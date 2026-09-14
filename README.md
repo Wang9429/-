@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 海油工程穿透式监管平台（可交互 Demo）
 
-## Getting Started
+按《海油工程穿透式监管平台_完整业需_V1.3》《公开产品借鉴与页面设计_V1.3》《投资底稿适配对照_V1.2》实现的可点击、可穿透、数据联动演示系统。
 
-First, run the development server:
+所有数值均由 `data/demo_seed.json` 与 `data/investment_catalog.json` 的基础业务记录实时计算，页面不写死任何指标结果。种子中的 `expected_results` 只用于验收断言。
+
+## 运行方式
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 http://localhost:43917 ，默认进入综合总览。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+其他命令：
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 命令 | 说明 |
+| --- | --- |
+| `npm run build` / `npm start` | 生产构建与启动（同样使用 43917 端口） |
+| `npm run lint` | ESLint + React Compiler 检查 |
+| `npm run verify` | 验收自检：48 项指标、阶段与五数口径对照种子预期值 |
 
-## Learn More
+## 技术栈
 
-To learn more about Next.js, take a look at the following resources:
+Next.js 16（App Router、Turbopack）、React 19、TypeScript、Tailwind CSS 4。无外部数据库与后端服务，演示状态保存在浏览器 localStorage，可用顶部「重置演示数据」恢复种子。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 目录结构
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/                 七个领域入口页 + 工作台 / 场景规则库 / 数据依据 / 对象与指标独立页
+components/          AppShell、横向箭头、指标穿透抽屉、事项抽屉、对象抽屉、场景执行面板等共用组件
+lib/                 数据装载、组织树、指标计算引擎、监测五数口径、事项状态机、导出
+data/                demo_seed.json、investment_catalog.json（唯一数据源）
+docs/                完整业需 V1.3 等业需包原文
+scripts/             验收自检脚本
+```
 
-## Deploy on Vercel
+## 主要能力
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **统一蓝色主题**：色值集中在 `app/globals.css`，深蓝固定左导航 + 浅灰工作区 + 白色卡片，红/黄/绿/灰四态标识风险等级。
+- **全局筛选**：组织（含下级/仅本级）、期间、演示截至日贯穿全页；阶段与子视图只筛选下区，不缩小顶部 KPI 口径。
+- **指标穿透抽屉（P71）**：点击指标卡在当前页浮层打开，左侧总部—二级单位—三级单位—项目组织树，末端按指标对象接续资产、账户等明细；浮层内选择组织不改变背景全局组织。
+- **流程横向箭头**：固定资产、股权、工程、产权四个流程领域使用肩形箭头，只显示阶段名与未关闭数。点击环节后，同页下方联动展示该环节的监管场景、监测对象、命中对象、未关闭事项、本期整改闭环与逾期整改。
+- **五数口径**：监测对象与命中对象按「对象类型 + 对象 ID」去重并分类型展示；未关闭、本期整改闭环、逾期整改按 `risk_id` 去重，两类不混用。部分覆盖会明确标注。
+- **事项状态共享**：认领核查、确认需整改、提交整改、复核通过/退回、排除、重开在全平台共用同一份状态，闭环后各领域页、综合总览与监管工作台同步更新。
+- **数据性质标识**：模拟数据、数据不足、来源待核实、未到评估时点均显式标注，空值不转 0。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 数据与口径约定
+
+- 演示截至日固定为 2026-06-30（唯一具备完整快照的时点），默认期间 2026-01-01 至 2026-06-30。
+- 监管操作的业务生效日期取演示截至日，实际操作时间另记 `recorded_at`，同日按 `sequence` 排序。
+- 比例指标按「分子合计 ÷ 分母合计」重算，不对百分比取平均。
+- 恢复种子后未关闭事项 8 件（红 4、黄 4；待核查 5、整改中 3、逾期整改 1），已排除 1 件不计入当前风险；六领域合计 15 次显示去重后为 8 件。
+
+## 免责说明
+
+本仓库为需求演示用途，数据全部为模拟数据，不连接任何真实业务系统，也不构成对外发布或生产接入授权。
