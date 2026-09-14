@@ -66,6 +66,8 @@ export default function IndicatorPage() {
           onSwitchIndicator={(next) => router.replace(`/indicator/${next}`)}
           initialOrgId={filters.orgId}
           scopeLabel={scopeLabel}
+          onOpenObject={(oid) => router.push(`/object/${oid}`)}
+          onOpenRisk={() => router.push("/supervision-workbench")}
         />
       )}
     </div>

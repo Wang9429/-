@@ -81,31 +81,43 @@ function StageTable({ instances }: { instances: LifecycleInstance[] }) {
   );
 }
 
-/** 切换对象时以 key 重挂载，页签回到「对象档案」。 */
+/** 切换对象时以 key 重挂载，页签回到入口指定的初始页签。 */
 export default function ObjectDrawer({
   objectId,
   onClose,
   onOpenRisk,
+  initialTab = "profile",
 }: {
   objectId: string | null;
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
+  initialTab?: string;
 }) {
   if (!objectId) return null;
-  return <ObjectDrawerBody key={objectId} objectId={objectId} onClose={onClose} onOpenRisk={onOpenRisk} />;
+  return (
+    <ObjectDrawerBody
+      key={`${objectId}:${initialTab}`}
+      objectId={objectId}
+      onClose={onClose}
+      onOpenRisk={onOpenRisk}
+      initialTab={initialTab}
+    />
+  );
 }
 
 function ObjectDrawerBody({
   objectId,
   onClose,
   onOpenRisk,
+  initialTab,
 }: {
   objectId: string;
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
+  initialTab: string;
 }) {
   const { risks, filters } = useDemoStore();
-  const [tab, setTab] = useState("profile");
+  const [tab, setTab] = useState(initialTab);
 
   const obj = findObject(objectId);
 

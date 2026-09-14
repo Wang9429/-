@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import React, { useMemo, useState } from "react";
-import { Drawer, Tag, DataTable, Notice, Button, LinkButton, DescList } from "@/components/ui";
+import { Drawer, Tag, DataTable, Notice, Button, LinkButton, DescList, Modal } from "@/components/ui";
 import { aggregate, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
 import { childOrgs, descendantOrgIds, orgLevelLabel, orgById, ROOT_ORG_ID } from "@/lib/org";
 import { fmtAmount, fmtInt, fmtPct, fmtSignedPct } from "@/lib/format";
@@ -35,8 +34,7 @@ export function formatMetric(def: IndicatorDef, m: NodeMetric): string {
   return fmtPct(m.value);
 }
 
-/** 每次打开或换口径时以 key 重挂载，穿透定位回到当前范围的顶层节点。 */
-export default function IndicatorDrawer(props: {
+export interface IndicatorDrawerProps {
   open: boolean;
   onClose: () => void;
   indicator: IndicatorDef | null;
@@ -44,7 +42,14 @@ export default function IndicatorDrawer(props: {
   onSwitchIndicator: (id: string) => void;
   initialOrgId: string;
   scopeLabel: string;
-}) {
+  /** 对象档案 P74；传入后在浮层之上继续打开，不跳离背景页 */
+  onOpenObject?: (id: string, tab?: string) => void;
+  /** 事项办理 P73 */
+  onOpenRisk?: (id: string) => void;
+}
+
+/** 每次打开或换口径时以 key 重挂载，穿透定位回到当前范围的顶层节点。 */
+export default function IndicatorDrawer(props: IndicatorDrawerProps) {
   if (!props.open) return null;
   return <IndicatorDrawerBody key={props.initialOrgId} {...props} />;
 }
@@ -57,21 +62,22 @@ function IndicatorDrawerBody({
   onSwitchIndicator,
   initialOrgId,
   scopeLabel,
-}: {
-  open: boolean;
-  onClose: () => void;
-  indicator: IndicatorDef | null;
-  indicatorOptions: IndicatorDef[];
-  onSwitchIndicator: (id: string) => void;
-  initialOrgId: string;
-  scopeLabel: string;
-}) {
+  onOpenObject,
+  onOpenRisk,
+}: IndicatorDrawerProps) {
   const { filters, risks } = useDemoStore();
   const [selection, setSelection] = useState<Selection>({ kind: "org", id: initialOrgId });
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(descendantOrgIds(ROOT_ORG_ID)),
   );
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
+  const [traceId, setTraceId] = useState<string | null>(null);
+
+  const openObject = (id: string, tab?: string) => onOpenObject?.(id, tab);
+  const openRisk = (id: string) => onOpenRisk?.(id);
+  const leafTrace = (objectId: string) =>
+    seed.data_traces.find((t) => t.object_id === objectId && (!indicator || !t.indicator_id || t.indicator_id === indicator.id)) ??
+    seed.data_traces.find((t) => t.object_id === objectId);
 
   const ctx = useMemo(
     () => ({
@@ -463,19 +469,20 @@ function IndicatorDrawerBody({
                     <div key={leaf.objectId} className="px-4 py-3">
                       <div className="flex items-start justify-between gap-3 flex-wrap">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Link
-                            href={`/objects/${leaf.objectType}/${leaf.objectId}`}
+                          <button
+                            type="button"
+                            onClick={() => openObject(leaf.objectId)}
                             className="text-brand text-[14px] hover:underline"
                           >
                             {leaf.name}
-                          </Link>
+                          </button>
                           <Tag tone="neutral">{objectTypeLabel[leaf.objectType] ?? leaf.objectType}</Tag>
                           <span className="text-[12px] text-textsub num">{leaf.objectId}</span>
                           {!leaf.dataComplete && <Tag tone="neutral">数据不足</Tag>}
                           {leaf.riskIds.map((id) => (
-                            <Link key={id} href={`/risk-cases/${id}`}>
+                            <button key={id} type="button" onClick={() => openRisk(id)}>
                               <Tag tone="red">未关闭事项 {id}</Tag>
-                            </Link>
+                            </button>
                           ))}
                         </div>
                         <span className="num text-[16px] font-semibold">
@@ -499,18 +506,16 @@ function IndicatorDrawerBody({
                         ))}
                       </div>
                       <div className="mt-2 flex items-center gap-3 flex-wrap">
-                        <Link href={`/objects/${leaf.objectType}/${leaf.objectId}`}>
-                          <LinkButton>查看对象档案 P74</LinkButton>
-                        </Link>
-                        <Link href={`/business-links/${leaf.objectType}/${leaf.objectId}`}>
-                          <LinkButton>业务关联 P79</LinkButton>
-                        </Link>
-                        {seed.data_traces.some((t) => t.object_id === leaf.objectId) && (
-                          <Link
-                            href={`/data-trace/${seed.data_traces.find((t) => t.object_id === leaf.objectId)!.id}`}
-                          >
-                            <LinkButton>查看计算依据 P78</LinkButton>
-                          </Link>
+                        <LinkButton onClick={() => openObject(leaf.objectId)}>
+                          查看对象档案 P74
+                        </LinkButton>
+                        <LinkButton onClick={() => openObject(leaf.objectId, "relations")}>
+                          业务关联 P79
+                        </LinkButton>
+                        {leafTrace(leaf.objectId) && (
+                          <LinkButton onClick={() => setTraceId(leafTrace(leaf.objectId)!.id)}>
+                            查看计算依据 P78
+                          </LinkButton>
                         )}
                       </div>
                     </div>
@@ -539,17 +544,100 @@ function IndicatorDrawerBody({
               />
               {relatedTrace && (
                 <div className="mt-3">
-                  <Link href={`/data-trace/${relatedTrace.id}`}>
-                    <Button variant="primary" size="sm">
-                      进入数据追溯 P78：{relatedTrace.name}
-                    </Button>
-                  </Link>
+                  <Button variant="primary" size="sm" onClick={() => setTraceId(relatedTrace.id)}>
+                    进入数据追溯 P78：{relatedTrace.name}
+                  </Button>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      <TraceModal traceId={traceId} onClose={() => setTraceId(null)} onOpenRisk={openRisk} />
     </Drawer>
+  );
+}
+
+/** P78 数据追溯：公式、输入值、构成对象与源记录，全部来自种子，不额外推算。 */
+function TraceModal({
+  traceId,
+  onClose,
+  onOpenRisk,
+}: {
+  traceId: string | null;
+  onClose: () => void;
+  onOpenRisk: (id: string) => void;
+}) {
+  const trace = traceId ? seed.data_traces.find((t) => t.id === traceId) : undefined;
+  if (!trace) return null;
+  const sources = seed.source_records.filter((s) => trace.source_record_ids.includes(s.id));
+  return (
+    <Modal open onClose={onClose} title={`数据追溯 P78：${trace.name}`} width={760}>
+      <div className="space-y-4">
+        <DescList
+          cols={1}
+          items={[
+            { label: "计算公式", value: <span className="num text-[13px]">{trace.calculation.formula}</span> },
+            {
+              label: "输入取值",
+              value: (
+                <span className="num text-[13px]">
+                  {trace.calculation.inputs.map((i) => `${i.field} = ${fmtAmount(i.value)} ${i.unit}`).join("；")}
+                </span>
+              ),
+            },
+            { label: "截至日", value: <span className="num text-[13px]">{trace.as_of}</span> },
+            { label: "数据性质", value: <Tag tone="neutral">模拟数据</Tag> },
+            { label: "说明", value: <span className="text-[13px]">{trace.detail_note}</span> },
+          ]}
+        />
+        <div>
+          <div className="text-[13px] font-medium mb-1.5">构成对象（{trace.component_object_ids.length}）</div>
+          <div className="flex flex-wrap gap-1.5">
+            {trace.component_object_ids.map((id) => (
+              <Tag key={id} tone="neutral">{id}</Tag>
+            ))}
+          </div>
+        </div>
+        <DataTable
+          columns={[
+            {
+              key: "id",
+              title: "源记录",
+              width: "180px",
+              render: (s) => <span className="num text-[12px]">{s.id}</span>,
+            },
+            { key: "name", title: "内容", render: (s) => s.name },
+            {
+              key: "amount",
+              title: "金额",
+              align: "right",
+              render: (s) => (
+                <span className="num">
+                  {fmtAmount(s.amount)} {s.amount_unit}
+                </span>
+              ),
+            },
+            { key: "system", title: "拟来源系统", render: (s) => s.source_system_label },
+            {
+              key: "date",
+              title: "业务日期",
+              width: "110px",
+              render: (s) => <span className="num text-[12px]">{s.business_date}</span>,
+            },
+          ]}
+          rows={sources}
+          rowKey={(s) => s.id}
+          dense
+          empty="该追溯未登记源记录明细。"
+        />
+        {trace.risk_id && (
+          <Button variant="secondary" size="sm" onClick={() => onOpenRisk(trace.risk_id)}>
+            查看关联事项 {trace.risk_id}
+          </Button>
+        )}
+      </div>
+    </Modal>
   );
 }

@@ -104,6 +104,7 @@ export default function DomainPage({
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
   const [riskId, setRiskId] = useState<string | null>(null);
   const [objectId, setObjectId] = useState<string | null>(null);
+  const [objectTab, setObjectTab] = useState("profile");
   const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [riskFilter, setRiskFilter] = useState<"all" | "open" | "red" | "overdue">("all");
 
@@ -551,6 +552,11 @@ export default function DomainPage({
         onSwitchIndicator={setIndicatorId}
         initialOrgId={filters.orgId}
         scopeLabel={scopeLabel}
+        onOpenObject={(id, t) => {
+          setObjectId(id);
+          setObjectTab(t ?? "profile");
+        }}
+        onOpenRisk={setRiskId}
       />
       <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel={`${meta.label}·${scopeTitle}`} />
       <ScenarioDrawer
@@ -565,7 +571,12 @@ export default function DomainPage({
           setObjectId(id);
         }}
       />
-      <ObjectDrawer objectId={objectId} onClose={() => setObjectId(null)} onOpenRisk={setRiskId} />
+      <ObjectDrawer
+        objectId={objectId}
+        initialTab={objectTab}
+        onClose={() => setObjectId(null)}
+        onOpenRisk={setRiskId}
+      />
     </div>
   );
 }

@@ -290,6 +290,39 @@ export function KpiCard({
   );
 }
 
+/* ------------------------------ 浮层栈 ------------------------------ */
+
+/**
+ * 抽屉与弹窗共用一个浮层栈：Esc 只关闭最上层，
+ * 所以在指标抽屉里打开数据追溯弹窗后按 Esc，只收起弹窗、回到原树节点。
+ */
+const overlayStack: symbol[] = [];
+
+function useEscapeOnTop(open: boolean, onClose: () => void) {
+  const idRef = React.useRef<symbol | null>(null);
+  if (idRef.current === null) idRef.current = Symbol("overlay");
+
+  React.useEffect(() => {
+    if (!open) return;
+    const id = idRef.current!;
+    overlayStack.push(id);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (overlayStack[overlayStack.length - 1] !== id) return;
+      onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      const i = overlayStack.lastIndexOf(id);
+      if (i >= 0) overlayStack.splice(i, 1);
+      if (overlayStack.length === 0) document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+}
+
 /* ------------------------------ 抽屉 ------------------------------ */
 
 export function Drawer({
@@ -309,19 +342,7 @@ export function Drawer({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
-  React.useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open, onClose]);
+  useEscapeOnTop(open, onClose);
 
   if (!open) return null;
   return (
@@ -370,14 +391,7 @@ export function Modal({
   footer?: React.ReactNode;
   width?: number;
 }) {
-  React.useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  useEscapeOnTop(open, onClose);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-6" role="dialog" aria-modal="true">
