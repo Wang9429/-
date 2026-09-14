@@ -585,10 +585,17 @@ export interface CatalogIndicator {
 }
 
 export interface MonitoringRuleDefinition {
-  id?: string;
-  rule_id?: string;
-  name?: string;
-  [k: string]: unknown;
+  id: string;
+  name: string;
+  generic_formula: string;
+  example_formula: string;
+  required_fields: string[];
+  scenario_ids: string[];
+  evaluation_mode: string;
+  data_missing_behavior: string;
+  rule_source: string;
+  parameters: Record<string, unknown>;
+  active_demo: boolean;
 }
 
 export interface DemoSeed {
