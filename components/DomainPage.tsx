@@ -132,9 +132,11 @@ export default function DomainPage({
     [orgIds],
   );
 
-  const templates = templatesByDomain(domain);
-  const template: LifecycleTemplate | undefined =
-    templates.find((t) => t.id === templateId) ?? templates[0];
+  const templates = useMemo(() => templatesByDomain(domain), [domain]);
+  const template: LifecycleTemplate | undefined = useMemo(
+    () => templates.find((t) => t.id === templateId) ?? templates[0],
+    [templates, templateId],
+  );
 
   const domainRisks = useMemo(
     () => risks.filter((r) => riskMatches(r, { domain, orgScope: orgIds })),

@@ -35,7 +35,21 @@ export function formatMetric(def: IndicatorDef, m: NodeMetric): string {
   return fmtPct(m.value);
 }
 
-export default function IndicatorDrawer({
+/** 每次打开或换口径时以 key 重挂载，穿透定位回到当前范围的顶层节点。 */
+export default function IndicatorDrawer(props: {
+  open: boolean;
+  onClose: () => void;
+  indicator: IndicatorDef | null;
+  indicatorOptions: IndicatorDef[];
+  onSwitchIndicator: (id: string) => void;
+  initialOrgId: string;
+  scopeLabel: string;
+}) {
+  if (!props.open) return null;
+  return <IndicatorDrawerBody key={props.initialOrgId} {...props} />;
+}
+
+function IndicatorDrawerBody({
   open,
   onClose,
   indicator,
@@ -58,10 +72,6 @@ export default function IndicatorDrawer({
     () => new Set(descendantOrgIds(ROOT_ORG_ID)),
   );
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
-
-  React.useEffect(() => {
-    if (open) setSelection({ kind: "org", id: initialOrgId });
-  }, [open, initialOrgId]);
 
   const ctx = useMemo(
     () => ({

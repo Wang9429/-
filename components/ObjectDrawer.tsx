@@ -81,6 +81,7 @@ function StageTable({ instances }: { instances: LifecycleInstance[] }) {
   );
 }
 
+/** 切换对象时以 key 重挂载，页签回到「对象档案」。 */
 export default function ObjectDrawer({
   objectId,
   onClose,
@@ -90,17 +91,28 @@ export default function ObjectDrawer({
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
 }) {
+  if (!objectId) return null;
+  return <ObjectDrawerBody key={objectId} objectId={objectId} onClose={onClose} onOpenRisk={onOpenRisk} />;
+}
+
+function ObjectDrawerBody({
+  objectId,
+  onClose,
+  onOpenRisk,
+}: {
+  objectId: string;
+  onClose: () => void;
+  onOpenRisk?: (id: string) => void;
+}) {
   const { risks, filters } = useDemoStore();
   const [tab, setTab] = useState("profile");
 
-  React.useEffect(() => setTab("profile"), [objectId]);
+  const obj = findObject(objectId);
 
-  const obj = objectId ? findObject(objectId) : undefined;
-
-  const related = useMemo(() => {
-    if (!objectId) return [];
-    return seed.business_links.filter((l) => l.from_id === objectId || l.to_id === objectId);
-  }, [objectId]);
+  const related = useMemo(
+    () => seed.business_links.filter((l) => l.from_id === objectId || l.to_id === objectId),
+    [objectId],
+  );
 
   const objRisks = useMemo(
     () => risks.filter((r) => r.primary_object_id === objectId),
@@ -116,8 +128,6 @@ export default function ObjectDrawer({
     () => seed.scenario_monitoring_coverage.filter((r) => r.monitoring_object_id === objectId),
     [objectId],
   );
-
-  if (!objectId) return null;
 
   if (!obj) {
     return (

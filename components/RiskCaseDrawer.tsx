@@ -130,12 +130,26 @@ function ActionTimeline({ actions }: { actions: CaseAction[] }) {
   );
 }
 
+/** 切换事项时以 key 重挂载本组件，办理表单与页签自然回到初始态。 */
 export default function RiskCaseDrawer({
   riskId,
   onClose,
   sourceLabel,
 }: {
   riskId: string | null;
+  onClose: () => void;
+  sourceLabel?: string;
+}) {
+  if (!riskId) return null;
+  return <RiskCaseDrawerBody key={riskId} riskId={riskId} onClose={onClose} sourceLabel={sourceLabel} />;
+}
+
+function RiskCaseDrawerBody({
+  riskId,
+  onClose,
+  sourceLabel,
+}: {
+  riskId: string;
   onClose: () => void;
   sourceLabel?: string;
 }) {
@@ -149,18 +163,9 @@ export default function RiskCaseDrawer({
   const [formError, setFormError] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
 
-  const risk = riskId ? riskById(riskId) : undefined;
-  const actions = useMemo(() => (riskId ? actionsFor(riskId) : []), [riskId, actionsFor]);
+  const risk = riskById(riskId);
+  const actions = useMemo(() => actionsFor(riskId), [riskId, actionsFor]);
   const roleDef = ROLES.find((r) => r.id === role)!;
-
-  React.useEffect(() => {
-    setTab("overview");
-    setPending(null);
-    setFlash(null);
-    setFormError(null);
-  }, [riskId]);
-
-  if (!riskId) return null;
 
   if (!risk) {
     return (
@@ -183,11 +188,6 @@ export default function RiskCaseDrawer({
   const overdue = isOverdueRectification(risk, filters.asOf);
   const missingDue = isMissingRectificationDeadline(risk);
   const options = optionsFor(risk);
-  const canAct =
-    (roleDef.canHandle && risk.status !== "pending_verification") ||
-    (roleDef.canVerify && risk.status === "pending_verification") ||
-    (roleDef.canHandle && (risk.status === "closed" || risk.status === "excluded"));
-
   const submit = () => {
     if (!pending) return;
     if (note.trim().length < 4) {
