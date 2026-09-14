@@ -1,0 +1,569 @@
+"use client";
+
+import React, { useMemo, useState } from "react";
+import ChevronFlow, { type ChevronItem } from "@/components/ChevronFlow";
+import IndicatorDrawer, { formatMetric } from "@/components/IndicatorDrawer";
+import RiskCaseDrawer from "@/components/RiskCaseDrawer";
+import ScenarioDrawer from "@/components/ScenarioDrawer";
+import ScenarioExecutionPanel, { type SubtopicOption } from "@/components/ScenarioExecutionPanel";
+import ObjectDrawer from "@/components/ObjectDrawer";
+import { Button, Card, DataTable, KpiCard, Notice, SeverityTag, Tabs, Tag } from "@/components/ui";
+import { DOMAIN_META, phaseName, seed, templatesByDomain, topicName } from "@/lib/seed";
+import { computeIndicator, indicatorById, type IndicatorDef, type NodeMetric } from "@/lib/metrics";
+import { openCountForPhase, openCountForTopic } from "@/lib/monitoring";
+import { orgName, orgScope } from "@/lib/org";
+import { isOpen, isOverdueRectification, rectificationDueDate, statusLabel } from "@/lib/risks";
+import { riskMatches } from "@/lib/risks";
+import { fmtDate } from "@/lib/format";
+import { downloadCsv } from "@/lib/export";
+import { useDemoStore } from "@/lib/store";
+import type { DomainId, LifecycleTemplate, RiskCase } from "@/lib/types";
+
+/**
+ * 领域首页固定结构（完整业需 3.1 / 3.5）：
+ * 标题筛选 → 4~6 张指标卡 → 本期重点关注 → 横向流程或专题看板 → 场景执行 → 对象与事项。
+ * 流程主视图位于任何趋势图之前，首屏即可见。
+ */
+
+export interface DomainTab {
+  id: string;
+  label: string;
+  render: (helpers: DomainHelpers) => React.ReactNode;
+}
+
+export interface DomainHelpers {
+  openRisk: (id: string) => void;
+  openObject: (id: string) => void;
+  openIndicator: (id: string) => void;
+  orgIds: Set<string>;
+}
+
+export interface KpiSpec {
+  indicatorId?: string;
+  name?: string;
+  value?: React.ReactNode;
+  unit?: string;
+  compare?: React.ReactNode;
+  compareTone?: "red" | "amber" | "green" | "neutral" | "brand";
+  dataState?: React.ReactNode;
+  onOpen?: () => void;
+}
+
+function metricTone(m: NodeMetric): "red" | "amber" | "green" | "neutral" {
+  switch (m.status) {
+    case "risk":
+      return "red";
+    case "attention":
+      return "amber";
+    case "normal":
+      return "green";
+    default:
+      return "neutral";
+  }
+}
+
+function metricStateText(m: NodeMetric, def: IndicatorDef): string {
+  if (m.status === "no_business") return "当前范围无业务";
+  if (m.value === null) return m.emptyReason ?? "数据不足，未评估";
+  const cov = m.coverage.partial
+    ? `已覆盖 ${m.coverage.evaluated}/${m.coverage.expected}`
+    : `全覆盖 ${m.coverage.evaluated}/${m.coverage.expected}`;
+  return def.targetLabel ? `${def.targetLabel}｜${cov}` : cov;
+}
+
+export default function DomainPage({
+  domain,
+  intro,
+  kpiIndicatorIds,
+  extraKpis,
+  flowMode = "phases",
+  topicFocus,
+  phaseFocus,
+  subtopicByPhase,
+  tabs = [],
+  ledger,
+}: {
+  domain: DomainId;
+  intro: string;
+  kpiIndicatorIds: string[];
+  extraKpis?: (helpers: DomainHelpers) => KpiSpec[];
+  flowMode?: "phases" | "topics";
+  phaseFocus?: Record<string, string>;
+  topicFocus?: Record<string, string>;
+  subtopicByPhase?: Record<string, SubtopicOption[]>;
+  tabs?: DomainTab[];
+  ledger?: (helpers: DomainHelpers) => React.ReactNode;
+}) {
+  const meta = DOMAIN_META[domain];
+  const { filters, risks } = useDemoStore();
+  const [tab, setTab] = useState("overview");
+  const [phaseId, setPhaseId] = useState<string | null>(null);
+  const [topicId, setTopicId] = useState<string | null>(null);
+  const [subtopicId, setSubtopicId] = useState<string | null>(null);
+  const [templateId, setTemplateId] = useState<string>(() => templatesByDomain(domain)[0]?.id ?? "");
+  const [indicatorId, setIndicatorId] = useState<string | null>(null);
+  const [riskId, setRiskId] = useState<string | null>(null);
+  const [objectId, setObjectId] = useState<string | null>(null);
+  const [scenarioId, setScenarioId] = useState<string | null>(null);
+  const [riskFilter, setRiskFilter] = useState<"all" | "open" | "red" | "overdue">("all");
+
+  const orgIds = useMemo(
+    () => orgScope(filters.orgId, filters.includeChildren),
+    [filters.orgId, filters.includeChildren],
+  );
+
+  const ctx = useMemo(
+    () => ({
+      periodStart: filters.periodStart,
+      periodEnd: filters.periodEnd,
+      asOf: filters.asOf,
+      risks,
+    }),
+    [filters.periodStart, filters.periodEnd, filters.asOf, risks],
+  );
+
+  const helpers: DomainHelpers = useMemo(
+    () => ({
+      openRisk: setRiskId,
+      openObject: setObjectId,
+      openIndicator: setIndicatorId,
+      orgIds,
+    }),
+    [orgIds],
+  );
+
+  const templates = templatesByDomain(domain);
+  const template: LifecycleTemplate | undefined =
+    templates.find((t) => t.id === templateId) ?? templates[0];
+
+  const domainRisks = useMemo(
+    () => risks.filter((r) => riskMatches(r, { domain, orgScope: orgIds })),
+    [risks, domain, orgIds],
+  );
+
+  const chevronItems: ChevronItem[] = useMemo(() => {
+    if (flowMode !== "phases" || !template) return [];
+    return template.phase_nodes
+      .slice()
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((n) => {
+        const c = openCountForPhase(domain, n.id, orgIds, risks, filters.asOf);
+        return { id: n.id, name: n.name, openCount: c.open, severity: c.maxSeverity };
+      });
+  }, [flowMode, template, domain, orgIds, risks, filters.asOf]);
+
+  const topics = useMemo(
+    () => seed.domain_topics.find((d) => d.domain === domain)?.topics ?? [],
+    [domain],
+  );
+
+  const highlights = useMemo(() => {
+    return domainRisks
+      .filter((r) => isOpen(r))
+      .slice()
+      .sort((a, b) => {
+        const rank = (r: RiskCase) =>
+          (r.severity === "red" ? 0 : 2) + (isOverdueRectification(r, filters.asOf) ? -1 : 0);
+        return rank(a) - rank(b) || a.id.localeCompare(b.id);
+      })
+      .slice(0, 3);
+  }, [domainRisks, filters.asOf]);
+
+  const kpiDefs = kpiIndicatorIds
+    .map((id) => indicatorById(id))
+    .filter((d): d is IndicatorDef => Boolean(d));
+
+  const scopeTitle =
+    flowMode === "phases"
+      ? phaseId
+        ? phaseName(phaseId)
+        : "全部环节"
+      : topicId
+        ? topicName(topicId)
+        : "全部专题";
+
+  const scopeLabel = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}`;
+
+  const currentSubtopics = phaseId ? subtopicByPhase?.[phaseId] : undefined;
+  const effectiveSubtopic = currentSubtopics ? (subtopicId ?? currentSubtopics[0].id) : null;
+
+  const visibleRisks = useMemo(() => {
+    return domainRisks.filter((r) => {
+      if (riskFilter === "open") return isOpen(r);
+      if (riskFilter === "red") return isOpen(r) && r.severity === "red";
+      if (riskFilter === "overdue") return isOpen(r) && isOverdueRectification(r, filters.asOf);
+      return true;
+    });
+  }, [domainRisks, riskFilter, filters.asOf]);
+
+  const allTabs = [
+    { id: "overview", label: "监管总览" },
+    ...tabs.map((t) => ({ id: t.id, label: t.label })),
+    { id: "cases", label: `监管事项（${domainRisks.filter(isOpen).length}）` },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-[22px] font-semibold text-textmain leading-7">{meta.label}</h1>
+          <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">{intro}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Tag tone="neutral">{meta.pageId}</Tag>
+          <Tag tone="brand">{scopeLabel}</Tag>
+        </div>
+      </div>
+
+      <Tabs tabs={allTabs} value={tab} onChange={setTab} />
+
+      {tab === "overview" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-3">
+            {kpiDefs.map((def) => {
+              const m = computeIndicator(def, orgIds, ctx);
+              return (
+                <KpiCard
+                  key={def.id}
+                  name={def.name}
+                  value={formatMetric(def, m)}
+                  unit={m.value === null ? undefined : def.unit}
+                  compare={
+                    m.status === "no_business" ? (
+                      "当前范围无业务"
+                    ) : m.status === "unknown" ? (
+                      "数据不足"
+                    ) : m.status === "risk" ? (
+                      "高风险"
+                    ) : m.status === "attention" ? (
+                      "关注"
+                    ) : (
+                      "有效监测正常"
+                    )
+                  }
+                  compareTone={metricTone(m)}
+                  dataState={metricStateText(m, def)}
+                  scopeLabel={`${def.name}｜${scopeLabel}｜口径：${def.caliber}`}
+                  onOpen={() => setIndicatorId(def.id)}
+                />
+              );
+            })}
+            {extraKpis?.(helpers).map((k, i) => (
+              <KpiCard
+                key={`extra-${i}`}
+                name={k.name ?? ""}
+                value={k.value}
+                unit={k.unit}
+                compare={k.compare}
+                compareTone={k.compareTone}
+                dataState={k.dataState}
+                onOpen={k.onOpen}
+              />
+            ))}
+          </div>
+
+          <Card
+            title="本期重点关注"
+            subtitle="最多 3 条；点击直接打开事项办理，不跳到全量清单"
+            right={
+              <button
+                className="text-[13px] text-brand hover:underline"
+                onClick={() => {
+                  setTab("cases");
+                  setRiskFilter("open");
+                }}
+              >
+                查看事项清单 ›
+              </button>
+            }
+          >
+            {highlights.length === 0 ? (
+              <p className="text-[13px] text-textsub">当前组织范围内没有未关闭事项。</p>
+            ) : (
+              <ul className="flex flex-wrap gap-2">
+                {highlights.map((r) => (
+                  <li key={r.id}>
+                    <button
+                      onClick={() => setRiskId(r.id)}
+                      className="flex items-center gap-2 h-9 px-3 rounded-[6px] border border-line bg-surface hover:bg-tint transition-colors duration-150 text-[13px]"
+                    >
+                      <SeverityTag severity={r.severity} />
+                      <span className="num text-textsub">{r.primary_object_id}</span>
+                      <span className="text-textmain">{r.title}</span>
+                      {isOverdueRectification(r, filters.asOf) && <Tag tone="red">整改逾期</Tag>}
+                      <span className="text-textsub">{statusLabel[r.status]}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          {flowMode === "phases" && template && (
+            <Card
+              title="业务流程监管"
+              subtitle="箭头只显示环节名称与未关闭事项数；点击后在本页下方联动场景与事项，不切换页签"
+              right={
+                templates.length > 1 ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] text-textsub">事项类型</span>
+                    <select
+                      className="h-8 px-2 rounded-[6px] border border-line bg-surface text-[13px]"
+                      value={template.id}
+                      onChange={(e) => {
+                        setTemplateId(e.target.value);
+                        setPhaseId(null);
+                      }}
+                    >
+                      {templates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.matter_type_name ?? t.id}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : undefined
+              }
+            >
+              <ChevronFlow
+                items={chevronItems}
+                value={phaseId}
+                onChange={(id) => {
+                  setPhaseId(id);
+                  setSubtopicId(null);
+                  requestAnimationFrame(() => {
+                    document.getElementById("scenario-execution")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
+                }}
+                ariaLabel={`${meta.label}业务阶段`}
+              />
+              <p className="text-[12px] text-textsub mt-3 leading-5">
+                {template.execution_note}
+              </p>
+              {templates.length > 1 && (
+                <p className="text-[12px] text-textsub mt-1">
+                  不同产权事项类型分别统计流程与事项，不合并成一条通用流程。
+                </p>
+              )}
+            </Card>
+          )}
+
+          {flowMode === "topics" && (
+            <Card
+              title="专题监管"
+              subtitle="资金与国际化以专题组织，复用同一筛选、清单与事项办理能力"
+            >
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setTopicId(null)}
+                  className={`h-[62px] px-4 rounded-[6px] border text-[13px] transition-colors duration-150 ${
+                    topicId === null ? "border-brand bg-tint text-brand font-medium" : "border-line bg-surface text-textsub hover:bg-tint"
+                  }`}
+                >
+                  全部专题
+                </button>
+                {topics.map((t) => {
+                  const c = openCountForTopic(domain, t.id, orgIds, risks);
+                  const selected = topicId === t.id;
+                  const tone =
+                    c.open === 0
+                      ? "var(--risk-neutral-fg)"
+                      : c.maxSeverity === "red"
+                        ? "var(--risk-red-fg)"
+                        : "var(--risk-amber-fg)";
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setTopicId(t.id);
+                        requestAnimationFrame(() => {
+                          document.getElementById("scenario-execution")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        });
+                      }}
+                      title={`${t.name}｜未关闭事项 ${c.open} 件｜${topicFocus?.[t.id] ?? ""}`}
+                      className={`h-[62px] min-w-[168px] px-4 rounded-[6px] border text-left transition-colors duration-150 ${
+                        selected ? "border-brand bg-tint" : "border-line bg-surface hover:bg-tint"
+                      }`}
+                    >
+                      <div className={`text-[13px] ${selected ? "text-brand font-medium" : "text-textmain"}`}>{t.name}</div>
+                      <div className="text-[12px] mt-0.5">
+                        <span className="text-textsub">未关闭 </span>
+                        <span className="num font-semibold" style={{ color: tone }}>
+                          {c.open}
+                        </span>
+                        <span className="text-textsub"> 件</span>
+                        {c.open > 0 && (
+                          <span style={{ color: tone }} aria-hidden>
+                            {" "}
+                            {c.maxSeverity === "red" ? "●" : "▲"}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
+          <ScenarioExecutionPanel
+            domain={domain}
+            phaseId={flowMode === "phases" ? phaseId : null}
+            topicId={flowMode === "topics" ? topicId : null}
+            subtopicId={effectiveSubtopic}
+            scopeTitle={scopeTitle}
+            focusNote={
+              flowMode === "phases"
+                ? phaseId
+                  ? phaseFocus?.[phaseId] ?? "本环节监管重点见场景清单"
+                  : "默认显示本领域全部环节的场景执行情况；“全部环节”不是第一个业务阶段"
+                : topicId
+                  ? topicFocus?.[topicId] ?? "本专题监管重点见场景清单"
+                  : "默认显示本领域全部专题的场景执行情况"
+            }
+            subtopicOptions={currentSubtopics}
+            onSubtopicChange={setSubtopicId}
+            onOpenRisk={setRiskId}
+            onOpenObject={setObjectId}
+            onOpenScenario={setScenarioId}
+            extraScopeNote={
+              currentSubtopics
+                ? `箭头未关闭总数覆盖“${currentSubtopics.map((s) => s.label).join("”与“")}”两个子主题并去重；当前摘要只含所选子类。`
+                : undefined
+            }
+          />
+
+          {ledger?.(helpers)}
+        </div>
+      )}
+
+      {tabs.map((t) => (tab === t.id ? <div key={t.id}>{t.render(helpers)}</div> : null))}
+
+      {tab === "cases" && (
+        <Card
+          title="监管事项"
+          subtitle="同一事项在各领域共用同一 risk_id 与状态；办理后本页、首页、指标与综合总览同步更新"
+          right={
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-[6px] border border-line overflow-hidden">
+                {[
+                  { id: "all", label: "全部" },
+                  { id: "open", label: "未关闭" },
+                  { id: "red", label: "高风险" },
+                  { id: "overdue", label: "逾期整改" },
+                ].map((o) => (
+                  <button
+                    key={o.id}
+                    onClick={() => setRiskFilter(o.id as never)}
+                    className={`h-8 px-3 text-[12px] transition-colors duration-150 ${
+                      riskFilter === o.id ? "bg-brand text-white" : "bg-surface text-textsub hover:bg-tint"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <Button
+                onClick={() =>
+                  downloadCsv(
+                    `监管事项_${domain}.csv`,
+                    ["事项ID", "名称", "等级", "办理状态", "责任单位", "主对象", "规则", "场景", "有效整改期限", "是否逾期"],
+                    visibleRisks.map((r) => [
+                      r.id,
+                      r.title,
+                      r.severity === "red" ? "高风险" : "关注",
+                      statusLabel[r.status],
+                      orgName(r.owner_org_id),
+                      r.primary_object_id,
+                      r.rule_id,
+                      r.scenario_ids.join("/"),
+                      rectificationDueDate(r) ?? "",
+                      isOverdueRectification(r, filters.asOf) ? "是" : "否",
+                    ]),
+                    {
+                      title: `${meta.label}监管事项清单`,
+                      scopeLines: [scopeLabel, `截至日 ${filters.asOf}`, `筛选：${riskFilter}`],
+                    },
+                  )
+                }
+              >
+                导出当前筛选
+              </Button>
+            </div>
+          }
+        >
+          <DataTable
+            rows={visibleRisks}
+            rowKey={(r) => r.id}
+            onRowClick={(r) => setRiskId(r.id)}
+            empty="当前组织范围与筛选条件下没有监管事项。"
+            columns={[
+              { key: "id", title: "事项", width: "76px", render: (r) => <span className="num">{r.id}</span> },
+              { key: "title", title: "名称", render: (r) => r.title },
+              { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
+              { key: "status", title: "办理状态", width: "104px", render: (r) => statusLabel[r.status] },
+              {
+                key: "phase",
+                title: "问题所属环节",
+                width: "150px",
+                render: (r) => {
+                  const link = seed.risk_context_links.find((l) => l.risk_id === r.id && l.domain === domain);
+                  return link?.primary_phase_id
+                    ? phaseName(link.primary_phase_id)
+                    : link?.topic_id
+                      ? topicName(link.topic_id)
+                      : "—";
+                },
+                hint: "与台账的“对象当前业务阶段”是两个筛选，分开命名",
+              },
+              { key: "org", title: "责任单位", width: "134px", render: (r) => orgName(r.owner_org_id) },
+              {
+                key: "due",
+                title: "有效整改期限",
+                width: "124px",
+                render: (r) => <span className="num">{fmtDate(rectificationDueDate(r))}</span>,
+              },
+              {
+                key: "overdue",
+                title: "逾期",
+                width: "84px",
+                render: (r) =>
+                  isOverdueRectification(r, filters.asOf) ? <Tag tone="red">逾期</Tag> : <span className="text-textsub">—</span>,
+              },
+            ]}
+          />
+          <div className="mt-3">
+            <Notice tone="neutral" title="统计口径">
+              未关闭包括待核查、核查中、整改中、待复核；已排除和已关闭不计入。逾期按当前有效整改期限与截至日
+              {filters.asOf} 比较。
+            </Notice>
+          </div>
+        </Card>
+      )}
+
+      <IndicatorDrawer
+        open={Boolean(indicatorId)}
+        onClose={() => setIndicatorId(null)}
+        indicator={indicatorId ? indicatorById(indicatorId) ?? null : null}
+        indicatorOptions={kpiDefs}
+        onSwitchIndicator={setIndicatorId}
+        initialOrgId={filters.orgId}
+        scopeLabel={scopeLabel}
+      />
+      <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel={`${meta.label}·${scopeTitle}`} />
+      <ScenarioDrawer
+        scenarioId={scenarioId}
+        onClose={() => setScenarioId(null)}
+        onOpenRisk={(id) => {
+          setScenarioId(null);
+          setRiskId(id);
+        }}
+        onOpenObject={(id) => {
+          setScenarioId(null);
+          setObjectId(id);
+        }}
+      />
+      <ObjectDrawer objectId={objectId} onClose={() => setObjectId(null)} onOpenRisk={setRiskId} />
+    </div>
+  );
+}

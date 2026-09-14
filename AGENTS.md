@@ -118,3 +118,13 @@
 - 如果环境缺少必要验证能力，写明未验证项、原因和复现步骤，不伪造测试或截图结果。
 - 交付源码及依赖、实际验证的`README.md`运行方法、`演示操作说明.md`、`验收记录.md`及`screenshots/`。运行命令根据最终工程填写，检查记录据实写通过、未通过或未验证。
 - 本项目指导不自动授权对外发布或真实系统操作。发布及生产接入按用户届时明确的任务范围执行。
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

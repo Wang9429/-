@@ -493,13 +493,13 @@ export interface SourceRecord {
 
 export interface BusinessLink {
   id: string;
-  from_type: string;
   from_id: string;
-  to_type: string;
   to_id: string;
-  relation: string;
-  basis?: string;
-  [k: string]: unknown;
+  relation_type: string;
+  domains: DomainId[];
+  as_of: string;
+  data_nature: string;
+  evidence_ids?: string[];
 }
 
 export interface DataTrace {
