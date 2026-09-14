@@ -17,9 +17,12 @@ npm run dev
 
 | 命令 | 说明 |
 | --- | --- |
-| `npm run build` / `npm start` | 生产构建与启动（同样使用 43917 端口） |
+| `npm run preview` | 生产构建并启动（43917 端口），用于演示 |
+| `npm run build` / `npm start` | 分步执行生产构建与启动 |
 | `npm run lint` | ESLint + React Compiler 检查 |
 | `npm run verify` | 验收自检：48 项指标、阶段与五数口径对照种子预期值 |
+
+> 演示环境建议用 `npm run preview`。`npm run dev` 依赖 Turbopack 的 HMR WebSocket（`ws://<host>/_next/hmr`）；在反向代理或远程沙箱中该连接被拦截时，Next 16 的开发客户端会停在未水合状态，页面能显示但点击无反应。生产构建不依赖该连接。
 
 ## 技术栈
 

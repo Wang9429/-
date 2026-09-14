@@ -6,6 +6,7 @@
     "dev": "next dev -H 0.0.0.0 -p 43917",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 43917",
+    "preview": "next build && next start -H 0.0.0.0 -p 43917",
     "lint": "eslint",
     "verify": "tsx scripts/verify-acceptance.ts"
   },
