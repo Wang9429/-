@@ -322,9 +322,11 @@ export function KpiCard({
             className="num text-[32px] font-semibold leading-none tracking-tight"
             style={{ color: "inherit" }}
           >
-            {valueText}
+            {typeof valueText === "string" && unit === "%" && !String(valueText).includes("%")
+              ? `${valueText}%`
+              : valueText}
           </span>
-          {showUnit && (
+          {showUnit && unit !== "%" && (
             <span className="text-[14px] font-medium" style={{ color: "var(--text-sub)" }}>
               {unit}
             </span>

@@ -240,8 +240,12 @@ export default function OverviewPage() {
                   >
                     <div className="text-[13px] text-textsub">{kpi.def.name}</div>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className="num text-[26px] font-semibold text-textmain leading-none">{parts.value}</span>
-                      {parts.unit && <span className="text-[14px] text-textsub">{parts.unit}</span>}
+                      <span className="num text-[26px] font-semibold text-textmain leading-none">
+                        {parts.unit === "%" ? `${parts.value}%` : parts.value}
+                      </span>
+                      {parts.unit && parts.unit !== "%" && (
+                        <span className="text-[14px] text-textsub">{parts.unit}</span>
+                      )}
                     </div>
                   </button>
                 )}

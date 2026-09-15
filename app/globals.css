@@ -293,7 +293,7 @@
 }
 
 .reg-content {
-  padding: 24px;
+  padding: 24px 24px 80px;
 }
 
 #scenario-execution,
@@ -354,13 +354,19 @@
   overflow-x: auto;
 }
 
+@media (max-width: 1439px) {
+  .reg-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1199px) {
   .reg-kpis,
   .reg-domains {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .reg-content {
-    padding: 20px;
+    padding: 20px 20px 80px;
   }
 }
 
