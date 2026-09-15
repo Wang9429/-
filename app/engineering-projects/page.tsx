@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
-import { Button, Card, DataTable, Notice, Tag } from "@/components/ui";
+import { Button, Card, DataTable, Tag } from "@/components/ui";
 import { seed } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { fmtAmount, fmtDate, fmtPct, fmtPp } from "@/lib/format";
@@ -17,18 +17,6 @@ import type { EngineeringProject } from "@/lib/types";
  * 工作包可并行；阶段“已完成”不自动关闭该阶段监管事项。
  */
 
-const PHASE_FOCUS: Record<string, string> = {
-  "ENG-V12-01": "监管重点：客户及项目风险、报价成本依据、投标/承揽决策证据。首版以资料与已批准事实核查为主，不设无制度依据的自动承揽打分。",
-  "ENG-V12-02": "监管重点：有效合同收入、批准目标成本、关键风险、变更责任、收付款安排（关联 ENG-S01、03、06、07）。",
-  "ENG-V12-03": "监管重点：交付与确认节点、版本一致性、设计变更对采购建造的影响（ENG-S03）。设计未全部完成不自动判定采购违规。",
-  "ENG-V12-04": "监管重点：供应商履约、到货节点、价格敞口、分包及支付条件（ENG-S04、05）。付款异常需说明命中的具体条件：超批准、超已确认可支付上限或收款方不符。",
-  "ENG-V12-05": "监管重点：预计完工成本及毛利、关键路径、变更执行、重大事项响应（ENG-S01、02、08）。",
-  "ENG-V12-06": "监管重点：航线事件、运费与船舶资源、作业窗口、安装节点及成本影响（ENG-S07）。情景测算只改变模拟结果，不改写实际预测基准。",
-  "ENG-V12-07": "监管重点：交付证据、客户确认、遗留问题、余料与资产安排（关联 ENG-S02、06、08、09）。",
-  "ENG-V12-08": "监管重点：未结算、已结算未到期与逾期分开；客户确认金额与应收匹配（ENG-S06）。本箭头集中查看应收与结算，不表示交付后才可收款。",
-  "ENG-V12-09": "监管重点：质保及保函释放条件、未结事项、资产余料与尾款（ENG-S09）。收款完成不表示全部履约结束。",
-};
-
 function EngLedger({ helpers }: { helpers: DomainHelpers }) {
   const { filters, risks, canAct } = useDemoStore();
   const orgIds = helpers.orgIds;
@@ -37,7 +25,6 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
   return (
     <Card
       title="工程项目台账"
-      subtitle="管理主体与合同法律主体分别标明；境外分支机构不是自动独立法人"
       right={
         <Button
           disabled={!canAct("business.export")}
@@ -113,7 +100,7 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
           },
           { key: "org", title: "主归属单位", width: "126px", render: (p) => orgName(p.owner_org_id) },
           { key: "country", title: "国别", width: "92px", render: (p) => p.country },
-          { key: "phase", title: "管理主状态", width: "104px", render: (p) => p.phase, hint: "工作包可并行，主状态不代表各工作包状态" },
+          { key: "phase", title: "管理主状态", width: "104px", render: (p) => p.phase },
           {
             key: "rev",
             title: "有效合同收入",
@@ -148,7 +135,6 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
                 </span>
               );
             },
-            hint: "上层按同口径收入、成本重新计算，不平均项目毛利率；低于目标 3 个百分点及以上为红",
           },
           {
             key: "ar",
@@ -160,7 +146,6 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
                 {fmtAmount(p.receivable_due)} / {fmtAmount(p.receivable_not_yet_due)}
               </span>
             ),
-            hint: "未到期应收不计入逾期口径",
           },
           {
             key: "risk",
@@ -198,10 +183,7 @@ function CostAndCash({ helpers }: { helpers: DomainHelpers }) {
 
   return (
     <div className="space-y-4">
-      <Card
-        title="预计完工成本构成"
-        subtitle="包括已发生、应计未入账、已签未执行、合理预计变更索赔成本与剩余工作估算，并按来源去重"
-      >
+      <Card title="预计完工成本构成">
         <DataTable
           rows={costItems}
           rowKey={(c) => c.id}
@@ -231,14 +213,9 @@ function CostAndCash({ helpers }: { helpers: DomainHelpers }) {
             },
           ]}
         />
-        <div className="mt-2">
-          <Notice tone="neutral" title="成本口径">
-            已签未执行与剩余工作估算范围明确区分，避免同一采购包重复计入；未获客户确认的索赔收益单列潜在增益，不计入基准有效合同收入。
-          </Notice>
-        </div>
       </Card>
 
-      <Card title="结算与到期收款" subtitle="未结算、已结算未到期、逾期分开显示；到期应收回收率与资金领域 CASH-I04 使用同一义务与收款匹配">
+      <Card title="结算与到期收款">
         <DataTable
           rows={obligations}
           rowKey={(o) => o.id}
@@ -263,7 +240,7 @@ function CostAndCash({ helpers }: { helpers: DomainHelpers }) {
         />
       </Card>
 
-      <Card title="付款核查" subtitle="同时显示批准金额、已确认可支付业务上限、实际支付与收款方，准确说明命中的具体条件">
+      <Card title="付款核查">
         <DataTable
           rows={payments}
           rowKey={(t) => t.id}
@@ -320,9 +297,7 @@ export default function Page() {
   return (
     <DomainPage
       domain="ENG"
-      intro="以海油工程承揽并执行的工程合同及履约项目为主要对象，关注合同收入、目标成本、预计完工成本、交付、采购分包、变更、结算收款及质量 HSE 重大事项。主要业务顺序展示 9 个环节，工作包可并行。"
       kpiIndicatorIds={["ENG-CNT", "ENG-REVENUE", "ENG-I01", "ENG-I06", "ENG-OPEN"]}
-      phaseFocus={PHASE_FOCUS}
       ledger={(h) => <EngLedger helpers={h} />}
       tabs={[
         { id: "cost", label: "成本与回款穿透", render: (h) => <CostAndCash helpers={h} /> },

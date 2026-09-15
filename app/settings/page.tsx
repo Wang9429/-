@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import React, { Suspense, useState } from "react";
-import { Button, Card, DataTable, Field, Notice, Tag, Tabs, inputClass } from "@/components/ui";
+import { Button, Card, DataTable, DescList, Field, Notice, Tag, Tabs, inputClass } from "@/components/ui";
 import { config, coverageById, intersectOrgScope, objectAllowed, roles, type ConfigUser } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { INDICATORS, computeIndicator } from "@/lib/metrics";
@@ -25,7 +25,6 @@ function SettingsBody() {
   const tab = params.get("tab") ?? "users";
   const setTab = (id: string) => router.replace(`/settings?tab=${id}`);
   const {
-    user,
     canAct,
     configUsers,
     saveConfigUsers,
@@ -43,12 +42,7 @@ function SettingsBody() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-[24px] font-semibold leading-[34px]">系统配置</h1>
-        <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
-          用于确认谁维护用户权限、监管子场景、监测规则、指标、AI 与数据运行，以及草稿、试算、发布如何生效。账号密码和真实密钥不在本原型配置。
-        </p>
-      </div>
+      <h1 className="text-[24px] font-semibold leading-[34px]">系统配置</h1>
       <Tabs
         tabs={config.settings.tabs.map((t) => ({ id: t.id, label: t.label }))}
         value={tab}
@@ -78,9 +72,8 @@ function SettingsBody() {
         />
       )}
       {!canConfig && tab !== "users" && (
-        <Notice tone="amber">当前身份对部分配置页只读或不可维护。配置管理员与总部监管人员权限不同。</Notice>
+        <Notice tone="amber">当前身份对部分配置页只读或不可维护。</Notice>
       )}
-      <p className="text-[12px] text-textsub">当前用户：{user?.name ?? "—"}。前端权限用于验证产品行为，不等于后端鉴权。</p>
     </div>
   );
 }
@@ -122,7 +115,7 @@ function UsersTab({
         </ul>
       </Card>
       {current && (
-        <Card title={current.name} subtitle="组织范围、动作权限与本级/含下级。保存后刷新仍保留。">
+        <Card title={current.name}>
           <div className="grid grid-cols-2 gap-3 text-[13px]">
             <div>所属组织：{orgName(current.org_id)}</div>
             <div>账号状态：{configStatusLabel(current.status)}</div>
@@ -161,9 +154,6 @@ function ScenariosTab() {
   const children = subs.filter((s) => s.parent_id === gid || s.group_id === gid || (!s.parent_id && !s.group_id && s.domain === groups.find((g) => g.id === gid)?.domain));
   return (
     <div className="space-y-3">
-      <Notice tone="neutral" title="监管子场景是最小业务分类">
-        一级监管场景下可挂多个子场景；一个子场景可关联多条规则，指标可跨子场景复用。不为规则再建子子场景。停用保留历史，不物理删除。
-      </Notice>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <Card title={`一级监管场景（${groups.length}）`}>
           <DataTable
@@ -191,7 +181,6 @@ function ScenariosTab() {
               { key: "st", title: "状态", width: "88px", render: (r) => configStatusLabel(r.status) },
             ]}
           />
-          <p className="text-[12px] text-textsub mt-2">目录共 {subs.length} 项。本表按所选一级场景筛选，不等于已运行监测数量。</p>
         </Card>
       </div>
     </div>
@@ -230,7 +219,7 @@ function RulesTab({
   const r01 = risks.find((r) => r.id === "R01");
   return (
     <div className="space-y-3">
-      <Card title={ex.name} subtitle="独立草稿。试算不改变历史事项，发布前不进入首页统计。">
+      <Card title={ex.name}>
         {!canBusiness && (
           <Notice tone="neutral" title="独立测试输入">
             当前身份无业务数据权限，试算只使用独立测试样本，不读取总部或单位项目金额。
@@ -299,7 +288,7 @@ function IndicatorsTab() {
   });
   return (
     <div className="space-y-3">
-      <Card title="指标试算（已有计算器）" subtitle="公式属于指标定义；阈值属于规则，不混在一条公式里。">
+      <Card title="指标试算（已有计算器）">
         {!canBusiness ? (
           <Notice tone="neutral">
             当前身份无业务数据权限，不能用总部项目金额试算指标。规则与指标定义仍可查阅；监测规则 Tab 提供独立测试输入。
@@ -330,7 +319,7 @@ function IndicatorsTab() {
           />
         )}
       </Card>
-      <Card title={`指标目录（${config.indicator_definitions.length}）`} subtitle="38 项原指标均可查定义；首页只展示已具备可靠输入的重点指标。">
+      <Card title={`指标目录（${config.indicator_definitions.length}）`}>
         <DataTable
           dense
           rows={config.indicator_definitions}
@@ -381,12 +370,16 @@ function DataTab({
       <Card title="数据说明">
         <p className="text-[14px] leading-6">{config.data_notice.text}</p>
       </Card>
-      <Card title="覆盖与准备情况" subtitle="已完成观察按事实计数；覆盖规划候选不进入应评估分母。">
-        <p className="text-[13px]">
-          已完成监测关联 {observed} 条；适用性尚待确认的覆盖规划候选 {candidates} 条，下沉本页，不在业务首页渲染为“数据不足”。
-        </p>
+      <Card title="覆盖与准备情况">
+        <DescList
+          cols={2}
+          items={[
+            { label: "已完成监测", value: <span className="num">{observed} 条</span> },
+            { label: "覆盖规划候选", value: <span className="num">{candidates} 条</span> },
+          ]}
+        />
       </Card>
-      <Card title="实施调研对应（待核实）" subtitle="系统名称、接口和更新频率未经科技信息部确认。">
+      <Card title="实施调研对应（待核实）">
         <ul className="text-[13px] text-textsub space-y-1.5 list-disc pl-5">
           <li>组织与用户目录：管理单位与法人如何区分，跨单位项目如何归属。</li>
           <li>投资计划执行率：计划与完成投资分别来自哪个台账，累计/发生如何区分。</li>

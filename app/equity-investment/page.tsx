@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
-import { Button, Card, DataTable, Notice, Tag } from "@/components/ui";
+import { Button, Card, DataTable, Tag } from "@/components/ui";
 import { seed } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { fmtAmount, fmtDate, fmtPct, fmtSignedPct } from "@/lib/format";
@@ -16,17 +16,6 @@ import type { EquityProject } from "@/lib/types";
  * 不驱动投资审批，也不按节点序号强制业务串行。
  */
 
-const PHASE_FOCUS: Record<string, string> = {
-  "EQ-V12-01": "监管重点：经营基础与预测依据、重大风险、专业报告矛盾或缺失（EQ-S02、03、07）。可查看财务/法律/业务及 HSE 尽调、中介独立性。",
-  "EQ-V12-02": "监管重点：价格与同权益估值、协同依据、条款与风险对应（EQ-S04、05、06、10、14）。EQ-S06/10/14 为专业核查依据，不设“条款充分率”等自动 KRI。",
-  "EQ-V12-03": "监管重点：适用程序证据、授权版本、决策方案及重大风险响应（EQ-S08、09、18）。查看业务发生当时的有效授权版本。",
-  "EQ-V12-04": "监管重点：逐笔付款条件、有效方案与实际交易、权属及登记衔接（EQ-S15、19）。已完成阶段仍展示未关闭问题，如产权来源差异 R08。",
-  "EQ-V12-05": "监管重点：到期出资缺口、各方义务与额外资金支持、付款条件（EQ-S12、EQ-X01）。交割与出资分别保存状态，交易价款、增资款、分期出资不是同一字段。",
-  "EQ-V12-06": "监管重点：权利执行、约定报送、整合节点、经营风险处置（EQ-S13、16、17）。不自动认定管理失控。",
-  "EQ-V12-07": "监管重点：现金回报偏差、分红到期回收、目标兑现、财务确认价值变化（EQ-S11、EQ-X02）。现金回报与会计收益分别追溯，不重复汇总。",
-  "EQ-V12-08": "监管重点：评价计划及完成证据、目标差异及整改；已触发退出事项的履行（EQ-S20）。无退出事项时显示“暂无适用退出事项”，不显示逾期。",
-};
-
 function EquityLedger({ helpers }: { helpers: DomainHelpers }) {
   const { filters, risks, canAct } = useDemoStore();
   const orgIds = helpers.orgIds;
@@ -35,7 +24,6 @@ function EquityLedger({ helpers }: { helpers: DomainHelpers }) {
   return (
     <Card
       title="投资项目台账"
-      subtitle="一个被投企业可关联多个投资项目；法人事件按唯一事件计数后再关联项目，不按持股比例替代会计确认"
       right={
         <Button
           disabled={!canAct("business.export")}
@@ -178,26 +166,18 @@ function EquityLedger({ helpers }: { helpers: DomainHelpers }) {
           },
         ]}
       />
-      <div className="mt-3">
-        <Notice tone="neutral" title="收益与交易口径">
-          会计收益率＝报告期经财务确认且去重的投资收益 ÷ 同范围期初期末投资账面余额平均数，不自动年化；
-          股利与处置收益若已含在会计投资收益中不再相加。投资收益实现偏差率使用实际收到的现金分红与已实现退出收益，
-          被投企业利润、未实现估值增值与退出收款中的投资本金不计入。
-        </Notice>
-      </div>
     </Card>
   );
 }
 
 function PostInvestment({ helpers }: { helpers: DomainHelpers }) {
-  const { filters } = useDemoStore();
   const orgIds = helpers.orgIds;
   const projects = seed.equity_projects.filter((p) => orgIds.has(p.owner_org_id));
   const obligations = seed.obligations.filter((o) => projects.some((p) => p.id === o.project_id));
 
   return (
     <div className="space-y-4">
-      <Card title="出资与分红义务履约" subtitle="EQ-X01 到期出资义务履约、EQ-X02 已决议分红回收；与资金领域共用同一义务与收款记录">
+      <Card title="出资与分红义务履约">
         <DataTable
           rows={obligations}
           rowKey={(o) => o.id}
@@ -256,15 +236,9 @@ function PostInvestment({ helpers }: { helpers: DomainHelpers }) {
             },
           ]}
         />
-        <div className="mt-3">
-          <Notice tone="neutral" title="口径提示">
-            到期履约率＝已匹配到期义务的实际履约金额 ÷ 到期应履约金额；提前支付与未到期义务不作为逾期分母。
-            已决议尚未到期与投资方案目标未实现分别显示。
-          </Notice>
-        </div>
       </Card>
 
-      <Card title="投后经营与收益" subtitle="目标与实际、会计收益、现金分红、减值分别展示，不互相替代">
+      <Card title="投后经营与收益">
         <DataTable
           rows={projects}
           rowKey={(p) => p.id}
@@ -349,9 +323,7 @@ export default function Page() {
   return (
     <DomainPage
       domain="EQ"
-      intro="以海油工程作为投资主体的管理范围，覆盖投资项目、投资方、被投企业、交易、出资、治理、收益、重大事件与后评价。被投企业不并入海油工程管理组织树。"
       kpiIndicatorIds={["EQ-BALANCE", "EQ-I11", "EQ-I15", "EQ-CASH-DEVIATION", "EQ-X01-RATE", "EQ-OPEN"]}
-      phaseFocus={PHASE_FOCUS}
       ledger={(h) => <EquityLedger helpers={h} />}
       tabs={[
         { id: "post", label: "投后监管", render: (h) => <PostInvestment helpers={h} /> },

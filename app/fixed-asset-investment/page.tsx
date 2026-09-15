@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
-import { Button, Card, DataTable, Notice, SimulatedBadge, Tag, inputClass, selectClass } from "@/components/ui";
+import { Button, Card, DataTable, SimulatedBadge, Tag, inputClass, selectClass } from "@/components/ui";
 import { seed } from "@/lib/seed";
 import { intersectOrgScope } from "@/lib/config";
 import { orgName } from "@/lib/org";
@@ -16,17 +16,6 @@ import type { Asset, FixedAssetProject } from "@/lib/types";
  * P20 固定资产投资管理。8 个环节固定为 FA-V12-01 至 FA-V12-08，
  * 末环节合并资产运营与投资后评价两个子主题（完整业需 7.3）。
  */
-
-const PHASE_FOCUS: Record<string, string> = {
-  "FA-V12-01": "监管重点：需求与存量资产是否匹配、项目准入规则是否更新（FA-S04、FA-S25）。子环节：需求识别、存量能力核实、项目准入、储备更新。",
-  "FA-V12-02": "监管重点：论证依据、基础数据与重大风险，中介独立性（FA-S03、07、08、09；审批结果关联 FA-S02）。子环节：可研编制、基础数据核验、收益及风险论证、中介独立性核查、专业审查。",
-  "FA-V12-03": "监管重点：材料审批、千万元以下适用报备、超授权与拆分规避（FA-S02、10、12、13）。子环节：方案审议、授权核对、适用报批报备、决策结论及条件落实。",
-  "FA-V12-04": "监管重点：概算编制基础、适用审查、与可研批准估算的差异处理（FA-S05、06）。部分项目无独立初设概算环节，按适用条件显示“不适用”，不虚造批复。",
-  "FA-V12-05": "监管重点：提前采办条件、应招未招、关联线索与关键资质（FA-S14 至 18）。询价、选商与对外签约/支出分别记录。",
-  "FA-V12-06": "监管重点：未批实施、设计变更、超概、进度、成本、环境变化、实施备案与计划资金衔接（FA-S11、19 至 24、34）。",
-  "FA-V12-07": "监管重点：分批验收、达到预定可使用状态、实际投用、价值归集与转固办理（新增 FA-X01）；权属登记 FA-S32、境外安排 FA-S31/33 关联查看。",
-  "FA-V12-08": "监管重点：资产运营（利用、盘活、权属及境外安排、减值迹象，FA-S29 至 33、35）与投资后评价（计划、评价、目标实现、问题整改，FA-S26 至 28）。资产投用运营在前，后评价依赖实际运营数据，二者并存而非先后互斥。",
-};
 
 function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
   const { filters, risks, canAct } = useDemoStore();
@@ -53,7 +42,6 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
   return (
     <Card
       title="投资项目台账"
-      subtitle="“项目当前业务阶段”筛选与首页“问题所属环节”筛选是两个独立条件，不互相覆盖"
       right={
         <Button
           disabled={!canAct("business.export")}
@@ -190,7 +178,6 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
                 {p.eac_complete === false && <span className="text-[11px] text-textsub"> 下限</span>}
               </span>
             ),
-            hint: "构成不完整时显示已知下限，不标为完整 EAC",
           },
           {
             key: "dev",
@@ -265,7 +252,7 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
 }
 
 function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
-  const { filters, risks } = useDemoStore();
+  const { risks } = useDemoStore();
   const orgIds = helpers.orgIds;
   const assets = useMemo(() => seed.assets.filter((a) => orgIds.has(a.owner_org_id)), [orgIds]);
 
@@ -279,28 +266,27 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
     <div className="space-y-4">
       <Card
         title="资产运营监管"
-        subtitle="重大资产账面净值、低利用率占比、低效闲置、权属与减值迹象分别统计，不把月度利用率标为年度效益"
       >
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: "纳入监测重大资产净值", value: fmtAmount(majorNet), unit: "万元", note: `${majors.length} 项重大资产` },
+            { label: "纳入监测重大资产净值", value: fmtAmount(majorNet), unit: "万元", note: `${majors.length} 项` },
             {
               label: "已确认低利用率净值占比",
               value: majorNet ? fmtPct((lowNet / majorNet) * 100) : "—",
               unit: "",
-              note: "分子为已人工确认低利用率的重大资产净值",
+              note: "",
             },
             {
               label: "正式低效闲置净值",
               value: fmtAmount(idleNet),
               unit: "万元",
-              note: idleNet === 0 ? "低利用率不自动认定闲置" : "已认定闲置",
+              note: "",
             },
             {
               label: "存在减值迹象资产",
               value: String(impairFlag.length),
               unit: "项",
-              note: "减值迹象资产与已计提减值资产分别统计",
+              note: "",
             },
           ].map((k) => (
             <div key={k.label} className="rounded-[8px] border border-line px-4 py-3">
@@ -309,13 +295,13 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
                 {k.value}
                 {k.unit && <span className="text-[13px] text-textsub ml-1">{k.unit}</span>}
               </div>
-              <div className="text-[12px] text-textsub mt-1">{k.note}</div>
+              {k.note ? <div className="text-[12px] text-textsub mt-1">{k.note}</div> : null}
             </div>
           ))}
         </div>
       </Card>
 
-      <Card title="资产运营台账" subtitle="低利用率候选、确认低利用率、正式低效闲置、待盘活、盘活中、已完成是不同状态">
+      <Card title="资产运营台账">
         <DataTable<Asset>
           rows={assets}
           rowKey={(a) => a.id}
@@ -355,7 +341,6 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
                   </span>
                 );
               },
-              hint: "季度为触发依据，月度明细仅作趋势",
             },
             {
               key: "state",
@@ -389,17 +374,8 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
             },
           ]}
         />
-        <div className="mt-3 space-y-2">
-          <Notice tone="neutral" title="资产汇总口径">
-            同一资产仅按已定义归属汇总一次；多个工程项目使用同一资产时，利用量按不重叠使用记录归集，不把完整资产净值分配到每个项目后重复汇总。
-            资产利用率只汇总同类别、同计量口径的使用量与可利用量，小时、天数与产能不相加。
-          </Notice>
-          <div className="flex items-center gap-2">
-            <SimulatedBadge text="配置阈值参数" />
-            <span className="text-[12px] text-textsub">
-              利用率目标为模拟参数，正式落地按同类别批准目标替换（见数据依据页“待确认参数”）。
-            </span>
-          </div>
+        <div className="mt-3">
+          <SimulatedBadge text="配置阈值参数" />
         </div>
       </Card>
     </div>
@@ -415,10 +391,7 @@ function TransferLedger() {
   const projects = seed.fixed_asset_projects.filter((p) => orgIds.has(p.owner_org_id));
 
   return (
-    <Card
-      title="验收投用与转固衔接（FA-X01 补充场景）"
-      subtitle="分别保存验收、达到预定可使用状态、实际投用、转固与后评价状态；尚未取得办理期限时只显示待核查，不编造法定天数"
-    >
+    <Card title="验收投用与转固衔接（FA-X01 补充场景）">
       <DataTable
         rows={projects}
         rowKey={(p) => p.id}
@@ -447,11 +420,6 @@ function TransferLedger() {
           { key: "post", title: "后评价计划", width: "130px", render: (p) => <span className="num">{fmtDate(p.post_evaluation_due)}</span> },
         ]}
       />
-      <div className="mt-3">
-        <Notice tone="amber" title="补充设计">
-          FA-X01 及补充指标 FA-XI01/XI02/XI03 明确标为本业需补充设计，不是投资底稿原始场景；分批验收、分批投用、分批转固分别建批次。
-        </Notice>
-      </div>
     </Card>
   );
 }
@@ -460,9 +428,7 @@ export default function Page() {
   return (
     <DomainPage
       domain="FA"
-      intro="从投资需求、论证审批、建设投入，监管到资产投用、运营效益、盘活与后评价。项目类型与资产类别分别用于匹配监测口径，不作为同一字段。"
       kpiIndicatorIds={["FA-CNT-PROJECT", "FA-I06", "FA-CNT-OVERBUDGET", "FA-I07", "FA-I14", "FA-OPEN"]}
-      phaseFocus={PHASE_FOCUS}
       subtopicByPhase={{
         "FA-V12-08": [
           { id: "operation", label: "资产运营", note: "按资产统计：利用、盘活、权属及境外安排、减值迹象（FA-S29 至 33、35）" },

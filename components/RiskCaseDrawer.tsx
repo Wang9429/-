@@ -25,7 +25,7 @@ import {
   taskTypeLabel,
 } from "@/lib/risks";
 import { DOMAIN_META, evidenceById, phaseName, scenarioName, seed, topicName } from "@/lib/seed";
-import { orgName, orgPath } from "@/lib/org";
+import { orgPath } from "@/lib/org";
 import { daysBetween, fmtDate } from "@/lib/format";
 import { isIndependentReviewer, objectAllowed, riskVisible } from "@/lib/config";
 import { draftsForRisk } from "@/lib/materials";
@@ -276,7 +276,6 @@ function RiskCaseDrawerBody({
           <span>
             涉及领域：
             {risk.domains.map((d) => DOMAIN_META[d].label).join("、")}
-            {risk.domains.length > 1 && "（跨领域同一事项，各领域按同一事项展示，不复制）"}
           </span>
           {sourceLabel && <span>来源：{sourceLabel}</span>}
           <SimulatedBadge text={`数据性质：${risk.data_nature === "simulated" ? "合成样例" : risk.data_nature}`} />
@@ -507,7 +506,6 @@ function RiskCaseDrawerBody({
                         {r.window_start} ~ {r.window_end}
                       </span>
                     ),
-                    hint: "监测与命中按窗口结束日归属期间，不按重叠月份分摊",
                   },
                   {
                     key: "result",
@@ -681,9 +679,6 @@ function RiskCaseDrawerBody({
                   </ul>
                 </>
               )}
-              <Notice tone="neutral" title="办理时间口径">
-                业务生效日期按截至日 {filters.asOf} 记录，本地操作实际时间单独保留，不互相替代。
-              </Notice>
             </>
           )}
 
@@ -710,9 +705,6 @@ function RiskCaseDrawerBody({
                   { key: "sub", title: "子主题", render: (l) => l.subtopic_id ?? "—" },
                 ]}
               />
-              <Notice tone="neutral" title="跨领域口径">
-                同一事项可出现在多个领域，综合总览按事项只计一件；各领域事项数之和可能大于总数。
-              </Notice>
               <div className="flex flex-wrap gap-2">
                 {risk.domains.map((d) => (
                   <Link
@@ -730,9 +722,6 @@ function RiskCaseDrawerBody({
                   打开主对象档案 {risk.primary_object_id} ›
                 </Link>
               </div>
-              <p className="text-[12px] text-textsub">
-                责任单位：{orgName(risk.owner_org_id)}；跨领域查看保留同一事项与对象，不复制事项。
-              </p>
             </>
           )}
         </div>

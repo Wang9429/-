@@ -8,19 +8,11 @@ import { analyzeWindow, overlappingEvents } from "@/lib/market";
 import { seed } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { fmtAmount, fmtPct, fmtPp, fmtSignedPct } from "@/lib/format";
-import { useDemoStore } from "@/lib/store";
 
 /**
  * P30 国际化业务（完整业需第 9 章）。地区是辅助分组，不代替管理树；
  * 行情曲线明确标识为模拟重放，不表述为实际历史涨跌。
  */
-
-const TOPIC_FOCUS: Record<string, string> = {
-  "INT-T01": "监管重点：区域安全与监管变化对境外机构、工程项目、投资和资产的影响（INT-R01、R05）。地区匹配用于筛选候选业务，是否实际适用由有依据的规则或专业人员确认。",
-  "INT-T02": "监管重点：航运变化与未定价成本上升（INT-R02、R03）。只计算未锁价、未结算且在影响期间内的敞口。",
-  "INT-T03": "监管重点：境外应收与汇兑异常（INT-R04）。关联资金领域同一事项，不另建重复风险。",
-  "INT-T04": "监管重点：境外项目结束资产未安排（INT-R06，复用 FA-R31-01）与重大变化后未重评（INT-R07）。",
-};
 
 function EventMarket() {
   const [eventId, setEventId] = useState("EVT-HIST-01");
@@ -47,7 +39,7 @@ function EventMarket() {
 
   return (
     <div className="space-y-4">
-      <Card title="国际事件台账" subtitle="重复报道归并为同一事件，新闻条数不作为重大风险事件数">
+      <Card title="国际事件台账">
         <DataTable
           rows={seed.international_events}
           rowKey={(e) => e.id}
@@ -70,7 +62,6 @@ function EventMarket() {
                   {e.reported_at ?? "—"} / {e.latest_verified_at ?? "—"}
                 </span>
               ),
-              hint: "事件时间与报道时间分开记录",
             },
             {
               key: "nature",
@@ -98,7 +89,6 @@ function EventMarket() {
 
       <Card
         title="历史事件窗口比较"
-        subtitle="标准化值 = 价格 ÷ 基期价格 × 100；窗口内涨跌只说明同期变化，不表达“该事件导致涨价X%”的因果结论"
         right={
           <div className="flex items-center gap-2">
             <select className={`${selectClass} w-[130px]`} value={before} onChange={(e) => setBefore(Number(e.target.value))}>
@@ -205,7 +195,6 @@ function EventMarket() {
                     {s.postVolatility === null ? `样本不足（${s.postSamples}）` : fmtPct(s.postVolatility)}
                   </span>
                 ),
-                hint: "日频年化因子 252，至少 20 个有效收益率样本；不插值、不前值填充",
               },
             ]}
           />
@@ -219,14 +208,11 @@ function EventMarket() {
           )}
           {overlaps.length > 0 && (
             <Notice tone="neutral" title="窗口内其他事件">
-              {overlaps.map((e) => `${e.event_date} ${e.title}`).join("；")}。多个事件重叠时不将变化归因于单一事件。
+              {overlaps.map((e) => `${e.event_date} ${e.title}`).join("；")}
             </Notice>
           )}
-          <div className="flex items-center gap-2">
+          <div>
             <SimulatedBadge text="行情模拟重放" />
-            <span className="text-[12px] text-textsub">
-              真实历史事件日期仅作对比锚点；曲线为模拟生成序列，不能称为实际历史涨跌。BDI 等干散货指数不直接代替海工重件运输价格。
-            </span>
           </div>
         </div>
       </Card>
@@ -253,10 +239,7 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
 
   if (!inScope || !steel || !freight || !project) {
     return (
-      <EmptyState
-        title="当前范围没有可测算敞口"
-        detail="钢材与运费敞口归属境外工程项目。授权范围或筛选范围内没有该项目时，不读取全量敞口金额。"
-      />
+      <EmptyState title="当前范围没有可测算敞口" />
     );
   }
 
@@ -272,10 +255,7 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
 
   return (
     <div className="space-y-4">
-      <Card
-        title="影响测算（成本敏感性）"
-        subtitle="只计算未锁价、未结算且在影响期间内的敞口；调整情景只改变模拟结果，不修改工程项目实际预测基准，也不生成已发生损失"
-      >
+      <Card title="影响测算（成本敏感性）">
         <div className="grid lg:grid-cols-2 gap-6">
           <div>
             <h4 className="text-[15px] font-semibold text-textmain mb-2">钢材敞口（{steel.specification}）</h4>
@@ -289,7 +269,7 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
               <Field label="价格变化比例（%）">
                 <input className={inputClass} type="number" value={steelShock} onChange={(e) => setSteelShock(Number(e.target.value))} />
               </Field>
-              <Field label="经确认可转嫁比例（%）" hint="仅使用已确认可转嫁份额，不按预期估计">
+              <Field label="经确认可转嫁比例（%）">
                 <input className={inputClass} type="number" value={passThrough} onChange={(e) => setPassThrough(Number(e.target.value))} />
               </Field>
             </div>
@@ -315,24 +295,21 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
               运费增量 = {freightBase} × {freightShock}% ={" "}
               <span className="num text-textmain">{fmtAmount(freightIncrease)} 万元</span>
             </p>
-            <p className="text-[12px] text-textsub mt-2">
-              同一成本不从采购口径与合同口径重复计入；不同币种按明示的模拟汇率换算。
-            </p>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { label: "基准预计完工成本", value: fmtAmount(baseCost), note: "实际预测基准，不被情景修改" },
+            { label: "基准预计完工成本", value: fmtAmount(baseCost), note: "" },
             { label: "模拟增量合计", value: fmtAmount(total), note: "钢材 + 运输" },
-            { label: "模拟预计完工成本", value: fmtAmount(scenarioCost), note: "仅情景结果" },
+            { label: "模拟预计完工成本", value: fmtAmount(scenarioCost), note: "" },
             { label: "基准毛利率", value: fmtPct(baseMargin), note: `有效合同收入 ${fmtAmount(project.contract_revenue_ex_vat)} 万元` },
             { label: "情景毛利率", value: fmtPct(scenarioMargin), note: `较基准 ${fmtPp(scenarioMargin - baseMargin)}` },
           ].map((k) => (
             <div key={k.label} className="rounded-[8px] border border-line px-3.5 py-3">
               <div className="text-[12px] text-textsub">{k.label}</div>
               <div className="num text-[22px] font-semibold text-textmain mt-1">{k.value}</div>
-              <div className="text-[12px] text-textsub mt-1">{k.note}</div>
+              {k.note ? <div className="text-[12px] text-textsub mt-1">{k.note}</div> : null}
             </div>
           ))}
         </div>
@@ -345,7 +322,7 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
         </div>
       </Card>
 
-      <Card title="敞口台账" subtitle="敞口按项目、事件与类别登记；已包含在基准 EAC 的敞口单独标注">
+      <Card title="敞口台账">
         <DataTable
           rows={exposures}
           rowKey={(e) => e.id}
@@ -384,14 +361,13 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
 }
 
 function OverseasProjects({ helpers }: { helpers: DomainHelpers }) {
-  const { filters } = useDemoStore();
   const orgIds = helpers.orgIds;
   const projects = seed.engineering_projects.filter((p) => orgIds.has(p.owner_org_id) && p.country !== "中国");
   const overseasOrgs = seed.organizations.filter((o) => o.node_type === "branch");
 
   return (
     <div className="space-y-4">
-      <Card title="境外项目穿透" subtitle="项目数与合同额按项目ID去重；一个项目可涉及实施国、供应来源国、运输途经国等多个地区">
+      <Card title="境外项目穿透">
         <DataTable
           rows={projects}
           rowKey={(p) => p.id}
@@ -425,7 +401,7 @@ function OverseasProjects({ helpers }: { helpers: DomainHelpers }) {
         />
       </Card>
 
-      <Card title="境外机构与主体" subtitle="境外分支机构不是自动独立法人；管理归属与法律主体分别记录">
+      <Card title="境外机构与主体">
         <DescList
           cols={2}
           items={overseasOrgs.map((o) => ({
@@ -443,10 +419,8 @@ export default function Page() {
   return (
     <DomainPage
       domain="INTL"
-      intro="围绕境外业务在哪里、受什么外部因素影响、影响哪些具体业务、当前如何应对展开。国家地区是辅助分组，可切换查看，不代替管理树。"
       kpiIndicatorIds={["INTL-CNT", "INTL-EXPOSURE", "INTL-AFFECTED", "INTL-OPEN"]}
       flowMode="topics"
-      topicFocus={TOPIC_FOCUS}
       ledger={() => <EventMarket />}
       tabs={[
         { id: "market", label: "事件与市场", render: () => <EventMarket /> },

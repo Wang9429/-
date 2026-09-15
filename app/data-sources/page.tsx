@@ -105,13 +105,7 @@ export default function DataSourcesPage() {
         </Notice>
       )}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">数据依据</h1>
-          <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
-            数据情况、拟来源边界、规则与数据版本、导入模板与办理状态维护。可判定覆盖率 = 适用且具备完整判断数据的
-            对象×规则实例数 ÷ 应评估的适用对象×规则实例数；分母是对象与规则的组合实例，不是配置规则数量，覆盖率也不称为合规率。
-          </p>
-        </div>
+        <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">数据依据</h1>
         <div className="flex items-center gap-2">
           <Tag tone="brand">种子版本 {seed.version}</Tag>
         </div>
@@ -130,7 +124,7 @@ export default function DataSourcesPage() {
 
       {tab === "coverage" && (
         <>
-          <Card title="按领域的可判定覆盖" subtitle="缺失数据不以零替代；显示已覆盖对象数与缺失范围">
+          <Card title="按领域的可判定覆盖">
             <DataTable
               rows={domainBreakdown}
               rowKey={(d) => d.domain}
@@ -166,7 +160,7 @@ export default function DataSourcesPage() {
             />
           </Card>
 
-          <Card title="监测状态分布" subtitle="覆盖表为单一来源，不拼接“记录数组”重复计数">
+          <Card title="监测状态分布">
             <DescList
               cols={3}
               items={Object.entries(statusBreakdown).map(([k, v]) => ({
@@ -174,20 +168,14 @@ export default function DataSourcesPage() {
                 value: <span className="num">{v} 条</span>,
               }))}
             />
-            <div className="mt-3">
-              <Notice tone="neutral" title="状态含义">
-                “没有命中”只有在适用性与必要数据均明确时才显示正常。无法确认资产是否需登记、付款数据是否完整或收益目标是否可比时，
-                显示具体缺口而不是 0 或绿色。
-              </Notice>
-            </div>
           </Card>
 
-          <Card title="样例数据范围" subtitle="完整业需 16.1">
+          <Card title="样例数据范围">
             {canSeeCounts ? (
             <DescList
               cols={4}
               items={[
-                { label: "业务截至日", value: <span className="num">{AS_OF}</span>, hint: "固定，不随电脑当天日期变化" },
+                { label: "业务截至日", value: <span className="num">{AS_OF}</span> },
                 { label: "默认统计期间", value: <span className="num">2026-01-01 ~ 2026-06-30</span> },
                 { label: "组织管理节点", value: <span className="num">{seed.organizations.length} 个</span> },
                 { label: "法律主体", value: <span className="num">{seed.legal_entities.length} 个</span> },
@@ -215,7 +203,7 @@ export default function DataSourcesPage() {
       )}
 
       {tab === "sources" && (
-        <Card title="拟来源与无接口时的处理" subtitle="“拟来源”不表示现有接口已经打通；补录仅针对确实缺少来源的数据、核查说明与证据">
+        <Card title="拟来源与无接口时的处理">
           <DataTable
             rows={SOURCE_ROWS}
             rowKey={(r) => r.content}
@@ -231,12 +219,6 @@ export default function DataSourcesPage() {
               },
             ]}
           />
-          <div className="mt-3">
-            <Notice tone="amber" title="演示边界">
-              正式接口、实时行情、生产单点登录与真实模型调用不在本 Demo 范围。平台优先读取业务系统已有字段，
-              不要求每个项目重录组织、合同、资产与已批准计划。
-            </Notice>
-          </div>
         </Card>
       )}
 
@@ -244,7 +226,6 @@ export default function DataSourcesPage() {
         <>
           <Card
             title="导入模板"
-            subtitle="至少提供进度、预测补充、境外付款、资产运行、被投企业经营数据五类；首版实现进度模板的预览、错误提示与确认导入联动"
             right={
               <Button variant="primary" disabled={!canImport} title={canImport ? "预览进度模板" : "当前身份不能导入"} onClick={() => setImportOpen(true)}>
                 预览并导入进度模板
@@ -272,9 +253,9 @@ export default function DataSourcesPage() {
             />
           </Card>
 
-          <Card title="导入批次记录" subtitle="确认导入后重新计算受影响指标并保留批次，不随意覆盖已批准基准">
+          <Card title="导入批次记录">
             {imports.length === 0 ? (
-              <EmptyState title="尚无导入批次" detail="本次会话还没有确认导入的批次；重置业务办理状态会清除本地批次记录。" />
+              <EmptyState title="尚无导入批次" />
             ) : (
               <DataTable
                 rows={imports}
@@ -305,7 +286,7 @@ export default function DataSourcesPage() {
 
       {tab === "version" && (
         <>
-          <Card title="版本信息" subtitle="文件版本日期与业务截至日期分别显示">
+          <Card title="版本信息">
             <DescList
               cols={3}
               items={[
@@ -319,7 +300,7 @@ export default function DataSourcesPage() {
             />
           </Card>
 
-          <Card title="正式落地前需确认的参数" subtitle="完整业需 18.1；用于替换演示配置与实施接口，不作为 Demo 前置阻塞">
+          <Card title="正式落地前需确认的参数">
             <DataTable
               rows={[
                 { k: "组织层级与法人关系", v: "虚构组织树；支持缺级、分支及同法人下多个管理单位", who: "组织管理及相关业务部门" },
@@ -343,7 +324,7 @@ export default function DataSourcesPage() {
             />
           </Card>
 
-          <Card title="业务办理状态" subtitle="重置只恢复核查整改等办理状态，不清除用户与规则配置；原始种子文件不会被修改">
+          <Card title="业务办理状态">
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="primary"
@@ -388,9 +369,6 @@ export default function DataSourcesPage() {
         title="进度导入模板 · 导入前预览"
         footer={
           <div className="flex items-center gap-2 justify-end">
-            <span className="text-[12px] text-textsub mr-auto">
-              失败行不会被静默丢弃：错误行保留并提示具体原因，可修正后重新导入。
-            </span>
             <Button onClick={() => setImportOpen(false)}>取消</Button>
             <Button
               variant="primary"

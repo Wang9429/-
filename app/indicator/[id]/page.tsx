@@ -39,24 +39,7 @@ export default function IndicatorPage() {
         )}
       </div>
 
-      <Card
-        title={def ? `${def.name}（${def.unit}）` : `指标 ${id}`}
-        subtitle={def ? `${DOMAIN_META[def.domain].label}指标范围｜${scopeLabel}｜截至 ${filters.asOf}` : undefined}
-      >
-        {def ? (
-          <div className="text-[13px] text-textsub space-y-1.5">
-            <p>公式：{def.formula}</p>
-            <p>口径：{def.caliber}</p>
-            <p>数据来源：{def.sourceNote}</p>
-          </div>
-        ) : (
-          <Notice tone="amber" title="指标不存在">
-            {id} 不在当前指标目录中。可在场景规则库查看原 KRI 与已实现指标的对应关系。
-          </Notice>
-        )}
-      </Card>
-
-      {def && (
+      {def ? (
         <IndicatorDrawer
           open
           onClose={() => router.back()}
@@ -69,6 +52,12 @@ export default function IndicatorPage() {
           onOpenObject={(oid) => router.push(`/object/${oid}`)}
           onOpenRisk={() => router.push("/supervision-workbench")}
         />
+      ) : (
+        <Card title={`指标 ${id}`}>
+          <Notice tone="amber" title="指标不存在">
+            {id} 不在当前指标目录中。
+          </Notice>
+        </Card>
       )}
     </div>
   );

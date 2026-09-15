@@ -23,7 +23,6 @@ import {
   type ScopeFilter,
 } from "@/lib/monitoring";
 import {
-  monitoringStatusLabel,
   objectTypeLabel,
   scenarioAdoption,
   scenarioName,
@@ -106,13 +105,11 @@ export default function ScenarioExecutionPanel({
   orgIds,
   allowedObjectIds,
   scopeTitle,
-  focusNote,
   subtopicOptions,
   onSubtopicChange,
   onOpenRisk,
   onOpenObject,
   onOpenScenario,
-  extraScopeNote,
 }: {
   domain: DomainId;
   phaseId?: string | null;
@@ -121,13 +118,11 @@ export default function ScenarioExecutionPanel({
   orgIds: Set<string>;
   allowedObjectIds: string[] | null;
   scopeTitle: string;
-  focusNote?: string;
   subtopicOptions?: SubtopicOption[];
   onSubtopicChange?: (id: string) => void;
   onOpenRisk: (id: string) => void;
   onOpenObject?: (id: string) => void;
   onOpenScenario?: (id: string) => void;
-  extraScopeNote?: string;
 }) {
   const { filters, risks, canAct } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
@@ -259,7 +254,6 @@ export default function ScenarioExecutionPanel({
     <div className="space-y-4" id="scenario-execution">
       <Card
         title={`当前环节：${scopeTitle}`}
-        subtitle={focusNote}
         right={
           subtopicOptions && subtopicOptions.length > 0 ? (
             <div className="flex items-center gap-1.5">
@@ -269,7 +263,6 @@ export default function ScenarioExecutionPanel({
                   <button
                     key={o.id}
                     onClick={() => onSubtopicChange?.(o.id)}
-                    title={o.note}
                     className={`h-8 px-3 text-[12px] transition-colors duration-150 ${
                       (subtopicId ?? subtopicOptions[0].id) === o.id
                         ? "bg-brand text-white"
@@ -289,7 +282,6 @@ export default function ScenarioExecutionPanel({
             <button
               key={it.kind}
               onClick={() => setDetail({ kind: it.kind, scenarioId: null })}
-              title={`点击查看${DETAIL_TITLE[it.kind]}；继承当前组织、期间、环节与场景筛选`}
               className="text-left rounded-[8px] border border-line bg-surface px-3.5 py-3 hover:border-[#c3d8f7] hover:bg-[#fcfdff] transition-colors duration-150"
             >
               <div className="flex items-center justify-between">
@@ -321,40 +313,17 @@ export default function ScenarioExecutionPanel({
           ))}
         </div>
 
-        <div className="mt-3 space-y-2">
-          <Notice tone={summary.partialCoverage ? "amber" : "neutral"} title="覆盖说明">
-            应监测 {summary.requiredObjects.length} 个，已监测 {summary.monitoredObjects.length} 个
-            {summary.partialCoverage ? "，部分覆盖" : ""}。
-            {Object.entries(summary.gapCounts)
-              .filter(([k]) => k !== "evaluated_hit" && k !== "evaluated_clear")
-              .map(([k, v]) => `${monitoringStatusLabel[k] ?? k} ${v} 条`)
-              .join("；") || "无数据缺口"}
-            。“监测对象”不代表该对象全部适用规则都已评估，详细覆盖按对象与规则组合计算。
-          </Notice>
-          {Object.keys(summary.objectTypeBreakdown).length > 1 && (
-            <Notice tone="neutral" title="按对象类型分列">
-              {Object.entries(summary.objectTypeBreakdown)
-                .map(
-                  ([t, v]) =>
-                    `${objectTypeLabel[t] ?? t}：应监测 ${v.required}、已监测 ${v.monitored}、命中 ${v.hit}`,
-                )
-                .join("；")}
-              （不同对象类型不合并成“主体共N个”）
-            </Notice>
-          )}
-          {extraScopeNote && <Notice tone="neutral">{extraScopeNote}</Notice>}
-          {summary.monitoredObjects.length === 0 && summary.openRiskIds.length > 0 && (
+        {summary.monitoredObjects.length === 0 && summary.openRiskIds.length > 0 && (
+          <div className="mt-3">
             <Notice tone="amber" title="历史遗留">
-              本期已监测 0 个、历史未关闭 {summary.openRiskIds.length} 件。事项来自以前期间发现且尚未关闭，
-              不为了让其计入本期监测数而补造本期规则评估。
+              本期已监测 0 个、历史未关闭 {summary.openRiskIds.length} 件。
             </Notice>
-          )}
-        </div>
+          </div>
+        )}
       </Card>
 
       <Card
         title="监管场景执行情况"
-        subtitle="默认按“有高风险未关闭、逾期整改、其他未关闭、数据不足、其余”排序；分页与筛选不影响上方摘要的全量计算"
         right={
           <Button
             disabled={!canAct("business.export")}
@@ -478,14 +447,12 @@ export default function ScenarioExecutionPanel({
               title: "监测状态",
               width: "132px",
               render: (r) => <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>,
-              hint: "多规则时按覆盖与结论呈现，不把有一条正常称为整个场景正常",
             },
             {
               key: "monitored",
               title: "监测对象数",
               align: "right",
               width: "110px",
-              hint: "至少完成一项适用规则评估或一次有结果的人工核查的对象去重数",
               render: (r) =>
                 r.rows.length === 0 ? (
                   <span className="text-textsub">
@@ -588,7 +555,6 @@ export default function ScenarioExecutionPanel({
                 return (
                   <EmptyState
                     title={detail.kind === "monitored" ? "本期尚无已完成监测的对象" : "本期尚无命中对象"}
-                    detail="仅配置规则、收到资料或等待人工结论不算完成监测；已排除的误报不计入命中。"
                   />
                 );
               }
@@ -660,11 +626,6 @@ export default function ScenarioExecutionPanel({
                         ? "所选期间没有复核通过关闭的事项"
                         : "当前范围没有逾期整改事项"
                   }
-                  detail={
-                    detail.kind === "closed"
-                      ? "仅统计复核通过关闭、关闭日期落在所选期间、截至日仍为已关闭且关闭原因为整改完成的事项；已提交、已排除、仅指标恢复不计。"
-                      : "该结论基于当前组织、期间与截至日范围；调整筛选条件可查看其他范围。"
-                  }
                 />
               );
             }
@@ -735,11 +696,8 @@ export default function ScenarioExecutionPanel({
           })()
         )}
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3">
           <SimulatedBadge text="合成样例" />
-          <span className="text-[12px] text-textsub">
-            对象数按对象类型与对象编号去重，事项数按事项去重，二者不是同一计数单位。
-          </span>
         </div>
       </Modal>
     </div>

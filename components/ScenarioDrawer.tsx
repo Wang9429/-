@@ -141,16 +141,8 @@ export default function ScenarioDrawer({
                 { label: "来源", value: supp?.source ?? "本业需补充设计" },
               ]}
             />
-            <Notice tone="amber" title="补充设计场景">
-              本场景不是投资底稿原始场景，为满足业务链条由本业需补充设计，界面明确区分来源，不伪装为制度逐字条款。
-            </Notice>
           </>
         )}
-
-        <Notice tone="neutral" title="制度来源">
-          国务院国资委令第46号《中央企业违规经营投资责任追究实施办法》，2026-01-01 起施行。平台的风险提示仍需经事实核查及有权程序；
-          与附件的逐条对应关系保留为制度条款核对项。
-        </Notice>
 
         {pending && (
           <Notice tone="neutral" title="适用性尚未确认">
@@ -167,13 +159,12 @@ export default function ScenarioDrawer({
               {
                 label: "应评估对象数",
                 value: <span className="num">{counts?.requiredObjects.length ?? 0}</span>,
-                hint: "与场景执行面板同一套覆盖判定；未确认候选不计入",
               },
               {
                 label: "已监测对象数",
                 value: <span className="num">{counts?.monitoredObjects.length ?? 0}</span>,
               },
-              { label: "命中规则种类数", value: <span className="num">{hitTypes.size}</span>, hint: "按规则去重" },
+              { label: "命中规则种类数", value: <span className="num">{hitTypes.size}</span> },
               {
                 label: "命中对象数",
                 value: <span className="num">{counts?.hitObjects.length ?? 0}</span>,
@@ -198,9 +189,6 @@ export default function ScenarioDrawer({
               },
             ]}
           />
-          <p className="text-[12px] text-textsub mt-2">
-            重复跑批的相同命中不累计成多条监管事项；前台不显示无解释的“执行率”。统计继承当前组织、期间与授权范围。
-          </p>
         </div>
 
         <div>
@@ -289,19 +277,11 @@ export default function ScenarioDrawer({
         {rows.length === 0 && riskIds.length === 0 && (
           <EmptyState
             title={pending ? "适用性尚未确认" : "当前范围没有相应业务"}
-            detail={
-              pending
-                ? "覆盖规划候选不计入业务应评估分母，也不显示为数据不足。"
-                : "显示场景定义与适用流程；明确监测完整且没有命中才显示 0，尚缺资料时显示缺口数量与所需材料。"
-            }
           />
         )}
 
-        <div className="flex items-center gap-2">
+        <div>
           <SimulatedBadge text="合成样例" />
-          <span className="text-[12px] text-textsub">
-            场景定义可展示在主阶段和关联阶段；监测与命中只按评估记录实际关联阶段统计，不由场景配置复制。
-          </span>
         </div>
       </div>
     </Drawer>

@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
-import { Button, Card, DataTable, DescList, Notice, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
+import { Button, Card, DataTable, DescList, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
 import { DOMAIN_META, catalog, coverageRows, phaseName, scenarioName, seed } from "@/lib/seed";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
@@ -58,14 +58,7 @@ export default function ScenarioLibraryPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">场景规则库</h1>
-          <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
-            投资底稿目录的 {catalog.counts.source_scenarios} 项监管子场景、{catalog.counts.unique_indicators} 项原监管指标
-            与当前启用的监测规则定义。场景展示一级监管场景、监管子场景，工作表与行号见来源依据；
-            本系统补充场景单独标注来源，不声称来自投资底稿或未经核实的制度条款。
-          </p>
-        </div>
+        <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">场景规则库</h1>
         <Tag tone="neutral">
           场景目录版本 {catalog.version}｜{catalog.document_date}
         </Tag>
@@ -131,16 +124,11 @@ export default function ScenarioLibraryPage() {
           >
             导出当前筛选
           </Button>
-          <span className="text-[12px] text-textsub ml-auto">
-            纳入方式分布：结构化监测 {catalog.counts.adoption_modes["结构化监测"]}、线索核查{" "}
-            {catalog.counts.adoption_modes["线索核查"]}、核查依据 {catalog.counts.adoption_modes["核查依据"]}
-            （按场景×指标出现次数统计）
-          </span>
         </div>
       )}
 
       {tab === "scenarios" && (
-        <Card title="投资子场景" subtitle="点击行打开场景详情；可定位到来源工作表与行号">
+        <Card title="投资子场景">
           <DataTable<CatalogScenario>
             rows={catalogRows}
             rowKey={(s) => s.id}
@@ -188,7 +176,7 @@ export default function ScenarioLibraryPage() {
       )}
 
       {tab === "supplemental" && (
-        <Card title="本业需补充场景" subtitle="为满足资产运营、验收转固、工程、资金、产权与国际化链条补充设计，不是投资底稿原始场景">
+        <Card title="本业需补充场景">
           <DataTable
             rows={suppRows}
             rowKey={(s) => s.id}
@@ -217,10 +205,7 @@ export default function ScenarioLibraryPage() {
       )}
 
       {tab === "indicators" && (
-        <Card
-          title="原 KRI 指标"
-          subtitle="保留底稿指标定义、计算与监控规则原文；参数状态标明是否需要业务确认"
-        >
+        <Card title="原 KRI 指标">
           <DataTable
             rows={catalog.indicators}
             rowKey={(i) => i.id}
@@ -252,7 +237,7 @@ export default function ScenarioLibraryPage() {
       )}
 
       {tab === "rules" && (
-        <Card title="监测规则定义" subtitle="草稿或失效规则不参与评估；启用规则采用明确的配置版本，不暗示已完成企业制度审批">
+        <Card title="监测规则定义">
           <DataTable<MonitoringRuleDefinition>
             rows={rules}
             rowKey={(r) => r.id}
@@ -308,7 +293,7 @@ export default function ScenarioLibraryPage() {
 
       {tab === "params" && (
         <div className="space-y-4">
-          <Card title="规则参数" subtitle="原底稿参数与配置补充参数分别标注；正式启用前需业务确认">
+          <Card title="规则参数">
             <DataTable
               rows={Object.entries(seed.demo_rule_parameters).filter(([, v]) => typeof v === "object" && v !== null)}
               rowKey={([k]) => k}
@@ -337,15 +322,9 @@ export default function ScenarioLibraryPage() {
                 },
               ]}
             />
-            <div className="mt-3">
-              <Notice tone="neutral" title="缺数处理">
-                {String(seed.demo_rule_parameters.default_missing_data_behavior)}；
-                {String(seed.demo_rule_parameters.default_seed_evaluation_scope)}。
-              </Notice>
-            </div>
           </Card>
 
-          <Card title="参数边界与特殊值" subtitle="完整业需 14.3">
+          <Card title="参数边界与特殊值">
             <DescList
               cols={1}
               items={[
@@ -374,7 +353,7 @@ export default function ScenarioLibraryPage() {
             />
           </Card>
 
-          <Card title="场景覆盖候选统计" subtitle="覆盖表为单一来源，按状态区分“已完成监测”与“覆盖候选”，不拼接数组重复计数">
+          <Card title="场景覆盖候选统计">
             <DescList
               cols={4}
               items={[

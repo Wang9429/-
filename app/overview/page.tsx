@@ -39,15 +39,6 @@ const DOMAIN_KPI: Record<DomainId, string> = {
   ENG: "ENG-I01",
 };
 
-const DOMAIN_FOCUS: Record<DomainId, string> = {
-  FA: "预计完工投资偏差",
-  EQ: "到期出资履约",
-  INTL: "航线与成本敞口",
-  CASH: "支付授权核查",
-  RIGHTS: "多来源权益信息核对",
-  ENG: "成本预测与目标差距",
-};
-
 const DOMAIN_ORDER: DomainId[] = ["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"];
 
 function highlightTitle(r: RiskCase): string {
@@ -134,29 +125,22 @@ export default function OverviewPage() {
 
   const scopeLabel = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}`;
   const openCases = (title: string, list: RiskCase[]) => setCaseScope({ title, ids: list.map((r) => r.id) });
-  const domainRefCount = domainSummary.reduce((s, d) => s + d.open.length, 0);
 
   const faDef = indicatorById("FA-I06")!;
   const faMetric = computeIndicator(faDef, orgIds, ctx);
   const faParts = formatMetricParts(faDef, faMetric);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {!can(user, "business.read") && (
         <Notice tone="amber" title="当前身份无业务数据权限">
           配置维护权限不自动带来业务数据。请切换总部或单位监管身份查看指标与事项，或进入系统配置。
         </Notice>
       )}
 
-      <PageHeader title="综合总览" subtitle="总部及所属单位监管情况">
+      <PageHeader title="综合总览">
         <FilterBar />
       </PageHeader>
-
-      <p className="text-[13px] text-textsub leading-5">
-        关注投资成本、资产利用及境外履约，当前有
-        <span className="num text-textmain font-medium"> {overdueRect.length} </span>
-        件整改事项逾期。
-      </p>
 
       <div className="reg-kpis">
         <KpiCard
@@ -187,7 +171,6 @@ export default function OverviewPage() {
           name="其中高风险事项"
           value={red.length}
           unit="件"
-          compare="重点关注"
           compareTone="red"
           icon={<IconAlert size={20} />}
           iconTone="red"
@@ -197,7 +180,6 @@ export default function OverviewPage() {
           name="逾期整改事项"
           value={overdueRect.length}
           unit="件"
-          compare="需跟进"
           compareTone="red"
           icon={<IconClock size={20} />}
           iconTone="amber"
@@ -208,7 +190,6 @@ export default function OverviewPage() {
       <section>
         <div className="flex items-end justify-between gap-3 mb-3">
           <h2 className="text-[16px] font-semibold text-textmain">六领域监管概况</h2>
-          <p className="text-[12px] text-textsub">跨领域关联事项合并计数</p>
         </div>
         <div className="reg-domains">
           {domainSummary.map((s) => {
@@ -257,8 +238,7 @@ export default function OverviewPage() {
                     </div>
                   </button>
                 )}
-                <div className="mt-auto pt-3 flex items-center justify-between gap-2">
-                  <span className="text-[12px] text-textsub leading-5 line-clamp-2">关注：{DOMAIN_FOCUS[s.domain]}</span>
+                <div className="mt-auto pt-3 flex items-center justify-end">
                   <Link href={meta.route} className="text-[13px] text-brand shrink-0 hover:underline">
                     进入领域 →
                   </Link>
@@ -267,14 +247,10 @@ export default function OverviewPage() {
             );
           })}
         </div>
-        <p className="text-[12px] text-textsub mt-2">
-          总览按事项合并计数 {open.length} 件；六领域引用合计 {domainRefCount} 次，引用次数之和可以大于综合总数，不作为新发现事项。
-        </p>
       </section>
 
       <Card
         title="重点关注事项"
-        subtitle="默认展示有依据的三条记录：投资偏差、资产利用及境外毛利"
         right={
           <Link href="/supervision-workbench" className="text-[13px] text-brand hover:underline whitespace-nowrap">
             查看全部 →
@@ -325,7 +301,7 @@ export default function OverviewPage() {
         </div>
       </Card>
 
-      <Card title="单位风险分布" subtitle="单元格为该单位该领域未关闭事项数；合计按事项去重，不由单元格相加">
+      <Card title="单位风险分布">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[14px]">
             <thead>
@@ -357,7 +333,6 @@ export default function OverviewPage() {
                       <button
                         className="hover:text-brand"
                         onClick={() => setFilters({ orgId: o.id, includeChildren: true })}
-                        title="点击进入该单位管理范围"
                       >
                         {o.name}
                       </button>
@@ -399,7 +374,7 @@ export default function OverviewPage() {
       </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card title="待复核事项" subtitle="复核通过并关闭后才计入本期已整改闭环数">
+        <Card title="待复核事项">
           <DataTable
             rows={pendingVerification}
             rowKey={(r) => r.id}
@@ -418,7 +393,7 @@ export default function OverviewPage() {
           />
         </Card>
 
-        <Card title="近期外部事件及受影响对象" subtitle="点击事件进入国际化业务查看关联业务与影响测算">
+        <Card title="近期外部事件及受影响对象">
           <DataTable
             rows={seed.international_events.slice().sort((a, b) => b.event_date.localeCompare(a.event_date))}
             rowKey={(e) => e.id}

@@ -2,8 +2,8 @@
 
 import React, { useMemo, useState } from "react";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
-import { Button, Card, DataTable, Notice, SeverityTag, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
-import { DOMAIN_META, seed } from "@/lib/seed";
+import { Button, Card, DataTable, SeverityTag, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
+import { DOMAIN_META } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import {
   isCurrentTaskOverdue,
@@ -87,11 +87,9 @@ export default function WorkbenchPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="监管工作台"
-        subtitle="从预警确认到整改复核的日常办理入口。与各领域页面共用同一对象与同一事项状态，不生成第二套统计。"
-      />
-      <FilterBar />
+      <PageHeader title="监管工作台">
+        <FilterBar />
+      </PageHeader>
 
       <Tabs
         tabs={VIEWS.map((v) => ({ id: v.id, label: `${v.label}（${counts[v.id as keyof typeof counts]}）` }))}
@@ -101,15 +99,6 @@ export default function WorkbenchPage() {
 
       <Card
         title={VIEWS.find((v) => v.id === view)!.label}
-        subtitle={
-          view === "pending"
-            ? "支持认领、查看事实、补充说明与核查结论；确认需整改必须填写结论、责任与措施"
-            : view === "rectifying"
-              ? "显示措施、责任、有效整改期限与进展；仅改计划日期不自动关闭原事项"
-              : view === "verification"
-                ? "查看前后证据后通过或退回；复核通过才关闭并计入本期已整改闭环"
-                : "包含已排除与已关闭，保留具体结论与历史动作"
-        }
         right={
           <Button
             disabled={!canAct("business.export")}
@@ -202,7 +191,6 @@ export default function WorkbenchPage() {
               title: "关联领域",
               width: "150px",
               render: (r) => r.domains.map((d) => DOMAIN_META[d].short).join("、"),
-              hint: "同一事项跨领域只显示一行，不按领域复制",
             },
             { key: "rule", title: "触发规则", width: "120px", render: (r) => <span className="num text-[12px]">{r.rule_id}</span> },
             { key: "sev", title: "等级", width: "84px", render: (r) => <SeverityTag severity={r.severity} /> },
@@ -222,7 +210,6 @@ export default function WorkbenchPage() {
                   </span>
                 </span>
               ),
-              hint: "当前办理超期按当前核查/整改/复核节点期限计算，与首页“逾期整改”分别计算",
             },
             {
               key: "rectDue",
@@ -254,40 +241,6 @@ export default function WorkbenchPage() {
             },
           ]}
         />
-
-        <div className="mt-3 space-y-2">
-          <Notice tone="neutral" title="办理与期限口径">
-            核查期限、整改期限与复核期限分别保存；调整期限需说明原因与批准依据，原到期日保留，不通过改日期抹掉历史逾期。
-            仅指标恢复、计划改期或源系统状态改变不自动关闭监管事项。
-          </Notice>
-          <Notice tone="amber" title="Demo 办理边界">
-            认领、说明、整改提交与复核更新本地办理状态，立即反映到总览与各领域数量，并可重置业务办理状态。
-            “催办”仅保存带操作者、时间与说明的本地督办记录，不发送邮件、短信或企业消息。正式业务办理仍在相应源系统进行。
-          </Notice>
-        </div>
-      </Card>
-
-      <Card title="办理状态流转" subtitle="待核查 → 核查中 →（排除 / 确认需整改）→ 整改中 → 待复核 →（通过关闭 / 退回整改）；已关闭可凭新证据重开">
-        <div className="flex flex-wrap items-center gap-2 text-[13px]">
-          {[
-            { label: "待核查", tone: "neutral" as const },
-            { label: "核查中", tone: "brand" as const },
-            { label: "整改中", tone: "amber" as const },
-            { label: "待复核", tone: "brand" as const },
-            { label: "已关闭", tone: "green" as const },
-            { label: "已排除", tone: "neutral" as const },
-          ].map((s, i, arr) => (
-            <React.Fragment key={s.label}>
-              <Tag tone={s.tone}>{s.label}</Tag>
-              {i < arr.length - 1 && <span className="text-textsub">→</span>}
-            </React.Fragment>
-          ))}
-        </div>
-        <p className="text-[12px] text-textsub mt-3">
-          “逾期”是叠加状态，不覆盖风险等级；一个已完成业务环节仍可含高风险未关闭事项。
-          种子基线：未关闭 8 件（红 4、黄 4），待核查 5、整改中 3、当前逾期整改 1，已排除 1（
-          {seed.risk_cases.filter((r) => r.status === "excluded").map((r) => r.id).join("、")}）。
-        </p>
       </Card>
 
       <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel="监管工作台" />

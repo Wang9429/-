@@ -7,7 +7,7 @@ import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import ScenarioExecutionPanel, { type SubtopicOption } from "@/components/ScenarioExecutionPanel";
 import ObjectDrawer from "@/components/ObjectDrawer";
-import { Button, Card, DataTable, KpiCard, Notice, SeverityTag, Tabs, Tag } from "@/components/ui";
+import { Button, Card, DataTable, KpiCard, SeverityTag, Tabs, Tag } from "@/components/ui";
 import FilterBar from "@/components/FilterBar";
 import PageHeader from "@/components/PageHeader";
 import { DOMAIN_META, phaseName, seed, templatesByDomain, topicName } from "@/lib/seed";
@@ -78,23 +78,17 @@ function metricStateText(m: NodeMetric, def: IndicatorDef): string {
 
 export default function DomainPage({
   domain,
-  intro,
   kpiIndicatorIds,
   extraKpis,
   flowMode = "phases",
-  topicFocus,
-  phaseFocus,
   subtopicByPhase,
   tabs = [],
   ledger,
 }: {
   domain: DomainId;
-  intro: string;
   kpiIndicatorIds: string[];
   extraKpis?: (helpers: DomainHelpers) => KpiSpec[];
   flowMode?: "phases" | "topics";
-  phaseFocus?: Record<string, string>;
-  topicFocus?: Record<string, string>;
   subtopicByPhase?: Record<string, SubtopicOption[]>;
   tabs?: DomainTab[];
   ledger?: (helpers: DomainHelpers) => React.ReactNode;
@@ -215,8 +209,9 @@ export default function DomainPage({
 
   return (
     <div className="space-y-4">
-      <PageHeader title={meta.label} subtitle={intro} />
-      <FilterBar />
+      <PageHeader title={meta.label}>
+        <FilterBar />
+      </PageHeader>
 
       <Tabs tabs={allTabs} value={tab} onChange={setTab} />
 
@@ -247,7 +242,7 @@ export default function DomainPage({
                   }
                   compareTone={metricTone(m) === "red" ? "red" : "neutral"}
                   dataState={metricStateText(m, def)}
-                  scopeLabel={`${def.name}｜${scopeLabel}｜口径：${def.caliber}`}
+                  scopeLabel={scopeLabel}
                   onOpen={() => setIndicatorId(def.id)}
                   returnKey={def.id}
                 />
@@ -280,7 +275,6 @@ export default function DomainPage({
 
           <Card
             title="本期重点关注"
-            subtitle="最多 3 条；点击直接打开事项办理，不跳到全量清单"
             right={
               <button
                 className="text-[13px] text-brand hover:underline"
@@ -326,7 +320,6 @@ export default function DomainPage({
             <Card
               id="business-flow"
               title="业务流程监管"
-              subtitle="箭头只显示环节名称与未关闭事项数；点击后在本页下方联动场景与事项，不切换页签"
               right={
                 templates.length > 1 ? (
                   <div className="flex items-center gap-1.5">
@@ -358,22 +351,11 @@ export default function DomainPage({
                 }}
                 ariaLabel={`${meta.label}业务阶段`}
               />
-              <p className="text-[12px] text-textsub mt-3 leading-5">
-                {template.execution_note}
-              </p>
-              {templates.length > 1 && (
-                <p className="text-[12px] text-textsub mt-1">
-                  不同产权事项类型分别统计流程与事项，不合并成一条通用流程。
-                </p>
-              )}
             </Card>
           )}
 
           {flowMode === "topics" && (
-            <Card
-              title="专题监管"
-              subtitle="资金与国际化以专题组织，复用同一筛选、清单与事项办理能力"
-            >
+            <Card title="专题监管">
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setTopicId(null)}
@@ -398,7 +380,7 @@ export default function DomainPage({
                       onClick={() => {
                         setTopicId(t.id);
                       }}
-                      title={`${t.name}｜未关闭事项 ${c.open} 件｜${topicFocus?.[t.id] ?? ""}`}
+                      title={`${t.name}｜未关闭事项 ${c.open} 件`}
                       className={`h-[62px] min-w-[168px] px-4 rounded-[6px] border text-left transition-colors duration-150 ${
                         selected ? "border-brand bg-tint" : "border-line bg-surface hover:bg-tint"
                       }`}
@@ -432,25 +414,11 @@ export default function DomainPage({
             orgIds={orgIds}
             allowedObjectIds={allowedObjectIds}
             scopeTitle={scopeTitle}
-            focusNote={
-              flowMode === "phases"
-                ? phaseId
-                  ? phaseFocus?.[phaseId] ?? "本环节监管重点见场景清单"
-                  : "默认显示本领域全部环节的场景执行情况；“全部环节”不是第一个业务阶段"
-                : topicId
-                  ? topicFocus?.[topicId] ?? "本专题监管重点见场景清单"
-                  : "默认显示本领域全部专题的场景执行情况"
-            }
             subtopicOptions={currentSubtopics}
             onSubtopicChange={setSubtopicId}
             onOpenRisk={setRiskId}
             onOpenObject={setObjectId}
             onOpenScenario={setScenarioId}
-            extraScopeNote={
-              currentSubtopics
-                ? `箭头未关闭总数覆盖“${currentSubtopics.map((s) => s.label).join("”与“")}”两个子主题并去重；当前摘要只含所选子类。`
-                : undefined
-            }
           />
 
           {ledger?.(helpers)}
@@ -462,7 +430,6 @@ export default function DomainPage({
       {tab === "cases" && (
         <Card
           title="监管事项"
-          subtitle="同一事项在各领域共用同一事项编号与办理状态；办理后本页、首页、指标与综合总览同步更新"
           right={
             <div className="flex items-center gap-2">
               <div className="flex rounded-[6px] border border-line overflow-hidden">
@@ -537,7 +504,6 @@ export default function DomainPage({
                       ? topicName(link.topic_id)
                       : "—";
                 },
-                hint: "与台账的“对象当前业务阶段”是两个筛选，分开命名",
               },
               { key: "org", title: "责任单位", width: "134px", render: (r) => orgName(r.owner_org_id) },
               {
@@ -555,12 +521,6 @@ export default function DomainPage({
               },
             ]}
           />
-          <div className="mt-3">
-            <Notice tone="neutral" title="统计口径">
-              未关闭包括待核查、核查中、整改中、待复核；已排除和已关闭不计入。逾期按当前有效整改期限与截至日
-              {filters.asOf} 比较。
-            </Notice>
-          </div>
         </Card>
       )}
 

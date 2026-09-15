@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
-import { Card, DataTable, Notice, SimulatedBadge, Tag } from "@/components/ui";
+import { Card, DataTable, EmptyState, SimulatedBadge, Tag } from "@/components/ui";
 import { seed } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { fmtAmount, fmtPct } from "@/lib/format";
@@ -15,16 +15,7 @@ import type { Account } from "@/lib/types";
  * 资金余额与可用资金分开，账户数与付款笔数不相加。
  */
 
-const TOPIC_FOCUS: Record<string, string> = {
-  "CASH-T01": "监管重点：期初及有效调整计划、实际收支、预计现金缺口、计划外支出。投资支付计划衔接关联 FA-S34。",
-  "CASH-T02": "监管重点：账户主体、币种、银行、余额、可用/受限与集中状态。外币保留原币金额，折算人民币显示汇率日期与来源。",
-  "CASH-T03": "监管重点：批准、业务条件、支付计划、金额、收款方及异常。超批准与超合同可支付上限分别判断，不同时捏造两种命中。",
-  "CASH-T04": "监管重点：已形成应收、已到期、逾期、实收及匹配。未到期不计入逾期分母；预收与错配不得直接冲销。",
-  "CASH-T05": "监管重点：股东借款、担保及其他资金支持安排的适用业务与余额。与 EQ-S12 共用事项与证据，不自动认定违规垫资。",
-};
-
 function AccountView({ helpers }: { helpers: DomainHelpers }) {
-  const { filters } = useDemoStore();
   const orgIds = helpers.orgIds;
   const accounts = useMemo(() => seed.accounts.filter((a) => orgIds.has(a.owner_org_id)), [orgIds]);
 
@@ -33,7 +24,7 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
 
   return (
     <div className="space-y-4">
-      <Card title="账户与资金余额" subtitle="资金余额与可用资金分开；多重限制账户金额不重复计入受限占比">
+      <Card title="账户与资金余额">
         <DataTable<Account>
           rows={accounts}
           rowKey={(a) => a.id}
@@ -74,7 +65,6 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
                   {a.fx_to_cny}
                 </span>
               ),
-              hint: "外币折算显示汇率日期与来源，不隐藏折算口径",
             },
             {
               key: "cny",
@@ -114,12 +104,6 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
           <Tag tone="neutral">受限占比 {fmtPct((restrictedCny / totalCny) * 100)}</Tag>
           <SimulatedBadge text="模拟汇率" />
         </div>
-        <div className="mt-3">
-          <Notice tone="neutral" title="余额口径">
-            余额按同一截至日的账户余额统计，不跨期间相加；资金集中后可支用关系另行展示。内部资金划拨在收支汇总中单列，
-            不重复计算为经营流入流出。
-          </Notice>
-        </div>
       </Card>
     </div>
   );
@@ -137,10 +121,7 @@ function PaymentView({ helpers }: { helpers: DomainHelpers }) {
 
   return (
     <div className="space-y-4">
-      <Card
-        title="重点交易核查"
-        subtitle="并列展示“申请与批准”“合同与付款条件”“计划与实付”“业务完成与付款”，命中条件逐项说明"
-      >
+      <Card title="重点交易核查">
         <DataTable
           rows={txs}
           rowKey={(t) => t.id}
@@ -191,12 +172,6 @@ function PaymentView({ helpers }: { helpers: DomainHelpers }) {
             },
           ]}
         />
-        <div className="mt-3">
-          <Notice tone="amber" title="数据边界">
-            规划计划数据、SAP 投资/核算事实与财务云资金计划/支付分别作为拟来源；本 Demo 不假设财务云同时承担全部会计核算。
-            境外线下付款以统一模板导入并展示银行核对状态，未完成核对时不出“全量支付正常”的结论。
-          </Notice>
-        </div>
       </Card>
     </div>
   );
@@ -204,12 +179,8 @@ function PaymentView({ helpers }: { helpers: DomainHelpers }) {
 
 function PlanView() {
   return (
-    <Card title="资金计划监管" subtitle="期初及有效调整计划、实际收支、预计现金缺口与计划外支出">
-      <Notice tone="neutral" title="当前样例数据范围">
-        本 Demo 的资金计划行、融资与担保业务未纳入种子数据。按业需要求，“当前范围无此业务”与“数据未覆盖”是两种不同状态，
-        此处显示为数据未覆盖，不显示零风险。投资资金计划与实际支付的衔接可在固定资产领域 FA-S34 场景与项目台账
-        “资金计划/实际支付”列查看；工程与股权的到期收款、出资义务分别在各领域义务清单中跟踪。
-      </Notice>
+    <Card title="资金计划监管">
+      <EmptyState title="该期间数据未覆盖" />
     </Card>
   );
 }
@@ -218,10 +189,8 @@ export default function Page() {
   return (
     <DomainPage
       domain="CASH"
-      intro="资金领域采用专题布局：资金计划、账户与集中、收支与支付、项目资金与回收、出资及资金支持。点击专题只筛选下方区域，顶部指标保留资金领域整体范围。"
       kpiIndicatorIds={["CASH-I01", "CASH-I02", "CASH-I07", "CASH-I04", "CASH-I06", "CASH-OPEN"]}
       flowMode="topics"
-      topicFocus={TOPIC_FOCUS}
       ledger={(h) => <AccountView helpers={h} />}
       tabs={[
         { id: "plan", label: "资金计划监管", render: () => <PlanView /> },

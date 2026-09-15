@@ -41,7 +41,6 @@ function StageTable({ instances }: { instances: LifecycleInstance[] }) {
               {BUSINESS_STATUS_LABEL[i.business_status] ?? i.business_status}
             </Tag>
           ),
-          hint: "业务状态与监管状态分开；已完成环节仍可含未关闭事项",
         },
         {
           key: "plan",
@@ -226,7 +225,7 @@ function ObjectDrawerBody({
                     { label: "同期完成投资", value: <span className="num">{fmtAmount(fa.ytd_completed_investment)}</span> },
                     { label: "累计完成投资", value: <span className="num">{fmtAmount(fa.cumulative_completed_investment)}</span> },
                     { label: "资金计划（同期）", value: <span className="num">{fmtAmount(fa.funds_plan_ytd)}</span> },
-                    { label: "实际支付（同期）", value: <span className="num">{fmtAmount(fa.cash_paid_ytd)}</span>, hint: "投资完成额与资金支付分别统计，不互相替换" },
+                    { label: "实际支付（同期）", value: <span className="num">{fmtAmount(fa.cash_paid_ytd)}</span> },
                     { label: "总体进度（计划/实际）", value: <span className="num">{fmtPct(fa.planned_progress_pct)} / {fmtPct(fa.actual_progress_pct)}</span> },
                     { label: "批准/预计完工", value: <span className="num">{fmtDate(fa.approved_completion)} / {fmtDate(fa.forecast_completion)}</span> },
                   ]}
@@ -327,7 +326,7 @@ function ObjectDrawerBody({
                   { label: "同期收款", value: <span className="num">{fmtAmount(eng.cash_received_ytd)}</span> },
                   { label: "同期付款", value: <span className="num">{fmtAmount(eng.cash_paid_ytd)}</span> },
                   { label: "已到期应收", value: <span className="num">{fmtAmount(eng.receivable_due)}</span> },
-                  { label: "未到期应收", value: <span className="num">{fmtAmount(eng.receivable_not_yet_due)}</span>, hint: "未到期应收不计入逾期口径" },
+                  { label: "未到期应收", value: <span className="num">{fmtAmount(eng.receivable_not_yet_due)}</span> },
                   { label: "并行工作包", value: eng.parallel_work.join("、") || "—" },
                   { label: "航线", value: eng.route_ids.join("、") || "—" },
                 ]}
@@ -371,10 +370,6 @@ function ObjectDrawerBody({
         {tab === "stages" && (
           <>
             <StageTable instances={stages} />
-            <Notice tone="neutral" title="环节核查口径">
-              批准计划调整保留版本、原因与批准日期，后补批复不改写为事前批准；标“不适用”需有适用条件与依据，不计入阶段完成率。
-              多个阶段可同时进行中，风险颜色按未关闭事项独立显示。
-            </Notice>
           </>
         )}
 
@@ -383,7 +378,7 @@ function ObjectDrawerBody({
             <DataTable
               rows={related}
               rowKey={(l) => l.id}
-              empty="该对象暂无已登记的业务关系。关系边必须带业务含义和有效依据，不画无含义连线。"
+              empty="该对象暂无已登记的业务关系。"
               columns={[
                 { key: "from", title: "来源对象", render: (l) => <span className="num">{l.from_id}</span> },
                 { key: "rel", title: "业务关系", width: "160px", render: (l) => <Tag tone="brand">{l.relation_type}</Tag> },
@@ -393,9 +388,6 @@ function ObjectDrawerBody({
                 { key: "evid", title: "依据", render: (l) => <span className="text-[12px] text-textsub">{l.evidence_ids?.join("、") ?? "—"}</span> },
               ]}
             />
-            <Notice tone="neutral" title="关系穿透口径">
-              组织树、股权结构与业务关系分开切换；父子管理关系、持股关系、项目合同关系不混在同一棵管理树中。
-            </Notice>
           </>
         )}
 

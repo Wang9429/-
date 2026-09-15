@@ -355,10 +355,7 @@ function IndicatorDrawerBody({
         </span>
       }
       footer={
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <span className="text-[12px] text-textsub">
-            浮层内选择组织只改变本浮层范围，不修改背景页全局组织；关闭或 Esc 后恢复背景页阶段、筛选、页码与滚动位置。
-          </span>
+        <div className="flex items-center justify-end">
           <Button onClick={onClose}>关闭</Button>
         </div>
       }
