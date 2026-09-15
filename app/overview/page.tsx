@@ -162,7 +162,7 @@ export default function OverviewPage() {
           name="固定资产投资计划执行率"
           value={faParts.value}
           unit={faParts.unit}
-          compare={`完成 ${fmtAmountSmart(faMetric.numerator)}／计划 ${fmtAmountSmart(faMetric.denominator)} 万元`}
+          compare={`完成 ${fmtAmountSmart(faMetric.numerator)}／同期计划 ${fmtAmountSmart(faMetric.denominator)} 万元`}
           icon={<IconBars size={20} />}
           scopeLabel={scopeLabel}
           onOpen={() => setIndicatorId("FA-I06")}
