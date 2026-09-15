@@ -157,6 +157,7 @@ export interface Column<T> {
   title: React.ReactNode;
   align?: "left" | "right" | "center";
   width?: string;
+  nowrap?: boolean;
   render: (row: T, index: number) => React.ReactNode;
   hint?: string;
 }
@@ -170,7 +171,9 @@ export function DataTable<T>({
   dense = false,
   highlight,
   className = "",
+  tableClassName = "",
   rowHeight,
+  compactEmpty = false,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -180,11 +183,13 @@ export function DataTable<T>({
   dense?: boolean;
   highlight?: (row: T) => boolean;
   className?: string;
+  tableClassName?: string;
   rowHeight?: number;
+  compactEmpty?: boolean;
 }) {
   return (
     <div className={`overflow-x-auto -mx-1 px-1 ${className}`}>
-      <table className="w-full border-collapse text-[14px]">
+      <table className={`w-full border-collapse text-[14px] ${tableClassName}`}>
         <thead>
           <tr className="bg-[#f6f8fc]">
             {columns.map((c) => (
@@ -205,7 +210,7 @@ export function DataTable<T>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-3 py-8 text-center text-[13px] text-textsub border-b border-line"
+                className={`px-3 ${compactEmpty ? "py-4" : "py-8"} text-center text-[13px] text-textsub border-b border-line`}
               >
                 {empty}
               </td>
@@ -224,8 +229,8 @@ export function DataTable<T>({
                 <td
                   key={c.key}
                   style={{ textAlign: c.align ?? "left" }}
-                  className={`px-3 py-2 align-top text-textmain break-words ${
-                    c.align === "right" ? "num whitespace-nowrap" : ""
+                  className={`px-3 py-2 align-top text-textmain ${
+                    c.align === "right" ? "num whitespace-nowrap" : c.nowrap ? "whitespace-nowrap" : "break-words"
                   }`}
                 >
                   {c.render(row, i)}
@@ -291,20 +296,20 @@ export function KpiCard({
       onClick={onOpen}
       title={scopeLabel}
       data-overlay-return={returnKey || name}
-      className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[132px] flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] whitespace-normal ${
+      className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[168px] h-full flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] whitespace-normal ${
         active ? "border-brand" : "border-line"
       } shadow-[0_2px_10px_rgba(17,43,77,0.04)] relative`}
     >
       {icon && (
         <span
-          className="shrink-0 w-10 h-10 rounded-[8px] flex items-center justify-center mt-0.5"
+          className="shrink-0 w-10 h-10 rounded-[8px] flex items-center justify-center"
           style={{ background: tone.bg, color: tone.fg }}
         >
           {icon}
         </span>
       )}
-      <span className="min-w-0 flex-1 flex flex-col justify-between">
-        <span className="flex items-start justify-between gap-2">
+      <span className="min-w-0 flex-1 flex flex-col h-full">
+        <span className="flex items-start justify-between gap-2 min-h-10">
           <span className="text-[13px] text-textsub leading-5 break-words">{name}</span>
           {onOpen && (
             <span className="text-[16px] text-[#B8C9E3] shrink-0 leading-none" aria-hidden>
@@ -313,7 +318,7 @@ export function KpiCard({
           )}
         </span>
         <span
-          className="flex items-baseline gap-1 mt-2"
+          className="mt-2 flex h-10 items-end gap-1"
           style={{
             color:
               compareTone === "red"
@@ -330,12 +335,12 @@ export function KpiCard({
               : valueText}
           </span>
           {showUnit && unit !== "%" && (
-            <span className="text-[14px] font-medium" style={{ color: "var(--text-sub)" }}>
+            <span className="text-[14px] font-medium leading-none pb-0.5 whitespace-nowrap" style={{ color: "var(--text-sub)" }}>
               {unit}
             </span>
           )}
         </span>
-        <span className="mt-2 min-h-[20px] text-[12px] text-textsub leading-5 line-clamp-2 whitespace-normal">
+        <span className="mt-2 min-h-10 text-[12px] text-textsub leading-5">
           {compare}
           {compare && dataState ? "　" : null}
           {dataState}
@@ -584,6 +589,7 @@ export function Modal({
   open,
   onClose,
   title,
+  subtitle,
   children,
   footer,
   width = 620,
@@ -591,6 +597,7 @@ export function Modal({
   open: boolean;
   onClose: () => void;
   title: React.ReactNode;
+  subtitle?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   width?: number;
@@ -613,10 +620,13 @@ export function Modal({
         className="relative bg-surface rounded-[10px] shadow-[0_12px_36px_rgba(11,31,58,0.22)] sup-fade max-h-[86vh] flex flex-col"
         style={{ width, maxWidth: "calc(100vw - 48px)" }}
       >
-        <header className="flex items-center justify-between px-5 py-3.5 border-b border-line">
-          <h3 id={titleId} className="text-[16px] font-semibold text-textmain break-words pr-3">
-            {title}
-          </h3>
+        <header className="flex items-start justify-between px-5 py-3.5 border-b border-line shrink-0">
+          <div className="min-w-0 pr-3">
+            <h3 id={titleId} className="text-[16px] font-semibold text-textmain break-words">
+              {title}
+            </h3>
+            {subtitle && <div className="text-[12px] text-textsub mt-1 leading-5">{subtitle}</div>}
+          </div>
           <div className="shrink-0 flex items-center gap-2">
             <div data-overlay-header-actions="" className="flex items-center" />
             <button
@@ -628,8 +638,8 @@ export function Modal({
             </button>
           </div>
         </header>
-        <div className="px-5 py-4 overflow-auto">{children}</div>
-        {footer && <div className="px-5 py-3 border-t border-line bg-[#fafcff]">{footer}</div>}
+        <div className="px-5 py-4 overflow-auto min-h-0 flex-1">{children}</div>
+        {footer && <div className="px-5 py-3 border-t border-line bg-[#fafcff] shrink-0">{footer}</div>}
       </div>
     </div>
   );

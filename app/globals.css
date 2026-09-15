@@ -349,6 +349,54 @@ details > summary::-webkit-details-marker {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch;
+}
+
+.reg-domain-card {
+  display: grid;
+  grid-template-rows: auto minmax(56px, 1fr) auto;
+  gap: 12px;
+  min-height: 174px;
+  height: 100%;
+}
+
+.reg-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.reg-matrix {
+  min-width: 980px;
+  table-layout: fixed;
+}
+
+.reg-matrix th,
+.reg-matrix td {
+  vertical-align: top;
+}
+
+.reg-matrix .col-org {
+  width: 148px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.reg-matrix .col-domain {
+  width: 92px;
+  text-align: center;
+}
+
+.reg-matrix .col-total {
+  width: 104px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.reg-event-table {
+  min-width: 640px;
+  table-layout: fixed;
 }
 
 .reg-value {
@@ -365,6 +413,12 @@ details > summary::-webkit-details-marker {
 @media (max-width: 1439px) {
   .reg-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .reg-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 

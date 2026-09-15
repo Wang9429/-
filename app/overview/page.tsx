@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import IndicatorDrawer, { formatMetricParts } from "@/components/IndicatorDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import FilterBar from "@/components/FilterBar";
 import PageHeader from "@/components/PageHeader";
-import { Card, DataTable, KpiCard, Notice, SeverityTag, Tag } from "@/components/ui";
+import { Card, DataTable, KpiCard, Modal, Notice, SeverityTag, Tag } from "@/components/ui";
 import {
   IconAlert,
   IconBars,
@@ -28,7 +28,8 @@ import { catalogIndicatorOnHomepage } from "@/lib/live-config";
 
 /**
  * 综合总览（V1.6 口径 + V1.6.1 视觉）。
- * 标题筛选 → 关注摘要 → 四张指标 → 六领域独立卡 → 重点事项 → 单位风险矩阵。
+ * 标题筛选 → 四张指标 → 六领域独立卡 → 重点事项 → 单位风险矩阵 → 待复核 / 近期事件。
+ * 事项数字打开共用 Modal 清单，详情抽屉叠在清单之上。
  */
 
 const DOMAIN_KPI: Record<DomainId, string> = {
@@ -71,6 +72,7 @@ export default function OverviewPage() {
   const [riskId, setRiskId] = useState<string | null>(null);
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
   const [caseScope, setCaseScope] = useState<{ title: string; ids: string[] } | null>(null);
+  const listScrollRef = useRef(0);
 
   const orgIds = useMemo(
     () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
@@ -125,7 +127,18 @@ export default function OverviewPage() {
   }, [open]);
 
   const scopeLabel = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}`;
-  const openCases = (title: string, list: RiskCase[]) => setCaseScope({ title, ids: list.map((r) => r.id) });
+  const openCases = (title: string, list: RiskCase[]) => {
+    listScrollRef.current = typeof window !== "undefined" ? window.scrollY : 0;
+    setCaseScope({ title, ids: list.map((r) => r.id) });
+  };
+  const closeCaseList = () => {
+    const y = listScrollRef.current;
+    setCaseScope(null);
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  };
+  const caseRows = caseScope
+    ? caseScope.ids.map((id) => risks.find((r) => r.id === id)).filter((r): r is RiskCase => Boolean(r))
+    : [];
 
   const showFaPlan = catalogIndicatorOnHomepage("FA-I06");
   const faDef = indicatorById("FA-I06")!;
@@ -155,7 +168,12 @@ export default function OverviewPage() {
               ? "当前范围无业务"
               : faMetric.status === "unknown"
                 ? faMetric.emptyReason ?? "数据不足，未评估"
-                : `完成 ${fmtAmountSmart(faMetric.numerator)}／同期计划 ${fmtAmountSmart(faMetric.denominator)} 万元`
+                : (
+                  <span className="flex flex-wrap gap-x-3 gap-y-0.5">
+                    <span className="whitespace-nowrap">完成 {fmtAmountSmart(faMetric.numerator)} 万元</span>
+                    <span className="whitespace-nowrap">同期计划 {fmtAmountSmart(faMetric.denominator)} 万元</span>
+                  </span>
+                )
           }
           icon={<IconBars size={20} />}
           scopeLabel={scopeLabel}
@@ -167,9 +185,10 @@ export default function OverviewPage() {
           name="未关闭监管事项"
           value={open.length}
           unit="件"
-          compare={`待核查 ${pendingReview.length}／整改中 ${rectifying.length}`}
+          compare={<span className="whitespace-nowrap">待核查 {pendingReview.length}／整改中 {rectifying.length}</span>}
           icon={<IconClipboard size={20} />}
           onOpen={() => openCases("未关闭监管事项", open)}
+          returnKey="kpi-open-cases"
         />
         <KpiCard
           name="其中高风险事项"
@@ -179,6 +198,7 @@ export default function OverviewPage() {
           icon={<IconAlert size={20} />}
           iconTone="red"
           onOpen={() => openCases("高风险未关闭事项", red)}
+          returnKey="kpi-red-cases"
         />
         <KpiCard
           name="逾期整改事项"
@@ -188,6 +208,7 @@ export default function OverviewPage() {
           icon={<IconClock size={20} />}
           iconTone="amber"
           onOpen={() => openCases("逾期整改事项", overdueRect)}
+          returnKey="kpi-overdue-cases"
         />
       </div>
 
@@ -204,46 +225,52 @@ export default function OverviewPage() {
             return (
               <article
                 key={s.domain}
-                className="bg-surface border border-line rounded-[10px] shadow-[0_2px_10px_rgba(17,43,77,0.04)] p-5 min-h-[174px] flex flex-col"
+                className="reg-domain-card bg-surface border border-line rounded-[10px] shadow-[0_2px_10px_rgba(17,43,77,0.04)] p-5"
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 min-h-8">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="w-8 h-8 rounded-[8px] bg-[#EAF1FD] text-brand flex items-center justify-center shrink-0">
                       {Icon && <Icon size={16} />}
                     </span>
-                    <Link href={meta.route} className="text-[16px] font-semibold text-textmain hover:text-brand leading-5">
+                    <Link href={meta.route} className="text-[16px] font-semibold text-textmain hover:text-brand leading-5 whitespace-nowrap">
                       {meta.label}
                     </Link>
                   </div>
                   <button
                     type="button"
-                    className="shrink-0 text-[12px] rounded-full px-2 py-0.5 border border-line"
+                    className="shrink-0 text-[12px] rounded-full px-2 py-0.5 border border-line whitespace-nowrap"
                     style={{ color: s.open.length ? "var(--risk-amber-fg)" : "var(--text-sub)" }}
+                    data-overlay-return={`domain-open-${s.domain}`}
                     onClick={() => openCases(`${meta.label}未关闭事项`, s.open)}
                   >
                     未关闭 {s.open.length} 件
                   </button>
                 </div>
-                {kpi && (
+                {kpi ? (
                   <button
                     type="button"
                     onClick={() => setIndicatorId(kpi.def.id)}
-                    className="text-left mt-3"
+                    className="text-left min-h-[56px]"
                     title={kpi.def.name}
+                    data-overlay-return={kpi.def.id}
                   >
-                    <div className="text-[13px] text-textsub">{kpi.def.name}</div>
+                    <div className="text-[13px] text-textsub leading-5">{kpi.def.name}</div>
                     <div className="flex items-baseline gap-1 mt-1">
                       <span className="num text-[26px] font-semibold text-textmain leading-none">
                         {parts.unit === "%" ? `${parts.value}%` : parts.value}
                       </span>
                       {parts.unit && parts.unit !== "%" && (
-                        <span className="text-[14px] text-textsub">{parts.unit}</span>
+                        <span className="text-[14px] text-textsub whitespace-nowrap">{parts.unit}</span>
                       )}
                     </div>
                   </button>
+                ) : (
+                  <div className="min-h-[56px] flex items-end">
+                    <span className="text-[13px] text-textsub leading-5">当前首页无可展示指标</span>
+                  </div>
                 )}
-                <div className="mt-auto pt-3 flex items-center justify-end">
-                  <Link href={meta.route} className="text-[13px] text-brand shrink-0 hover:underline">
+                <div className="flex items-center justify-end">
+                  <Link href={meta.route} className="text-[13px] text-brand shrink-0 hover:underline whitespace-nowrap">
                     进入领域 →
                   </Link>
                 </div>
@@ -265,12 +292,12 @@ export default function OverviewPage() {
           <table className="w-full border-collapse text-[14px]">
             <thead>
               <tr className="bg-[#f6f8fc]">
-                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line">关注事项</th>
-                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line">关键事实</th>
-                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line w-[140px]">
+                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line min-w-[200px]">关注事项</th>
+                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line min-w-[180px]">关键事实</th>
+                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line w-[140px] whitespace-nowrap">
                   当前进展
                 </th>
-                <th className="px-3 py-3 text-right text-[13px] font-semibold text-textsub border-b border-line w-[100px]">
+                <th className="px-3 py-3 text-right text-[13px] font-semibold text-textsub border-b border-line w-[100px] whitespace-nowrap">
                   操作
                 </th>
               </tr>
@@ -306,17 +333,17 @@ export default function OverviewPage() {
       </Card>
 
       <Card title="单位风险分布">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[14px]">
+        <div className="reg-table-wrap">
+          <table className="reg-matrix w-full border-collapse text-[14px]">
             <thead>
               <tr className="bg-[#f6f8fc]">
-                <th className="px-3 py-2.5 text-left text-[13px] font-semibold text-textsub border-b border-line">单位</th>
+                <th className="col-org px-3 py-2.5 text-left text-[13px] font-semibold text-textsub border-b border-line">单位</th>
                 {DOMAIN_ORDER.filter((d) => canDomain(user, d)).map((d) => (
-                  <th key={d} className="px-3 py-2.5 text-center text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap">
+                  <th key={d} className="col-domain px-3 py-2.5 text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap">
                     {DOMAIN_META[d].short}
                   </th>
                 ))}
-                <th className="px-3 py-2.5 text-center text-[13px] font-semibold text-textsub border-b border-line">合计（去重）</th>
+                <th className="col-total px-3 py-2.5 text-[13px] font-semibold text-textsub border-b border-line">合计（去重）</th>
               </tr>
             </thead>
             <tbody>
@@ -333,26 +360,34 @@ export default function OverviewPage() {
                   seed.accounts.some((a) => scope.has(a.owner_org_id));
                 return (
                   <tr key={o.id} className="border-b border-line hover:bg-tint transition-colors duration-150">
-                    <td className="px-3 py-2 text-textmain">
+                    <td className="col-org px-3 py-2 text-textmain">
                       <button
-                        className="hover:text-brand"
+                        className="hover:text-brand text-left"
                         onClick={() => setFilters({ orgId: o.id, includeChildren: true })}
                       >
                         {o.name}
                       </button>
-                      {!hasBusiness && <Tag tone="neutral">当前范围无业务</Tag>}
+                      {!hasBusiness && (
+                        <div className="mt-1">
+                          <Tag tone="neutral">当前范围无业务</Tag>
+                        </div>
+                      )}
                     </td>
                     {DOMAIN_ORDER.filter((d) => canDomain(user, d)).map((d) => {
                       const cell = unitRisks.filter((r) => riskMatches(r, { domain: d, orgScope: scope }));
                       const cellRed = cell.filter((r) => r.severity === "red").length;
                       return (
-                        <td key={d} className="px-3 py-2 text-center">
+                        <td key={d} className="col-domain px-3 py-2">
                           {cell.length === 0 ? (
-                            <span className="text-textsub text-[13px]">{hasBusiness ? "本次监测未发现异常" : "无业务"}</span>
+                            <span className="text-textsub text-[13px] leading-5">
+                              {hasBusiness ? "本次监测未发现异常" : "无业务"}
+                            </span>
                           ) : (
                             <button
+                              type="button"
                               className="num text-[14px] hover:underline"
                               style={{ color: cellRed ? "var(--risk-red-fg)" : "var(--risk-amber-fg)" }}
+                              data-overlay-return={`matrix-${o.id}-${d}`}
                               onClick={() => openCases(`${o.name}·${DOMAIN_META[d].label}未关闭事项`, cell)}
                             >
                               {cell.length}
@@ -361,9 +396,11 @@ export default function OverviewPage() {
                         </td>
                       );
                     })}
-                    <td className="px-3 py-2 text-center">
+                    <td className="col-total px-3 py-2">
                       <button
+                        type="button"
                         className="num text-[14px] text-textmain hover:text-brand hover:underline"
+                        data-overlay-return={`matrix-${o.id}-total`}
                         onClick={() => openCases(`${o.name}未关闭事项`, unitRisks)}
                       >
                         {unitRisks.length}
@@ -377,20 +414,22 @@ export default function OverviewPage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div className="reg-split">
         <Card title="待复核事项">
           <DataTable
             rows={pendingVerification}
             rowKey={(r) => r.id}
             onRowClick={(r) => setRiskId(r.id)}
             empty="当前范围没有待复核事项。"
+            compactEmpty
             columns={[
               { key: "title", title: "名称", render: (r) => r.title },
-              { key: "org", title: "责任单位", width: "150px", render: (r) => orgName(r.owner_org_id) },
+              { key: "org", title: "责任单位", width: "150px", nowrap: true, render: (r) => orgName(r.owner_org_id) },
               {
                 key: "overdue",
                 title: "整改逾期",
-                width: "110px",
+                width: "96px",
+                nowrap: true,
                 render: (r) => (isOverdueRectification(r, filters.asOf) ? <Tag tone="red">逾期</Tag> : <span className="text-textsub">—</span>),
               },
             ]}
@@ -402,13 +441,15 @@ export default function OverviewPage() {
             rows={seed.international_events.slice().sort((a, b) => b.event_date.localeCompare(a.event_date))}
             rowKey={(e) => e.id}
             onRowClick={() => router.push("/international-business")}
+            tableClassName="reg-event-table"
             columns={[
-              { key: "date", title: "发生时间", width: "110px", render: (e) => <span className="num">{e.event_date}</span> },
+              { key: "date", title: "发生时间", width: "108px", nowrap: true, render: (e) => <span className="num">{e.event_date}</span> },
               { key: "title", title: "事件", render: (e) => e.title },
               {
                 key: "nature",
                 title: "数据性质",
-                width: "130px",
+                width: "112px",
+                nowrap: true,
                 render: (e) => (
                   <Tag tone={e.data_nature === "real_event" ? "brand" : "neutral"}>
                     {e.data_nature === "real_event" ? "真实事件日期" : "模拟事件"}
@@ -418,6 +459,7 @@ export default function OverviewPage() {
               {
                 key: "affected",
                 title: "受影响对象",
+                width: "148px",
                 render: (e) => {
                   const ids = (e.affected_project_ids ?? []).filter((id) => {
                     const obj = findObject(id);
@@ -431,35 +473,52 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      {caseScope && (
-        <Card
-          title={caseScope.title}
-          subtitle={`来源范围：${scopeLabel}｜截至日 ${filters.asOf}`}
-          right={
-            <button className="text-[13px] text-brand hover:underline" onClick={() => setCaseScope(null)}>
-              关闭清单
-            </button>
-          }
-        >
-          <DataTable
-            rows={caseScope.ids.map((id) => risks.find((r) => r.id === id)!).filter(Boolean)}
-            rowKey={(r) => r.id}
-            onRowClick={(r) => setRiskId(r.id)}
-            empty="该范围内没有事项。"
-            columns={[
-              { key: "title", title: "名称", render: (r) => r.title },
-              { key: "sev", title: "等级", width: "84px", render: (r) => <SeverityTag severity={r.severity} /> },
-              { key: "status", title: "状态", width: "100px", render: (r) => statusLabel[r.status] },
-              { key: "org", title: "责任单位", width: "150px", render: (r) => orgName(r.owner_org_id) },
-              {
-                key: "domains",
-                title: "涉及领域",
-                render: (r) => r.domains.map((d) => DOMAIN_META[d].short).join("、"),
-              },
-            ]}
-          />
-        </Card>
-      )}
+      <Modal
+        open={Boolean(caseScope)}
+        onClose={closeCaseList}
+        title={caseScope?.title ?? "事项清单"}
+        subtitle={`来源范围：${scopeLabel}｜截至日 ${filters.asOf}｜共 ${caseRows.length} 条`}
+        width={920}
+      >
+        <DataTable
+          rows={caseRows}
+          rowKey={(r) => r.id}
+          onRowClick={(r) => setRiskId(r.id)}
+          empty="该范围内没有事项。"
+          compactEmpty
+          columns={[
+            { key: "title", title: "名称", render: (r) => r.title },
+            { key: "sev", title: "等级", width: "92px", nowrap: true, render: (r) => <SeverityTag severity={r.severity} /> },
+            { key: "status", title: "状态", width: "100px", nowrap: true, render: (r) => statusLabel[r.status] },
+            { key: "org", title: "责任单位", width: "150px", nowrap: true, render: (r) => orgName(r.owner_org_id) },
+            {
+              key: "domains",
+              title: "涉及领域",
+              width: "140px",
+              render: (r) => r.domains.map((d) => DOMAIN_META[d].short).join("、"),
+            },
+            {
+              key: "act",
+              title: "操作",
+              width: "88px",
+              align: "right",
+              nowrap: true,
+              render: (r) => (
+                <button
+                  type="button"
+                  className="text-[13px] text-brand hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRiskId(r.id);
+                  }}
+                >
+                  查看详情
+                </button>
+              ),
+            },
+          ]}
+        />
+      </Modal>
 
       <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel="综合总览" />
       <IndicatorDrawer
