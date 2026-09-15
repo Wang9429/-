@@ -30,10 +30,14 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
           rowKey={(a) => a.id}
           onRowClick={(a) => helpers.openObject(a.id)}
           empty="当前组织范围内没有纳入监测的账户。"
+          pageSize={8}
+          compactEmpty
+          tableClassName="min-w-[960px]"
           columns={[
             {
               key: "name",
               title: "账户",
+              minWidth: "200px",
               render: (a) => (
                 <span>
                   <span className="text-textmain">{a.name}</span>
@@ -163,7 +167,7 @@ function PaymentView({ helpers }: { helpers: DomainHelpers }) {
                 if (over > 0)
                   return (
                     <span className="text-[13px]" style={{ color: "var(--risk-red-fg)" }}>
-                      超批准 {fmtAmount(over)} 万元
+                      超批准 <span className="whitespace-nowrap">{fmtAmount(over)} 万元</span>
                       {overCert !== null && overCert <= 0 ? "；未超合同可支付上限" : ""}
                     </span>
                   );

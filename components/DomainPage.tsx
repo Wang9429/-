@@ -231,7 +231,7 @@ export default function DomainPage({
 
       {tab === "overview" && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 min-[1440px]:grid-cols-3 gap-4">
+          <div className="reg-kpis-domain">
             {kpiDefs.map((def) => {
               const m = computeIndicator(def, orgIds, ctx);
               const parts = formatMetricParts(def, m);
@@ -287,6 +287,96 @@ export default function DomainPage({
             })}
           </div>
 
+          {flowMode === "phases" && template && (
+            <Card
+              id="business-flow"
+              title="业务流程监管"
+              right={
+                templates.length > 1 ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] text-textsub whitespace-nowrap">事项类型</span>
+                    <select
+                      className="h-8 px-2 rounded-[6px] border border-line bg-surface text-[13px]"
+                      value={template.id}
+                      onChange={(e) => {
+                        setTemplateId(e.target.value);
+                        setPhaseId(null);
+                      }}
+                    >
+                      {templates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.matter_type_name ?? t.id}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : undefined
+              }
+            >
+              <ChevronFlow
+                items={chevronItems}
+                value={phaseId}
+                onChange={(id) => {
+                  setPhaseId(id);
+                  setSubtopicId(null);
+                }}
+                ariaLabel={`${meta.label}业务阶段`}
+              />
+            </Card>
+          )}
+
+          {flowMode === "topics" && (
+            <Card title="专题监管">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setTopicId(null)}
+                  className={`shrink-0 h-[62px] px-4 rounded-[6px] border text-[13px] transition-colors duration-150 ${
+                    topicId === null ? "border-brand bg-tint text-brand font-medium" : "border-line bg-surface text-textsub hover:bg-tint"
+                  }`}
+                >
+                  全部专题
+                </button>
+                {topics.map((t) => {
+                  const c = openCountForTopic(domain, t.id, orgIds, domainRisks);
+                  const selected = topicId === t.id;
+                  const tone =
+                    c.open === 0
+                      ? "var(--risk-neutral-fg)"
+                      : c.maxSeverity === "red"
+                        ? "var(--risk-red-fg)"
+                        : "var(--risk-amber-fg)";
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setTopicId(t.id);
+                      }}
+                      title={`${t.name}｜未关闭事项 ${c.open} 件`}
+                      className={`h-[62px] min-w-[168px] px-4 rounded-[6px] border text-left transition-colors duration-150 ${
+                        selected ? "border-brand bg-tint" : "border-line bg-surface hover:bg-tint"
+                      }`}
+                    >
+                      <div className={`text-[13px] whitespace-nowrap ${selected ? "text-brand font-medium" : "text-textmain"}`}>{t.name}</div>
+                      <div className="text-[12px] mt-0.5">
+                        <span className="text-textsub">未关闭 </span>
+                        <span className="num font-semibold" style={{ color: tone }}>
+                          {c.open}
+                        </span>
+                        <span className="text-textsub"> 件</span>
+                        {c.open > 0 && (
+                          <span style={{ color: tone }} aria-hidden>
+                            {" "}
+                            {c.maxSeverity === "red" ? "●" : "▲"}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
           <Card
             title="本期重点关注"
             right={
@@ -329,96 +419,6 @@ export default function DomainPage({
               </ul>
             )}
           </Card>
-
-          {flowMode === "phases" && template && (
-            <Card
-              id="business-flow"
-              title="业务流程监管"
-              right={
-                templates.length > 1 ? (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[12px] text-textsub">事项类型</span>
-                    <select
-                      className="h-8 px-2 rounded-[6px] border border-line bg-surface text-[13px]"
-                      value={template.id}
-                      onChange={(e) => {
-                        setTemplateId(e.target.value);
-                        setPhaseId(null);
-                      }}
-                    >
-                      {templates.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.matter_type_name ?? t.id}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : undefined
-              }
-            >
-              <ChevronFlow
-                items={chevronItems}
-                value={phaseId}
-                onChange={(id) => {
-                  setPhaseId(id);
-                  setSubtopicId(null);
-                }}
-                ariaLabel={`${meta.label}业务阶段`}
-              />
-            </Card>
-          )}
-
-          {flowMode === "topics" && (
-            <Card title="专题监管">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setTopicId(null)}
-                  className={`h-[62px] px-4 rounded-[6px] border text-[13px] transition-colors duration-150 ${
-                    topicId === null ? "border-brand bg-tint text-brand font-medium" : "border-line bg-surface text-textsub hover:bg-tint"
-                  }`}
-                >
-                  全部专题
-                </button>
-                {topics.map((t) => {
-                  const c = openCountForTopic(domain, t.id, orgIds, domainRisks);
-                  const selected = topicId === t.id;
-                  const tone =
-                    c.open === 0
-                      ? "var(--risk-neutral-fg)"
-                      : c.maxSeverity === "red"
-                        ? "var(--risk-red-fg)"
-                        : "var(--risk-amber-fg)";
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => {
-                        setTopicId(t.id);
-                      }}
-                      title={`${t.name}｜未关闭事项 ${c.open} 件`}
-                      className={`h-[62px] min-w-[168px] px-4 rounded-[6px] border text-left transition-colors duration-150 ${
-                        selected ? "border-brand bg-tint" : "border-line bg-surface hover:bg-tint"
-                      }`}
-                    >
-                      <div className={`text-[13px] ${selected ? "text-brand font-medium" : "text-textmain"}`}>{t.name}</div>
-                      <div className="text-[12px] mt-0.5">
-                        <span className="text-textsub">未关闭 </span>
-                        <span className="num font-semibold" style={{ color: tone }}>
-                          {c.open}
-                        </span>
-                        <span className="text-textsub"> 件</span>
-                        {c.open > 0 && (
-                          <span style={{ color: tone }} aria-hidden>
-                            {" "}
-                            {c.maxSeverity === "red" ? "●" : "▲"}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
-          )}
 
           <ScenarioExecutionPanel
             domain={domain}
@@ -501,11 +501,13 @@ export default function DomainPage({
             rowKey={(r) => r.id}
             onRowClick={(r) => setRiskId(r.id)}
             empty="当前组织范围与筛选条件下没有监管事项。"
+            pageSize={10}
+            tableClassName="min-w-[960px]"
             columns={[
-              { key: "id", title: "事项", width: "76px", render: (r) => <span className="num">{r.id}</span> },
-              { key: "title", title: "名称", render: (r) => <span className="break-words leading-5">{r.title}</span> },
-              { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
-              { key: "status", title: "办理状态", width: "104px", render: (r) => statusLabel[r.status] },
+              { key: "id", title: "事项", width: "76px", nowrap: true, render: (r) => <span className="num">{r.id}</span> },
+              { key: "title", title: "名称", minWidth: "220px", render: (r) => <span className="break-words leading-5">{r.title}</span> },
+              { key: "sev", title: "等级", width: "88px", nowrap: true, render: (r) => <SeverityTag severity={r.severity} /> },
+              { key: "status", title: "办理状态", width: "104px", nowrap: true, render: (r) => statusLabel[r.status] },
               {
                 key: "phase",
                 title: "问题所属环节",

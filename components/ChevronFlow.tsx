@@ -64,6 +64,7 @@ export default function ChevronFlow({
                 : item.severity === "red"
                   ? "var(--risk-red-fg)"
                   : "var(--risk-amber-fg)";
+            const chevronWidth = Math.max(156, item.name.length * 14 + 48);
             return (
               <button
                 key={item.id}
@@ -76,7 +77,7 @@ export default function ChevronFlow({
                 }｜统计范围：当前组织及期间内与本环节实际关联的事项去重`}
                 className="relative h-[62px] shrink-0 transition-[filter] duration-150 hover:brightness-[0.99]"
                 style={{
-                  width: 132,
+                  width: chevronWidth,
                   marginLeft: i === 0 ? 0 : -ARROW + 3,
                   padding: selected ? 2 : 1,
                   background: borderColor,

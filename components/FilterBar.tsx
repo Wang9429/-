@@ -33,7 +33,7 @@ export default function FilterBar({ className = "" }: { className?: string }) {
         <label htmlFor="filter-org">组织范围</label>
         <select
           id="filter-org"
-          className={`${selectClass} min-w-[260px] max-w-[320px] w-[280px]`}
+          className={`${selectClass} min-w-[200px] w-[240px] max-w-full`}
           value={encodeOrg(currentOrg, filters.includeChildren)}
           onChange={(e) => {
             const [orgId, scope] = e.target.value.split("::");
@@ -53,7 +53,7 @@ export default function FilterBar({ className = "" }: { className?: string }) {
         <label htmlFor="filter-period">统计期</label>
         <select
           id="filter-period"
-          className={`${selectClass} w-[200px] min-w-[180px]`}
+          className={`${selectClass} w-[176px] min-w-[148px] max-w-full`}
           value={currentPeriodId}
           onChange={(e) => {
             const p = PERIOD_OPTIONS.find((x) => x.id === e.target.value);
@@ -77,7 +77,7 @@ export default function FilterBar({ className = "" }: { className?: string }) {
         <label htmlFor="filter-asof">截至日</label>
         <select
           id="filter-asof"
-          className={`${selectClass} w-[148px] min-w-[140px]`}
+          className={`${selectClass} w-[132px] min-w-[120px] max-w-full`}
           value={filters.asOf}
           aria-label="业务截至日"
           disabled

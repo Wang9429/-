@@ -107,8 +107,10 @@ export default function UsersTab() {
           rows={configUsers}
           rowKey={(r) => r.id}
           empty="暂无用户"
+          pageSize={10}
+          compactEmpty
           columns={[
-            { key: "name", title: "用户", render: (r) => r.name },
+            { key: "name", title: "用户", minWidth: "140px", render: (r) => r.name },
             {
               key: "role",
               title: "角色",

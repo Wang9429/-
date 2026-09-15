@@ -182,9 +182,12 @@ export default function WorkbenchPage() {
               ? "当前组织范围内该视图没有事项。"
               : "当前筛选条件下没有匹配事项，请调整搜索或筛选。"
           }
+          pageSize={10}
+          compactEmpty
+          tableClassName="min-w-[1100px]"
           columns={[
-            { key: "id", title: "事项编号", width: "84px", render: (r) => <span className="num">{r.id}</span> },
-            { key: "title", title: "问题摘要", render: (r) => r.title },
+            { key: "id", title: "事项编号", width: "84px", nowrap: true, render: (r) => <span className="num">{r.id}</span> },
+            { key: "title", title: "问题摘要", minWidth: "220px", render: (r) => r.title },
             { key: "obj", title: "主对象", width: "120px", render: (r) => <span className="num">{r.primary_object_id}</span> },
             {
               key: "domains",

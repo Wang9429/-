@@ -186,8 +186,11 @@ export default function RulesTab() {
           dense
           rows={catalog.rules}
           rowKey={(r) => r.id}
+          pageSize={10}
+          compactEmpty
+          tableClassName="min-w-[960px]"
           columns={[
-            { key: "name", title: "规则", render: (r) => r.name },
+            { key: "name", title: "规则", minWidth: "200px", render: (r) => r.name },
             { key: "st", title: "状态", width: "88px", render: (r) => configStatusLabel(r.status) },
             {
               key: "run",

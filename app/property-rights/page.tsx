@@ -190,9 +190,11 @@ function MatterLedger({ helpers }: { helpers: DomainHelpers }) {
         rowKey={(m) => m.id}
         onRowClick={(m) => helpers.openObject(m.id)}
         empty="当前组织范围内没有产权事项。"
+        pageSize={8}
+        compactEmpty
         columns={[
-          { key: "id", title: "事项", width: "120px", render: (m) => <span className="num">{m.id}</span> },
-          { key: "name", title: "名称", render: (m) => m.name },
+          { key: "id", title: "事项", width: "120px", nowrap: true, render: (m) => <span className="num">{m.id}</span> },
+          { key: "name", title: "名称", minWidth: "200px", render: (m) => m.name },
           { key: "type", title: "事项类型", width: "110px", render: (m) => m.matter_type },
           {
             key: "tpl",

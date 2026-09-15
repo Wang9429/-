@@ -87,10 +87,14 @@ function EquityLedger({ helpers }: { helpers: DomainHelpers }) {
         rowKey={(p) => p.id}
         onRowClick={(p) => helpers.openObject(p.id)}
         empty="当前组织范围内没有股权投资项目。"
+        pageSize={8}
+        compactEmpty
+        tableClassName="min-w-[1200px]"
         columns={[
           {
             key: "name",
             title: "投资项目",
+            minWidth: "220px",
             render: (p) => (
               <span>
                 <span className="text-textmain">{p.name}</span>

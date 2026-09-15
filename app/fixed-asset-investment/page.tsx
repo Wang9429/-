@@ -146,10 +146,14 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
         rowKey={(p) => p.id}
         onRowClick={(p) => helpers.openObject(p.id)}
         empty="当前组织范围与筛选条件下没有投资项目。"
+        pageSize={8}
+        compactEmpty
+        tableClassName="min-w-[1200px]"
         columns={[
           {
             key: "name",
             title: "项目",
+            minWidth: "220px",
             render: (p) => (
               <span>
                 <span className="text-textmain">{p.name}</span>
@@ -307,6 +311,9 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
           rowKey={(a) => a.id}
           onRowClick={(a) => helpers.openObject(a.id)}
           empty="当前组织范围内没有纳入监测的资产。"
+          pageSize={8}
+          compactEmpty
+          tableClassName="min-w-[960px]"
           columns={[
             {
               key: "name",

@@ -48,9 +48,12 @@ function EventMarket() {
             setSeriesIds(e.data_nature === "real_event" ? ["HISTORY-freight", "HISTORY-oil"] : ["CURRENT-steel", "CURRENT-freight"]);
           }}
           highlight={(e) => e.id === eventId}
+          pageSize={8}
+          compactEmpty
+          tableClassName="min-w-[720px]"
           columns={[
             { key: "id", title: "事件", width: "130px", render: (e) => <span className="num">{e.id}</span> },
-            { key: "title", title: "名称", render: (e) => e.title },
+            { key: "title", title: "名称", minWidth: "200px", render: (e) => e.title },
             { key: "type", title: "事件类型", width: "120px", render: (e) => e.event_type ?? "—" },
             { key: "date", title: "发生时间", width: "110px", render: (e) => <span className="num">{e.event_date}</span> },
             {
@@ -256,7 +259,7 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
   return (
     <div className="space-y-4">
       <Card title="影响测算（成本敏感性）">
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="reg-split">
           <div>
             <h4 className="text-[15px] font-semibold text-textmain mb-2">钢材敞口（{steel.specification}）</h4>
             <div className="grid sm:grid-cols-2 gap-x-4">
@@ -373,8 +376,10 @@ function OverseasProjects({ helpers }: { helpers: DomainHelpers }) {
           rowKey={(p) => p.id}
           onRowClick={(p) => helpers.openObject(p.id)}
           empty="当前组织范围内没有境外工程项目。"
+          pageSize={8}
+          compactEmpty
           columns={[
-            { key: "name", title: "项目", render: (p) => p.name },
+            { key: "name", title: "项目", minWidth: "200px", render: (p) => p.name },
             { key: "country", title: "实施国", width: "110px", render: (p) => p.country },
             { key: "org", title: "主归属单位", width: "140px", render: (p) => orgName(p.owner_org_id) },
             { key: "customer", title: "客户", width: "130px", render: (p) => <span className="num">{p.customer_id}</span> },

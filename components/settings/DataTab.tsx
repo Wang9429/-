@@ -86,8 +86,10 @@ export default function DataTab() {
           dense
           rows={catalog.dataSources}
           rowKey={(r) => r.id}
+          pageSize={8}
+          compactEmpty
           columns={[
-            { key: "content", title: "数据内容", render: (r) => r.content },
+            { key: "content", title: "数据内容", minWidth: "180px", render: (r) => r.content },
             { key: "source", title: "拟来源", render: (r) => r.source },
             {
               key: "st",

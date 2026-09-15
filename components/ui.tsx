@@ -157,6 +157,7 @@ export interface Column<T> {
   title: React.ReactNode;
   align?: "left" | "right" | "center";
   width?: string;
+  minWidth?: string;
   nowrap?: boolean;
   render: (row: T, index: number) => React.ReactNode;
   hint?: string;
@@ -174,6 +175,7 @@ export function DataTable<T>({
   tableClassName = "",
   rowHeight,
   compactEmpty = false,
+  pageSize,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -186,60 +188,90 @@ export function DataTable<T>({
   tableClassName?: string;
   rowHeight?: number;
   compactEmpty?: boolean;
+  pageSize?: number;
 }) {
+  const [page, setPage] = React.useState(1);
+  const size = pageSize && pageSize > 0 ? pageSize : 0;
+  React.useEffect(() => {
+    setPage(1);
+  }, [rows.length, size]);
+  const pageCount = size ? Math.max(1, Math.ceil(rows.length / size)) : 1;
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  const shown = size ? rows.slice((safePage - 1) * size, safePage * size) : rows;
+
   return (
-    <div className={`overflow-x-auto -mx-1 px-1 ${className}`}>
-      <table className={`w-full border-collapse text-[14px] ${tableClassName}`}>
-        <thead>
-          <tr className="bg-[#f6f8fc]">
-            {columns.map((c) => (
-              <th
-                key={c.key}
-                title={c.hint}
-                style={{ width: c.width, textAlign: c.align ?? "left" }}
-                className="px-3 py-2.5 text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap"
-              >
-                {c.title}
-                {c.hint && <span className="ml-1 text-[11px] text-textsub/70">ⓘ</span>}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length === 0 && (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className={`px-3 ${compactEmpty ? "py-4" : "py-8"} text-center text-[13px] text-textsub border-b border-line`}
-              >
-                {empty}
-              </td>
-            </tr>
-          )}
-          {rows.map((row, i) => (
-            <tr
-              key={rowKey(row, i)}
-              onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={`border-b border-line transition-colors duration-150 hover:bg-tint ${
-                onRowClick ? "cursor-pointer" : ""
-              } ${highlight?.(row) ? "bg-[#fbfcfe]" : ""}`}
-              style={{ minHeight: rowHeight ?? (dense ? 40 : 56) }}
-            >
+    <div className={className}>
+      <div className="overflow-x-auto -mx-1 px-1">
+        <table className={`w-full border-collapse text-[14px] ${tableClassName}`}>
+          <thead>
+            <tr className="bg-[#f6f8fc]">
               {columns.map((c) => (
-                <td
+                <th
                   key={c.key}
-                  style={{ textAlign: c.align ?? "left" }}
-                  className={`px-3 py-2 align-top text-textmain ${
-                    c.align === "right" ? "num whitespace-nowrap" : c.nowrap ? "whitespace-nowrap" : "break-words"
-                  }`}
+                  title={c.hint}
+                  style={{ width: c.width, minWidth: c.minWidth, textAlign: c.align ?? "left" }}
+                  className="px-3 py-2.5 text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap"
                 >
-                  {c.render(row, i)}
-                </td>
+                  {c.title}
+                  {c.hint && <span className="ml-1 text-[11px] text-textsub/70">ⓘ</span>}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className={`px-3 ${compactEmpty ? "py-4" : "py-8"} text-center text-[13px] text-textsub border-b border-line`}
+                >
+                  {empty}
+                </td>
+              </tr>
+            )}
+            {shown.map((row, i) => {
+              const absIndex = size ? (safePage - 1) * size + i : i;
+              return (
+                <tr
+                  key={rowKey(row, absIndex)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-line transition-colors duration-150 hover:bg-tint ${
+                    onRowClick ? "cursor-pointer" : ""
+                  } ${highlight?.(row) ? "bg-[#fbfcfe]" : ""}`}
+                  style={{ minHeight: rowHeight ?? (dense ? 40 : 56) }}
+                >
+                  {columns.map((c) => (
+                    <td
+                      key={c.key}
+                      style={{ textAlign: c.align ?? "left", minWidth: c.minWidth }}
+                      className={`px-3 py-2 align-top text-textmain ${
+                        c.align === "right" ? "num whitespace-nowrap" : c.nowrap ? "whitespace-nowrap" : "break-words"
+                      }`}
+                    >
+                      {c.render(row, absIndex)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {size > 0 && rows.length > size && (
+        <div className="flex items-center justify-between gap-3 pt-3 text-[13px] text-textsub">
+          <span>
+            共 {rows.length} 条，第 {safePage}/{pageCount} 页
+          </span>
+          <div className="flex items-center gap-1">
+            <Button size="sm" disabled={safePage <= 1} onClick={() => setPage(safePage - 1)}>
+              上一页
+            </Button>
+            <Button size="sm" disabled={safePage >= pageCount} onClick={() => setPage(safePage + 1)}>
+              下一页
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -728,9 +760,9 @@ export function Notice({
   );
 }
 
-export function EmptyState({ title, detail }: { title: string; detail?: React.ReactNode }) {
+export function EmptyState({ title, detail, compact = false }: { title: string; detail?: React.ReactNode; compact?: boolean }) {
   return (
-    <div className="py-10 text-center">
+    <div className={`${compact ? "py-4" : "py-8"} text-center`}>
       <p className="text-[14px] text-textmain">{title}</p>
       {detail && <p className="text-[12px] text-textsub mt-1.5 max-w-xl mx-auto">{detail}</p>}
     </div>

@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import React, { Suspense } from "react";
 import { Tabs } from "@/components/ui";
+import PageHeader from "@/components/PageHeader";
 import { config } from "@/lib/config";
 import UsersTab from "@/components/settings/UsersTab";
 import ScenariosTab from "@/components/settings/ScenariosTab";
@@ -19,7 +20,7 @@ function SettingsBody() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[24px] font-semibold leading-[34px]">系统配置</h1>
+      <PageHeader title="系统配置" />
       <Tabs
         tabs={config.settings.tabs.map((t) => ({ id: t.id, label: t.label }))}
         value={tab}

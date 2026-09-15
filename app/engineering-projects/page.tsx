@@ -86,10 +86,14 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
         rowKey={(p) => p.id}
         onRowClick={(p) => helpers.openObject(p.id)}
         empty="当前组织范围内没有工程项目。"
+        pageSize={8}
+        compactEmpty
+        tableClassName="min-w-[1100px]"
         columns={[
           {
             key: "name",
             title: "工程项目",
+            minWidth: "220px",
             render: (p) => (
               <span>
                 <span className="text-textmain">{p.name}</span>

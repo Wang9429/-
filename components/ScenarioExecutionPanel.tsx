@@ -257,7 +257,7 @@ export default function ScenarioExecutionPanel({
           ) : undefined
         }
       >
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 min-[1440px]:grid-cols-5 gap-3">
           {summaryItems.map((it) => (
             <button
               key={it.kind}
@@ -405,18 +405,21 @@ export default function ScenarioExecutionPanel({
               ? "当前环节尚未配置监管场景。"
               : "当前筛选条件下没有匹配场景，请调整搜索或筛选。"
           }
+          pageSize={8}
+          compactEmpty
+          tableClassName="min-w-[1080px]"
           columns={[
             {
               key: "name",
               title: "监管场景",
-              width: "30%",
+              minWidth: "240px",
               render: (r) => (
                 <button
                   className="text-left hover:text-brand transition-colors duration-150"
                   onClick={() => onOpenScenario?.(r.id)}
                   title={scenarioSourceLabel(r.id)}
                 >
-                  <span className="text-[14px] text-textmain block break-words whitespace-normal">{r.name}</span>
+                  <span className="text-[14px] text-textmain block break-words whitespace-normal leading-5">{r.name}</span>
                   <span className="num text-[12px] text-textsub">{r.id}</span>
                   <Tag tone={r.adoption === "结构化监测" ? "brand" : "neutral"}>{r.adoption}</Tag>
                 </button>

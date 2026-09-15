@@ -134,9 +134,12 @@ export default function IndicatorsTab() {
           dense
           rows={catalog.indicators}
           rowKey={(r) => r.id}
+          pageSize={10}
+          compactEmpty
+          tableClassName="min-w-[960px]"
           columns={[
-            { key: "id", title: "编号", width: "88px", render: (r) => <span className="num text-[12px]">{r.id}</span> },
-            { key: "name", title: "名称", render: (r) => r.name },
+            { key: "id", title: "编号", width: "88px", nowrap: true, render: (r) => <span className="num text-[12px]">{r.id}</span> },
+            { key: "name", title: "名称", minWidth: "200px", render: (r) => r.name },
             { key: "domain", title: "领域", width: "80px", render: (r) => domainCodeLabel(r.domain) },
             { key: "st", title: "状态", width: "80px", render: (r) => configStatusLabel(r.status) },
             {

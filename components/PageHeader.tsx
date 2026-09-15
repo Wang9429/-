@@ -10,8 +10,8 @@ export default function PageHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-      <div className="min-w-0">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+      <div className="min-w-0 shrink-0">
         <h1 className="text-[24px] font-semibold leading-[34px] text-textmain">{title}</h1>
         {subtitle && <p className="text-[13px] text-textsub mt-0.5 leading-5">{subtitle}</p>}
       </div>
