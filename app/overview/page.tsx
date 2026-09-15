@@ -162,7 +162,7 @@ export default function OverviewPage() {
           name="固定资产投资计划执行率"
           value={faParts.value}
           unit={faParts.unit}
-          compare={`完成 ${fmtAmountSmart(faMetric.numerator)}／同期计划 ${fmtAmountSmart(faMetric.denominator)} 万元`}
+          compare={`完成 ${fmtAmountSmart(faMetric.numerator)}／计划 ${fmtAmountSmart(faMetric.denominator)} 万元`}
           icon={<IconBars size={20} />}
           scopeLabel={scopeLabel}
           onOpen={() => setIndicatorId("FA-I06")}
@@ -264,7 +264,7 @@ export default function OverviewPage() {
         title="重点关注事项"
         subtitle="默认展示有依据的三条记录：投资偏差、资产利用及境外毛利"
         right={
-          <Link href="/supervision-workbench" className="text-[13px] text-brand hover:underline whitespace-nowrap">
+          <Link href="/supervision-workbench" className="text-[13px] text-brand hover:underline whitespace-nowrap mr-16">
             查看全部 →
           </Link>
         }
