@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { Button, Tag, useOverlay, useOverlayCount } from "@/components/ui";
 import { config, intersectOrgScope } from "@/lib/config";
@@ -57,6 +58,15 @@ export default function AiPanel() {
   const { zIndex, containerRef } = useOverlay(open, close, { isolateFocus: true });
   const fabZ = 40 + (overlayCount + 1) * 10;
   const showFab = !open && overlayCount > 0;
+  const [headerHost, setHeaderHost] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    if (!showFab) {
+      setHeaderHost(null);
+      return;
+    }
+    const nodes = [...document.querySelectorAll<HTMLElement>("[data-overlay-header-actions]")];
+    setHeaderHost(nodes.at(-1) ?? null);
+  }, [showFab, overlayCount]);
 
   const orgIds = useMemo(
     () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
@@ -149,26 +159,35 @@ export default function AiPanel() {
     };
   }, [task, filters, risks, canAct, user, orgIds, pathname]);
 
+  const fabButton = (
+    <button
+      type="button"
+      data-ai-fab=""
+      onClick={() => setOpen(true)}
+      className={
+        headerHost
+          ? "h-8 px-2.5 rounded-[6px] border border-brand bg-brand text-white text-[12px] font-medium hover:bg-brandstrong"
+          : "fixed h-11 px-3 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
+      }
+      style={
+        headerHost
+          ? undefined
+          : {
+              left: 16,
+              bottom: 24,
+              background: "var(--brand)",
+              zIndex: fabZ,
+            }
+      }
+      title="AI分析（抽屉打开时仍可使用）"
+    >
+      AI分析
+    </button>
+  );
+
   return (
     <>
-      {showFab && (
-        <button
-          type="button"
-          data-ai-fab=""
-          onClick={() => setOpen(true)}
-          className="fixed h-11 px-3 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
-          style={{
-            left: 16,
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "var(--brand)",
-            zIndex: fabZ,
-          }}
-          title="AI分析（抽屉打开时仍可使用）"
-        >
-          AI分析
-        </button>
-      )}
+      {showFab && (headerHost ? createPortal(fabButton, headerHost) : fabButton)}
       {open && (
         <div
           ref={containerRef}

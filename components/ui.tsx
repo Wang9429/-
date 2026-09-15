@@ -562,13 +562,16 @@ export function Drawer({
             </h2>
             {subtitle && <div className="text-[12px] text-textsub mt-1">{subtitle}</div>}
           </div>
-          <button
-            onClick={onClose}
-            aria-label="关闭"
-            className="shrink-0 h-8 w-8 rounded-[6px] border border-line text-textsub hover:bg-tint hover:text-brand transition-colors duration-150"
-          >
-            ✕
-          </button>
+          <div className="shrink-0 flex items-center gap-2">
+            <div data-overlay-header-actions="" className="flex items-center" />
+            <button
+              onClick={onClose}
+              aria-label="关闭"
+              className="h-8 w-8 rounded-[6px] border border-line text-textsub hover:bg-tint hover:text-brand transition-colors duration-150"
+            >
+              ✕
+            </button>
+          </div>
         </header>
         <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
         {footer && <div className="border-t border-line px-6 py-3 bg-[#fafcff]">{footer}</div>}
@@ -614,13 +617,16 @@ export function Modal({
           <h3 id={titleId} className="text-[16px] font-semibold text-textmain break-words pr-3">
             {title}
           </h3>
-          <button
-            onClick={onClose}
-            aria-label="关闭"
-            className="h-7 w-7 rounded-[6px] border border-line text-textsub hover:bg-tint transition-colors duration-150"
-          >
-            ✕
-          </button>
+          <div className="shrink-0 flex items-center gap-2">
+            <div data-overlay-header-actions="" className="flex items-center" />
+            <button
+              onClick={onClose}
+              aria-label="关闭"
+              className="h-7 w-7 rounded-[6px] border border-line text-textsub hover:bg-tint transition-colors duration-150"
+            >
+              ✕
+            </button>
+          </div>
         </header>
         <div className="px-5 py-4 overflow-auto">{children}</div>
         {footer && <div className="px-5 py-3 border-t border-line bg-[#fafcff]">{footer}</div>}
