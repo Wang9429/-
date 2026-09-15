@@ -162,6 +162,7 @@ export default function ScenariosTab() {
             highlight={(r) => r.id === gid}
             pageSize={8}
             compactEmpty
+            tableClassName="min-w-[560px]"
             columns={[
               { key: "name", title: "名称", minWidth: "160px", render: (r) => r.name },
               { key: "domain", title: "领域", width: "80px", render: (r) => domainCodeLabel(r.domain) },
@@ -176,7 +177,9 @@ export default function ScenariosTab() {
               {
                 key: "act",
                 title: "操作",
-                width: "190px",
+                width: "210px",
+                minWidth: "210px",
+                nowrap: true,
                 render: (r) => (
                   <ActionCell>
                     <Button size="sm" onClick={() => setTarget({ kind: "group", mode: "view", value: { ...r } })}>
@@ -230,6 +233,7 @@ export default function ScenariosTab() {
             empty="该一级场景下暂无子场景"
             pageSize={8}
             compactEmpty
+            tableClassName="min-w-[760px]"
             columns={[
               { key: "id", title: "编号", width: "88px", nowrap: true, render: (r) => <span className="num text-[12px]">{r.id}</span> },
               { key: "name", title: "名称", minWidth: "180px", render: (r) => r.name },
@@ -255,7 +259,9 @@ export default function ScenariosTab() {
               {
                 key: "act",
                 title: "操作",
-                width: "190px",
+                width: "210px",
+                minWidth: "210px",
+                nowrap: true,
                 render: (r) => (
                   <ActionCell>
                     <Button size="sm" onClick={() => setTarget({ kind: "sub", mode: "view", value: { ...r } })}>
