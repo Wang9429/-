@@ -276,7 +276,7 @@ function RiskCaseDrawerBody({
           <span>
             涉及领域：
             {risk.domains.map((d) => DOMAIN_META[d].label).join("、")}
-            {risk.domains.length > 1 && "（跨领域同一事项，各领域按同一 risk_id 展示，不复制）"}
+            {risk.domains.length > 1 && "（跨领域同一事项，各领域按同一事项展示，不复制）"}
           </span>
           {sourceLabel && <span>来源：{sourceLabel}</span>}
           <SimulatedBadge text={`数据性质：${risk.data_nature === "simulated" ? "合成样例" : risk.data_nature}`} />
@@ -691,7 +691,7 @@ function RiskCaseDrawerBody({
                   {
                     key: "phase",
                     title: "主归属环节",
-                    render: (l) => (l.primary_phase_id ? `${phaseName(l.primary_phase_id)}（${l.primary_phase_id}）` : "—"),
+                    render: (l) => (l.primary_phase_id ? phaseName(l.primary_phase_id) : "—"),
                   },
                   {
                     key: "assoc",
@@ -703,7 +703,7 @@ function RiskCaseDrawerBody({
                 ]}
               />
               <Notice tone="neutral" title="跨领域口径">
-                同一事项可出现在多个领域，综合总览按 risk_id 只计一件；各领域事项数之和可能大于总数。
+                同一事项可出现在多个领域，综合总览按事项只计一件；各领域事项数之和可能大于总数。
               </Notice>
               <div className="flex flex-wrap gap-2">
                 {risk.domains.map((d) => (
@@ -723,7 +723,7 @@ function RiskCaseDrawerBody({
                 </Link>
               </div>
               <p className="text-[12px] text-textsub">
-                责任单位：{orgName(risk.owner_org_id)}；跨领域查看保留同一 risk_id 与对象，不复制事项。
+                责任单位：{orgName(risk.owner_org_id)}；跨领域查看保留同一事项与对象，不复制事项。
               </p>
             </>
           )}

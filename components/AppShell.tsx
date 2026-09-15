@@ -81,7 +81,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   aria-current={active ? "page" : undefined}
                 >
                   <Icon size={18} />
-                  <span className="reg-nav-label">{item.label}</span>
+          <span className="reg-nav-label" title={item.label}>{item.label}</span>
                 </Link>
               </li>
             );

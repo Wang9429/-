@@ -111,7 +111,7 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
           <Tag tone="amber">受限 {fmtAmount(restrictedCny)} 万元</Tag>
           <Tag tone="neutral">可用 {fmtAmount(totalCny - restrictedCny)} 万元</Tag>
           <Tag tone="neutral">受限占比 {fmtPct((restrictedCny / totalCny) * 100)}</Tag>
-          <SimulatedBadge text="演示汇率" />
+          <SimulatedBadge text="模拟汇率" />
         </div>
         <div className="mt-3">
           <Notice tone="neutral" title="余额口径">

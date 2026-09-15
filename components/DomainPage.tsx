@@ -255,7 +255,9 @@ export default function DomainPage({
               const raw = k.value;
               const text = typeof raw === "string" ? raw.replace(/%%+$/, "%") : raw;
               const unit =
-                k.unit && typeof text === "string" && k.unit === "%" && text.includes("%")
+                k.unit &&
+                typeof text === "string" &&
+                (k.unit === "%" ? text.includes("%") : text.includes(k.unit))
                   ? undefined
                   : k.unit;
               return (
@@ -291,18 +293,25 @@ export default function DomainPage({
             {highlights.length === 0 ? (
               <p className="text-[13px] text-textsub">当前组织范围内没有未关闭事项。</p>
             ) : (
-              <ul className="flex flex-wrap gap-2">
+              <ul className="space-y-2">
                 {highlights.map((r) => (
                   <li key={r.id}>
                     <button
+                      type="button"
                       onClick={() => setRiskId(r.id)}
-                      className="flex items-center gap-2 h-9 px-3 rounded-[6px] border border-line bg-surface hover:bg-tint transition-colors duration-150 text-[13px]"
+                      className="w-full flex items-start gap-3 px-3 py-2.5 rounded-[6px] border border-line bg-surface hover:bg-tint transition-colors duration-150 text-left"
                     >
-                      <SeverityTag severity={r.severity} />
-                      <span className="num text-textsub">{r.primary_object_id}</span>
-                      <span className="text-textmain">{r.title}</span>
-                      {isOverdueRectification(r, filters.asOf) && <Tag tone="red">整改逾期</Tag>}
-                      <span className="text-textsub">{statusLabel[r.status]}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start gap-2">
+                          <span className="num text-[12px] text-textsub shrink-0 mt-0.5">{r.primary_object_id}</span>
+                          <span className="text-[13px] text-textmain leading-5 break-words">{r.title}</span>
+                        </div>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-2 flex-wrap justify-end max-w-[46%]">
+                        <SeverityTag severity={r.severity} />
+                        {isOverdueRectification(r, filters.asOf) && <Tag tone="red">整改逾期</Tag>}
+                        <span className="text-[12px] text-textsub whitespace-nowrap">{statusLabel[r.status]}</span>
+                      </div>
                     </button>
                   </li>
                 ))}
@@ -312,6 +321,7 @@ export default function DomainPage({
 
           {flowMode === "phases" && template && (
             <Card
+              id="business-flow"
               title="业务流程监管"
               subtitle="箭头只显示环节名称与未关闭事项数；点击后在本页下方联动场景与事项，不切换页签"
               right={
@@ -342,9 +352,6 @@ export default function DomainPage({
                 onChange={(id) => {
                   setPhaseId(id);
                   setSubtopicId(null);
-                  requestAnimationFrame(() => {
-                    document.getElementById("scenario-execution")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  });
                 }}
                 ariaLabel={`${meta.label}业务阶段`}
               />
@@ -387,9 +394,6 @@ export default function DomainPage({
                       key={t.id}
                       onClick={() => {
                         setTopicId(t.id);
-                        requestAnimationFrame(() => {
-                          document.getElementById("scenario-execution")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        });
                       }}
                       title={`${t.name}｜未关闭事项 ${c.open} 件｜${topicFocus?.[t.id] ?? ""}`}
                       className={`h-[62px] min-w-[168px] px-4 rounded-[6px] border text-left transition-colors duration-150 ${
@@ -455,7 +459,7 @@ export default function DomainPage({
       {tab === "cases" && (
         <Card
           title="监管事项"
-          subtitle="同一事项在各领域共用同一 risk_id 与状态；办理后本页、首页、指标与综合总览同步更新"
+          subtitle="同一事项在各领域共用同一事项编号与办理状态；办理后本页、首页、指标与综合总览同步更新"
           right={
             <div className="flex items-center gap-2">
               <div className="flex rounded-[6px] border border-line overflow-hidden">
@@ -512,7 +516,7 @@ export default function DomainPage({
             empty="当前组织范围与筛选条件下没有监管事项。"
             columns={[
               { key: "id", title: "事项", width: "76px", render: (r) => <span className="num">{r.id}</span> },
-              { key: "title", title: "名称", render: (r) => r.title },
+              { key: "title", title: "名称", render: (r) => <span className="break-words leading-5">{r.title}</span> },
               { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
               { key: "status", title: "办理状态", width: "104px", render: (r) => statusLabel[r.status] },
               {

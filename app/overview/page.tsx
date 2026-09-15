@@ -294,13 +294,13 @@ export default function OverviewPage() {
               {highlightCases.map((r) => {
                 const prog = progressOf(r, filters.asOf);
                 return (
-                  <tr key={r.id} className="border-b border-line hover:bg-tint" style={{ height: 56 }}>
-                    <td className="px-3 py-2 text-textmain font-medium">{highlightTitle(r)}</td>
-                    <td className="px-3 py-2 text-textsub">{highlightFact(r)}</td>
-                    <td className="px-3 py-2">
+                  <tr key={r.id} className="border-b border-line hover:bg-tint">
+                    <td className="px-3 py-2 text-textmain font-medium break-words leading-5 align-top">{highlightTitle(r)}</td>
+                    <td className="px-3 py-2 text-textsub break-words leading-5 align-top">{highlightFact(r)}</td>
+                    <td className="px-3 py-2 align-top whitespace-nowrap">
                       <Tag tone={prog.tone}>{prog.text}</Tag>
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-3 py-2 text-right align-top whitespace-nowrap">
                       <button type="button" className="text-[13px] text-brand hover:underline" onClick={() => setRiskId(r.id)}>
                         查看详情
                       </button>

@@ -16,8 +16,8 @@ import { objectName } from "@/lib/objects";
 import { orgName } from "@/lib/org";
 
 /**
- * P72 监管场景详情：保留附件原文、子场景、工作表行号与制度来源，
- * 并展示规则配置、执行统计与数据缺口（完整业需 13.1 / 5.4）。
+ * 监管场景详情：业务名称用一级监管场景 / 监管子场景；
+ * 工作表、行号与映射说明放在来源依据。
  */
 export default function ScenarioDrawer({
   scenarioId,
@@ -68,9 +68,9 @@ export default function ScenarioDrawer({
             <DescList
               cols={2}
               items={[
-                { label: "附件A列监管场景原文", value: cat.original_scene },
-                { label: "附件B列子场景", value: cat.name },
-                { label: "主归属阶段", value: `${phaseName(cat.primary_phase_id)}（${cat.primary_phase_id}）` },
+                { label: "一级监管场景", value: cat.original_scene },
+                { label: "监管子场景", value: cat.name },
+                { label: "主归属阶段", value: phaseName(cat.primary_phase_id) },
                 {
                   label: "关联阶段",
                   value:
@@ -80,13 +80,22 @@ export default function ScenarioDrawer({
                 },
                 { label: "平台行为", value: cat.platform_behavior },
                 { label: "明确排除的操作", value: cat.excluded_operations || "—" },
-                { label: "关联原KRI", value: cat.indicator_ids.join("、") || "本场景无对应KRI" },
-                { label: "阶段映射版本", value: `${cat.phase_mapping_version}｜${cat.phase_mapping_note}` },
+                { label: "关联监管指标", value: cat.indicator_ids.join("、") || "本场景无对应监管指标" },
               ]}
             />
-            <Notice tone="neutral" title="落地说明">
-              {cat.implementation_note}
-            </Notice>
+            <div>
+              <h4 className="text-[15px] font-semibold text-textmain mb-2">来源依据</h4>
+              <DescList
+                cols={2}
+                items={[
+                  { label: "目录来源", value: scenarioSourceLabel(scenarioId) },
+                  { label: "工作表", value: cat.source_sheet },
+                  { label: "行号", value: <span className="num">第 {cat.source_row} 行（{cat.source_range}）</span> },
+                  { label: "阶段对应说明", value: cat.phase_mapping_note },
+                  { label: "落地说明", value: cat.implementation_note },
+                ]}
+              />
+            </div>
           </>
         ) : (
           <>
@@ -96,7 +105,7 @@ export default function ScenarioDrawer({
                 { label: "场景名称", value: scenarioName(scenarioId) },
                 {
                   label: "主归属阶段",
-                  value: supp?.primary_phase_id ? `${phaseName(supp.primary_phase_id)}（${supp.primary_phase_id}）` : "—",
+                  value: supp?.primary_phase_id ? phaseName(supp.primary_phase_id) : "—",
                 },
                 { label: "关联规则", value: supp?.rule_id ?? "—" },
                 { label: "来源", value: supp?.source ?? "本业需补充设计" },
@@ -128,7 +137,7 @@ export default function ScenarioDrawer({
                   </span>
                 ),
               },
-              { label: "命中规则种类数", value: <span className="num">{hitTypes.size}</span>, hint: "按 rule_id 去重" },
+                { label: "命中规则种类数", value: <span className="num">{hitTypes.size}</span>, hint: "按规则去重" },
               {
                 label: "有效命中次数",
                 value: <span className="num">{evals.filter((e) => e.effective_result === "hit").length}</span>,

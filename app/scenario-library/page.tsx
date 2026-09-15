@@ -59,9 +59,9 @@ export default function ScenarioLibraryPage() {
         <div>
           <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">场景规则库</h1>
           <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
-            投资底稿附件的 {catalog.counts.source_scenarios} 项子场景、{catalog.counts.unique_indicators} 项原 KRI
-            与本 Demo 启用的监测规则定义。场景保留 A 列监管场景原文、B 列子场景、工作表与行号；
-            本业需补充场景单独标注来源，不声称来自投资 Excel 或未经核实的制度条款。
+            投资底稿目录的 {catalog.counts.source_scenarios} 项监管子场景、{catalog.counts.unique_indicators} 项原监管指标
+            与当前启用的监测规则定义。场景展示一级监管场景、监管子场景，工作表与行号见来源依据；
+            本系统补充场景单独标注来源，不声称来自投资底稿或未经核实的制度条款。
           </p>
         </div>
         <Tag tone="neutral">
@@ -104,7 +104,7 @@ export default function ScenarioLibraryPage() {
             onClick={() =>
               downloadCsv(
                 "监管场景清单.csv",
-                ["场景ID", "领域", "子场景名称", "监管场景原文", "纳入方式", "主归属阶段", "来源工作表", "来源行号", "关联KRI"],
+                ["场景ID", "领域", "监管子场景", "一级监管场景", "纳入方式", "主归属阶段", "来源工作表", "来源行号", "关联指标"],
                 (tab === "scenarios" ? catalogRows : []).map((s) => [
                   s.id,
                   DOMAIN_META[s.domain].label,
@@ -140,10 +140,10 @@ export default function ScenarioLibraryPage() {
             columns={[
               { key: "id", title: "场景ID", width: "96px", render: (s) => <span className="num">{s.id}</span> },
               { key: "domain", title: "领域", width: "110px", render: (s) => DOMAIN_META[s.domain].label },
-              { key: "name", title: "子场景名称", render: (s) => s.name },
+              { key: "name", title: "监管子场景", render: (s) => s.name },
               {
                 key: "origin",
-                title: "监管场景原文",
+                title: "一级监管场景",
                 render: (s) => <span className="text-[13px] text-textsub">{s.original_scene}</span>,
               },
               {
@@ -159,7 +159,7 @@ export default function ScenarioLibraryPage() {
               { key: "phase", title: "主归属阶段", width: "120px", render: (s) => phaseName(s.primary_phase_id) },
               {
                 key: "src",
-                title: "来源",
+                title: "来源依据",
                 width: "180px",
                 render: (s) => (
                   <span className="num text-[12px] text-textsub">
@@ -169,7 +169,7 @@ export default function ScenarioLibraryPage() {
               },
               {
                 key: "kri",
-                title: "关联KRI",
+                title: "关联指标",
                 width: "120px",
                 render: (s) => (s.indicator_ids.length ? s.indicator_ids.join("、") : <span className="text-textsub">无</span>),
               },
@@ -257,7 +257,7 @@ export default function ScenarioLibraryPage() {
               },
               {
                 key: "example",
-                title: "演示示例",
+                title: "计算示例",
                 render: (r) => <span className="text-[13px] text-textsub">{r.example_formula}</span>,
               },
               {
@@ -288,7 +288,7 @@ export default function ScenarioLibraryPage() {
               },
               {
                 key: "active",
-                title: "演示启用",
+                title: "当前启用",
                 width: "100px",
                 render: (r) => (r.active_demo ? <Tag tone="green">已启用</Tag> : <Tag tone="neutral">未启用</Tag>),
               },

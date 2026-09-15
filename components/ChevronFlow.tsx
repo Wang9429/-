@@ -73,7 +73,7 @@ export default function ChevronFlow({
                 onClick={() => onChange(item.id)}
                 title={`${item.name}｜未关闭事项 ${item.openCount} 件${
                   item.businessNote ? `｜业务状态：${item.businessNote}` : ""
-                }｜统计范围：当前组织及期间内与本环节实际关联的 risk_id 去重`}
+                }｜统计范围：当前组织及期间内与本环节实际关联的事项去重`}
                 className="relative h-[62px] shrink-0 transition-[filter] duration-150 hover:brightness-[0.99]"
                 style={{
                   width: 132,
@@ -95,7 +95,7 @@ export default function ChevronFlow({
                   }}
                 >
                   <span
-                    className={`text-[13px] leading-[18px] text-left ${
+                    className={`text-[13px] leading-[18px] text-left whitespace-nowrap ${
                       selected ? "text-brand font-medium" : "text-textmain"
                     }`}
                   >

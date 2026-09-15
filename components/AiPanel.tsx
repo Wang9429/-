@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { Button, Tag } from "@/components/ui";
+import { Button, Tag, useOverlay, useOverlayCount } from "@/components/ui";
 import { config, intersectOrgScope } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { INDICATORS, computeIndicator } from "@/lib/metrics";
@@ -19,6 +19,10 @@ export default function AiPanel() {
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState<string>("explain_metric");
   const [scopeNote, setScopeNote] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const overlayCount = useOverlayCount();
+  const { zIndex, containerRef } = useOverlay(open, close);
+  const fabZ = 40 + (overlayCount + 1) * 10;
 
   const orgIds = useMemo(
     () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
@@ -113,29 +117,37 @@ export default function AiPanel() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed z-40 min-w-12 h-12 px-3 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
-        style={{ right: 24, bottom: 24, background: "var(--brand)" }}
-        title="AI分析"
-      >
-        AI分析
-      </button>
-      {open && (
-        <aside
-          className="fixed top-0 right-0 h-full w-[460px] max-w-[100vw] bg-surface border-l border-line z-[55] flex flex-col shadow-[-8px_0_24px_rgba(11,31,58,0.12)]"
-          role="dialog"
-          aria-label="AI分析"
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="fixed min-w-12 h-12 px-3 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
+          style={{ right: 24, bottom: 24, background: "var(--brand)", zIndex: fabZ }}
+          title="AI分析"
         >
+          AI分析
+        </button>
+      )}
+      {open && (
+        <div
+          ref={containerRef}
+          className="fixed inset-0 pointer-events-none"
+          style={{ zIndex }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="AI分析"
+          tabIndex={-1}
+        >
+          <div className="absolute inset-0 bg-[#0b1f3a]/25 sup-fade pointer-events-none" aria-hidden />
+          <aside className="absolute top-0 right-0 h-full w-[460px] max-w-[100vw] bg-surface border-l border-line flex flex-col shadow-[-8px_0_24px_rgba(11,31,58,0.12)] pointer-events-auto">
           <div className="h-14 px-5 border-b border-line flex items-center justify-between">
             <div>
               <div className="text-[15px] font-semibold">AI分析</div>
-              <button className="text-[12px] text-brand hover:underline" onClick={() => setScopeNote((v) => !v)}>
+              <button type="button" className="text-[12px] text-brand hover:underline" onClick={() => setScopeNote((v) => !v)}>
                 {config.ai.mode_display} · 未连接模型服务
               </button>
             </div>
-            <button className="text-textsub hover:text-textmain" onClick={() => setOpen(false)} aria-label="关闭">
+            <button type="button" className="text-textsub hover:text-textmain" onClick={close} aria-label="关闭">
               ✕
             </button>
           </div>
@@ -147,6 +159,7 @@ export default function AiPanel() {
           <div className="px-5 py-3 flex flex-wrap gap-1.5 border-b border-line">
             {config.ai.tasks.map((t) => (
               <button
+                type="button"
                 key={t.id}
                 onClick={() => setTask(t.id)}
                 className={`h-8 px-2.5 rounded-[6px] text-[12px] border ${
@@ -168,9 +181,10 @@ export default function AiPanel() {
             <p className="text-[12px] text-textsub">{config.ai.unrecognized_question}</p>
           </div>
           <div className="px-5 py-3 border-t border-line">
-            <Button onClick={() => setOpen(false)}>关闭</Button>
+            <Button onClick={close}>关闭</Button>
           </div>
-        </aside>
+          </aside>
+        </div>
       )}
     </>
   );

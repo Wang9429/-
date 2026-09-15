@@ -378,7 +378,7 @@ export default function ScenarioExecutionPanel({
                 ]),
                 {
                   title: "监管场景执行清单",
-                  scopeLines: [scopeLine, "金额单位：万元人民币", "口径：对象数按对象类型+对象ID去重，事项数按risk_id去重"],
+                  scopeLines: [scopeLine, "金额单位：万元人民币", "口径：对象数按对象类型与对象编号去重，事项数按事项去重"],
                 },
               )
             }
@@ -725,7 +725,7 @@ export default function ScenarioExecutionPanel({
         <div className="mt-3 flex items-center gap-2">
           <SimulatedBadge text="合成样例" />
           <span className="text-[12px] text-textsub">
-            对象数按 object_type+object_id 去重，事项数按 risk_id 去重，二者不是同一计数单位。
+            对象数按对象类型与对象编号去重，事项数按事项去重，二者不是同一计数单位。
           </span>
         </div>
       </Modal>

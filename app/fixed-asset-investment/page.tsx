@@ -394,7 +394,7 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
           <div className="flex items-center gap-2">
             <SimulatedBadge text="配置阈值参数" />
             <span className="text-[12px] text-textsub">
-              利用率目标为演示参数，正式落地按同类别批准目标替换（见数据依据页“待确认参数”）。
+              利用率目标为模拟参数，正式落地按同类别批准目标替换（见数据依据页“待确认参数”）。
             </span>
           </div>
         </div>

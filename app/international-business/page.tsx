@@ -302,7 +302,7 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
               <span className="num text-textmain">{fmtAmount(freightIncrease)} 万元</span>
             </p>
             <p className="text-[12px] text-textsub mt-2">
-              同一成本不从采购口径与合同口径重复计入；不同币种按明示的演示汇率换算。
+              同一成本不从采购口径与合同口径重复计入；不同币种按明示的模拟汇率换算。
             </p>
           </div>
         </div>

@@ -119,7 +119,7 @@ export function Button({
   size?: "sm" | "md";
 }) {
   const base =
-    "inline-flex items-center justify-center gap-1.5 rounded-[6px] border transition-colors duration-150 disabled:opacity-45 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center gap-1.5 rounded-[6px] border whitespace-nowrap transition-colors duration-150 disabled:opacity-45 disabled:cursor-not-allowed";
   const sizes = size === "sm" ? "h-8 px-2.5 text-[12px]" : "h-9 px-3.5 text-[13px]";
   const variants: Record<string, string> = {
     primary:
@@ -218,14 +218,14 @@ export function DataTable<T>({
               className={`border-b border-line transition-colors duration-150 hover:bg-tint ${
                 onRowClick ? "cursor-pointer" : ""
               } ${highlight?.(row) ? "bg-[#fbfcfe]" : ""}`}
-              style={{ height: rowHeight ?? (dense ? 40 : 56) }}
+              style={{ minHeight: rowHeight ?? (dense ? 40 : 56) }}
             >
               {columns.map((c) => (
                 <td
                   key={c.key}
                   style={{ textAlign: c.align ?? "left" }}
-                  className={`px-3 py-2 align-middle text-textmain ${
-                    c.align === "right" ? "num" : ""
+                  className={`px-3 py-2 align-top text-textmain break-words ${
+                    c.align === "right" ? "num whitespace-nowrap" : ""
                   }`}
                 >
                   {c.render(row, i)}
@@ -276,8 +276,12 @@ export function KpiCard({
   const tone = iconBg[iconTone];
   const valueText = typeof value === "string" ? value.replace(/%%+$/, "%") : value;
   const showUnit =
-    unit &&
-    !(typeof valueText === "string" && unit === "%" && valueText.includes("%"));
+    Boolean(unit) &&
+    !(
+      typeof valueText === "string" &&
+      unit &&
+      (unit === "%" ? valueText.includes("%") : valueText.includes(unit))
+    );
 
   return (
     <button
@@ -339,34 +343,126 @@ export function KpiCard({
 /* ------------------------------ 浮层栈 ------------------------------ */
 
 /**
- * 抽屉与弹窗共用一个浮层栈：Esc 只关闭最上层，
- * 所以在指标抽屉里打开数据追溯弹窗后按 Esc，只收起弹窗、回到原树节点。
+ * 抽屉、弹窗与 AI 面板共用一个浮层栈：
+ * 后打开的层 z-index 更高；Esc 只关闭最上层；全部关闭后恢复页面滚动。
  */
 const overlayStack: symbol[] = [];
+const overlayListeners = new Set<() => void>();
+const OVERLAY_BASE_Z = 50;
+const OVERLAY_STEP_Z = 10;
 
-function useEscapeOnTop(open: boolean, onClose: () => void) {
+function emitOverlayChange() {
+  overlayListeners.forEach((fn) => fn());
+}
+
+function overlayZ(rank: number) {
+  return OVERLAY_BASE_Z + Math.max(0, rank - 1) * OVERLAY_STEP_Z;
+}
+
+export function useOverlayCount() {
+  const [n, setN] = React.useState(overlayStack.length);
+  React.useEffect(() => {
+    const fn = () => setN(overlayStack.length);
+    overlayListeners.add(fn);
+    fn();
+    return () => {
+      overlayListeners.delete(fn);
+    };
+  }, []);
+  return n;
+}
+
+function focusableIn(root: HTMLElement): HTMLElement[] {
+  const sel =
+    'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  return [...root.querySelectorAll<HTMLElement>(sel)].filter((el) => {
+    if (el.hasAttribute("disabled") || el.getAttribute("aria-hidden") === "true") return false;
+    const style = window.getComputedStyle(el);
+    if (style.visibility === "hidden" || style.display === "none") return false;
+    return el.getClientRects().length > 0;
+  });
+}
+
+export function useOverlay(open: boolean, onClose: () => void) {
   const idRef = React.useRef<symbol | null>(null);
+  const restoreFocusRef = React.useRef<HTMLElement | null>(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const onCloseRef = React.useRef(onClose);
+  onCloseRef.current = onClose;
+  const [rank, setRank] = React.useState(0);
   if (idRef.current === null) idRef.current = Symbol("overlay");
 
-  React.useEffect(() => {
-    if (!open) return;
+  React.useLayoutEffect(() => {
+    if (!open) {
+      setRank(0);
+      return;
+    }
     const id = idRef.current!;
+    restoreFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     overlayStack.push(id);
+    setRank(overlayStack.length);
+    emitOverlayChange();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
       if (overlayStack[overlayStack.length - 1] !== id) return;
-      onClose();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const root = containerRef.current;
+      if (!root) return;
+      if (!root.contains(document.activeElement)) return;
+      const nodes = focusableIn(root);
+      if (nodes.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !root.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !root.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
+    window.addEventListener("keydown", onKey, true);
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    const focusTimer = window.setTimeout(() => {
+      const root = containerRef.current;
+      if (!root) return;
+      const nodes = focusableIn(root);
+      (nodes[0] ?? root).focus();
+    }, 0);
+
     return () => {
-      window.removeEventListener("keydown", onKey);
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", onKey, true);
       const i = overlayStack.lastIndexOf(id);
       if (i >= 0) overlayStack.splice(i, 1);
-      if (overlayStack.length === 0) document.body.style.overflow = prev;
+      emitOverlayChange();
+      if (overlayStack.length === 0) document.body.style.overflow = prevOverflow;
+      const prev = restoreFocusRef.current;
+      if (prev && document.contains(prev)) {
+        try {
+          prev.focus();
+        } catch {
+          /* ignore */
+        }
+      }
+      setRank(0);
     };
-  }, [open, onClose]);
+  }, [open]);
+
+  const zIndex = overlayZ(rank || (open ? overlayStack.length + 1 : 1));
+  return { rank, zIndex, containerRef };
 }
 
 /* ------------------------------ 抽屉 ------------------------------ */
@@ -388,11 +484,20 @@ export function Drawer({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
-  useEscapeOnTop(open, onClose);
+  const { zIndex, containerRef } = useOverlay(open, onClose);
+  const titleId = React.useId();
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
+    <div
+      ref={containerRef}
+      className="fixed inset-0 flex justify-end"
+      style={{ zIndex }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+    >
       <div
         className="absolute inset-0 bg-[#0b1f3a]/35 sup-fade"
         onClick={onClose}
@@ -404,7 +509,9 @@ export function Drawer({
       >
         <header className="flex items-start justify-between gap-4 px-6 py-4 border-b border-line bg-surface">
           <div className="min-w-0">
-            <h2 className="text-[24px] font-semibold text-textmain leading-[34px]">{title}</h2>
+            <h2 id={titleId} className="text-[24px] font-semibold text-textmain leading-[34px] break-words">
+              {title}
+            </h2>
             {subtitle && <div className="text-[12px] text-textsub mt-1">{subtitle}</div>}
           </div>
           <button
@@ -437,17 +544,28 @@ export function Modal({
   footer?: React.ReactNode;
   width?: number;
 }) {
-  useEscapeOnTop(open, onClose);
+  const { zIndex, containerRef } = useOverlay(open, onClose);
+  const titleId = React.useId();
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6" role="dialog" aria-modal="true">
+    <div
+      ref={containerRef}
+      className="fixed inset-0 flex items-center justify-center p-6"
+      style={{ zIndex }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+    >
       <div className="absolute inset-0 bg-[#0b1f3a]/35 sup-fade" onClick={onClose} aria-hidden />
       <div
         className="relative bg-surface rounded-[10px] shadow-[0_12px_36px_rgba(11,31,58,0.22)] sup-fade max-h-[86vh] flex flex-col"
-        style={{ width }}
+        style={{ width, maxWidth: "calc(100vw - 48px)" }}
       >
         <header className="flex items-center justify-between px-5 py-3.5 border-b border-line">
-          <h3 className="text-[16px] font-semibold text-textmain">{title}</h3>
+          <h3 id={titleId} className="text-[16px] font-semibold text-textmain break-words pr-3">
+            {title}
+          </h3>
           <button
             onClick={onClose}
             aria-label="关闭"
@@ -475,7 +593,7 @@ export function Tabs({
   onChange: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-1 border-b border-line" role="tablist">
+    <div className="flex items-center gap-1 border-b border-line overflow-x-auto" role="tablist">
       {tabs.map((t) => {
         const active = t.id === value;
         return (

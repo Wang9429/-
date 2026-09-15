@@ -48,47 +48,50 @@
   --color-line: var(--border);
 }
 
-* {
-  box-sizing: border-box;
-}
+/*
+  基础 reset 必须放在 @layer base，否则会盖过 Tailwind 工具类的颜色、字号和换行。
+  侧栏链接颜色由 .reg-sidebar a.reg-nav-link 单独指定，不依赖全局 a。
+*/
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body {
-  padding: 0;
-  margin: 0;
-}
+  html,
+  body {
+    padding: 0;
+    margin: 0;
+  }
 
-body {
-  background: var(--page-bg);
-  color: var(--text-main);
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
-    "Noto Sans SC", "Hiragino Sans GB", "Source Han Sans SC", "Helvetica Neue", Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+  body {
+    background: var(--page-bg);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+      "Noto Sans SC", "Hiragino Sans GB", "Source Han Sans SC", "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font-family: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 .num {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
-}
-
-/* 主内容链接继承正文色；侧栏链接必须单独指定，避免 :visited 变成深蓝字。 */
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button {
-  font-family: inherit;
-  font-size: inherit;
-  white-space: nowrap;
-}
-
-:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
-  border-radius: 4px;
 }
 
 ::-webkit-scrollbar {
@@ -262,6 +265,9 @@ button {
 }
 
 .reg-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   min-height: 60px;
   display: flex;
   align-items: center;
@@ -288,6 +294,11 @@ button {
 
 .reg-content {
   padding: 24px;
+}
+
+#scenario-execution,
+#business-flow {
+  scroll-margin-top: 72px;
 }
 
 .reg-filters {

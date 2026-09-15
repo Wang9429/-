@@ -192,11 +192,15 @@ function IndicatorDrawerBody({
           )}
           <span
             className={`text-[14px] truncate flex-1 ${selected ? "text-brand font-medium" : "text-textmain"}`}
+            title={org.name}
           >
             {org.name}
           </span>
           <span className="text-[11px] text-textsub shrink-0">{orgLevelLabel(org)}</span>
-          <span className="num text-[13px] shrink-0 w-[74px] text-right text-textmain">
+          <span
+            className="num text-[13px] shrink-0 min-w-[64px] max-w-[88px] text-right text-textmain truncate"
+            title={formatMetric(indicator, metric)}
+          >
             {formatMetric(indicator, metric)}
           </span>
           {riskCount > 0 && (
@@ -231,13 +235,19 @@ function IndicatorDrawerBody({
                     }
                   }}
                 >
-                  <span className={`text-[14px] truncate flex-1 ${sel ? "text-brand font-medium" : "text-textmain"}`}>
+                  <span
+                    className={`text-[14px] truncate flex-1 ${sel ? "text-brand font-medium" : "text-textmain"}`}
+                    title={leaf.name}
+                  >
                     {leaf.name}
                   </span>
                   <span className="text-[11px] text-textsub shrink-0">
                     {objectTypeLabel[leaf.objectType] ?? leaf.objectType}
                   </span>
-                  <span className="num text-[13px] shrink-0 w-[74px] text-right text-textmain">
+                  <span
+                    className="num text-[13px] shrink-0 min-w-[64px] max-w-[88px] text-right text-textmain truncate"
+                    title={formatMetric(indicator, lm)}
+                  >
                     {formatMetric(indicator, lm)}
                   </span>
                   {leaf.riskIds.length > 0 && (
@@ -290,7 +300,6 @@ function IndicatorDrawerBody({
         <span className="flex items-center gap-2 flex-wrap">
           {indicator.name}
           <Tag tone="brand">组织穿透</Tag>
-          <Tag tone="neutral">单位 {indicator.unit}</Tag>
         </span>
       }
       subtitle={
@@ -300,7 +309,6 @@ function IndicatorDrawerBody({
             期间 {filters.periodStart} ~ {filters.periodEnd}
           </span>
           <span className="num">截至日 {filters.asOf}</span>
-          <span>口径版本 DEMO-RULES-V1.2</span>
           <span>数据性质：合成样例</span>
         </span>
       }
@@ -376,11 +384,10 @@ function IndicatorDrawerBody({
                       ? orgById(selection.id)?.name
                       : `${selectedLeaf?.name}（${objectTypeLabel[selectedLeaf?.objectType ?? ""] ?? ""}）`}
                   </div>
-                  <div className="flex items-baseline gap-2 mt-1">
+                  <div className="flex items-baseline gap-2 mt-1 flex-wrap">
                     <span className="num text-[32px] font-semibold leading-9">
                       {formatMetric(indicator, selectedMetric)}
                     </span>
-                    <span className="text-[13px] text-textsub">{indicator.unit}</span>
                     {statusTag(selectedMetric)}
                   </div>
                 </div>
@@ -465,7 +472,7 @@ function IndicatorDrawerBody({
                     { key: "type", title: "类型", width: "120px", render: (r) => <span className="text-textsub text-[13px]">{r.type}</span> },
                     {
                       key: "value",
-                      title: `指标值（${indicator.unit}）`,
+                      title: "指标值",
                       align: "right",
                       width: "160px",
                       render: (r) => formatMetric(indicator, r.metric),
@@ -563,7 +570,7 @@ function IndicatorDrawerBody({
                     label: "版本与性质",
                     value: (
                       <span className="text-[13px]">
-                        规则版本 DEMO-RULES-V1.2；参数为底稿参数或配置参数，正式阈值由业务部门确认后配置。
+                        规则版本记录于来源依据；参数为底稿参数或配置参数，正式阈值由业务部门确认后配置。
                       </span>
                     ),
                   },
@@ -651,7 +658,6 @@ function TraceModal({
               value: (
                 <span className="num text-[14px] font-semibold">
                   {formatMetric(indicator, result)}
-                  {result.value === null ? "" : ` ${indicator.unit}`}
                 </span>
               ),
             },
