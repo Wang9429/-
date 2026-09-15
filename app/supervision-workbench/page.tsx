@@ -17,6 +17,8 @@ import { daysBetween, fmtDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/export";
 import { intersectOrgScope, riskVisible } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
+import FilterBar from "@/components/FilterBar";
+import PageHeader from "@/components/PageHeader";
 import type { DomainId, RiskCase } from "@/lib/types";
 
 /**
@@ -85,15 +87,12 @@ export default function WorkbenchPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-[22px] font-semibold text-textmain leading-7">监管工作台</h1>
-          <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
-            从预警确认到整改复核的日常办理入口。与各领域页面共用同一对象、同一 risk_id 与同一状态，不生成第二套统计。
-            当前用户：{user?.name ?? "—"}。与各领域页面共用同一对象、同一 risk_id 与同一状态。
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="监管工作台"
+        subtitle="从预警确认到整改复核的日常办理入口。与各领域页面共用同一对象与同一事项状态，不生成第二套统计。"
+      >
+        <FilterBar />
+      </PageHeader>
 
       <Tabs
         tabs={VIEWS.map((v) => ({ id: v.id, label: `${v.label}（${counts[v.id as keyof typeof counts]}）` }))}

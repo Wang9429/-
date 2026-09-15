@@ -1,33 +1,38 @@
 @import "tailwindcss";
 
 /*
-  统一蓝色调国央企监管工作台主题
-  色值来源：完整业需 V1.3 第 3.2 节 / 公开产品借鉴与页面设计 V1.3 第 9 章
-  所有领域、共用详情、指标抽屉、规则与工作台共用本文件，不在页面内另写一套颜色与间距。
+  海油工程穿透式监管平台 · V1.6.1 视觉
+  色值与间距以《海油工程_UI视觉整改说明_V1.6.1》为准。
+  业务计算仍执行 V1.6；本文件只约束共用外观。
 */
 :root {
   --nav-deep: #0b1f3a;
+  --nav-text: #e7effa;
+  --nav-icon: #b8c9e3;
+  --nav-hover: #12345b;
   --nav-active: #164b8e;
+  --nav-active-mark: #5c9cf2;
   --brand: #1d5fd1;
   --brand-strong: #17509f;
   --page-bg: #f3f6fb;
   --surface: #ffffff;
   --tint: #eaf1fd;
-  --text-main: #172b4d;
-  --text-sub: #5a6b83;
-  --border: #e1e8f0;
+  --text-main: #182b49;
+  --text-sub: #66768d;
+  --border: #e3eaf3;
+  --card-shadow: 0 2px 10px rgba(17, 43, 77, 0.04);
 
-  --risk-red-fg: #b42318;
+  --risk-red-fg: #c7383b;
   --risk-red-bg: #fef3f2;
-  --risk-amber-fg: #9a6700;
+  --risk-amber-fg: #946000;
   --risk-amber-bg: #fffaeb;
   --risk-green-fg: #067647;
   --risk-green-bg: #ecfdf3;
-  --risk-neutral-fg: #52627a;
+  --risk-neutral-fg: #66768d;
   --risk-neutral-bg: #f3f6fb;
 
-  --radius-card: 8px;
-  --radius-control: 6px;
+  --radius-card: 10px;
+  --radius-control: 8px;
 }
 
 @theme inline {
@@ -56,19 +61,19 @@ body {
 body {
   background: var(--page-bg);
   color: var(--text-main);
-  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Hiragino Sans GB",
-    "Source Han Sans SC", "Helvetica Neue", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    "Noto Sans SC", "Hiragino Sans GB", "Source Han Sans SC", "Helvetica Neue", Arial, sans-serif;
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* 数字统一使用等宽数字属性，保证金额与百分比对齐 */
 .num {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
+/* 主内容链接继承正文色；侧栏链接必须单独指定，避免 :visited 变成深蓝字。 */
 a {
   color: inherit;
   text-decoration: none;
@@ -77,6 +82,7 @@ a {
 button {
   font-family: inherit;
   font-size: inherit;
+  white-space: nowrap;
 }
 
 :focus-visible {
@@ -122,4 +128,237 @@ button {
 }
 .sup-slide {
   animation: sup-slide-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sup-fade,
+  .sup-slide {
+    animation: none;
+  }
+}
+
+.reg-app {
+  display: flex;
+  min-height: 100dvh;
+  color: var(--text-main);
+  background: var(--page-bg);
+}
+
+.reg-sidebar {
+  flex: 0 0 248px;
+  width: 248px;
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--nav-deep);
+  color: var(--nav-text);
+}
+
+.reg-brand {
+  flex-shrink: 0;
+  height: 88px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #263c58;
+}
+
+.reg-brand-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 24px;
+}
+.reg-brand-sub {
+  font-size: 13px;
+  color: var(--nav-text);
+  line-height: 18px;
+  margin-top: 2px;
+}
+
+.reg-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.reg-sidebar a.reg-nav-link,
+.reg-sidebar a.reg-nav-link:link,
+.reg-sidebar a.reg-nav-link:visited,
+.reg-sidebar a.reg-nav-link:hover,
+.reg-sidebar a.reg-nav-link:active,
+.reg-sidebar button.reg-nav-link {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  color: var(--nav-text);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.reg-sidebar a.reg-nav-link:hover,
+.reg-sidebar button.reg-nav-link:hover {
+  background: var(--nav-hover);
+  color: #ffffff;
+}
+
+.reg-sidebar a.reg-nav-link[aria-current="page"],
+.reg-sidebar button.reg-nav-link[aria-current="page"] {
+  background: var(--nav-active);
+  color: #ffffff;
+  box-shadow: inset 3px 0 0 var(--nav-active-mark);
+}
+
+.reg-sidebar a.reg-nav-link:focus-visible,
+.reg-sidebar button.reg-nav-link:focus-visible {
+  outline: 2px solid #a9d2ff;
+  outline-offset: 2px;
+}
+
+.reg-nav-link svg {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--nav-icon);
+}
+.reg-sidebar a.reg-nav-link:hover svg,
+.reg-sidebar a.reg-nav-link[aria-current="page"] svg,
+.reg-sidebar button.reg-nav-link:hover svg {
+  color: #ffffff;
+}
+
+.reg-nav-label {
+  min-width: 0;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.reg-sidebar-footer {
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 1px solid #263c58;
+}
+
+.reg-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.reg-toolbar {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.reg-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.reg-toolbar-actions a,
+.reg-toolbar-actions button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.reg-content {
+  padding: 24px;
+}
+
+.reg-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+
+.reg-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reg-filter-item label {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.reg-card {
+  min-width: 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+}
+
+.reg-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.reg-domains {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.reg-value {
+  font-size: 32px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.reg-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 1199px) {
+  .reg-kpis,
+  .reg-domains {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reg-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 899px) {
+  .reg-toolbar {
+    flex-wrap: wrap;
+  }
+  .reg-kpis,
+  .reg-domains {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

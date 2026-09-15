@@ -95,7 +95,7 @@ export default function DataSourcesPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-[22px] font-semibold text-textmain leading-7">数据依据</h1>
+          <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">数据依据</h1>
           <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
             数据情况、拟来源边界、规则与数据版本、导入模板与办理状态维护。可判定覆盖率 = 适用且具备完整判断数据的
             对象×规则实例数 ÷ 应评估的适用对象×规则实例数；分母是对象与规则的组合实例，不是配置规则数量，覆盖率也不称为合规率。

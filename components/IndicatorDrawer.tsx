@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { Drawer, Tag, DataTable, Notice, Button, LinkButton, DescList, Modal } from "@/components/ui";
 import { aggregate, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
 import { childOrgs, descendantOrgIds, orgLevelLabel, orgById, ROOT_ORG_ID } from "@/lib/org";
-import { fmtAmount, fmtInt, fmtPct, fmtSignedPct } from "@/lib/format";
+import { fmtAmount, fmtInt, fmtPctNumber, fmtSignedPct } from "@/lib/format";
 import { objectTypeLabel, seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import { isOpen } from "@/lib/risks";
@@ -27,12 +27,25 @@ function statusTag(m: NodeMetric) {
   }
 }
 
+export function formatMetricParts(
+  def: IndicatorDef,
+  m: NodeMetric,
+): { value: string; unit: string } {
+  if (m.value === null) return { value: "—", unit: "" };
+  if (def.kind === "count") return { value: fmtInt(m.value), unit: def.unit };
+  if (def.kind === "amount") return { value: fmtAmount(m.value), unit: def.unit };
+  if (def.kind === "signed_ratio") {
+    const signed = fmtSignedPct(m.value);
+    return { value: signed.replace(/%$/, ""), unit: "%" };
+  }
+  return { value: fmtPctNumber(m.value), unit: "%" };
+}
+
 export function formatMetric(def: IndicatorDef, m: NodeMetric): string {
-  if (m.value === null) return "—";
-  if (def.kind === "count") return fmtInt(m.value);
-  if (def.kind === "amount") return fmtAmount(m.value);
-  if (def.kind === "signed_ratio") return fmtSignedPct(m.value);
-  return fmtPct(m.value);
+  const parts = formatMetricParts(def, m);
+  if (parts.value === "—") return "—";
+  if (!parts.unit) return parts.value;
+  return parts.unit === "%" ? `${parts.value}%` : `${parts.value} ${parts.unit}`;
 }
 
 export interface IndicatorDrawerProps {
@@ -178,7 +191,7 @@ function IndicatorDrawerBody({
             <span className="w-4 shrink-0" />
           )}
           <span
-            className={`text-[13px] truncate flex-1 ${selected ? "text-brand font-medium" : "text-textmain"}`}
+            className={`text-[14px] truncate flex-1 ${selected ? "text-brand font-medium" : "text-textmain"}`}
           >
             {org.name}
           </span>
@@ -218,7 +231,7 @@ function IndicatorDrawerBody({
                     }
                   }}
                 >
-                  <span className={`text-[13px] truncate flex-1 ${sel ? "text-brand font-medium" : "text-textmain"}`}>
+                  <span className={`text-[14px] truncate flex-1 ${sel ? "text-brand font-medium" : "text-textmain"}`}>
                     {leaf.name}
                   </span>
                   <span className="text-[11px] text-textsub shrink-0">

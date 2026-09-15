@@ -57,7 +57,7 @@ export default function ScenarioLibraryPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-[22px] font-semibold text-textmain leading-7">场景规则库</h1>
+          <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">场景规则库</h1>
           <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
             投资底稿附件的 {catalog.counts.source_scenarios} 项子场景、{catalog.counts.unique_indicators} 项原 KRI
             与本 Demo 启用的监测规则定义。场景保留 A 列监管场景原文、B 列子场景、工作表与行号；

@@ -3,23 +3,30 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import IndicatorDrawer from "@/components/IndicatorDrawer";
+import IndicatorDrawer, { formatMetricParts } from "@/components/IndicatorDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
+import FilterBar from "@/components/FilterBar";
+import PageHeader from "@/components/PageHeader";
 import { Card, DataTable, KpiCard, Notice, SeverityTag, Tag } from "@/components/ui";
+import {
+  IconAlert,
+  IconBars,
+  IconClock,
+  IconClipboard,
+  DOMAIN_ICONS,
+} from "@/components/icons";
 import { DOMAIN_META, coverageRows, seed } from "@/lib/seed";
-import { INDICATORS, computeIndicator, indicatorById, type IndicatorDef } from "@/lib/metrics";
+import { INDICATORS, computeIndicator, indicatorById } from "@/lib/metrics";
 import { childOrgs, descendantOrgIds, orgName, ROOT_ORG_ID } from "@/lib/org";
 import { authorizedObjectIds, can, canDomain, intersectOrgScope, riskVisible } from "@/lib/config";
-import { isOpen, isCurrentTaskOverdue, isOverdueRectification, rectificationDueDate, riskMatches, statusLabel } from "@/lib/risks";
-import { fmtAmount, fmtDate, fmtPct } from "@/lib/format";
-import { formatMetric } from "@/components/IndicatorDrawer";
+import { isOpen, isOverdueRectification, riskMatches, statusLabel } from "@/lib/risks";
+import { fmtAmountSmart } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
 import type { DomainId, RiskCase } from "@/lib/types";
 
 /**
- * P00 综合总览（完整业需第 6 章）。默认以总部监管问题为主线：
- * 未关闭、高风险、逾期与可判定覆盖在上，六领域摘要与单位×领域矩阵在中，
- * 重点事项、近期事件与督办入口在下。按 risk_id 去重，不做综合风险评分。
+ * 综合总览（V1.6 口径 + V1.6.1 视觉）。
+ * 标题筛选 → 关注摘要 → 四张指标 → 六领域独立卡 → 重点事项 → 单位风险矩阵。
  */
 
 const DOMAIN_KPI: Record<DomainId, string> = {
@@ -32,15 +39,38 @@ const DOMAIN_KPI: Record<DomainId, string> = {
 };
 
 const DOMAIN_FOCUS: Record<DomainId, string> = {
-  FA: "投资成本偏差及转固后资产利用",
-  EQ: "出资履约、收益回收及权益信息",
+  FA: "预计完工投资偏差",
+  EQ: "到期出资履约",
   INTL: "航线与成本敞口",
-  CASH: "支付授权核查及出资、分红义务",
-  RIGHTS: "同有效期的批准、登记与产权台账核对",
-  ENG: "成本预测与 15% 目标的差距",
+  CASH: "支付授权核查",
+  RIGHTS: "多来源权益信息核对",
+  ENG: "成本预测与目标差距",
 };
 
 const DOMAIN_ORDER: DomainId[] = ["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"];
+
+function highlightTitle(r: RiskCase): string {
+  if (r.id === "R01") return "基地能力提升项目预计投资偏差";
+  if (r.id === "R02") return "关键生产设备利用偏低";
+  if (r.id === "R05") return "境外工程预计毛利偏离目标";
+  return r.title;
+}
+
+function highlightFact(r: RiskCase): string {
+  if (r.id === "R01") return "预计超有效概算 18%";
+  if (r.id === "R02") return "整改期限已过";
+  if (r.id === "R05") return "预计 12%／目标 15%";
+  return r.title;
+}
+
+function progressOf(r: RiskCase, asOf: string): { text: string; tone: "red" | "amber" | "brand" | "neutral" } {
+  const overdue = isOverdueRectification(r, asOf);
+  if (r.status === "pending_review") return { text: "待核查", tone: "amber" };
+  if (r.status === "rectifying" && overdue) return { text: "整改中 · 逾期", tone: "red" };
+  if (r.status === "rectifying") return { text: "整改中", tone: "brand" };
+  if (r.status === "pending_verification") return { text: "待复核", tone: "brand" };
+  return { text: statusLabel[r.status] ?? r.status, tone: "neutral" };
+}
 
 export default function OverviewPage() {
   const router = useRouter();
@@ -68,8 +98,10 @@ export default function OverviewPage() {
   const scoped = useMemo(() => risks.filter((r) => riskVisible(user, r) && orgIds.has(r.owner_org_id)), [risks, orgIds, user]);
   const open = scoped.filter(isOpen);
   const red = open.filter((r) => r.severity === "red");
-  const overdue = open.filter((r) => isOverdueRectification(r, filters.asOf) || isCurrentTaskOverdue(r, filters.asOf));
+  const overdueRect = open.filter((r) => isOverdueRectification(r, filters.asOf));
   const pendingVerification = open.filter((r) => r.status === "pending_verification");
+  const pendingReview = open.filter((r) => r.status === "pending_review");
+  const rectifying = open.filter((r) => r.status === "rectifying");
 
   const domainSummary = useMemo(
     () =>
@@ -79,10 +111,7 @@ export default function OverviewPage() {
         const kpiId = DOMAIN_KPI[d];
         const def = indicatorById(kpiId);
         const kpis = def ? [{ def, metric: computeIndicator(def, orgIds, ctx) }] : [];
-        const top = o
-          .slice()
-          .sort((a, b) => (a.severity === "red" ? -1 : 1) - (b.severity === "red" ? -1 : 1))[0];
-        return { domain: d, open: o, red: o.filter((r) => r.severity === "red"), kpis, top };
+        return { domain: d, open: o, red: o.filter((r) => r.severity === "red"), kpis };
       }),
     [risks, orgIds, ctx, user],
   );
@@ -103,160 +132,188 @@ export default function OverviewPage() {
   }, [open]);
 
   const scopeLabel = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}`;
-
   const openCases = (title: string, list: RiskCase[]) => setCaseScope({ title, ids: list.map((r) => r.id) });
+  const domainRefCount = domainSummary.reduce((s, d) => s + d.open.length, 0);
+
+  const faDef = indicatorById("FA-I06")!;
+  const faMetric = computeIndicator(faDef, orgIds, ctx);
+  const faParts = formatMetricParts(faDef, faMetric);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {!can(user, "business.read") && (
         <Notice tone="amber" title="当前身份无业务数据权限">
           配置维护权限不自动带来业务数据。请切换总部或单位监管身份查看指标与事项，或进入系统配置。
         </Notice>
       )}
-      <div
-        className="rounded-[8px] px-6 py-5 text-white"
-        style={{ background: "linear-gradient(100deg, #0b1f3a 0%, #164b8e 68%, #1d5fd1 100%)" }}
-      >
-        <h1 className="text-[22px] font-semibold leading-7">综合总览</h1>
-        <p className="text-[13px] text-[#c6d9f5] mt-1.5 max-w-4xl leading-5">
-          从总部视角查看所属单位执行情况与重点监管事项。指标可穿透到项目，事项可跟踪核查与整改。
-        </p>
-        <div className="flex flex-wrap items-center gap-2 mt-3">
-          <Tag tone="neutral">{scopeLabel}</Tag>
-        </div>
-      </div>
 
-      <Notice tone="neutral" title="关注摘要">
-        关注投资成本偏差、设备利用及境外项目履约；当前有 {overdue.filter((r) => isOverdueRectification(r, filters.asOf)).length} 件整改事项逾期。
-      </Notice>
+      <PageHeader title="综合总览" subtitle="总部及所属单位监管情况">
+        <FilterBar />
+      </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-        {(() => {
-          const def = indicatorById("FA-I06")!;
-          const m = computeIndicator(def, orgIds, ctx);
-          return (
-            <KpiCard
-              name="固定资产投资计划执行率"
-              value={formatMetric(def, m)}
-              unit={def.unit}
-              compare={`完成 ${fmtAmount(m.numerator)} / 同期计划 ${fmtAmount(m.denominator)} 万元`}
-              compareTone="amber"
-              dataState="固定资产口径｜当前组织及期间"
-              scopeLabel={scopeLabel}
-              onOpen={() => setIndicatorId("FA-I06")}
-            />
-          );
-        })()}
+      <p className="text-[13px] text-textsub leading-5">
+        关注投资成本、资产利用及境外履约，当前有
+        <span className="num text-textmain font-medium"> {overdueRect.length} </span>
+        件整改事项逾期。
+      </p>
+
+      <div className="reg-kpis">
+        <KpiCard
+          name="固定资产投资计划执行率"
+          value={faParts.value}
+          unit={faParts.unit}
+          compare={`完成 ${fmtAmountSmart(faMetric.numerator)}／同期计划 ${fmtAmountSmart(faMetric.denominator)} 万元`}
+          icon={<IconBars size={20} />}
+          scopeLabel={scopeLabel}
+          onOpen={() => setIndicatorId("FA-I06")}
+        />
         <KpiCard
           name="未关闭监管事项"
           value={open.length}
           unit="件"
-          compare={`待核查 ${open.filter((r) => r.status === "pending_review").length}、整改中 ${open.filter((r) => r.status === "rectifying").length}`}
-          compareTone={open.length ? "amber" : "green"}
-          dataState="含待核查、核查中、整改中、待复核"
+          compare={`待核查 ${pendingReview.length}／整改中 ${rectifying.length}`}
+          icon={<IconClipboard size={20} />}
           onOpen={() => openCases("未关闭监管事项", open)}
         />
         <KpiCard
           name="其中高风险事项"
           value={red.length}
           unit="件"
-          compare="需优先处置"
-          compareTone={red.length ? "red" : "green"}
+          compare="重点关注"
+          compareTone="red"
+          icon={<IconAlert size={20} />}
+          iconTone="red"
           onOpen={() => openCases("高风险未关闭事项", red)}
         />
         <KpiCard
           name="逾期整改事项"
-          value={open.filter((r) => isOverdueRectification(r, filters.asOf)).length}
+          value={overdueRect.length}
           unit="件"
-          compare="已进入整改责任范围且超过有效期限"
+          compare="需跟进"
           compareTone="red"
-          onOpen={() =>
-            openCases(
-              "逾期整改事项",
-              open.filter((r) => isOverdueRectification(r, filters.asOf)),
-            )
-          }
+          icon={<IconClock size={20} />}
+          iconTone="amber"
+          onOpen={() => openCases("逾期整改事项", overdueRect)}
         />
       </div>
 
-      <Card
-        title="六领域监管摘要"
-        subtitle="每张卡片一个代表性业务数值、未关闭数和一个可追溯关注点。跨领域关联事项按同一事项合并计数。"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      <section>
+        <div className="flex items-end justify-between gap-3 mb-3">
+          <h2 className="text-[16px] font-semibold text-textmain">六领域监管概况</h2>
+          <p className="text-[12px] text-textsub">跨领域关联事项合并计数</p>
+        </div>
+        <div className="reg-domains">
           {domainSummary.map((s) => {
             const meta = DOMAIN_META[s.domain];
+            const Icon = DOMAIN_ICONS[s.domain];
+            const kpi = s.kpis[0];
+            const parts = kpi ? formatMetricParts(kpi.def, kpi.metric) : { value: "—", unit: "" };
             return (
-              <div
+              <article
                 key={s.domain}
-                className="rounded-[8px] border border-line bg-surface p-4 hover:border-[#c3d8f7] transition-colors duration-150"
+                className="bg-surface border border-line rounded-[10px] shadow-[0_2px_10px_rgba(17,43,77,0.04)] p-5 min-h-[174px] flex flex-col"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <Link href={meta.route} className="text-[15px] font-semibold text-textmain hover:text-brand">
-                    {meta.label}
-                  </Link>
-                  <Link href={meta.route} className="text-[12px] text-brand hover:underline">
-                    进入领域 ›
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  {s.kpis.map(({ def, metric }) => (
-                    <button
-                      key={def.id}
-                      onClick={() => setIndicatorId(def.id)}
-                      className="text-left"
-                      title={`${def.name}｜口径：${def.caliber}`}
-                    >
-                      <div className="text-[12px] text-textsub">{def.name}</div>
-                      <div className="num text-[20px] font-semibold text-textmain leading-7">
-                        {formatMetric(def, metric)}
-                        {metric.value !== null && <span className="text-[12px] text-textsub ml-1">{def.unit}</span>}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 mt-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-8 h-8 rounded-[8px] bg-[#EAF1FD] text-brand flex items-center justify-center shrink-0">
+                      {Icon && <Icon size={16} />}
+                    </span>
+                    <Link href={meta.route} className="text-[16px] font-semibold text-textmain hover:text-brand truncate">
+                      {meta.label}
+                    </Link>
+                  </div>
                   <button
-                    className="text-[13px] hover:underline"
+                    type="button"
+                    className="shrink-0 text-[12px] rounded-full px-2 py-0.5 border border-line"
                     style={{ color: s.open.length ? "var(--risk-amber-fg)" : "var(--text-sub)" }}
                     onClick={() => openCases(`${meta.label}未关闭事项`, s.open)}
                   >
-                    未关闭 <span className="num font-semibold">{s.open.length}</span> 件
+                    未关闭 {s.open.length} 件
                   </button>
+                </div>
+                {kpi && (
                   <button
-                    className="text-[13px] hover:underline"
-                    style={{ color: s.red.length ? "var(--risk-red-fg)" : "var(--text-sub)" }}
-                    onClick={() => openCases(`${meta.label}高风险未关闭事项`, s.red)}
+                    type="button"
+                    onClick={() => setIndicatorId(kpi.def.id)}
+                    className="text-left mt-3"
+                    title={kpi.def.name}
                   >
-                    高风险 <span className="num font-semibold">{s.red.length}</span> 件
+                    <div className="text-[13px] text-textsub">{kpi.def.name}</div>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className="num text-[26px] font-semibold text-textmain leading-none">{parts.value}</span>
+                      {parts.unit && <span className="text-[14px] text-textsub">{parts.unit}</span>}
+                    </div>
                   </button>
+                )}
+                <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+                  <span className="text-[12px] text-textsub truncate">关注：{DOMAIN_FOCUS[s.domain]}</span>
+                  <Link href={meta.route} className="text-[13px] text-brand shrink-0 hover:underline">
+                    进入领域 →
+                  </Link>
                 </div>
-                <div className="mt-2 min-h-[36px]">
-                  <div className="text-[12px] text-textsub mb-1">{DOMAIN_FOCUS[s.domain]}</div>
-                  {s.top ? (
-                    <button
-                      onClick={() => setRiskId(s.top!.id)}
-                      className="text-left text-[13px] text-textmain hover:text-brand leading-5"
-                    >
-                      重点问题：{s.top.title}
-                      <span className="num text-textsub ml-1">（{s.top.primary_object_id}）</span>
-                    </button>
-                  ) : (
-                    <span className="text-[13px] text-textsub">当前范围未发现未关闭事项</span>
-                  )}
-                </div>
-              </div>
+              </article>
             );
           })}
         </div>
-        <div className="mt-3">
-          <Notice tone="neutral" title="跨领域去重">
-            一个资金异常可能同时出现在资金、工程、国际化三个领域。综合总览按事项编号只计一件；六领域引用次数之和可以大于综合总数。不得把引用次数称为新发现事项。
-          </Notice>
+        <p className="text-[12px] text-textsub mt-2">
+          总览按事项合并计数 {open.length} 件；六领域引用合计 {domainRefCount} 次，引用次数之和可以大于综合总数，不作为新发现事项。
+        </p>
+      </section>
+
+      <Card
+        title="重点关注事项"
+        subtitle="默认展示有依据的三条记录：投资偏差、资产利用及境外毛利"
+        right={
+          <Link href="/supervision-workbench" className="text-[13px] text-brand hover:underline whitespace-nowrap">
+            查看全部 →
+          </Link>
+        }
+      >
+        <div className="reg-table-wrap">
+          <table className="w-full border-collapse text-[14px]">
+            <thead>
+              <tr className="bg-[#f6f8fc]">
+                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line">关注事项</th>
+                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line">关键事实</th>
+                <th className="px-3 py-3 text-left text-[13px] font-semibold text-textsub border-b border-line w-[140px]">
+                  当前进展
+                </th>
+                <th className="px-3 py-3 text-right text-[13px] font-semibold text-textsub border-b border-line w-[100px]">
+                  操作
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {highlightCases.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-3 py-8 text-center text-[13px] text-textsub">
+                    当前范围没有未关闭事项。
+                  </td>
+                </tr>
+              )}
+              {highlightCases.map((r) => {
+                const prog = progressOf(r, filters.asOf);
+                return (
+                  <tr key={r.id} className="border-b border-line hover:bg-tint" style={{ height: 56 }}>
+                    <td className="px-3 py-2 text-textmain font-medium">{highlightTitle(r)}</td>
+                    <td className="px-3 py-2 text-textsub">{highlightFact(r)}</td>
+                    <td className="px-3 py-2">
+                      <Tag tone={prog.tone}>{prog.text}</Tag>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <button type="button" className="text-[13px] text-brand hover:underline" onClick={() => setRiskId(r.id)}>
+                        查看详情
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </Card>
 
-      <Card title="单位 × 领域风险矩阵" subtitle="单元格显示去重风险数与最高等级；点击定位到该单位该领域清单。根节点统计仍按 risk_id 去重，不由单元格求和">
+      <Card title="单位风险分布" subtitle="单元格为该单位该领域未关闭事项数；合计按事项去重，不由单元格相加">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[14px]">
             <thead>
@@ -298,7 +355,7 @@ export default function OverviewPage() {
                       return (
                         <td key={d} className="px-3 py-2 text-center">
                           {cell.length === 0 ? (
-                            <span className="text-textsub text-[13px]">{hasBusiness ? "未发现异常" : "无业务"}</span>
+                            <span className="text-textsub text-[13px]">{hasBusiness ? "本次监测未发现异常" : "无业务"}</span>
                           ) : (
                             <button
                               className="num text-[14px] hover:underline"
@@ -306,7 +363,6 @@ export default function OverviewPage() {
                               onClick={() => openCases(`${o.name}·${DOMAIN_META[d].label}未关闭事项`, cell)}
                             >
                               {cell.length}
-                              {cellRed > 0 ? " ●" : " ▲"}
                             </button>
                           )}
                         </td>
@@ -329,41 +385,23 @@ export default function OverviewPage() {
       </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card
-          title="重大事项清单"
-          subtitle="默认按等级、逾期、影响与最近变化排序"
-          right={
-            <Link href="/supervision-workbench" className="text-[13px] text-brand hover:underline">
-              进入监管工作台 ›
-            </Link>
-          }
-        >
+        <Card title="待复核事项" subtitle="复核通过并关闭后才计入本期已整改闭环数">
           <DataTable
-            rows={highlightCases}
+            rows={pendingVerification}
             rowKey={(r) => r.id}
             onRowClick={(r) => setRiskId(r.id)}
-            empty="当前范围没有未关闭事项。"
+            empty="当前范围没有待复核事项。"
             columns={[
-              { key: "id", title: "事项", width: "70px", render: (r) => <span className="num">{r.id}</span> },
               { key: "title", title: "名称", render: (r) => r.title },
-              { key: "sev", title: "等级", width: "84px", render: (r) => <SeverityTag severity={r.severity} /> },
-              { key: "domain", title: "主领域", width: "110px", render: (r) => DOMAIN_META[r.primary_domain].short },
-              { key: "status", title: "状态", width: "100px", render: (r) => statusLabel[r.status] },
+              { key: "org", title: "责任单位", width: "150px", render: (r) => orgName(r.owner_org_id) },
               {
-                key: "due",
-                title: "有效期限",
+                key: "overdue",
+                title: "整改逾期",
                 width: "110px",
-                render: (r) => (
-                  <span className="num" style={{ color: isOverdueRectification(r, filters.asOf) ? "var(--risk-red-fg)" : undefined }}>
-                    {fmtDate(rectificationDueDate(r) ?? r.current_task_due_date)}
-                  </span>
-                ),
+                render: (r) => (isOverdueRectification(r, filters.asOf) ? <Tag tone="red">逾期</Tag> : <span className="text-textsub">—</span>),
               },
             ]}
           />
-          <p className="text-[12px] text-textsub mt-2">
-            排序依据：高风险优先，其次逾期整改，再次待核查，最后按事项编号稳定排序。
-          </p>
         </Card>
 
         <Card title="近期外部事件及受影响对象" subtitle="点击事件进入国际化业务查看关联业务与影响测算">
@@ -394,90 +432,6 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <Card title="待复核事项" subtitle="复核通过并关闭后才计入本期已整改闭环数">
-          <DataTable
-            rows={pendingVerification}
-            rowKey={(r) => r.id}
-            onRowClick={(r) => setRiskId(r.id)}
-            empty="当前范围没有待复核事项。"
-            columns={[
-              { key: "id", title: "事项", width: "70px", render: (r) => <span className="num">{r.id}</span> },
-              { key: "title", title: "名称", render: (r) => r.title },
-              { key: "org", title: "责任单位", width: "150px", render: (r) => orgName(r.owner_org_id) },
-              {
-                key: "overdue",
-                title: "整改逾期",
-                width: "110px",
-                render: (r) => (isOverdueRectification(r, filters.asOf) ? <Tag tone="red">逾期</Tag> : <span className="text-textsub">—</span>),
-              },
-            ]}
-          />
-        </Card>
-
-        <Card title="重点单位业务规模比较" subtitle="合同额、投资额、资产余额与资金余额分项列示，不合成单一金额">
-          <DataTable
-            rows={matrixOrgs}
-            rowKey={(o) => o.id}
-            columns={[
-              { key: "name", title: "单位", render: (o) => o.name },
-              {
-                key: "fa",
-                title: "投资有效概算",
-                align: "right",
-                width: "130px",
-                render: (o) => {
-                  const scope = new Set([o.id, ...descendantOrgIds(o.id)]);
-                  const v = seed.fixed_asset_projects
-                    .filter((p) => scope.has(p.owner_org_id))
-                    .reduce((s, p) => s + p.effective_approved_budget, 0);
-                  return <span className="num">{v ? fmtAmount(v) : "—"}</span>;
-                },
-              },
-              {
-                key: "eq",
-                title: "股权账面余额",
-                align: "right",
-                width: "130px",
-                render: (o) => {
-                  const scope = new Set([o.id, ...descendantOrgIds(o.id)]);
-                  const v = seed.equity_projects
-                    .filter((p) => scope.has(p.owner_org_id))
-                    .reduce((s, p) => s + p.closing_book_balance_before_impairment - p.impairment_allowance, 0);
-                  return <span className="num">{v ? fmtAmount(v) : "—"}</span>;
-                },
-              },
-              {
-                key: "eng",
-                title: "工程合同额",
-                align: "right",
-                width: "120px",
-                render: (o) => {
-                  const scope = new Set([o.id, ...descendantOrgIds(o.id)]);
-                  const v = seed.engineering_projects
-                    .filter((p) => scope.has(p.owner_org_id))
-                    .reduce((s, p) => s + p.contract_revenue_ex_vat, 0);
-                  return <span className="num">{v ? fmtAmount(v) : "—"}</span>;
-                },
-              },
-              {
-                key: "cash",
-                title: "资金余额",
-                align: "right",
-                width: "120px",
-                render: (o) => {
-                  const scope = new Set([o.id, ...descendantOrgIds(o.id)]);
-                  const v = seed.accounts
-                    .filter((a) => scope.has(a.owner_org_id))
-                    .reduce((s, a) => s + a.closing_balance_native * a.fx_to_cny, 0);
-                  return <span className="num">{v ? fmtAmount(v) : "—"}</span>;
-                },
-              },
-            ]}
-          />
-        </Card>
-      </div>
-
       {caseScope && (
         <Card
           title={caseScope.title}
@@ -494,7 +448,6 @@ export default function OverviewPage() {
             onRowClick={(r) => setRiskId(r.id)}
             empty="该范围内没有事项。"
             columns={[
-              { key: "id", title: "事项", width: "70px", render: (r) => <span className="num">{r.id}</span> },
               { key: "title", title: "名称", render: (r) => r.title },
               { key: "sev", title: "等级", width: "84px", render: (r) => <SeverityTag severity={r.severity} /> },
               { key: "status", title: "状态", width: "100px", render: (r) => statusLabel[r.status] },

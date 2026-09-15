@@ -3,37 +3,49 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { NAV_ITEMS, AS_OF, seed } from "@/lib/seed";
-import { orgById, orgLevelLabel, orgPath } from "@/lib/org";
-import { authorizedObjectIds, authorizedOrgIds, can, canDomain, config, riskVisible } from "@/lib/config";
+import { NAV_ITEMS, seed } from "@/lib/seed";
+import { can, canDomain, config, riskVisible } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
-import { Modal, Tag, selectClass } from "@/components/ui";
+import { Modal } from "@/components/ui";
 import { isOpen } from "@/lib/risks";
 import AiPanel from "@/components/AiPanel";
+import FilterBar from "@/components/FilterBar";
+import {
+  IconBell,
+  IconBrandMark,
+  IconDoc,
+  IconGear,
+  NAV_ICONS,
+} from "@/components/icons";
 
-const PERIOD_OPTIONS = [
-  { id: "h1-2026", label: "2026年上半年（默认）", start: "2026-01-01", end: "2026-06-30" },
-  { id: "q2-2026", label: "2026年第二季度", start: "2026-04-01", end: "2026-06-30" },
-  { id: "q1-2026", label: "2026年第一季度", start: "2026-01-01", end: "2026-03-31" },
-  { id: "y2025-h2", label: "2025年下半年（历史事实范围）", start: "2025-07-01", end: "2025-12-31" },
+const UI_VERSION = "1.6.1";
+
+const PAGE_OWNS_FILTER = [
+  "/overview",
+  "/fixed-asset-investment",
+  "/equity-investment",
+  "/international-business",
+  "/funds",
+  "/property-rights",
+  "/engineering-projects",
+  "/supervision-workbench",
 ];
+
+function breadcrumb(pathname: string): { parent: string; current: string } {
+  if (pathname.startsWith("/settings")) return { parent: "穿透式监管", current: "系统配置" };
+  if (pathname.startsWith("/supervision-workbench")) return { parent: "穿透式监管", current: "监管工作台" };
+  if (pathname.startsWith("/scenario-library")) return { parent: "系统配置", current: "场景规则库" };
+  if (pathname.startsWith("/data-sources")) return { parent: "系统配置", current: "数据与运行" };
+  const nav = NAV_ITEMS.find((item) => pathname === item.route || pathname.startsWith(`${item.route}/`));
+  return { parent: "穿透式监管", current: nav?.label ?? "综合总览" };
+}
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const {
-    filters,
-    setFilters,
-    dirty,
-    saveError,
-    user,
-    setUserId,
-    configUsers,
-    risks,
-  } = useDemoStore();
+  const { dirty, saveError, user, setUserId, configUsers, risks } = useDemoStore();
   const [noticeOpen, setNoticeOpen] = useState(false);
-  const [more, setMore] = useState(false);
+  const [userMenu, setUserMenu] = useState(false);
 
-  const allowedOrgs = useMemo(() => authorizedOrgIds(user), [user]);
   const pendingCount = useMemo(
     () => risks.filter((r) => isOpen(r) && riskVisible(user, r)).length,
     [risks, user],
@@ -42,218 +54,158 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     () => NAV_ITEMS.filter((item) => can(user, "business.read") && canDomain(user, item.domain)),
     [user],
   );
-
-  const currentPeriodId =
-    PERIOD_OPTIONS.find((p) => p.start === filters.periodStart && p.end === filters.periodEnd)?.id ??
-    "custom";
-
-  const path = orgPath(filters.orgId);
-  const orgOptions = seed.organizations.filter((o) => allowedOrgs.has(o.id));
+  const crumbs = breadcrumb(pathname);
+  const ownsFilter = PAGE_OWNS_FILTER.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const showFilter = !pathname.startsWith("/settings") && !ownsFilter;
+  const initial = (user?.name ?? "用").slice(0, 1);
 
   return (
-    <div className="min-h-screen flex bg-pagebg">
-      <nav
-        className="shrink-0 sticky top-0 h-screen flex flex-col"
-        style={{
-          background: "var(--nav-deep)",
-          flex: "0 0 248px",
-          width: 248,
-        }}
-        aria-label="一级导航"
-      >
-        <div className="px-5 py-4 border-b border-white/10">
-          <div className="text-white text-[15px] font-semibold tracking-wide leading-5">
-            {config.ui.brand_lines[0]}
+    <div className="reg-app">
+      <nav className="reg-sidebar" aria-label="一级导航">
+        <div className="reg-brand">
+          <IconBrandMark />
+          <div className="min-w-0">
+            <div className="reg-brand-title">{config.ui.brand_lines[0]}</div>
+            <div className="reg-brand-sub">{config.ui.brand_lines[1]}</div>
           </div>
-          <div className="text-[#E7EFFA] text-[15px] mt-0.5 leading-5">{config.ui.brand_lines[1]}</div>
         </div>
-        <ul className="py-2 flex-1 overflow-auto min-h-0">
+        <ul className="reg-nav">
           {navItems.map((item) => {
             const active = pathname === item.route || pathname.startsWith(`${item.route}/`);
+            const Icon = NAV_ICONS[item.id] ?? NAV_ICONS.P00;
             return (
               <li key={item.id}>
                 <Link
                   href={item.route}
-                  className={`relative flex items-center gap-2.5 px-5 h-12 text-[15px] transition-colors duration-150 ${
-                    active ? "text-white font-medium" : "text-[#E7EFFA] hover:text-white hover:bg-white/5"
-                  }`}
-                  style={active ? { background: "var(--nav-active)" } : undefined}
+                  className="reg-nav-link"
                   aria-current={active ? "page" : undefined}
                 >
-                  {active && <span className="absolute left-0 top-0 h-full w-[3px] bg-white" />}
-                  <span className="min-w-0 leading-5">{item.label}</span>
+                  <Icon size={18} />
+                  <span className="reg-nav-label">{item.label}</span>
                 </Link>
               </li>
             );
           })}
         </ul>
-        <div className="border-t border-white/10">
+        <div className="reg-sidebar-footer">
           <Link
             href="/settings"
-            className={`relative flex items-center px-5 h-12 text-[15px] ${
-              pathname.startsWith("/settings")
-                ? "text-white font-medium"
-                : "text-[#E7EFFA] hover:text-white hover:bg-white/5"
-            }`}
-            style={pathname.startsWith("/settings") ? { background: "var(--nav-active)" } : undefined}
+            className="reg-nav-link"
+            aria-current={pathname.startsWith("/settings") ? "page" : undefined}
           >
-            {pathname.startsWith("/settings") && (
-              <span className="absolute left-0 top-0 h-full w-[3px] bg-white" />
-            )}
-            系统配置
+            <IconGear size={18} />
+            <span className="reg-nav-label">系统配置</span>
           </Link>
-          <div className="px-5 py-3 text-[11px] text-[#7f9bc4] leading-4">
-            业务截至日 {AS_OF}
-            <br />
-            合成样例 · 功能验证
-          </div>
+          <button
+            type="button"
+            className="reg-nav-link w-full text-left"
+            onClick={() => setNoticeOpen(true)}
+          >
+            <IconDoc size={18} />
+            <span className="reg-nav-label">数据说明</span>
+          </button>
         </div>
       </nav>
 
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-[56px] shrink-0 bg-surface border-b border-line sticky top-0 z-30 flex items-center gap-3 px-6">
-          <div className="flex items-center gap-2 min-w-0">
-            <label className="text-[12px] text-textsub shrink-0">组织范围</label>
-            <select
-              className={`${selectClass} w-[200px]`}
-              value={allowedOrgs.has(filters.orgId) ? filters.orgId : orgOptions[0]?.id ?? filters.orgId}
-              onChange={(e) => setFilters({ orgId: e.target.value })}
-              aria-label="全局组织范围"
+      <div className="reg-main">
+        <header className="reg-toolbar sticky top-0 z-30">
+          <nav className="text-[13px] text-textsub min-w-0 truncate" aria-label="面包屑">
+            <span>{crumbs.parent}</span>
+            <span className="mx-1.5 text-[#C5D0DE]">/</span>
+            <span className="text-textmain">{crumbs.current}</span>
+          </nav>
+          <div className="reg-toolbar-actions">
+            <Link
+              href="/supervision-workbench"
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-[8px] border border-line text-[13px] text-textmain hover:bg-tint"
             >
-              {(orgOptions.length ? orgOptions : seed.organizations).map((o) => (
-                <option key={o.id} value={o.id}>
-                  {"　".repeat(Math.max(0, o.management_level - 1))}
-                  {o.name}
-                </option>
-              ))}
-            </select>
-            <div className="flex rounded-[6px] border border-line overflow-hidden shrink-0">
-              {[
-                { v: true, label: "含下级" },
-                { v: false, label: "仅本级" },
-              ].map((opt) => (
-                <button
-                  key={String(opt.v)}
-                  onClick={() => setFilters({ includeChildren: opt.v })}
-                  className={`h-8 px-2.5 text-[12px] transition-colors duration-150 ${
-                    filters.includeChildren === opt.v
-                      ? "bg-brand text-white"
-                      : "bg-surface text-textsub hover:bg-tint"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <label className="text-[12px] text-textsub">统计期间</label>
-            <select
-              className={`${selectClass} w-[210px]`}
-              value={currentPeriodId}
-              onChange={(e) => {
-                const p = PERIOD_OPTIONS.find((x) => x.id === e.target.value);
-                if (p) setFilters({ periodStart: p.start, periodEnd: p.end });
-              }}
-              aria-label="统计期间"
+              监管工作台
+              <span className="num inline-flex items-center justify-center min-w-[20px] h-[18px] px-1 rounded-full bg-brand text-white text-[11px]">
+                {pendingCount}
+              </span>
+            </Link>
+            <Link
+              href="/supervision-workbench"
+              className="relative inline-flex items-center justify-center h-9 w-9 rounded-[8px] border border-line text-textsub hover:bg-tint hover:text-brand"
+              aria-label={`待办 ${pendingCount} 件`}
             >
-              {PERIOD_OPTIONS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <label className="text-[12px] text-textsub">截至日</label>
-            <select className={`${selectClass} w-[124px]`} value={filters.asOf} aria-label="业务截至日" disabled>
-              <option value={AS_OF}>{AS_OF}</option>
-            </select>
-          </div>
-
-          <div className="flex-1" />
-
-          <Link
-            href="/supervision-workbench"
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] border border-line text-[13px] text-textmain hover:bg-tint"
-          >
-            监管工作台
-            <span className="num inline-flex items-center justify-center min-w-[20px] h-[18px] px-1 rounded-full bg-brand text-white text-[11px]">
-              {pendingCount}
-            </span>
-          </Link>
-          <button
-            className="h-8 px-3 rounded-[6px] border border-line text-[13px] text-textmain hover:bg-tint"
-            onClick={() => setNoticeOpen(true)}
-          >
-            {config.data_notice.entry_label}
-          </button>
-          <div className="relative">
+              <IconBell size={18} />
+              {pendingCount > 0 && (
+                <span className="num absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brand text-white text-[11px] flex items-center justify-center">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
             <button
-              className="h-8 px-3 rounded-[6px] border border-line text-[13px] text-textmain hover:bg-tint"
-              onClick={() => setMore((v) => !v)}
+              type="button"
+              className="h-9 px-3 rounded-[8px] border border-line text-[13px] text-textmain hover:bg-tint"
+              onClick={() => setNoticeOpen(true)}
             >
-              更多
+              {config.data_notice.entry_label}
             </button>
-            {more && (
-              <div className="absolute right-0 mt-1 bg-surface border border-line rounded-[6px] shadow-md z-40 min-w-[160px] py-1">
-                <Link href="/scenario-library" className="block px-3 py-2 text-[13px] hover:bg-tint" onClick={() => setMore(false)}>
-                  场景规则库
-                </Link>
-                <Link href="/data-sources" className="block px-3 py-2 text-[13px] hover:bg-tint" onClick={() => setMore(false)}>
-                  数据与运行
-                </Link>
-                <Link href="/settings?tab=data" className="block px-3 py-2 text-[13px] hover:bg-tint" onClick={() => setMore(false)}>
-                  系统配置
-                </Link>
-              </div>
-            )}
+            <div className="relative">
+              <button
+                type="button"
+                className="flex items-center gap-2 h-9 pl-1 pr-2.5 rounded-full border border-line max-w-[220px] hover:bg-tint"
+                onClick={() => setUserMenu((v) => !v)}
+                aria-label="当前用户"
+                title="本地身份切换，用于验证授权产品行为，不等于正式登录"
+              >
+                <span className="w-7 h-7 rounded-full bg-brand text-white text-[13px] font-medium flex items-center justify-center shrink-0">
+                  {initial}
+                </span>
+                <span className="text-[13px] text-textmain truncate">{user?.name ?? "未登录"}</span>
+              </button>
+              {userMenu && (
+                <div className="absolute right-0 mt-1 bg-surface border border-line rounded-[8px] shadow-[0_8px_24px_rgba(17,43,77,0.12)] z-40 min-w-[200px] max-w-[280px] py-1">
+                  {configUsers.map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      className={`w-full text-left px-3 py-2 text-[13px] hover:bg-tint ${
+                        u.id === user?.id ? "text-brand font-medium" : "text-textmain"
+                      }`}
+                      onClick={() => {
+                        setUserId(u.id);
+                        setUserMenu(false);
+                      }}
+                    >
+                      {u.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <select
+              className="absolute w-px h-px overflow-hidden opacity-0"
+              value={user?.id ?? ""}
+              onChange={(e) => setUserId(e.target.value)}
+              aria-label="当前用户（键盘）"
+            >
+              {configUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
           </div>
-          <select
-            className={`${selectClass} w-[176px]`}
-            value={user?.id ?? ""}
-            onChange={(e) => setUserId(e.target.value)}
-            aria-label="当前用户"
-            title="本地身份切换，用于验证授权产品行为，不等于正式登录"
-          >
-            {configUsers.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
         </header>
 
-        <div className="px-6 py-2 bg-[#fafcff] border-b border-line flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-textsub">
-          <span>
-            当前范围：
-            <span className="text-textmain">{path.map((o) => o.name).join(" / ")}</span>
-            {orgById(filters.orgId) && (
-              <>
-                （{orgLevelLabel(orgById(filters.orgId)!)}·{filters.includeChildren ? "含下级" : "仅本级"}）
-              </>
-            )}
-          </span>
-          <span>
-            统计期间：
-            <span className="num text-textmain">
-              {filters.periodStart} ~ {filters.periodEnd}
-            </span>
-          </span>
-          <span>
-            截至日：<span className="num text-textmain">{filters.asOf}</span>
-          </span>
-          <span>
-            当前用户：<span className="text-textmain">{user?.name ?? "—"}</span>
-          </span>
-          {dirty && <Tag tone="brand">含本地办理修改</Tag>}
-          {saveError && <Tag tone="red">{saveError}</Tag>}
-          {user && !can(user, "business.read") && <Tag tone="amber">当前身份无业务数据权限</Tag>}
-        </div>
+        {showFilter && (
+          <div className="px-6 py-3 bg-surface border-b border-line">
+            <FilterBar />
+          </div>
+        )}
 
-        <main className="flex-1 min-w-0 p-6" key={user?.id ?? "anon"}>
+        {(dirty || saveError || (user && !can(user, "business.read"))) && (
+          <div className="px-6 py-2 bg-[#fafcff] border-b border-line flex flex-wrap items-center gap-3 text-[12px] text-textsub">
+            {dirty && <span className="text-brand">含本地办理修改</span>}
+            {saveError && <span style={{ color: "var(--risk-red-fg)" }}>{saveError}</span>}
+            {user && !can(user, "business.read") && <span>当前身份无业务数据权限</span>}
+          </div>
+        )}
+
+        <main className="reg-content flex-1 min-w-0" key={user?.id ?? "anon"}>
           {children}
         </main>
       </div>
@@ -262,6 +214,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <Modal open={noticeOpen} onClose={() => setNoticeOpen(false)} title="数据说明" width={640}>
         <p className="text-[14px] leading-6 text-textmain">{config.data_notice.text}</p>
+        <dl className="mt-4 grid grid-cols-1 gap-2 text-[13px]">
+          <div className="flex gap-3">
+            <dt className="text-textsub shrink-0 w-24">界面版本</dt>
+            <dd className="num text-textmain">{UI_VERSION}</dd>
+          </div>
+          <div className="flex gap-3">
+            <dt className="text-textsub shrink-0 w-24">业务口径</dt>
+            <dd className="text-textmain">V1.6</dd>
+          </div>
+          <div className="flex gap-3">
+            <dt className="text-textsub shrink-0 w-24">种子组织</dt>
+            <dd className="text-textmain">{seed.organizations.map((o) => o.name).join("、")}</dd>
+          </div>
+        </dl>
         <p className="text-[13px] text-textsub mt-3 leading-6">
           真实历史事件日期与样例行情分别标识。AI 面板当前为预置分析，未连接模型服务。匿名名称不等于真实经营数据。
         </p>

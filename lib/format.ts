@@ -2,6 +2,11 @@
 
 export const WAN = "万元";
 
+function trimFixed(v: number, digits: number): string {
+  if (digits <= 0) return v.toFixed(0);
+  return v.toFixed(digits).replace(/\.?0+$/, "");
+}
+
 export function fmtAmount(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
   return v.toLocaleString("zh-CN", {
@@ -10,24 +15,39 @@ export function fmtAmount(v: number | null | undefined, digits = 2): string {
   });
 }
 
+/** KPI 与卡片用：保留千分位，去掉无意义的尾随小数。 */
+export function fmtAmountSmart(v: number | null | undefined, maxDigits = 2): string {
+  if (v === null || v === undefined || Number.isNaN(v)) return "—";
+  return v.toLocaleString("zh-CN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: maxDigits,
+  });
+}
+
 export function fmtAmount0(v: number | null | undefined): string {
   return fmtAmount(v, 0);
 }
 
-export function fmtPct(v: number | null | undefined, digits = 2): string {
+/** 返回不含百分号的数字文本。调用方只追加一次单位。 */
+export function fmtPctNumber(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
-  return `${v.toFixed(digits)}%`;
+  return trimFixed(v, digits);
+}
+
+export function fmtPct(v: number | null | undefined, digits = 2): string {
+  const n = fmtPctNumber(v, digits);
+  return n === "—" ? "—" : `${n}%`;
 }
 
 export function fmtSignedPct(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
-  const s = v.toFixed(digits);
-  return `${v > 0 ? "+" : ""}${s}%`;
+  const n = trimFixed(v, digits);
+  return `${v > 0 ? "+" : ""}${n}%`;
 }
 
 export function fmtPp(v: number | null | undefined, digits = 2): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
-  return `${v > 0 ? "+" : ""}${v.toFixed(digits)}个百分点`;
+  return `${v > 0 ? "+" : ""}${trimFixed(v, digits)}个百分点`;
 }
 
 export function fmtInt(v: number | null | undefined): string {

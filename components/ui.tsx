@@ -29,20 +29,20 @@ export function Card({
   return (
     <section
       id={id}
-      className={`bg-surface border border-line rounded-[8px] shadow-[0_1px_2px_rgba(16,35,64,0.06)] ${className}`}
+      className={`bg-surface border border-line rounded-[10px] shadow-[0_2px_10px_rgba(17,43,77,0.04)] ${className}`}
     >
       {(title || right) && (
-        <header className="flex items-start justify-between gap-4 px-5 py-3.5 border-b border-line">
+        <header className="flex items-start justify-between gap-4 px-5 py-4 border-b border-line">
           <div className="min-w-0">
             {title && (
               <h2 className="text-[16px] font-semibold text-textmain leading-6">{title}</h2>
             )}
-            {subtitle && <p className="text-[12px] text-textsub mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-[13px] text-textsub mt-0.5">{subtitle}</p>}
           </div>
           {right && <div className="shrink-0 flex items-center gap-2">{right}</div>}
         </header>
       )}
-      <div className={`px-5 py-4 ${bodyClassName}`}>{children}</div>
+      <div className={`px-5 py-5 ${bodyClassName}`}>{children}</div>
     </section>
   );
 }
@@ -120,7 +120,7 @@ export function Button({
 }) {
   const base =
     "inline-flex items-center justify-center gap-1.5 rounded-[6px] border transition-colors duration-150 disabled:opacity-45 disabled:cursor-not-allowed";
-  const sizes = size === "sm" ? "h-7 px-2.5 text-[12px]" : "h-8 px-3 text-[13px]";
+  const sizes = size === "sm" ? "h-8 px-2.5 text-[12px]" : "h-9 px-3.5 text-[13px]";
   const variants: Record<string, string> = {
     primary:
       "bg-brand text-white border-brand hover:bg-brandstrong hover:border-brandstrong disabled:hover:bg-brand",
@@ -170,6 +170,7 @@ export function DataTable<T>({
   dense = false,
   highlight,
   className = "",
+  rowHeight,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -179,6 +180,7 @@ export function DataTable<T>({
   dense?: boolean;
   highlight?: (row: T) => boolean;
   className?: string;
+  rowHeight?: number;
 }) {
   return (
     <div className={`overflow-x-auto -mx-1 px-1 ${className}`}>
@@ -216,7 +218,7 @@ export function DataTable<T>({
               className={`border-b border-line transition-colors duration-150 hover:bg-tint ${
                 onRowClick ? "cursor-pointer" : ""
               } ${highlight?.(row) ? "bg-[#fbfcfe]" : ""}`}
-              style={{ height: dense ? 40 : 46 }}
+              style={{ height: rowHeight ?? (dense ? 40 : 56) }}
             >
               {columns.map((c) => (
                 <td
@@ -249,6 +251,8 @@ export function KpiCard({
   scopeLabel,
   onOpen,
   active,
+  icon,
+  iconTone = "brand",
 }: {
   name: string;
   value: React.ReactNode;
@@ -259,35 +263,75 @@ export function KpiCard({
   scopeLabel?: string;
   onOpen?: () => void;
   active?: boolean;
+  icon?: React.ReactNode;
+  iconTone?: ToneName;
 }) {
+  const iconBg: Record<ToneName, { bg: string; fg: string }> = {
+    brand: { bg: "#EAF1FD", fg: "var(--brand)" },
+    red: { bg: "var(--risk-red-bg)", fg: "var(--risk-red-fg)" },
+    amber: { bg: "var(--risk-amber-bg)", fg: "var(--risk-amber-fg)" },
+    green: { bg: "var(--risk-green-bg)", fg: "var(--risk-green-fg)" },
+    neutral: { bg: "var(--tint)", fg: "var(--text-sub)" },
+  };
+  const tone = iconBg[iconTone];
+  const valueText = typeof value === "string" ? value.replace(/%%+$/, "%") : value;
+  const showUnit =
+    unit &&
+    !(typeof valueText === "string" && unit === "%" && valueText.includes("%"));
+
   return (
     <button
       type="button"
       onClick={onOpen}
       title={scopeLabel}
-      className={`text-left bg-surface border rounded-[8px] px-4 py-3.5 h-[124px] flex flex-col justify-between transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] ${
+      className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[132px] flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] ${
         active ? "border-brand" : "border-line"
-      } shadow-[0_1px_2px_rgba(16,35,64,0.06)] relative overflow-hidden`}
+      } shadow-[0_2px_10px_rgba(17,43,77,0.04)] relative`}
     >
-      <span
-        aria-hidden
-        className="absolute left-0 top-0 h-full w-[3px]"
-        style={{ background: "var(--brand)" }}
-      />
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-[13px] text-textsub leading-5 pl-1.5">{name}</span>
-        {onOpen && <span className="text-[12px] text-brand shrink-0">详情 ›</span>}
-      </div>
-      <div className="pl-1.5 flex items-baseline gap-1">
-        <span className="num text-[28px] font-semibold text-textmain leading-8 tracking-tight">
-          {value}
+      {icon && (
+        <span
+          className="shrink-0 w-10 h-10 rounded-[8px] flex items-center justify-center mt-0.5"
+          style={{ background: tone.bg, color: tone.fg }}
+        >
+          {icon}
         </span>
-        {unit && <span className="text-[13px] text-textsub">{unit}</span>}
-      </div>
-      <div className="pl-1.5 flex items-center gap-2 min-h-[22px]">
-        {compare && <Tag tone={compareTone}>{compare}</Tag>}
-        {dataState && <span className="text-[12px] text-textsub truncate">{dataState}</span>}
-      </div>
+      )}
+      <span className="min-w-0 flex-1 flex flex-col justify-between">
+        <span className="flex items-start justify-between gap-2">
+          <span className="text-[13px] text-textsub leading-5">{name}</span>
+          {onOpen && (
+            <span className="text-[16px] text-[#B8C9E3] shrink-0 leading-none" aria-hidden>
+              ›
+            </span>
+          )}
+        </span>
+        <span
+          className="flex items-baseline gap-1 mt-2"
+          style={{
+            color:
+              compareTone === "red"
+                ? "var(--risk-red-fg)"
+                : "var(--text-main)",
+          }}
+        >
+          <span
+            className="num text-[32px] font-semibold leading-none tracking-tight"
+            style={{ color: "inherit" }}
+          >
+            {valueText}
+          </span>
+          {showUnit && (
+            <span className="text-[14px] font-medium" style={{ color: "var(--text-sub)" }}>
+              {unit}
+            </span>
+          )}
+        </span>
+        <span className="mt-2 min-h-[20px] text-[12px] text-textsub leading-5 truncate">
+          {compare}
+          {compare && dataState ? "　" : null}
+          {dataState}
+        </span>
+      </span>
     </button>
   );
 }
@@ -360,7 +404,7 @@ export function Drawer({
       >
         <header className="flex items-start justify-between gap-4 px-6 py-4 border-b border-line bg-surface">
           <div className="min-w-0">
-            <h2 className="text-[18px] font-semibold text-textmain">{title}</h2>
+            <h2 className="text-[24px] font-semibold text-textmain leading-[34px]">{title}</h2>
             {subtitle && <div className="text-[12px] text-textsub mt-1">{subtitle}</div>}
           </div>
           <button
@@ -399,7 +443,7 @@ export function Modal({
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-6" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-[#0b1f3a]/35 sup-fade" onClick={onClose} aria-hidden />
       <div
-        className="relative bg-surface rounded-[8px] shadow-[0_12px_36px_rgba(11,31,58,0.22)] sup-fade max-h-[86vh] flex flex-col"
+        className="relative bg-surface rounded-[10px] shadow-[0_12px_36px_rgba(11,31,58,0.22)] sup-fade max-h-[86vh] flex flex-col"
         style={{ width }}
       >
         <header className="flex items-center justify-between px-5 py-3.5 border-b border-line">
@@ -440,7 +484,7 @@ export function Tabs({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(t.id)}
-            className={`relative px-3.5 h-9 text-[14px] transition-colors duration-150 ${
+            className={`relative px-4 h-10 text-[14px] transition-colors duration-150 whitespace-nowrap ${
               active ? "text-brand font-medium" : "text-textsub hover:text-textmain"
             }`}
           >
@@ -539,10 +583,10 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full h-8 px-2.5 rounded-[6px] border border-line bg-surface text-[13px] text-textmain focus:border-brand outline-none transition-colors duration-150";
+  "w-full h-9 px-3 rounded-[8px] border border-line bg-surface text-[14px] text-textmain whitespace-nowrap focus:border-brand outline-none transition-colors duration-150";
 
 export const textareaClass =
-  "w-full min-h-[76px] px-2.5 py-2 rounded-[6px] border border-line bg-surface text-[13px] text-textmain focus:border-brand outline-none transition-colors duration-150 resize-y";
+  "w-full min-h-[76px] px-3 py-2 rounded-[8px] border border-line bg-surface text-[14px] text-textmain focus:border-brand outline-none transition-colors duration-150 resize-y";
 
 export const selectClass = inputClass;
 

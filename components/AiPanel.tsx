@@ -116,15 +116,15 @@ export default function AiPanel() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed z-40 w-12 h-12 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
+        className="fixed z-40 min-w-12 h-12 px-3 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
         style={{ right: 24, bottom: 24, background: "var(--brand)" }}
         title="AI分析"
       >
-        AI
+        AI分析
       </button>
       {open && (
         <aside
-          className="fixed top-0 right-0 h-full w-[440px] max-w-[100vw] bg-surface border-l border-line z-[55] flex flex-col shadow-[-8px_0_24px_rgba(11,31,58,0.12)]"
+          className="fixed top-0 right-0 h-full w-[460px] max-w-[100vw] bg-surface border-l border-line z-[55] flex flex-col shadow-[-8px_0_24px_rgba(11,31,58,0.12)]"
           role="dialog"
           aria-label="AI分析"
         >

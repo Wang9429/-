@@ -2,12 +2,14 @@
 
 import React, { useMemo, useState } from "react";
 import ChevronFlow, { type ChevronItem } from "@/components/ChevronFlow";
-import IndicatorDrawer, { formatMetric } from "@/components/IndicatorDrawer";
+import IndicatorDrawer, { formatMetricParts } from "@/components/IndicatorDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import ScenarioExecutionPanel, { type SubtopicOption } from "@/components/ScenarioExecutionPanel";
 import ObjectDrawer from "@/components/ObjectDrawer";
 import { Button, Card, DataTable, KpiCard, Notice, SeverityTag, Tabs, Tag } from "@/components/ui";
+import FilterBar from "@/components/FilterBar";
+import PageHeader from "@/components/PageHeader";
 import { DOMAIN_META, phaseName, seed, templatesByDomain, topicName } from "@/lib/seed";
 import { computeIndicator, indicatorById, type IndicatorDef, type NodeMetric } from "@/lib/metrics";
 import { openCountForPhase, openCountForTopic } from "@/lib/monitoring";
@@ -212,29 +214,24 @@ export default function DomainPage({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-[22px] font-semibold text-textmain leading-7">{meta.label}</h1>
-          <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">{intro}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Tag tone="brand">{scopeLabel}</Tag>
-        </div>
-      </div>
+      <PageHeader title={meta.label} subtitle={intro}>
+        <FilterBar />
+      </PageHeader>
 
       <Tabs tabs={allTabs} value={tab} onChange={setTab} />
 
       {tab === "overview" && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
             {kpiDefs.map((def) => {
               const m = computeIndicator(def, orgIds, ctx);
+              const parts = formatMetricParts(def, m);
               return (
                 <KpiCard
                   key={def.id}
                   name={def.name}
-                  value={formatMetric(def, m)}
-                  unit={m.value === null ? undefined : def.unit}
+                  value={parts.value}
+                  unit={parts.unit}
                   compare={
                     m.status === "no_business" ? (
                       "当前范围无业务"
@@ -248,25 +245,33 @@ export default function DomainPage({
                       "有效监测正常"
                     )
                   }
-                  compareTone={metricTone(m)}
+                  compareTone={metricTone(m) === "red" ? "red" : "neutral"}
                   dataState={metricStateText(m, def)}
                   scopeLabel={`${def.name}｜${scopeLabel}｜口径：${def.caliber}`}
                   onOpen={() => setIndicatorId(def.id)}
                 />
               );
             })}
-            {extraKpis?.(helpers).map((k, i) => (
-              <KpiCard
-                key={`extra-${i}`}
-                name={k.name ?? ""}
-                value={k.value}
-                unit={k.unit}
-                compare={k.compare}
-                compareTone={k.compareTone}
-                dataState={k.dataState}
-                onOpen={k.onOpen}
-              />
-            ))}
+            {extraKpis?.(helpers).map((k, i) => {
+              const raw = k.value;
+              const text = typeof raw === "string" ? raw.replace(/%%+$/, "%") : raw;
+              const unit =
+                k.unit && typeof text === "string" && k.unit === "%" && text.includes("%")
+                  ? undefined
+                  : k.unit;
+              return (
+                <KpiCard
+                  key={`extra-${i}`}
+                  name={k.name ?? ""}
+                  value={text}
+                  unit={unit}
+                  compare={k.compare}
+                  compareTone={k.compareTone === "red" ? "red" : "neutral"}
+                  dataState={k.dataState}
+                  onOpen={k.onOpen}
+                />
+              );
+            })}
           </div>
 
           <Card

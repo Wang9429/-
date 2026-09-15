@@ -37,7 +37,7 @@ function SettingsBody() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-[22px] font-semibold">系统配置</h1>
+        <h1 className="text-[24px] font-semibold leading-[34px]">系统配置</h1>
         <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
           用于确认谁维护用户权限、监管子场景、监测规则、指标、AI 与数据运行，以及草稿、试算、发布如何生效。账号密码和真实密钥不在本原型配置。
         </p>
