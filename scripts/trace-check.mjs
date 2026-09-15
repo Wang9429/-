@@ -4,7 +4,7 @@
  */
 import puppeteer from "puppeteer-core";
 
-const BASE = "http://127.0.0.1:43917";
+const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43917";
 const OUT = "/workspace/screenshots";
 const results = [];
 const log = (name, ok, detail = "") => {
@@ -43,15 +43,6 @@ const topOverlay = () =>
     const all = [...document.querySelectorAll('div[role="dialog"]')];
     return all.length ? all[all.length - 1].innerText.replace(/\s+/g, " ") : "";
   });
-
-async function shotTopOverlay(file) {
-  const el = await page.evaluateHandle(() => {
-    const all = [...document.querySelectorAll('div[role="dialog"]')];
-    return all[all.length - 1].querySelector("div.bg-surface, div") ?? all[all.length - 1];
-  });
-  await page.screenshot({ path: file });
-  await el.dispose();
-}
 
 async function openTraceFor(indicatorName, objectName) {
   await page.goto(`${BASE}/fixed-asset-investment`, { waitUntil: "networkidle0" });

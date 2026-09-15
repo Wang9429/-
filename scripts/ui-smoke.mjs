@@ -4,7 +4,7 @@
  */
 import puppeteer from "puppeteer-core";
 
-const BASE = "http://127.0.0.1:43917";
+const BASE = process.env.BASE_URL ?? "http://127.0.0.1:43917";
 const results = [];
 const errors = [];
 
@@ -82,7 +82,13 @@ let modal = await page.evaluate(() => {
   return all.length > 1 ? all[all.length - 1].innerText.replace(/\s+/g, " ") : "";
 });
 log("数据追溯 P78 弹窗打开", modal.includes("数据追溯 P78"), modal.slice(0, 50));
-log("P78 显示源记录与公式", modal.includes("SAP-FA001-ACT") && modal.includes("effective_approved_budget"));
+log(
+  "P78 绑定当前指标而非其他指标",
+  modal.includes("投资计划执行率（FA-I06）") &&
+    modal.includes("同期累计完成投资合计 ÷ 同期有效累计计划合计 × 100%") &&
+    modal.includes("4,800.00 ÷ 6,000.00") &&
+    !modal.includes("effective_approved_budget"),
+);
 await page.keyboard.press("Escape");
 await new Promise((r) => setTimeout(r, 300));
 
