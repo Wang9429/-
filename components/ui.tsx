@@ -159,6 +159,7 @@ export interface Column<T> {
   width?: string;
   minWidth?: string;
   nowrap?: boolean;
+  sticky?: "right";
   render: (row: T, index: number) => React.ReactNode;
   hint?: string;
 }
@@ -202,7 +203,7 @@ export function DataTable<T>({
   return (
     <div className={className}>
       <div className="overflow-x-auto -mx-1 px-1">
-        <table className={`w-full border-collapse text-[14px] ${tableClassName}`}>
+        <table className={`w-full border-separate border-spacing-0 text-[14px] ${tableClassName}`}>
           <thead>
             <tr className="bg-[#f6f8fc]">
               {columns.map((c) => (
@@ -210,7 +211,9 @@ export function DataTable<T>({
                   key={c.key}
                   title={c.hint}
                   style={{ width: c.width, minWidth: c.minWidth, textAlign: c.align ?? "left" }}
-                  className="px-3 py-2.5 text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap"
+                  className={`px-3 py-2.5 text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap ${
+                    c.sticky === "right" ? "reg-th-sticky" : ""
+                  }`}
                 >
                   {c.title}
                   {c.hint && <span className="ml-1 text-[11px] text-textsub/70">ⓘ</span>}
@@ -231,13 +234,14 @@ export function DataTable<T>({
             )}
             {shown.map((row, i) => {
               const absIndex = size ? (safePage - 1) * size + i : i;
+              const hl = Boolean(highlight?.(row));
               return (
                 <tr
                   key={rowKey(row, absIndex)}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={`border-b border-line transition-colors duration-150 hover:bg-tint ${
                     onRowClick ? "cursor-pointer" : ""
-                  } ${highlight?.(row) ? "bg-[#fbfcfe]" : ""}`}
+                  } ${hl ? "reg-row-hl bg-[#fbfcfe]" : ""}`}
                   style={{ minHeight: rowHeight ?? (dense ? 40 : 56) }}
                 >
                   {columns.map((c) => (
@@ -246,7 +250,7 @@ export function DataTable<T>({
                       style={{ textAlign: c.align ?? "left", minWidth: c.minWidth }}
                       className={`px-3 py-2 align-top text-textmain ${
                         c.align === "right" ? "num whitespace-nowrap" : c.nowrap ? "whitespace-nowrap" : "break-words"
-                      }`}
+                      } ${c.sticky === "right" ? "reg-td-sticky" : ""}`}
                     >
                       {c.render(row, absIndex)}
                     </td>

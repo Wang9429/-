@@ -138,7 +138,7 @@ export default function ScenariosTab() {
   return (
     <div className="space-y-3">
       {flash && <p className="text-[13px] text-textsub">{flash}</p>}
-      <div className="reg-split">
+      <div className="reg-settings-pair">
         <Card
           title={`一级监管场景（${catalog.groups.length}）`}
           right={
@@ -162,14 +162,14 @@ export default function ScenariosTab() {
             highlight={(r) => r.id === gid}
             pageSize={8}
             compactEmpty
-            tableClassName="min-w-[560px]"
             columns={[
               { key: "name", title: "名称", minWidth: "160px", render: (r) => r.name },
-              { key: "domain", title: "领域", width: "80px", render: (r) => domainCodeLabel(r.domain) },
+              { key: "domain", title: "领域", width: "80px", nowrap: true, render: (r) => domainCodeLabel(r.domain) },
               {
                 key: "st",
                 title: "状态",
                 width: "72px",
+                nowrap: true,
                 render: (r) => (
                   <Tag tone={r.status === "disabled" ? "neutral" : "green"}>{configStatusLabel(r.status)}</Tag>
                 ),
@@ -180,6 +180,7 @@ export default function ScenariosTab() {
                 width: "210px",
                 minWidth: "210px",
                 nowrap: true,
+                sticky: "right",
                 render: (r) => (
                   <ActionCell>
                     <Button size="sm" onClick={() => setTarget({ kind: "group", mode: "view", value: { ...r } })}>
@@ -233,11 +234,10 @@ export default function ScenariosTab() {
             empty="该一级场景下暂无子场景"
             pageSize={8}
             compactEmpty
-            tableClassName="min-w-[760px]"
             columns={[
               { key: "id", title: "编号", width: "88px", nowrap: true, render: (r) => <span className="num text-[12px]">{r.id}</span> },
               { key: "name", title: "名称", minWidth: "180px", render: (r) => r.name },
-              { key: "mode", title: "执行方式", width: "110px", render: (r) => executionModeLabel(r.execution_mode) },
+              { key: "mode", title: "执行方式", width: "110px", nowrap: true, render: (r) => executionModeLabel(r.execution_mode) },
               {
                 key: "app",
                 title: "适用",
@@ -262,6 +262,7 @@ export default function ScenariosTab() {
                 width: "210px",
                 minWidth: "210px",
                 nowrap: true,
+                sticky: "right",
                 render: (r) => (
                   <ActionCell>
                     <Button size="sm" onClick={() => setTarget({ kind: "sub", mode: "view", value: { ...r } })}>

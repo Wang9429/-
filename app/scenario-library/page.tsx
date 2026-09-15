@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
+import PageHeader from "@/components/PageHeader";
 import { Button, Card, DataTable, DescList, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
 import { DOMAIN_META, catalog, coverageRows, phaseName, scenarioName, seed } from "@/lib/seed";
 import { downloadCsv } from "@/lib/export";
@@ -57,12 +58,11 @@ export default function ScenarioLibraryPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">场景规则库</h1>
+      <PageHeader title="场景规则库">
         <Tag tone="neutral">
           场景目录版本 {catalog.version}｜{catalog.document_date}
         </Tag>
-      </div>
+      </PageHeader>
 
       <Tabs
         tabs={[
@@ -134,10 +134,12 @@ export default function ScenarioLibraryPage() {
             rowKey={(s) => s.id}
             onRowClick={(s) => setScenarioId(s.id)}
             empty="当前筛选条件下没有匹配场景。"
+            pageSize={10}
+            compactEmpty
             columns={[
-              { key: "id", title: "场景ID", width: "96px", render: (s) => <span className="num">{s.id}</span> },
-              { key: "domain", title: "领域", width: "110px", render: (s) => DOMAIN_META[s.domain].label },
-              { key: "name", title: "监管子场景", render: (s) => s.name },
+              { key: "id", title: "场景ID", width: "96px", nowrap: true, render: (s) => <span className="num">{s.id}</span> },
+              { key: "domain", title: "领域", width: "110px", nowrap: true, render: (s) => DOMAIN_META[s.domain].label },
+              { key: "name", title: "监管子场景", minWidth: "180px", render: (s) => s.name },
               {
                 key: "origin",
                 title: "一级监管场景",
@@ -182,10 +184,12 @@ export default function ScenarioLibraryPage() {
             rowKey={(s) => s.id}
             onRowClick={(s) => setScenarioId(s.id)}
             empty="当前筛选条件下没有匹配场景。"
+            pageSize={10}
+            compactEmpty
             columns={[
-              { key: "id", title: "场景ID", width: "110px", render: (s) => <span className="num">{s.id}</span> },
-              { key: "domain", title: "领域", width: "120px", render: (s) => (s.domain ? DOMAIN_META[s.domain].label : "—") },
-              { key: "name", title: "场景名称", render: (s) => s.scenario_name ?? s.name },
+              { key: "id", title: "场景ID", width: "110px", nowrap: true, render: (s) => <span className="num">{s.id}</span> },
+              { key: "domain", title: "领域", width: "120px", nowrap: true, render: (s) => (s.domain ? DOMAIN_META[s.domain].label : "—") },
+              { key: "name", title: "场景名称", minWidth: "180px", render: (s) => s.scenario_name ?? s.name },
               { key: "rule", title: "对应规则", width: "120px", render: (s) => <span className="num">{s.rule_id ?? "—"}</span> },
               {
                 key: "phase",
@@ -209,10 +213,12 @@ export default function ScenarioLibraryPage() {
           <DataTable
             rows={catalog.indicators}
             rowKey={(i) => i.id}
+            pageSize={10}
+            compactEmpty
             columns={[
-              { key: "id", title: "指标ID", width: "96px", render: (i) => <span className="num">{i.id}</span> },
-              { key: "domain", title: "领域", width: "110px", render: (i) => DOMAIN_META[i.domain].label },
-              { key: "name", title: "指标名称", width: "220px", render: (i) => i.name },
+              { key: "id", title: "指标ID", width: "96px", nowrap: true, render: (i) => <span className="num">{i.id}</span> },
+              { key: "domain", title: "领域", width: "110px", nowrap: true, render: (i) => DOMAIN_META[i.domain].label },
+              { key: "name", title: "指标名称", minWidth: "200px", render: (i) => i.name },
               { key: "role", title: "展示角色", width: "110px", render: (i) => i.display_role },
               {
                 key: "note",
@@ -241,9 +247,11 @@ export default function ScenarioLibraryPage() {
           <DataTable<MonitoringRuleDefinition>
             rows={rules}
             rowKey={(r) => r.id}
+            pageSize={10}
+            compactEmpty
             columns={[
-              { key: "id", title: "规则ID", width: "116px", render: (r) => <span className="num">{r.id}</span> },
-              { key: "name", title: "规则名称", width: "220px", render: (r) => r.name },
+              { key: "id", title: "规则ID", width: "116px", nowrap: true, render: (r) => <span className="num">{r.id}</span> },
+              { key: "name", title: "规则名称", minWidth: "200px", render: (r) => r.name },
               {
                 key: "formula",
                 title: "通用计算式",
@@ -297,6 +305,8 @@ export default function ScenarioLibraryPage() {
             <DataTable
               rows={Object.entries(seed.demo_rule_parameters).filter(([, v]) => typeof v === "object" && v !== null)}
               rowKey={([k]) => k}
+              pageSize={10}
+              compactEmpty
               columns={[
                 { key: "rule", title: "规则", width: "150px", render: ([k]) => <span className="num">{k}</span> },
                 {

@@ -9,7 +9,7 @@ export function fieldClass(error?: string) {
 
 export function ActionCell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-nowrap gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
+    <div className="flex flex-nowrap gap-1 justify-end shrink-0" onClick={(e) => e.stopPropagation()}>
       {children}
     </div>
   );

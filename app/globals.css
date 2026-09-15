@@ -374,6 +374,44 @@ details > summary::-webkit-details-marker {
   align-items: start;
 }
 
+/* 配置页双列表：1440 半栏放不下查看/编辑/停用，始终上下排。 */
+.reg-settings-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.reg-th-sticky,
+.reg-td-sticky {
+  position: sticky;
+  right: 0;
+}
+
+.reg-th-sticky {
+  z-index: 3;
+  background: #f6f8fc;
+  box-shadow: -8px 0 12px -8px rgba(17, 43, 77, 0.18);
+}
+
+.reg-td-sticky {
+  z-index: 2;
+  background: #ffffff;
+  box-shadow: -8px 0 12px -8px rgba(17, 43, 77, 0.16);
+}
+
+tr:hover > .reg-td-sticky {
+  background: var(--tint);
+}
+
+tr.reg-row-hl > .reg-td-sticky {
+  background: #fbfcfe;
+}
+
+tr.reg-row-hl:hover > .reg-td-sticky {
+  background: var(--tint);
+}
+
 .reg-matrix {
   min-width: 920px;
   table-layout: fixed;

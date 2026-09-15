@@ -188,7 +188,6 @@ export default function RulesTab() {
           rowKey={(r) => r.id}
           pageSize={10}
           compactEmpty
-          tableClassName="min-w-[960px]"
           columns={[
             { key: "name", title: "规则", minWidth: "200px", render: (r) => r.name },
             { key: "st", title: "状态", width: "88px", render: (r) => configStatusLabel(r.status) },
@@ -210,7 +209,10 @@ export default function RulesTab() {
             {
               key: "act",
               title: "操作",
-              width: "260px",
+              width: "268px",
+              minWidth: "268px",
+              nowrap: true,
+              sticky: "right",
               render: (r) => (
                 <ActionCell>
                   <Button size="sm" onClick={() => openForm(r, "view")}>

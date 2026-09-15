@@ -129,6 +129,9 @@ export default function UsersTab() {
               key: "act",
               title: "操作",
               width: "210px",
+              minWidth: "210px",
+              nowrap: true,
+              sticky: "right",
               render: (r) => (
                 <ActionCell>
                   <Button size="sm" onClick={() => openForm(r, "view")}>

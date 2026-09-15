@@ -36,6 +36,7 @@ function breadcrumb(pathname: string): { parent: string; current: string } {
   if (pathname.startsWith("/supervision-workbench")) return { parent: "穿透式监管", current: "监管工作台" };
   if (pathname.startsWith("/scenario-library")) return { parent: "系统配置", current: "场景规则库" };
   if (pathname.startsWith("/data-sources")) return { parent: "系统配置", current: "数据与运行" };
+  if (pathname.startsWith("/object/")) return { parent: "穿透式监管", current: "对象档案" };
   const nav = NAV_ITEMS.find((item) => pathname === item.route || pathname.startsWith(`${item.route}/`));
   return { parent: "穿透式监管", current: nav?.label ?? "综合总览" };
 }
@@ -124,6 +125,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <span className="num inline-flex items-center justify-center min-w-[20px] h-[18px] px-1 rounded-full bg-brand text-white text-[11px]">
                 {pendingCount}
               </span>
+            </Link>
+            <Link
+              href="/scenario-library"
+              className="inline-flex items-center h-9 px-3 rounded-[8px] border border-line text-[13px] text-textmain hover:bg-tint whitespace-nowrap"
+              aria-current={pathname.startsWith("/scenario-library") ? "page" : undefined}
+            >
+              场景规则库
             </Link>
             <Link
               href="/supervision-workbench"

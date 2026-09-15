@@ -136,7 +136,6 @@ export default function IndicatorsTab() {
           rowKey={(r) => r.id}
           pageSize={10}
           compactEmpty
-          tableClassName="min-w-[960px]"
           columns={[
             { key: "id", title: "编号", width: "88px", nowrap: true, render: (r) => <span className="num text-[12px]">{r.id}</span> },
             { key: "name", title: "名称", minWidth: "200px", render: (r) => r.name },
@@ -162,7 +161,10 @@ export default function IndicatorsTab() {
             {
               key: "act",
               title: "操作",
-              width: "200px",
+              width: "210px",
+              minWidth: "210px",
+              nowrap: true,
+              sticky: "right",
               render: (r) => (
                 <ActionCell>
                   <Button size="sm" onClick={() => openForm(r, "view")}>

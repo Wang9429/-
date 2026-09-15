@@ -39,7 +39,7 @@ export default function ObjectPage() {
         </Card>
       )}
 
-      {obj && <ObjectDrawer objectId={id} onClose={() => router.back()} onOpenRisk={setRiskId} />}
+      {obj && <ObjectDrawer objectId={id} variant="page" onClose={() => router.back()} onOpenRisk={setRiskId} />}
       <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel={`对象档案 ${id}`} />
     </div>
   );

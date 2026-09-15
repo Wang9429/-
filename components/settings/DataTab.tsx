@@ -101,6 +101,9 @@ export default function DataTab() {
               key: "act",
               title: "操作",
               width: "150px",
+              minWidth: "150px",
+              nowrap: true,
+              sticky: "right",
               render: (r) => (
                 <ActionCell>
                   <Button

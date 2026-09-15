@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { DataTable, DescList, Drawer, EmptyState, Notice, SeverityTag, SimulatedBadge, Tabs, Tag } from "@/components/ui";
+import PageHeader from "@/components/PageHeader";
+import { Card, DataTable, DescList, Drawer, EmptyState, Notice, SeverityTag, SimulatedBadge, Tabs, Tag } from "@/components/ui";
 import { findObject } from "@/lib/objects";
 import { DOMAIN_META, evidenceById, phaseName, scenarioName, seed, templateById } from "@/lib/seed";
 import { orgName, orgPath } from "@/lib/org";
@@ -31,8 +32,10 @@ function StageTable({ instances }: { instances: LifecycleInstance[] }) {
       rows={instances}
       rowKey={(i) => i.id}
       empty="该对象没有环节实例记录。"
+      pageSize={8}
+      compactEmpty
       columns={[
-        { key: "phase", title: "环节", width: "130px", render: (i) => phaseName(i.phase_id) },
+        { key: "phase", title: "环节", width: "130px", minWidth: "120px", nowrap: true, render: (i) => phaseName(i.phase_id) },
         {
           key: "status",
           title: "业务状态",
@@ -88,20 +91,23 @@ export default function ObjectDrawer({
   onClose,
   onOpenRisk,
   initialTab = "profile",
+  variant = "drawer",
 }: {
   objectId: string | null;
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
   initialTab?: string;
+  variant?: "drawer" | "page";
 }) {
   if (!objectId) return null;
   return (
     <ObjectDrawerBody
-      key={`${objectId}:${initialTab}`}
+      key={`${objectId}:${initialTab}:${variant}`}
       objectId={objectId}
       onClose={onClose}
       onOpenRisk={onOpenRisk}
       initialTab={initialTab}
+      variant={variant}
     />
   );
 }
@@ -111,11 +117,13 @@ function ObjectDrawerBody({
   onClose,
   onOpenRisk,
   initialTab,
+  variant,
 }: {
   objectId: string;
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
   initialTab: string;
+  variant: "drawer" | "page";
 }) {
   const { risks, filters, user } = useDemoStore();
   const [tab, setTab] = useState(initialTab);
@@ -143,25 +151,41 @@ function ObjectDrawerBody({
   );
 
   if (obj && !objectAllowed(user, obj.orgId, obj.id)) {
+    const notice = (
+      <Notice tone="amber" title="超出当前授权范围">
+        当前用户不能查看该对象的名称、金额或其他受限信息。
+      </Notice>
+    );
+    if (variant === "page") {
+      return (
+        <Card title="访问受限">
+          {notice}
+        </Card>
+      );
+    }
     return (
       <Drawer open onClose={onClose} title="访问受限" width="60vw">
-        <div className="p-6">
-          <Notice tone="amber" title="超出当前授权范围">
-            当前用户不能查看该对象的名称、金额或其他受限信息。
-          </Notice>
-        </div>
+        <div className="p-6">{notice}</div>
       </Drawer>
     );
   }
 
   if (!obj) {
+    const notice = (
+      <Notice tone="amber" title="对象不在当前数据范围">
+        {objectId} 在当前样例中没有档案记录。可能属于来源待核实的对象，按“来源待核实”处理，不创建虚假档案。
+      </Notice>
+    );
+    if (variant === "page") {
+      return (
+        <Card title={`对象 ${objectId}`}>
+          {notice}
+        </Card>
+      );
+    }
     return (
       <Drawer open onClose={onClose} title={`对象 ${objectId}`} width="60vw">
-        <div className="p-6">
-          <Notice tone="amber" title="对象不在当前数据范围">
-            {objectId} 在当前样例中没有档案记录。可能属于来源待核实的对象，按“来源待核实”处理，不创建虚假档案。
-          </Notice>
-        </div>
+        <div className="p-6">{notice}</div>
       </Drawer>
     );
   }
@@ -173,27 +197,23 @@ function ObjectDrawerBody({
   const account = seed.accounts.find((a) => a.id === objectId);
   const matter = seed.property_matters.find((m) => m.id === objectId);
 
-  return (
-    <Drawer
-      open
-      onClose={onClose}
-      width="76vw"
-      title={
-        <span className="flex items-center gap-2 flex-wrap">
-          {obj.name}
-          <span className="num text-[14px] text-textsub">{obj.id}</span>
-          <Tag tone="neutral">{obj.typeLabel}</Tag>
-        </span>
-      }
-      subtitle={
-        <span className="flex flex-wrap gap-x-4 gap-y-1">
-          <span>管理归属：{orgPath(obj.orgId).map((o) => o.name).join(" / ")}</span>
-          <span>截至日：{filters.asOf}</span>
-          <SimulatedBadge text="合成样例" />
-        </span>
-      }
-    >
-      <div className="h-full overflow-auto px-6 py-4 space-y-4">
+  const titleNode = (
+    <span className="flex items-center gap-2 flex-wrap">
+      {obj.name}
+      <span className="num text-[14px] text-textsub">{obj.id}</span>
+      <Tag tone="neutral">{obj.typeLabel}</Tag>
+    </span>
+  );
+  const subtitleNode = (
+    <span className="flex flex-wrap gap-x-4 gap-y-1">
+      <span>管理归属：{orgPath(obj.orgId).map((o) => o.name).join(" / ")}</span>
+      <span>截至日：{filters.asOf}</span>
+      <SimulatedBadge text="合成样例" />
+    </span>
+  );
+
+  const archive = (
+      <div className={variant === "page" ? "space-y-4" : "h-full overflow-auto px-6 py-4 space-y-4"}>
         <Tabs
           tabs={[
             { id: "profile", label: "对象全景" },
@@ -380,10 +400,12 @@ function ObjectDrawerBody({
               rows={related}
               rowKey={(l) => l.id}
               empty="该对象暂无已登记的业务关系。"
+              pageSize={8}
+              compactEmpty
               columns={[
-                { key: "from", title: "来源对象", render: (l) => <span className="num">{l.from_id}</span> },
-                { key: "rel", title: "业务关系", width: "160px", render: (l) => <Tag tone="brand">{l.relation_type}</Tag> },
-                { key: "to", title: "关联对象", render: (l) => <span className="num">{l.to_id}</span> },
+                { key: "from", title: "来源对象", minWidth: "120px", nowrap: true, render: (l) => <span className="num">{l.from_id}</span> },
+                { key: "rel", title: "业务关系", width: "160px", nowrap: true, render: (l) => <Tag tone="brand">{l.relation_type}</Tag> },
+                { key: "to", title: "关联对象", minWidth: "120px", nowrap: true, render: (l) => <span className="num">{l.to_id}</span> },
                 { key: "domains", title: "可进入的关联监管", render: (l) => l.domains.map((d) => DOMAIN_META[d].label).join("、") },
                 { key: "asof", title: "关系有效期", width: "110px", render: (l) => <span className="num text-[12px]">{l.as_of}</span> },
                 { key: "evid", title: "依据", render: (l) => <span className="text-[12px] text-textsub">{l.evidence_ids?.join("、") ?? "—"}</span> },
@@ -397,8 +419,10 @@ function ObjectDrawerBody({
             rows={monitoring}
             rowKey={(r) => r.id}
             empty="该对象当前没有监测实例。"
+            pageSize={8}
+            compactEmpty
             columns={[
-              { key: "sc", title: "监管场景", render: (r) => (
+              { key: "sc", title: "监管场景", minWidth: "200px", render: (r) => (
                 <span>
                   {r.scenario_id} {scenarioName(r.scenario_id)}
                   {!isScenarioMonitoringActive(r.scenario_id) ? (
@@ -446,9 +470,11 @@ function ObjectDrawerBody({
                 rows={objRisks}
                 rowKey={(r) => r.id}
                 onRowClick={(r) => onOpenRisk?.(r.id)}
+                pageSize={8}
+                compactEmpty
                 columns={[
-                  { key: "id", title: "事项", width: "76px", render: (r) => <span className="num">{r.id}</span> },
-                  { key: "title", title: "名称", render: (r) => r.title },
+                  { key: "id", title: "事项", width: "76px", nowrap: true, render: (r) => <span className="num">{r.id}</span> },
+                  { key: "title", title: "名称", minWidth: "180px", render: (r) => r.title },
                   { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
                   { key: "status", title: "办理状态", width: "110px", render: (r) => statusLabel[r.status] },
                   { key: "open", title: "是否未关闭", width: "110px", render: (r) => (isOpen(r) ? "是" : "否") },
@@ -459,6 +485,26 @@ function ObjectDrawerBody({
           </>
         )}
       </div>
+  );
+
+  if (variant === "page") {
+    return (
+      <div className="space-y-4">
+        <PageHeader title={obj.name}>
+          <span className="flex items-center gap-2 flex-wrap">
+            <span className="num text-[14px] text-textsub">{obj.id}</span>
+            <Tag tone="neutral">{obj.typeLabel}</Tag>
+          </span>
+        </PageHeader>
+        <p className="text-[12px] text-textsub -mt-2">{subtitleNode}</p>
+        {archive}
+      </div>
+    );
+  }
+
+  return (
+    <Drawer open onClose={onClose} width="76vw" title={titleNode} subtitle={subtitleNode}>
+      {archive}
     </Drawer>
   );
 }
