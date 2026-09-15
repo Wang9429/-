@@ -71,13 +71,10 @@ function IndicatorDrawerBody({
     () => new Set(descendantOrgIds(ROOT_ORG_ID)),
   );
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
-  const [traceId, setTraceId] = useState<string | null>(null);
+  const [traceLeafId, setTraceLeafId] = useState<string | null>(null);
 
   const openObject = (id: string, tab?: string) => onOpenObject?.(id, tab);
   const openRisk = (id: string) => onOpenRisk?.(id);
-  const leafTrace = (objectId: string) =>
-    seed.data_traces.find((t) => t.object_id === objectId && (!indicator || !t.indicator_id || t.indicator_id === indicator.id)) ??
-    seed.data_traces.find((t) => t.object_id === objectId);
 
   const ctx = useMemo(
     () => ({
@@ -258,9 +255,7 @@ function IndicatorDrawerBody({
   const deviation =
     target !== null && selectedMetric.value !== null ? selectedMetric.value - target : null;
 
-  const relatedTrace = seed.data_traces.find(
-    (t) => selectedLeaf && t.object_id === selectedLeaf.objectId,
-  );
+  const traceLeaf = traceLeafId ? allLeaves.find((l) => l.objectId === traceLeafId) : undefined;
 
   return (
     <Drawer
@@ -512,11 +507,9 @@ function IndicatorDrawerBody({
                         <LinkButton onClick={() => openObject(leaf.objectId, "relations")}>
                           业务关联 P79
                         </LinkButton>
-                        {leafTrace(leaf.objectId) && (
-                          <LinkButton onClick={() => setTraceId(leafTrace(leaf.objectId)!.id)}>
-                            查看计算依据 P78
-                          </LinkButton>
-                        )}
+                        <LinkButton onClick={() => setTraceLeafId(leaf.objectId)}>
+                          查看计算依据 P78
+                        </LinkButton>
                       </div>
                     </div>
                   ))}
@@ -542,10 +535,10 @@ function IndicatorDrawerBody({
                   },
                 ]}
               />
-              {relatedTrace && (
+              {selectedLeaf && (
                 <div className="mt-3">
-                  <Button variant="primary" size="sm" onClick={() => setTraceId(relatedTrace.id)}>
-                    进入数据追溯 P78：{relatedTrace.name}
+                  <Button variant="primary" size="sm" onClick={() => setTraceLeafId(selectedLeaf.objectId)}>
+                    进入数据追溯 P78：{indicator.name}·{selectedLeaf.name}
                   </Button>
                 </div>
               )}
@@ -554,52 +547,133 @@ function IndicatorDrawerBody({
         </div>
       </div>
 
-      <TraceModal traceId={traceId} onClose={() => setTraceId(null)} onOpenRisk={openRisk} />
+      {traceLeaf && (
+        <TraceModal
+          indicator={indicator}
+          leaf={traceLeaf}
+          scopeLabel={`${orgById(traceLeaf.orgId)?.name ?? traceLeaf.orgId}｜${filters.periodStart}~${filters.periodEnd}｜截至 ${filters.asOf}`}
+          onClose={() => setTraceLeafId(null)}
+          onOpenRisk={openRisk}
+        />
+      )}
     </Drawer>
   );
 }
 
-/** P78 数据追溯：公式、输入值、构成对象与源记录，全部来自种子，不额外推算。 */
+/**
+ * P78 数据追溯：公式、输入值与结果全部按“当前指标 + 当前对象 + 当前期间”实算，
+ * 不复用其他指标已登记的追溯记录。种子追溯只有在 object_id 与 indicator_id
+ * 同时对上时才作为源记录补充展示（完整业需 16.3）。
+ */
 function TraceModal({
-  traceId,
+  indicator,
+  leaf,
+  scopeLabel,
   onClose,
   onOpenRisk,
 }: {
-  traceId: string | null;
+  indicator: IndicatorDef;
+  leaf: LeafMetric;
+  scopeLabel: string;
   onClose: () => void;
   onOpenRisk: (id: string) => void;
 }) {
-  const trace = traceId ? seed.data_traces.find((t) => t.id === traceId) : undefined;
-  if (!trace) return null;
-  const sources = seed.source_records.filter((s) => trace.source_record_ids.includes(s.id));
+  const trace = seed.data_traces.find(
+    (t) => t.object_id === leaf.objectId && t.indicator_id === indicator.id,
+  );
+  const sources = trace
+    ? seed.source_records.filter((s) => trace.source_record_ids.includes(s.id))
+    : [];
+  const result = aggregate(indicator, [leaf], new Set([leaf.orgId]));
+  const isRatio = indicator.kind === "ratio" || indicator.kind === "signed_ratio";
+
   return (
-    <Modal open onClose={onClose} title={`数据追溯 P78：${trace.name}`} width={760}>
+    <Modal
+      open
+      onClose={onClose}
+      title={`数据追溯 P78：${indicator.name}·${leaf.name}`}
+      width={760}
+    >
       <div className="space-y-4">
         <DescList
           cols={1}
           items={[
-            { label: "计算公式", value: <span className="num text-[13px]">{trace.calculation.formula}</span> },
+            { label: "指标", value: <span className="text-[13px]">{indicator.name}（{indicator.id}）</span> },
+            { label: "对象", value: <span className="text-[13px]">{leaf.name}<span className="num ml-2 text-textsub">{leaf.objectId}</span></span> },
+            { label: "范围与期间", value: <span className="text-[13px]">{scopeLabel}</span> },
+            { label: "计算公式", value: <span className="text-[13px]">{indicator.formula}</span> },
             {
-              label: "输入取值",
+              label: isRatio ? "分子 ÷ 分母" : "取值",
               value: (
                 <span className="num text-[13px]">
-                  {trace.calculation.inputs.map((i) => `${i.field} = ${fmtAmount(i.value)} ${i.unit}`).join("；")}
+                  {isRatio
+                    ? `${fmtAmount(leaf.numerator)} ÷ ${fmtAmount(leaf.denominator)}`
+                    : fmtAmount(leaf.numerator)}
                 </span>
               ),
             },
-            { label: "截至日", value: <span className="num text-[13px]">{trace.as_of}</span> },
+            {
+              label: "计算结果",
+              value: (
+                <span className="num text-[14px] font-semibold">
+                  {formatMetric(indicator, result)}
+                  {result.value === null ? "" : ` ${indicator.unit}`}
+                </span>
+              ),
+            },
+            { label: "口径说明", value: <span className="text-[13px]">{indicator.caliber}</span> },
+            { label: "数据来源", value: <span className="text-[13px]">{indicator.sourceNote}</span> },
             { label: "数据性质", value: <Tag tone="neutral">模拟数据</Tag> },
-            { label: "说明", value: <span className="text-[13px]">{trace.detail_note}</span> },
           ]}
         />
+
         <div>
-          <div className="text-[13px] font-medium mb-1.5">构成对象（{trace.component_object_ids.length}）</div>
-          <div className="flex flex-wrap gap-1.5">
-            {trace.component_object_ids.map((id) => (
-              <Tag key={id} tone="neutral">{id}</Tag>
+          <div className="text-[13px] font-medium mb-1.5">输入构成</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
+            {leaf.extras.map((x, i) => (
+              <div key={i} className="min-w-0">
+                <div className="text-[12px] text-textsub">{x.label}</div>
+                <div className="num text-[13px] text-textmain">{x.value}</div>
+              </div>
             ))}
           </div>
+          {leaf.gapNote && (
+            <div className="mt-2">
+              <Notice tone="amber">{leaf.gapNote}</Notice>
+            </div>
+          )}
         </div>
+
+        {trace ? (
+          <div>
+            <div className="text-[13px] font-medium mb-1.5">
+              已登记追溯：{trace.name}
+            </div>
+            <p className="text-[12px] text-textsub mb-2">
+              登记公式 <span className="num">{trace.calculation.formula}</span>；
+              登记输入{" "}
+              <span className="num">
+                {trace.calculation.inputs
+                  .map((i) => `${i.field} = ${fmtAmount(i.value)} ${i.unit}`)
+                  .join("；")}
+              </span>
+              。{trace.detail_note}
+            </p>
+            {trace.component_object_ids.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {trace.component_object_ids.map((id) => (
+                  <Tag key={id} tone="neutral">{id}</Tag>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <Notice tone="neutral" title="源记录明细">
+            演示数据未对「{indicator.name}」登记逐笔源记录，上方取值来自该对象的业务台账字段，
+            接入后按拟来源系统补充逐笔凭据。
+          </Notice>
+        )}
+
         <DataTable
           columns={[
             {
@@ -630,12 +704,16 @@ function TraceModal({
           rows={sources}
           rowKey={(s) => s.id}
           dense
-          empty="该追溯未登记源记录明细。"
+          empty="本指标在演示数据中没有逐笔源记录。"
         />
-        {trace.risk_id && (
-          <Button variant="secondary" size="sm" onClick={() => onOpenRisk(trace.risk_id)}>
-            查看关联事项 {trace.risk_id}
-          </Button>
+        {leaf.riskIds.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {leaf.riskIds.map((id) => (
+              <Button key={id} variant="secondary" size="sm" onClick={() => onOpenRisk(id)}>
+                查看关联事项 {id}
+              </Button>
+            ))}
+          </div>
         )}
       </div>
     </Modal>
