@@ -1,6 +1,6 @@
 {
-  "version": "1.2",
-  "document_date": "2026-09-14",
+  "version": "1.4",
+  "document_date": "2026-09-15",
   "source": {
     "filename": "【海油工程】投资管理穿透式监管底稿@0914(1).xlsx",
     "sha256": "bad2f1e0d2bc590add0ab849559cb65a2fe5b62436d2afb571392b6325ffe84c",
@@ -35,7 +35,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "按项目类别、金额和发生时有效授权，应履行预可研、可研、专家审查或职能审查的项目及其后续实施事项。",
+        "required_inputs": [
+          "项目编号与类型",
+          "适用授权版本及必需节点",
+          "节点结论/批准时间",
+          "实施事项类型/发生时间",
+          "正式材料版本"
+        ],
+        "automatic_decision_boundary": "只校验应履行程序与源系统已完成程序、有效结论和实施时间；技术可行性、经济性和意见充分性不由文件齐全推定。",
+        "ai_assistance": "可选：从批复或审查意见提取结论、日期和附带条件，展示原文件页码；已结构化节点直接使用。",
+        "human_review": "确认特殊适用条件、附条件批准是否已落实以及节点同义映射；异常形成待核查事项，不发起业务审批。",
+        "missing_field_routing": "无适用授权版本归待配置；审批系统未接入归待接入；接口已完整覆盖但审批记录确认不存在，才作为程序缺失事实；单条批复缺时间归数据待核对。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目编号与类型",
+            "适用授权版本及必需节点",
+            "节点结论/批准时间",
+            "实施事项类型/发生时间",
+            "正式材料版本"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "可行性研究/需求分析报告未按规定审批"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S03",
@@ -65,7 +138,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "存在储备或可研项目、需求/收益预测及可供核对的订单、经营计划、市场依据或同类资产能力。",
+        "required_inputs": [
+          "储备项目与正式项目关联",
+          "需求规模/期间",
+          "现有与新增能力",
+          "订单/预测来源",
+          "收益模型关键假设及版本"
+        ],
+        "automatic_decision_boundary": "可检查金额/能力单位、期间一致性及确认阈值下的偏离，生成核查线索；不能因订单少或预测调整直接认定无投资必要性。",
+        "ai_assistance": "提取需求、业务量、价格、产能利用率、达产年限及来源；比较储备与可研变化和历史/市场假设，逐项给出原文与对比依据。",
+        "human_review": "市场、规划和技术人员判断需求真实性、可替代能力及异常是否合理；确认后保留依据与处置意见。",
+        "missing_field_routing": "没有在手订单但有经审查市场预测，不算缺数据；源材料未纳入归待接入；预测有材料但尚未审核归待人工核查；模型期间/单位未定义归待配置。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "储备项目与正式项目关联",
+            "需求规模/期间",
+            "现有与新增能力",
+            "订单/预测来源",
+            "收益模型关键假设及版本"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资收益测算与业务需求支撑不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S04",
@@ -98,7 +244,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "提出新增同类或可替代资产需求，且已有功能匹配的存量船舶、装备或设施，可按一致计量口径比较能力和利用情况。",
+        "required_inputs": [
+          "新增项目拟形成资产功能/规模",
+          "存量资产类别/功能/归属",
+          "同期实际与可用工时或天数",
+          "剩余能力",
+          "统筹或不可替代意见"
+        ],
+        "automatic_decision_boundary": "同类利用率按同单位同期间分子分母汇总；低利用率且新增同功能投资生成线索，不直接认定重复投资，不把小时与天数混算。",
+        "ai_assistance": "对技术规格、作业环境、承载能力和需求说明进行功能匹配，列出可替代与不可替代差异。",
+        "human_review": "资产和规划人员确认调配、共享、改造的现实条件；总部可看授权范围内跨单位资产，下级不能借AI查看其他单位明细。",
+        "missing_field_routing": "确无同类可替代资产属于对标子规则不适用；功能分类或目标未定义归待配置；运行台账未接入归待接入；可用工时为0要查检修/停用原因，不能填100%。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "新增项目拟形成资产功能/规模",
+            "存量资产类别/功能/归属",
+            "同期实际与可用工时或天数",
+            "剩余能力",
+            "统筹或不可替代意见"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资需求与存量资产利用情况不匹配"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S05",
@@ -130,7 +349,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "已进入设计概算审查，且按项目类型需要概算审查或初步设计批准的项目。",
+        "required_inputs": [
+          "可研批准估算及版本",
+          "初设概算",
+          "适用审查节点",
+          "审查结论/日期",
+          "调整说明及批复"
+        ],
+        "automatic_decision_boundary": "比较初设批准概算与可研批准估算，校验应审节点和结论；高于估算是变化提示，不能据此认定超概执行或造价不合理。",
+        "ai_assistance": "可选：从概算审查报告提取费用构成、变化原因及条件，保留章节来源。",
+        "human_review": "造价和规划人员判断工程量、费用计取与变化合理性；概算审核审批仍由原业务系统办理。",
+        "missing_field_routing": "项目尚无已批准初设概算时，指标尚未到适用时点；审批路径未知归待配置；已有批复未采集归待接入；金额版本不一致归数据待核对。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "可研批准估算及版本",
+            "初设概算",
+            "适用审查节点",
+            "审查结论/日期",
+            "调整说明及批复"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "项目概算未按规定进行审查"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S06",
@@ -162,7 +454,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "编制或审查概算的项目存在设计方案、工程量或价格依据；实施期另有批准概算与累计完成投资。",
+        "required_inputs": [
+          "工程量/设备材料价格及来源",
+          "价格时点/地域/标准",
+          "参考项目或询价",
+          "批准概算版本",
+          "累计投资"
+        ],
+        "automatic_decision_boundary": "参数差异与实际累计投资可计算；在建累计投资小于总概算很正常，负偏差不能按绝对值判超概，也不能仅由偏差反推概算编制失实。",
+        "ai_assistance": "提取工程量、报价、计价时点和关键假设，与经确认参考资料比对；只提供疑点及证据，不编制正式概算。",
+        "human_review": "造价人员确认比较基础、允许差异和概算合理性；监管人员跟踪问题和说明。",
+        "missing_field_routing": "无历史同类项目但有合格询价依据不算缺数据；没有可比依据的对标规则不适用；价格库未接入归待接入；依据尚未审核归待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "工程量/设备材料价格及来源",
+            "价格时点/地域/标准",
+            "参考项目或询价",
+            "批准概算版本",
+            "累计投资"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资概算编制基础不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S07",
@@ -192,7 +557,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "项目聘用中介机构，需核查其与项目单位、供应商或交易对方的利益冲突和独立性。",
+        "required_inputs": [
+          "中介与相关主体统一代码",
+          "股权/控制/任职关系及有效时间",
+          "利益冲突声明",
+          "委托范围",
+          "核查结论"
+        ],
+        "automatic_decision_boundary": "可识别控制或人员重合、声明与已知关系不一致；地址或一般股东相同仅是线索，不能直接定性利益输送或虚假报告。",
+        "ai_assistance": "辅助整理关联路径和声明差异；引用来源、查询时点和主体识别依据，不能补造亲属或实际控制关系。",
+        "human_review": "专业归口部门核实同名主体、实际关系与独立性影响；更换中介或处置在业务系统办理。",
+        "missing_field_routing": "外部企业信息未取得授权接入归待接入，可用合法查询留存资料；声明已采集但没有核查结论是待人工核查；标识冲突归数据待核对。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "中介与相关主体统一代码",
+            "股权/控制/任职关系及有效时间",
+            "利益冲突声明",
+            "委托范围",
+            "核查结论"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "中介独立性和利益冲突未核查"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S08",
@@ -222,7 +660,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "可研、技术方案、经济评价等至少存在可比材料或实际来源，需要复核投资规模、工程量、收入成本等关键数据。",
+        "required_inputs": [
+          "文件名称/版本/日期",
+          "关键数据与单位/期间",
+          "相同事项关联",
+          "历史或实际来源",
+          "差异说明"
+        ],
+        "automatic_decision_boundary": "经确认口径后识别数字不一致、计算不符或无来源字段；不能因两份不同阶段报告数值变化直接判造假。",
+        "ai_assistance": "从材料提取数字与假设并定位页码，展示来源甲/来源乙/差异/可能口径原因；低置信提取先交人工确认。",
+        "human_review": "项目、财务和技术人员确认数据口径及依据，专业报告真实性由有权核查人员判断。",
+        "missing_field_routing": "只有一份材料且没有比较源时暂不执行交叉对比规则，但可做单文档完整性核查；文件未接入归待接入；提取失败归待人工确认，不算业务违规。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "文件名称/版本/日期",
+            "关键数据与单位/期间",
+            "相同事项关联",
+            "历史或实际来源",
+            "差异说明"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资论证基础数据失真"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S09",
@@ -255,7 +766,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "已形成重大风险清单，或报告中存在可提取风险，且有规定更新周期或重大变化触发事项。",
+        "required_inputs": [
+          "风险事项ID/来源",
+          "等级/影响",
+          "措施/责任人",
+          "有效更新频率",
+          "上次更新日期",
+          "重大变更事件"
+        ],
+        "automatic_decision_boundary": "对已确认清单自动检查更新逾期、责任措施缺项及重大变化后再评估是否完成；不能声称已自动穷尽所有重大风险。",
+        "ai_assistance": "从可研/评估报告提取风险条目，比较前后版本及投资调整、进度变化与既有风险关联。",
+        "human_review": "专业人员确认风险等级、重大性、应对措施有效性及新增线索；AI条目经确认后才入正式风险清单。",
+        "missing_field_routing": "更新周期未配置归待配置；已识别条目等确认是待人工核查；报告系统未接入归待接入；本期无重大变化仅事件触发子规则无对象，周期跟踪继续。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "风险事项ID/来源",
+            "等级/影响",
+            "措施/责任人",
+            "有效更新频率",
+            "上次更新日期",
+            "重大变更事件"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "重大投资风险识别及动态管控不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S10",
@@ -283,7 +869,80 @@
       "associated_phase_ids": [],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "本级权限内且按有效制度需要向总部报备的投资项目，已完成内部批准并达到报备触发条件。",
+        "required_inputs": [
+          "项目类型/金额",
+          "当期授权与报备范围",
+          "内部批准日期",
+          "报备提交/退回/确认记录",
+          "有效办理期限"
+        ],
+        "automatic_decision_boundary": "标题中的1000万元不是全企业永久硬编码门槛；依据有效范围校验报备提交与确认，未到期限可展示办理中。",
+        "ai_assistance": "无需AI；可选读取非结构化报备确认函的日期和文号。",
+        "human_review": "归口部门确认报备适用性和完成标准，正式报备办理与确认结果来自原系统。",
+        "missing_field_routing": "报备时限未明确归待配置，不编造逾期；无本级权限内待报备项目为本期无适用对象；源系统全量覆盖后确认无记录才识别应报未报。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目类型/金额",
+            "当期授权与报备范围",
+            "内部批准日期",
+            "报备提交/退回/确认记录",
+            "有效办理期限"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "权限内投资项目报备未完成"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S11",
@@ -314,7 +973,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "发生建设、采购、合同签署或付款，且该具体行为有明确前置审批要求。",
+        "required_inputs": [
+          "项目/WBS",
+          "行为类型及发生时间",
+          "前置审批生效时间",
+          "允许提前事项的范围与条件",
+          "例外依据"
+        ],
+        "automatic_decision_boundary": "逐项比对行为与对应审批时间；询价、技术交流与签署支出合同分开，后补批复不能改写当时先后关系。",
+        "ai_assistance": "可选：从批准文件提取提前采办范围和附加条件，经人工确认后入规则输入。",
+        "human_review": "核实有效例外及实际业务发生性质；预警待核查，不自动停工、拦支付或补办审批。",
+        "missing_field_routing": "缺业务发生时间归数据待核对；前置要求未确定归待配置；审批源未接入归待接入；接口完整且查无有效审批才形成程序异常。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目/WBS",
+            "行为类型及发生时间",
+            "前置审批生效时间",
+            "允许提前事项的范围与条件",
+            "例外依据"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "未完成审批即开展项目实施"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S12",
@@ -345,7 +1077,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "项目发生投资审批，需要校验实际审批层级、岗位与当时有效授权。",
+        "required_inputs": [
+          "项目金额及口径/类型",
+          "审批行为日期",
+          "有效授权版本",
+          "有权层级/岗位",
+          "实际决策与审批人员"
+        ],
+        "automatic_decision_boundary": "按业务发生时有效授权匹配权限，不能用今天的新授权反判历史事项；临时授权须有已生效依据。",
+        "ai_assistance": "无需AI；可选提取授权文件条款，管理员复核发布后使用。",
+        "human_review": "制度归口人员确认授权边界及代行岗位的有效性；业务审批权限和平台查看权限必须分别管理。",
+        "missing_field_routing": "有效授权版本、金额基数或岗位映射未配置归待配置；历史审批记录未接入归待接入；个人信息歧义归数据待核对。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目金额及口径/类型",
+            "审批行为日期",
+            "有效授权版本",
+            "有权层级/岗位",
+            "实际决策与审批人员"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "超授权审批投资项目"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S13",
@@ -376,7 +1181,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "一定观察期内存在多个目的、内容、地点、主体或实施周期相关的投资项目，需要判断是否同一实质事项。",
+        "required_inputs": [
+          "项目编号",
+          "投资目的/建设内容/地点/周期",
+          "申报及批准金额",
+          "项目关联依据",
+          "独立性说明",
+          "授权规则"
+        ],
+        "automatic_decision_boundary": "规则形成疑似项目组和合并后权限影响；名称相似、同期建设、分期实施均不能单独证明规避审批。",
+        "ai_assistance": "比较建设内容与功能独立性，列出相似句段和共同设施等关联依据，不直接合并项目。",
+        "human_review": "投资管理人员判断是否同一事项；确认后以合并金额复核权限，并保留独立项目排除结论。",
+        "missing_field_routing": "关联字段未接入归待接入；已有材料但需判断独立性为待人工核查；本期仅1个可比项目则匹配规则无候选，不报数据不足。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目编号",
+            "投资目的/建设内容/地点/周期",
+            "申报及批准金额",
+            "项目关联依据",
+            "独立性说明",
+            "授权规则"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "同一投资事项拆分规避审批"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S14",
@@ -409,7 +1289,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "按有效规定允许提前采办的长周期设备项目，已发生提前申请、订单或合同等事项。",
+        "required_inputs": [
+          "项目类型/规划属性",
+          "批准估算",
+          "技术审查/可研状态",
+          "允许范围和签约条件",
+          "采办申请/订单/合同关联及去重金额"
+        ],
+        "automatic_decision_boundary": "校验允许提前范围、前置条件和签约约束；金额占比仅管理提示，30%是底稿举例参数；同一申请转订单转合同只计一次。",
+        "ai_assistance": "可选提取技术认可意见、采购范围及限制条款；计算采用已确认结构化字段。",
+        "human_review": "核实提前事项性质、金额变更和合同签订条件；不在监管平台审批采购。",
+        "missing_field_routing": "本期没有提前采办事项为本期无适用对象；范围或去重规则未知归待配置；采购链未接入归待接入；不能把无批准估算当0计算。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目类型/规划属性",
+            "批准估算",
+            "技术审查/可研状态",
+            "允许范围和签约条件",
+            "采办申请/订单/合同关联及去重金额"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "长线合同提前采购超出投资决策范围"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S15",
@@ -437,7 +1390,82 @@
       "associated_phase_ids": [],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "有具体采购包及已采用采购方式，需要按有效法规/制度和例外条件核查采购方式适用性。",
+        "required_inputs": [
+          "项目范围/资金来源",
+          "采购类别/金额",
+          "采购方式",
+          "招标轮次/供应商数量",
+          "例外依据及审批",
+          "市场调研材料"
+        ],
+        "automatic_decision_boundary": "可核金额门槛、采购方式、重招次数和证据存在性；金额阈值必须连同适用范围，邀请招标及非招标不一概异常。",
+        "ai_assistance": "读取技术不可替代、紧急原因、市场调研和招标材料，按实际方式逐项给出适用依据及疑点位置。",
+        "human_review": "采办及法律人员确认紧急性、专有技术不可替代性与例外合法性；不能用“材料未识别到”直接认定违法。",
+        "missing_field_routing": "规则版本/范围未定归待配置；采购过程未接入归待接入；资料已全但适用性需专业判断为待人工核查；确认缺法定必要材料可作为核查发现。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目范围/资金来源",
+            "采购类别/金额",
+            "采购方式",
+            "招标轮次/供应商数量",
+            "例外依据及审批",
+            "市场调研材料"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "应招未招或采购方式不符合规定"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S16",
@@ -465,7 +1493,84 @@
       "associated_phase_ids": [],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "同一标段多个投标人或历史共同投标组合存在可核验的主体、文件、报价和保证金数据。",
+        "required_inputs": [
+          "标段与投标人代码",
+          "股权/控制及任职",
+          "原始投标文件",
+          "分项报价",
+          "联系人/代理人",
+          "保证金主体/账户",
+          "依法可用上传元数据"
+        ],
+        "automatic_decision_boundary": "区分控制、人员、保证金等强线索与地址/一般股东/公共IP等弱线索；生成疑似关联或串通线索，不自动认定围标串标。",
+        "ai_assistance": "对文档独特错漏、技术方案、报价比例及历史组合分析，逐条标文件页码、报价项和关系路径，不只输出分数。",
+        "human_review": "采办、法律或监督人员综合证据确认、合理解释或排除；供应商禁用/处罚必须来自经批准业务处理决定。",
+        "missing_field_routing": "未获取外部库不阻止已有文件/报价规则运行，但外部关联子规则为待接入；没有历史投标记录只是不运行历史行为子规则；单标段多投标人输入缺失归数据待核对。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "标段与投标人代码",
+            "股权/控制及任职",
+            "原始投标文件",
+            "分项报价",
+            "联系人/代理人",
+            "保证金主体/账户",
+            "依法可用上传元数据"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "围标串标和关联供应商"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S17",
@@ -493,7 +1598,82 @@
       "associated_phase_ids": [],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "内部或受托人员实际参与、管理、审核、监督招采或访问敏感信息，需要校验利益申报、回避与履职。",
+        "required_inputs": [
+          "人员受控标识/岗位",
+          "实际项目参与或访问记录",
+          "合法取得的申报关联",
+          "投标人关键人员",
+          "回避记录",
+          "有效制度范围"
+        ],
+        "automatic_decision_boundary": "结合真实身份、实际参与、应申报范围和回避状态；同名不等于同人，已申报回避且未参与不得作为风险，不能因内部问题自动处罚供应商。",
+        "ai_assistance": "辅助整理岗位不符的访问、评分偏离、倾向性技术条件和关联链；引用具体项目记录，不推断未披露亲属关系。",
+        "human_review": "授权法律合规/监督人员核实敏感关联与实际干预；普通人员只看必要风险状态，不能通过AI取得亲属或身份明细。",
+        "missing_field_routing": "HR/申报资料未获授权接入为待接入，不能用外网补个人隐私；访问日志未接入仅关闭该子规则运行；已有合法证据待判断为待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "人员受控标识/岗位",
+            "实际项目参与或访问记录",
+            "合法取得的申报关联",
+            "投标人关键人员",
+            "回避记录",
+            "有效制度范围"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "内部人员与投标人存在未申报利益关联或不当接触"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S18",
@@ -523,7 +1703,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "投标人及联合体成员需要满足招标文件规定的资格，并按投标截止/开标及签约前时点核验。",
+        "required_inputs": [
+          "招标资质要求/最低等级/范围",
+          "证书主体/编号/状态/有效期",
+          "投标关键日期",
+          "联合体工作分工",
+          "权威查询或留存证明"
+        ],
+        "automatic_decision_boundary": "类型、等级、主体及日期可明确比较；许可范围是否覆盖海工技术条件、名称异同和联合体适用性需专业复核。",
+        "ai_assistance": "逐项比对招标要求与证书/制造能力/技术材料，给出要求、材料、疑点、页码及核验建议。",
+        "human_review": "资格审查与技术人员确认适用范围和证书效力；供应商库仅接收管理提示，不自动改资质或禁用。",
+        "missing_field_routing": "无接口但有已核验权威查询凭证可以具备监测条件；证书日期缺字段为数据待核对；技术适用性未确认是待人工核查，不叫数据不足。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "招标资质要求/最低等级/范围",
+            "证书主体/编号/状态/有效期",
+            "投标关键日期",
+            "联合体工作分工",
+            "权威查询或留存证明"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "供应商关键资质不符合或已失效"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S19",
@@ -556,7 +1809,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "出现设计/合同/现场变更事实，或批准概算使用率、同期投资计划执行率异常并需要判断是否存在未申报变更。",
+        "required_inputs": [
+          "项目/WBS与变更ID",
+          "有效概算/同期计划",
+          "完成投资",
+          "合同/现场变更事实与时间",
+          "对应批准范围/时间",
+          "实际进度"
+        ],
+        "automatic_decision_boundary": "指标异常仅提示原因核查，不能直接认定未审批变更；已确认变更事实与批准时间/金额/范围可核对，价格或付款节奏引起偏差可合理解释。",
+        "ai_assistance": "从变更图纸、现场指令、签证与合同对比建设内容及最早实施证据，标位置与编号；不能凭指标生成不存在的变更。",
+        "human_review": "项目、规划和造价人员确认变更性质、例外及累计影响；重大变更审批与费用确认在业务系统完成。",
+        "missing_field_routing": "合同变更源未接入为待接入；指标已完整可独立计算，不能整场景报数据不足；无变更事实只做指标线索；批准链全量核验后缺审批才形成程序问题。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目/WBS与变更ID",
+            "有效概算/同期计划",
+            "完成投资",
+            "合同/现场变更事实与时间",
+            "对应批准范围/时间",
+            "实际进度"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "设计变更未履行审批程序"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S20",
@@ -588,7 +1916,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "在建项目有有效批准概算、已发生投资和经确认的剩余工作预测，可形成预计完工投资。",
+        "required_inputs": [
+          "有效概算及版本",
+          "SAP累计投资",
+          "未入账已确认成本",
+          "合同未执行金额",
+          "合理预计变更/索赔",
+          "未签约剩余估算及去重来源"
+        ],
+        "automatic_decision_boundary": "来源去重后算EAC，达到95%关注、超过100%高风险；缺预测不计0，已知金额已超概仍提示至少超概，不能把已批准变更与剩余合同双算。 达到概算95%只表示接近预算的管理关注，接近完工且剩余义务已覆盖可能是正常状态，不自动生成违规结论；是否需进一步核查结合剩余工作、预测完整性和趋势。",
+        "ai_assistance": "可选：解释EAC构成、从索赔/变更材料提取依据；AI不生成无依据的预测金额。",
+        "human_review": "项目、财务和采办人员确认各项预测及去重关系；纠偏和概算调整由业务承担，复核后监管事项闭环。",
+        "missing_field_routing": "只缺某类预测记录且已确认该类无余额，可用明确0；尚未接入预测为待接入，已接入但有未核实金额为数据待核对；显示已知金额下限及具体缺项。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "有效概算及版本",
+            "SAP累计投资",
+            "未入账已确认成本",
+            "合同未执行金额",
+            "合理预计变更/索赔",
+            "未签约剩余估算及去重来源"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资执行超概算风险"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S21",
@@ -619,7 +2022,82 @@
       "associated_phase_ids": [],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "在建项目有已批准总体计划和关键里程碑，能够按月获得确认的实际/预计进度。",
+        "required_inputs": [
+          "项目/计划版本",
+          "批准计划累计进度",
+          "实际累计进度",
+          "里程碑基准/实际/预计日期",
+          "权重和关键路径",
+          "来源月报"
+        ],
+        "automatic_decision_boundary": "进度差用百分点、日期差用天；未批准调整不能替代批准计划；10个百分点及60天边界按底稿待确认参数，示例9个百分点不能写成10。",
+        "ai_assistance": "可选：从月报/现场报告提取节点、日期和延期原因，经人工确认后参与计算。",
+        "human_review": "项目人员确认数据，规划人员核查延期与恢复措施；不要求新建全功能进度管理系统。",
+        "missing_field_routing": "没有统一进度系统可用受控模板导入，不等于无法上线；缺关键日期或权重合计错误为数据待核对；批准计划不存在经核实后才是管理问题。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目/计划版本",
+            "批准计划累计进度",
+            "实际累计进度",
+            "里程碑基准/实际/预计日期",
+            "权重和关键路径",
+            "来源月报"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "项目建设进度偏离计划"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S22",
@@ -651,7 +2129,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "项目与经批准可比项目具备同类型、单位、规模、地域、技术标准和价格时点可比条件。",
+        "required_inputs": [
+          "本项目EAC/能力或工程量",
+          "可比项目实际投资/产出",
+          "调整因素与审核",
+          "成本及实物进度",
+          "阈值"
+        ],
+        "automatic_decision_boundary": "只有可比条件确认后计算单位投资成本偏离；价格、地域和海工技术要求不能忽略；高于对标仅表示需解释，不自动认定管理混乱。",
+        "ai_assistance": "提取技术标准、属地条件、工程量和价格差异，定位WBS/合同/签证，供成本人员调整和确认。",
+        "human_review": "造价或投资人员批准对标对象、调整方法及异常原因；本平台不自动回写EAC预测金额。",
+        "missing_field_routing": "确无可靠同类项目，标该对标规则不适用并说明原因；有可比资料但未确认调整口径为待配置/待人工确认；接口缺EAC等输入为待接入或数据待核对。 若既定可比项目确有已批准数据而只是未匹配/未导入，归数据待核对或待接入；不能误标本业务不适用。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "本项目EAC/能力或工程量",
+            "可比项目实际投资/产出",
+            "调整因素与审核",
+            "成本及实物进度",
+            "阈值"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资成本偏离同类项目水平"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S23",
@@ -684,7 +2235,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "项目实施或运营中出现关键假设变化；有统一收益测算的项目计算预期收益偏差，其余跟踪关键假设。",
+        "required_inputs": [
+          "批准收益口径/目标",
+          "当前同口径预测",
+          "订单/工作量/价格/利用率/国别等关键假设",
+          "变化来源",
+          "专项评估及决策意见"
+        ],
+        "automatic_decision_boundary": "已确认预测与目标可算百分点偏差；油价或市场事件不直接等于项目损失，不能自行推断必须退出。",
+        "ai_assistance": "关联关键假设变化和项目暴露，提取事件、订单、成本、工期及解释材料，提出需复核假设与情景。",
+        "human_review": "投资及专业部门确认预测可靠性、影响程度与继续/调整/止损方案；实际再决策留在原系统。",
+        "missing_field_routing": "无适用经济收益口径的装备/能力建设项目，收益率子规则不适用，改用已定义工作量和利用率跟踪；不是整场景数据不足。需用收益率而口径未定归待配置。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "批准收益口径/目标",
+            "当前同口径预测",
+            "订单/工作量/价格/利用率/国别等关键假设",
+            "变化来源",
+            "专项评估及决策意见"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资环境变化导致投资价值下降"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S24",
@@ -714,7 +2338,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "可研或初设批复触发实施策略、实施计划等备案任务，且存在按有效权限确定的办理路径。",
+        "required_inputs": [
+          "任务类型",
+          "触发批复日期",
+          "30/20工作日等经确认时限",
+          "工作日历",
+          "提交/退回/确认记录",
+          "版本及备案路径"
+        ],
+        "automatic_decision_boundary": "策略与计划分开计时，不能把这两项内部管理时限套用所有集团/监管备案；提交不等于有权主体确认完成。",
+        "ai_assistance": "可选比对实施范围、主要里程碑与批复的文本差异，标章节，交规划人员确认。",
+        "human_review": "确认适用任务、办理权限和重大调整；正式备案不在监管平台办理，读取过程与结果。",
+        "missing_field_routing": "触发事件尚未发生为无当前任务；日历/时限缺配置归待配置；已完成备案文书未接入归待接入；记录全量后确认应办未办才产生异常。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "任务类型",
+            "触发批复日期",
+            "30/20工作日等经确认时限",
+            "工作日历",
+            "提交/退回/确认记录",
+            "版本及备案路径"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "应备案未备案"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S25",
@@ -745,7 +2444,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "主管部门发布经确认有效的投资准入规则变化，或储备/在审/在建项目须做准入匹配与受影响复核。",
+        "required_inputs": [
+          "规则来源/版本/生效失效日",
+          "适用国家/行业/业务活动",
+          "禁止/特别监管及例外",
+          "项目业务信息",
+          "规则复核任务"
+        ],
+        "automatic_decision_boundary": "仅对已审核发布且字段匹配明确的规则生成命中线索或版本未更新提示；原始政策文本不能未经审定直接替换线上规则。",
+        "ai_assistance": "比较政策/制度版本及项目实际业务描述，指出可能适用条款和证据位置，辅助形成规则草稿。",
+        "human_review": "规划、战略、法律人员确认规则适用性及发布；审批/暂停项目决定由有权业务主体作出。",
+        "missing_field_routing": "本期无新规则发布不等于监管失效；业务映射未配置归待配置；政策来源未同步归待接入；语义是否适用归待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "规则来源/版本/生效失效日",
+            "适用国家/行业/业务活动",
+            "禁止/特别监管及例外",
+            "项目业务信息",
+            "规则复核任务"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资准入规则未动态更新"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S26",
@@ -773,7 +2545,80 @@
       "associated_phase_ids": [],
       "subtopic_id": "post_evaluation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "项目达到适用后评价范围与条件；按实际投产/预定可使用状态及批准年度计划确定任务期限。",
+        "required_inputs": [
+          "项目类型/上会适用标识",
+          "业务起算日期及依据",
+          "评价计划/提交验收期限",
+          "报告/评审/验收记录",
+          "角色信息"
+        ],
+        "automatic_decision_boundary": "分别识别未到评价期、进行中、已完成和逾期；原则1—2年/最迟2年只按底稿适用范围配置，不能用财务转固记账日替代投产日。",
+        "ai_assistance": "可选检查报告章节与所需资料清单并给位置；评价质量和不相容性事实由人员复核。",
+        "human_review": "规划人员确认起算事件、适用范围与最终验收；投用后的资产运营持续开展，后评价不是运营前置阶段。",
+        "missing_field_routing": "尚未达到评价时点为本期无到期对象，清单可展示后续计划；起算日期无法取到归数据待核对；期限未确认归待配置；不制造逾期数据。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目类型/上会适用标识",
+            "业务起算日期及依据",
+            "评价计划/提交验收期限",
+            "报告/评审/验收记录",
+            "角色信息"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "未按时开展后评价"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S27",
@@ -804,7 +2649,80 @@
       "associated_phase_ids": [],
       "subtopic_id": "post_evaluation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "项目已进入适用后评价周期，实际与批准目标在期间、收益口径和投资范围上可比较。",
+        "required_inputs": [
+          "批准目标及有效调整",
+          "实际投资",
+          "同期收入成本/现金流或已核实收益率",
+          "期间/币种/分摊方法",
+          "项目权重"
+        ],
+        "automatic_decision_boundary": "同口径项目计算收益率百分点偏差，主体按投资额加权可比项目偏差；该加权数不是组合IRR，运营初期与成熟期不能直接比较。",
+        "ai_assistance": "可选汇总订单、利用率、成本和工期对偏差的证据；不能自动认定管理责任。",
+        "human_review": "财务确认实际收益及分摊，评价人员判断原因和改进措施；正式后评价意见由专业人员形成。",
+        "missing_field_routing": "未到后评价周期或该项目不适用收益率，指标不适用而可展示能力/利用率目标；需要财务确认的数据为待人工核查；必需实际数据未接入归待接入。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "批准目标及有效调整",
+            "实际投资",
+            "同期收入成本/现金流或已核实收益率",
+            "期间/币种/分摊方法",
+            "项目权重"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资目标未实现"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S28",
@@ -832,7 +2750,82 @@
       "associated_phase_ids": [],
       "subtopic_id": "post_evaluation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "后评价形成经确认问题清单、整改要求与完成标准，存在需要跟踪的整改事项。",
+        "required_inputs": [
+          "来源评价/问题ID",
+          "措施/责任人",
+          "有效整改期限",
+          "验收标准",
+          "提交材料",
+          "复核结论及关闭时间"
+        ],
+        "automatic_decision_boundary": "自动算未关闭、逾期和本期整改闭环；提交说明或材料不等于关闭，只有规定复核通过才算完成。",
+        "ai_assistance": "可选将整改材料与已确定验收标准逐项对应，指出仍需核实证据；不能替代复核签字。",
+        "human_review": "责任单位说明措施与结果，复核部门作通过/退回/继续整改；责任追究不自动办理。",
+        "missing_field_routing": "没有后评价发现问题为本期无适用对象，不创造问题占位；期限缺失归待配置或具体任务数据待核对；F列未设计实现不妨碍使用已有整改流程。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "来源评价/问题ID",
+            "措施/责任人",
+            "有效整改期限",
+            "验收标准",
+            "提交材料",
+            "复核结论及关闭时间"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "后评价发现问题整改不到位"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S29",
@@ -864,7 +2857,80 @@
       ],
       "subtopic_id": "operation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "纳入重大资产监测的船舶、设备或设施已有连续季度或滚动12个月可比运行数据。",
+        "required_inputs": [
+          "资产编码/功能/净值",
+          "季度或滚动利用量与可用量",
+          "扣除事项",
+          "类别目标",
+          "低利用率复核及改善记录"
+        ],
+        "automatic_decision_boundary": "自动计算利用率和候选；低利用率价值占比分子仅含已复核确认对象；连续两月不能替代原定两季度，低利用率不等于正式闲置。",
+        "ai_assistance": "解释订单、检修、技术适用和资源安排的可能原因，指向运行记录和需求说明；仅建议核查调剂/改造方向。",
+        "human_review": "资产人员确认低利用率对象及改善措施，财务净值与季度时点一致；新增投资时核查替代可能。",
+        "missing_field_routing": "期间未满可显示观察中，不判连续低效；没有数据源归待接入；可用量无依据归数据待核对；完整样本与已确认低效记录应直接给计算结论。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "资产编码/功能/净值",
+            "季度或滚动利用量与可用量",
+            "扣除事项",
+            "类别目标",
+            "低利用率复核及改善记录"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "资产利用效率不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S30",
@@ -895,7 +2961,80 @@
       "associated_phase_ids": [],
       "subtopic_id": "operation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "有经复核确认的低效闲置资产及盘活安排，或按已确认条件筛选的候选资产。",
+        "required_inputs": [
+          "资产状态/停用日期/净值",
+          "候选依据与正式确认",
+          "后续需求/维护成本",
+          "盘活计划/期限/审批",
+          "完成证明"
+        ],
+        "automatic_decision_boundary": "候选与正式闲置分开；盘活逾期按有效计划与完成证明，不能因利用率低自动改资产状态，不能填新日期自动消除逾期历史。",
+        "ai_assistance": "汇总需求、技术状态、维护成本和措施，列出可核查方案及依据，不决定出售、报废或盘活方式。",
+        "human_review": "资产与财务确认闲置及方案结果，业务审批/交易另行办理；仅材料上传不能确认盘活完成。",
+        "missing_field_routing": "未确认闲置资产时，盘活期限规则无当前对象，整体闲置占比在全量资产已排查时可为0；无正式确认则待人工核查，不填数据不足。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "资产状态/停用日期/净值",
+            "候选依据与正式确认",
+            "后续需求/维护成本",
+            "盘活计划/期限/审批",
+            "完成证明"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "低效闲置资产未及时盘活处置"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S31",
@@ -927,7 +3066,80 @@
       ],
       "subtopic_id": "operation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "境外项目进入收尾或已结束，仍有关联资产需要安排继续使用、调剂、调回或处置。",
+        "required_inputs": [
+          "项目结束日期",
+          "关联资产/权属/净值",
+          "批准后续安排/接收方/负责人/期限",
+          "海关证照期限",
+          "完成证明"
+        ],
+        "automatic_decision_boundary": "已结束且无批准安排或安排逾期才入异常分子；未到计划期限正常办理不算滞留，项目仍履约不能当已结束。",
+        "ai_assistance": "可选提取海关期限、交接安排和证据；不自动判断跨境税费及处置合法性。",
+        "human_review": "资产会同法务税务确认安排与完成条件；平台跟踪监管事项，正式跨境手续在业务系统办理。",
+        "missing_field_routing": "没有已结束境外项目为本期无适用对象；国别手续和期限未确定归待配置；接收证明未采集归待接入；存在安排但需效力复核为待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目结束日期",
+            "关联资产/权属/净值",
+            "批准后续安排/接收方/负责人/期限",
+            "海关证照期限",
+            "完成证明"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "境外项目资产退出及处置不及时"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S32",
@@ -959,7 +3171,82 @@
       ],
       "subtopic_id": "operation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "房屋、土地、车辆、船舶等按有效规则需要权属登记，且具有资产卡片、清查或登记办理记录。",
+        "required_inputs": [
+          "资产编码/类别/净值",
+          "登记要求/期限",
+          "权证/受理材料",
+          "账面与登记主体",
+          "清查差异",
+          "争议或例外结论"
+        ],
+        "automatic_decision_boundary": "按应登记范围核对主体、有效期和进度；期限内有效受理为办理中，不将所有设备都要求产权证。",
+        "ai_assistance": "可选提取证书主体、号码、有效期，显示扫描件位置。",
+        "human_review": "资产及法律人员判断权属争议、主体差异和处置前提；登记或资产交易结果只读。",
+        "missing_field_routing": "该类资产无需登记为不适用；登记规则缺配置为待配置；权证未接入为待接入；全量确认后确无证书或受理材料才形成核查发现。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "资产编码/类别/净值",
+            "登记要求/期限",
+            "权证/受理材料",
+            "账面与登记主体",
+            "清查差异",
+            "争议或例外结论"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "资产权属不清"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S33",
@@ -991,7 +3278,82 @@
       ],
       "subtopic_id": "operation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "境外资产按已确认国别与类别规则需要登记、许可或临时进口手续。",
+        "required_inputs": [
+          "资产国家/类别/净值",
+          "适用手续",
+          "证照与海关日期",
+          "账面/登记主体",
+          "合法主体差异意见",
+          "完成证明"
+        ],
+        "automatic_decision_boundary": "逐项校验有效期限和主体；临期提醒与已逾期分开，已有合法主体差异依据不算异常。",
+        "ai_assistance": "可选辅助翻译并提取属地证照字段，保留原文位置和人工确认值，不判文件法律效力。",
+        "human_review": "属地机构、法务税务与资产人员确认规则和证明；本平台不直接办理续期或跨境转移。",
+        "missing_field_routing": "本单位无此类境外资产为本期无适用对象；国别规则未获确认归待配置；证照未采集归待接入；文件效力待审为待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "资产国家/类别/净值",
+            "适用手续",
+            "证照与海关日期",
+            "账面/登记主体",
+            "合法主体差异意见",
+            "完成证明"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "境外资产权属及登记管理风险"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S34",
@@ -1026,7 +3388,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "在建项目存在年度投资计划、资本预算、同期资金计划和实际投资/付款，需要按项目WBS核对。",
+        "required_inputs": [
+          "项目/WBS",
+          "计划和预算版本/期间/币种/含税口径",
+          "全年投资预测",
+          "同期完成投资",
+          "同期资金计划/实际付款",
+          "调整依据"
+        ],
+        "automatic_decision_boundary": "投资完成与支付分开，全年预测与年度计划比、同期支付与同期资金计划比；±5%按严格超界，计划0有发生额显示事实而非除0。",
+        "ai_assistance": "可选归纳项目说明中的进度、付款节奏和预算差异原因，附对应来源。",
+        "human_review": "规划和财务确认计划差异及跨期安排，境外线下付款完成导入核对后纳入；不在平台拦截银行支付。",
+        "missing_field_routing": "未接入资本预算仅该衔接规则待接入，已具备投资计划和资金数据的指标照常算；币种/期间映射错误为数据待核对；真实无付款需完整性证据后可为0。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目/WBS",
+            "计划和预算版本/期间/币种/含税口径",
+            "全年投资预测",
+            "同期完成投资",
+            "同期资金计划/实际付款",
+            "调整依据"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资概算、预算与资金计划衔接不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "FA-S35",
@@ -1056,7 +3493,80 @@
       "associated_phase_ids": [],
       "subtopic_id": "operation",
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "按资产负债表日开展减值迹象排查，存在长期低利用率、毁损、收益下降或市场变化等资料。",
+        "required_inputs": [
+          "资产/资产组净值与范围",
+          "候选迹象及来源",
+          "财务确认结论",
+          "测试任务期限/结果",
+          "批准与入账记录"
+        ],
+        "automatic_decision_boundary": "自动筛选候选、核对任务期限与确认金额入账一致性；减值迹象和减值金额不同，低利用率不等于已计提减值。",
+        "ai_assistance": "从市场、技术替代、运行和经营资料提取可能迹象及证据位置；不替财务判断可收回金额或自动计提。",
+        "human_review": "财务确认是否存在迹象、资产组范围和测试结论；账务处理只读，专业判断完成后才计入指标分子。",
+        "missing_field_routing": "候选待确认属于待人工核查；已确认本期无迹象且覆盖完整可为0；无测试义务就无测试逾期对象；正式财务取数未接入归待接入。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "资产/资产组净值与范围",
+            "候选迹象及来源",
+            "财务确认结论",
+            "测试任务期限/结果",
+            "批准与入账记录"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "资产减值风险识别及处理不及时"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S02",
@@ -1090,7 +3600,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "投资前存在经营能力尽调，或投后已到批准经营目标可比年度，需核对被投资企业实际表现。",
+        "required_inputs": [
+          "项目/被投法人关联",
+          "尽调与经营能力意见",
+          "对应年度预测收入或替代指标",
+          "实际同口径数据",
+          "年度历史"
+        ],
+        "automatic_decision_boundary": "可校验材料/指标偏差，不因投后收入低于预期直接认定投前尽调疏漏；默认收入公式为预测减实际，方向不得颠倒。",
+        "ai_assistance": "从尽调提取主营业务、客户结构、资质和能力，并与批准假设对比，标证据与待核查问题。",
+        "human_review": "投资和业务专业人员评估能力与战略支撑，财务确认投后期间与报表范围；控股与参股按可取得信息范围。",
+        "missing_field_routing": "未满两个年度不能声称连续两年偏差；新设企业没有并购历史不等于缺失尽调；需要取数但报表未接入归待接入，能力充分性待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目/被投法人关联",
+            "尽调与经营能力意见",
+            "对应年度预测收入或替代指标",
+            "实际同口径数据",
+            "年度历史"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "标的企业经营能力识别不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S03",
@@ -1125,7 +3708,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "存在尽调识别风险或投后新增被投法人风险事件、已确认财务报表及投资余额。",
+        "required_inputs": [
+          "法人唯一标识",
+          "事件类型/发生日/重大性确认/来源",
+          "资产负债",
+          "投资余额与期间",
+          "投前清单及措施"
+        ],
+        "automatic_decision_boundary": "重大事件先去重且由有权人员确认，再算事件数/资产负债率/风险敞口；新闻、诉讼匹配不自动等于重大损失或投前漏识别。",
+        "ai_assistance": "辅助归集诉讼、HSE、处罚和尽调披露差异，显示来源、时间及主体匹配依据。",
+        "human_review": "专业部门确认重大性与被投关联，投资人员判断新增风险是否改变投资条件；不把海工自身无融资推导为被投企业无负债。",
+        "missing_field_routing": "合法外部渠道尚未接入不妨碍已有内部确认事件；参股报表按约定报送周期，未到期不算缺失；没有新增事件可为0但需明确覆盖和期间。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "法人唯一标识",
+            "事件类型/发生日/重大性确认/来源",
+            "资产负债",
+            "投资余额与期间",
+            "投前清单及措施"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "标的重大风险识别不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S04",
@@ -1159,7 +3815,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "重大并购有整合及协同目标，目标类型和计量方式已确认；其他新设投资不强制套并购整合流程。",
+        "required_inputs": [
+          "并购类型/投资目的",
+          "治理与整合方案",
+          "年度价值目标/指标类型",
+          "实际协同项目或节约依据",
+          "归属规则"
+        ],
+        "automatic_decision_boundary": "可核目标、任务及确认价值偏差；合同金额、营业收入、成本节约不可混加，协同偏差不能自动证明投前整合论证失职。",
+        "ai_assistance": "提取整合路径、治理权限、业务协同假设及实际材料，指出未覆盖事项和差异位置。",
+        "human_review": "业务与财务确认协同增量及归因，治理专业人员判断整合可行性；原指标与EQ-S16共用ID去重。",
+        "missing_field_routing": "非并购项目不适用本场景；有并购但目标单位/归因未定义归待配置；实际数据未到年度评价时点为无当期评价对象；方案充分性待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "并购类型/投资目的",
+            "治理与整合方案",
+            "年度价值目标/指标类型",
+            "实际协同项目或节约依据",
+            "归属规则"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "并购整合可行性评估不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S05",
@@ -1193,7 +3922,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "发生有评估/估值依据的股权交易，或投后实际经营已可与估值预测年度比较。",
+        "required_inputs": [
+          "交易范围/权益比例",
+          "总对价",
+          "评估价值/基准日/有效性",
+          "溢价论证",
+          "预测与实际同口径指标"
+        ],
+        "automatic_decision_boundary": "溢价按同权益同范围总对价与价值比较，不能拿分期已付额对全额估值；高溢价是关注线索，不能自动认定非公允或利益输送。",
+        "ai_assistance": "提取估值关键假设、敏感因素及溢价说明，与历史经营和已确认可比交易对照，引用具体模型/报告页。",
+        "human_review": "估值、财务与投资人员评估价格合理性，投后兑现偏差方向为实际减预测；不让AI出正式估值结论。",
+        "missing_field_routing": "新设按约定出资、没有适用交易溢价口径时该指标不适用；评估有效版本未定归待配置；报告已到但专业合理性未确认归待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "交易范围/权益比例",
+            "总对价",
+            "评估价值/基准日/有效性",
+            "溢价论证",
+            "预测与实际同口径指标"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "股权交易价格合理性论证不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S06",
@@ -1223,7 +4025,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "核查依据",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "professional_review_support",
+        "label": "专业核查支撑",
+        "applicable_business_facts": "尽调已发现重大潜在债务、诉讼或其他风险，需要核查是否落实到交易价格、条件、赔偿或保障安排。",
+        "required_inputs": [
+          "已确认风险清单",
+          "交易协议版本与条款",
+          "价格调整/赔偿/交割条件",
+          "专项法律财务意见",
+          "审查结论"
+        ],
+        "automatic_decision_boundary": "系统只展示风险与条款及意见的对应关系、已确定任务期限；不能把“存在条款”自动判为风险保障充分，不新增伪KRI。",
+        "ai_assistance": "可选提取相关风险和条款，形成有原文页码的对应清单及未找到对应的提示；并不证明不存在有效保障。",
+        "human_review": "法律、财务与投资人员确认条款可执行性、风险覆盖和剩余风险，记录专业结论及后续行动。",
+        "missing_field_routing": "专业审查未完成显示待人工核查；原F列不涉及系统实现不是数据缺失；资料未接入才标待接入；无相关交易安排则本期无适用对象。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "已确认风险清单",
+            "交易协议版本与条款",
+            "价格调整/赔偿/交割条件",
+            "专项法律财务意见",
+            "审查结论"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "潜在风险未充分反映至交易安排"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S07",
@@ -1254,7 +4129,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "存在财务、法律、技术、HSE等多专业报告及可交叉核对资料，需检查风险传递与专业意见一致性。",
+        "required_inputs": [
+          "报告版本/委托范围",
+          "中介资格与独立性资料",
+          "关键假设",
+          "已确认重大风险",
+          "决策披露及交易安排"
+        ],
+        "automatic_decision_boundary": "可校验材料覆盖、数据矛盾和风险条目是否传递，但不以“专业意见不一致”自动认定报告虚假或有人指使。",
+        "ai_assistance": "交叉提取财务预测、估值假设、技术能力和法律风险，对照决策披露与协议条款，逐项标来源差异。",
+        "human_review": "各专业人员确认差异是口径不同、意见分歧还是实质遗漏；责任认定与中介处理另行执行。",
+        "missing_field_routing": "只有一份专项报告时多报告对比无对象，不强迫补造；已有报告需判断质量为待人工核查；报告未进入平台是待接入；不因原F列空就删监管目标。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "报告版本/委托范围",
+            "中介资格与独立性资料",
+            "关键假设",
+            "已确认重大风险",
+            "决策披露及交易安排"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "专业意见未真实反映重大风险"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S08",
@@ -1285,7 +4233,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "股权投资进入决策、签约或实施，存在按有效权限应履行的程序及已批准方案。",
+        "required_inputs": [
+          "项目金额/类型/主体",
+          "当时授权/章程规则",
+          "决策节点结论/日期",
+          "批准交易范围",
+          "合同/付款/持股事实"
+        ],
+        "automatic_decision_boundary": "比较应办与已办程序及实际实施关键字段；党委会、董事会等按实际适用条件配置，不能每笔投资强制一套相同路径。",
+        "ai_assistance": "可选提取决策文件的主体、金额、持股比例及附带条件，经确认后比对。",
+        "human_review": "有权人员核验特殊授权及附条件批准；材料存在不证明决策合理性；审批执行仍在业务系统。",
+        "missing_field_routing": "权限版本未定归待配置；合同或批准方案未接入归待接入；相同期间字段冲突为数据待核对；数据齐全且确认无必要程序才形成核查线索。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "项目金额/类型/主体",
+            "当时授权/章程规则",
+            "决策节点结论/日期",
+            "批准交易范围",
+            "合同/付款/持股事实"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资决策程序执行不到位"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S09",
@@ -1316,7 +4337,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "尽调或专项评估已识别重大风险，需核查是否披露至投资方案、决策材料并持续跟踪措施。",
+        "required_inputs": [
+          "风险条目ID及来源",
+          "影响/等级",
+          "决策材料与风险专篇",
+          "交易措施",
+          "责任人与后续跟踪"
+        ],
+        "automatic_decision_boundary": "对已确认风险检查披露链接、责任措施和更新期限；不能只看“有风险章节”就判所有风险充分纳入。",
+        "ai_assistance": "将尽调风险逐项映射到投资方案和决策材料，指出遗漏、弱化或表达冲突的具体句段。",
+        "human_review": "投资及专业人员确认披露是否充分及措施是否有效；新的重大风险须经确认，不将AI摘要直接当正式风险事实。",
+        "missing_field_routing": "没有确认的重大风险时专项风险传递规则无对象；AI提取候选待人工确认；报告未接入归待接入；不能把待专业审查标成数据不足。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "风险条目ID及来源",
+            "影响/等级",
+            "决策材料与风险专篇",
+            "交易措施",
+            "责任人与后续跟踪"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "重大风险未有效纳入投资决策"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S10",
@@ -1347,7 +4441,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "核查依据",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "professional_review_support",
+        "label": "专业核查支撑",
+        "applicable_business_facts": "投资已有重大风险，需要专业评估业绩补偿、团队稳定、合作方履约、分阶段投入及止损安排是否适当。",
+        "required_inputs": [
+          "重大风险与触发条件",
+          "应对措施/责任边界",
+          "协议/章程条款",
+          "法律财务专业意见",
+          "实施跟踪结果"
+        ],
+        "automatic_decision_boundary": "保留专业要点与证据对应，已确定义务可跟踪到期执行；系统不能自动评定措施足够或强制所有项目设置业绩承诺/回购。",
+        "ai_assistance": "可选整理风险—措施—条款—执行证据，提示待补充问题；不输出可替代专业意见的充分性评分。",
+        "human_review": "投资、法律、财务、技术人员结合交易类型和国别确认措施合理性与可执行性，形成审查意见。",
+        "missing_field_routing": "无已识别重大风险或不涉及对应交易安排可无当前对象；意见未完成为待人工核查；文件未接入才是待接入，不强加自动化KRI。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "重大风险与触发条件",
+            "应对措施/责任边界",
+            "协议/章程条款",
+            "法律财务专业意见",
+            "实施跟踪结果"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "重大风险应对措施不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S11",
@@ -1381,7 +4548,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "合资合作项目存在我方投入、收益、治理及风险承担安排，并进入约定回报评价期。",
+        "required_inputs": [
+          "投资目的与收益目标",
+          "股东投入/权益/风险条款",
+          "实际现金分红及适用处置收益",
+          "评价期间",
+          "归属和去重"
+        ],
+        "automatic_decision_boundary": "现金回报偏差可计算，但低回报不直接证明风险收益安排不公；未分配利润不算现金回报，交易退出本金不当作收益。",
+        "ai_assistance": "提取投入、责任、分配及保障条款，与已确认回报事实对比，提示不对称安排待核查。",
+        "human_review": "法律和投资人员确认风险承担合理性，财务确认现金收益；与EQ-S20相同事实共享指标/事项，不重复计数。",
+        "missing_field_routing": "未到约定收益期为无当期评价对象；目标未设或口径未定归待配置；回报已真实为0可算偏差，不把现金未到账误说数据不足。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "投资目的与收益目标",
+            "股东投入/权益/风险条款",
+            "实际现金分红及适用处置收益",
+            "评价期间",
+            "归属和去重"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资收益与风险承担不匹配"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S12",
@@ -1413,7 +4653,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "线索核查",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "实际存在股东借款、资金支持、垫付、担保或额外承诺等合作安排，需要判断是否替其他合作方承担义务。",
+        "required_inputs": [
+          "各股东应履行义务",
+          "协议与补充文件",
+          "实际资金流/出资到期",
+          "担保或支持批准",
+          "付款用途和合作方情况"
+        ],
+        "automatic_decision_boundary": "可比对我方实付与约定义务、合作方到期未履约及额外承诺线索；先行出资、持股比例不同或普通股东借款不自动等于违规垫资。",
+        "ai_assistance": "提取差额补足、保底、回购、流动性支持等条款，串联应付款人与实际付款人，列明证据。",
+        "human_review": "投资、财务、法律确认义务归属和适用例外；不自动归因为利益输送，不制造海工没有的担保融资案例。",
+        "missing_field_routing": "确无此类资金支持或承诺时本期无适用对象，目录保留可启用；协议和资金源未接入归待接入；义务性质未确定为待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "各股东应履行义务",
+            "协议与补充文件",
+            "实际资金流/出资到期",
+            "担保或支持批准",
+            "付款用途和合作方情况"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "变相承担合作方义务"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S13",
@@ -1445,7 +4758,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "股权项目已有协议/章程等治理安排，或投后存在约定信息报送、委派、重大事项审议任务。",
+        "required_inputs": [
+          "持股比例/治理地位",
+          "协议章程版本",
+          "法律意见",
+          "信息报送义务/期限",
+          "委派履职及审议记录"
+        ],
+        "automatic_decision_boundary": "明确约定的报送到期和已履行记录可跟踪；文件上传齐全不等于股东权利被充分保障，参股不照搬控股控制权。",
+        "ai_assistance": "提取知情、决策参与、审计、分配与退出条款，比较承诺和实际执行证据，标位置。",
+        "human_review": "法律与投资人员确认权利有效性及是否实际受限；不能自动判断管理失控或发起公司治理决议。",
+        "missing_field_routing": "治理义务尚未结构化需待配置；权利保障充分性待人工核查；参股单位只提供约定报表不是数据缺失；必要记录未采集才待接入。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "持股比例/治理地位",
+            "协议章程版本",
+            "法律意见",
+            "信息报送义务/期限",
+            "委派履职及审议记录"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "股东权益保障不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S14",
@@ -1476,7 +4862,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "核查依据",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "professional_review_support",
+        "label": "专业核查支撑",
+        "applicable_business_facts": "交易文件需要明确退出、风险触发、违约责任和治理保护，或已出现约定风险触发事实。",
+        "required_inputs": [
+          "协议/章程有效版本",
+          "触发条件",
+          "转让限制/优先权/回购机制",
+          "违约责任",
+          "属地法律意见",
+          "专业结论"
+        ],
+        "automatic_decision_boundary": "系统仅关联条款、已确认触发事实和处置任务；没有回购条款不当然不足，不能自动决定退出或计算法律可执行性分数。",
+        "ai_assistance": "可选检索退出和赔偿条款，给出原文、交叉引用和需专业澄清点；不自行宣称条款违法。",
+        "human_review": "法律、投资和财务人员确认退出路径及实际可行性，决定是否采取止损方案；退出不强制等后评价结束。",
+        "missing_field_routing": "专业审查未完成显示待人工核查；尚无风险触发事实则处置任务无对象，条款审查仍可开展；文件未接入才显示待接入。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "协议/章程有效版本",
+            "触发条件",
+            "转让限制/优先权/回购机制",
+            "违约责任",
+            "属地法律意见",
+            "专业结论"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "退出和风险处置机制不足"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S15",
@@ -1506,7 +4967,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "并购价款发生某期付款，存在该笔付款约定前提、条件完成事实及有效例外批准。",
+        "required_inputs": [
+          "付款ID/金额/日期",
+          "对应付款阶段",
+          "协议该阶段前提",
+          "条件确认/交割证明",
+          "监管批准",
+          "例外有效性"
+        ],
+        "automatic_decision_boundary": "按每笔约定条件检查，不一律要求首付款前完成工商变更或全部交割；内部批准不能豁免法定条件、不能单方改对方合同权利。",
+        "ai_assistance": "可选提取付款触发条款和例外文本，经人工确认后作为结构化条件，AI不直接许可支付。",
+        "human_review": "法律/投资确认合同条件与例外有效，资金人员核对实付；银行支付和审批控制留在财务云等业务系统。",
+        "missing_field_routing": "本期无交易付款为本期无适用对象；付款条件未配置归待配置；证明已在源系统但未采集归待接入；付款已发生且条件确认不满足才形成线索。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "付款ID/金额/日期",
+            "对应付款阶段",
+            "协议该阶段前提",
+            "条件确认/交割证明",
+            "监管批准",
+            "例外有效性"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "交易付款与交割条件不匹配"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S16",
@@ -1539,7 +5075,78 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "并购已交割并进入整合执行，存在批准整合事项或可比年度协同价值目标。",
+        "required_inputs": [
+          "整合方案/任务/期限",
+          "治理财务QHSE等实施证据",
+          "协同目标类型",
+          "可归因实际贡献及核实意见"
+        ],
+        "automatic_decision_boundary": "对明确任务到期和已确认协同值算偏差；项目未到整合节点不判未执行，协同收入不能和被投全部收入混算。",
+        "ai_assistance": "从整合报告和共同项目材料提取任务进展、协同贡献及未覆盖事项，标证据。",
+        "human_review": "投资、业务与财务确认协同归属及融合质量；同EQ-S04共用EQ-I05，避免重复累计一笔协同收益。",
+        "missing_field_routing": "非并购项目不适用；刚交割尚未到目标年度为无当期价值评价对象；任务明细未采集归待接入；目标归因尚未定义归待配置。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "整合方案/任务/期限",
+            "治理财务QHSE等实施证据",
+            "协同目标类型",
+            "可归因实际贡献及核实意见"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "并购整合不到位"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S17",
@@ -1573,7 +5180,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "已投企业具有连续可比财务报告，或有经确认重大事件及应对任务可跟踪。",
+        "required_inputs": [
+          "法人关联",
+          "同口径各期利润/现金流",
+          "已确认事件ID与期间",
+          "治理和协议安排",
+          "处置计划/截止日/记录"
+        ],
+        "automatic_decision_boundary": "统计连续亏损和去重重大事件，前期事件数为0时显示新增数不除0；经营异常不自动证明未处置，需看规定期限和实际措施。",
+        "ai_assistance": "可选概括经营变化、重大事件和处置记录，附来源；不根据报道自行认定HSE事故重大性。",
+        "human_review": "财务确认报告可比，专业部门确认事件重大性，投资人员评估措施是否有效并保留跟踪。",
+        "missing_field_routing": "历史不足只显示已掌握连续期数，不冒称多年；尚未到报送期不算缺失；必要历史报表源未接入归待接入，事件重大性待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "法人关联",
+            "同口径各期利润/现金流",
+            "已确认事件ID与期间",
+            "治理和协议安排",
+            "处置计划/截止日/记录"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "经营异常未及时处置"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S18",
@@ -1609,7 +5289,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "rule_ai_human",
+        "label": "线索识别与人工复核",
+        "applicable_business_facts": "投资需匹配有效主责主业/战略目录与负面清单，并有年度计划、已投入及组合余额。",
+        "required_inputs": [
+          "有效战略/主业/清单版本",
+          "项目行业/实际业务/目的",
+          "主业认定",
+          "年度计划/当期实投",
+          "标的与行业余额"
+        ],
+        "automatic_decision_boundary": "年度计划执行、已确认非主业金额占比和集中度可算；行业代码相近不等于主业，高集中度对产业企业不当然异常；Top5/Top10小样本保留结构参考。 少于5个行业或10个标的时Top5/Top10常为100%，不作为自动风险触发条件。",
+        "ai_assistance": "比较项目实际业务与主业、战略协同描述，给出可能匹配条款和原文，不自动认定无关多元化。",
+        "human_review": "战略与投资人员确认主业属性和例外适用；年度计划执行偏差应对照时点计划，不拿半年执行率直接判全年未完成。",
+        "missing_field_routing": "主业清单版本或口径未定归待配置；样本不足以区分Top10是解释范围而非数据错误；源金额缺失归待接入，战略相关性待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "有效战略/主业/清单版本",
+            "项目行业/实际业务/目的",
+            "主业认定",
+            "年度计划/当期实投",
+            "标的与行业余额"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资方向偏离战略规划"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S19",
@@ -1641,7 +5394,80 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "实际交易主体、金额、持股比例、结构、合作方或业务范围发生变化，需要与有效批准方案及变更程序核对。",
+        "required_inputs": [
+          "批准方案快照/生效日",
+          "同一生效时点实际记录",
+          "变更范围及重大性标准",
+          "新审批/备案",
+          "合同和登记来源"
+        ],
+        "automatic_decision_boundary": "同生效时点比对；台账55%与批准/工商60%的差异先提示信息一致性核查，不能直接称已实施未批变更；确认实质变化后才核程序。",
+        "ai_assistance": "可选提取补充协议中交易结构和额外义务差异，供人工确认是否重大变化。",
+        "human_review": "投资与法律人员确认真实变更、版本错位、录入差异和重大性；后续审批仍在源系统。",
+        "missing_field_routing": "缺变更重大性标准归待配置；记录生效日缺失归数据待核对；正式批准未接入归待接入；原上级禁止投资场景只作来源追踪，不替代独立准入核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "批准方案快照/生效日",
+            "同一生效时点实际记录",
+            "变更范围及重大性标准",
+            "新审批/备案",
+            "合同和登记来源"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资方案重大调整未重新履行程序"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     },
     {
       "id": "EQ-S20",
@@ -1676,7 +5502,82 @@
       ],
       "subtopic_id": null,
       "phase_mapping_version": "1.2",
-      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。"
+      "phase_mapping_note": "阶段归属为本Demo的监管展示映射，原底稿A—F文字保持不变。",
+      "legacy_adoption_mode": "结构化监测",
+      "adoption_mode_status": "历史兼容标签，仅供旧版本对照；V1.4页面按supervision_execution及实例三轴状态呈现",
+      "supervision_execution": {
+        "mode": "structured_automatic",
+        "label": "结构化自动识别",
+        "applicable_business_facts": "已投项目达到约定回报评价期或后评价条件，存在财务确认的收益、余额、现金回报及减值数据。",
+        "required_inputs": [
+          "期初期末投资余额",
+          "去重会计收益",
+          "同期现金分红/适用处置收益",
+          "批准目标",
+          "财务确认减值准备",
+          "评价范围与时间"
+        ],
+        "automatic_decision_boundary": "期间会计收益率与现金回报偏差分开；收益已含分红/处置收益不再重复加；减值率用明确减值前账面余额；期间收益率不自动年化。",
+        "ai_assistance": "可选汇总回报偏差和经营/协同证据，列出专业分析建议；不自动认定低效无效投资或形成减值金额。",
+        "human_review": "财务确认会计口径、减值与归属，评价人员确认价值实现及原因；后评价起算按投资类型，不能假设所有股权都有投产日。",
+        "missing_field_routing": "未到后评价期不妨碍已适用期间收益指标；确认无减值准备可为0，缺财务记录不能当0；目标未定义归待配置，专业原因分析待人工核查。",
+        "ai_invocation": "按需辅助，不要求每个对象调用AI；已结构化数字由确定性计算完成",
+        "formal_business_actions_allowed": false
+      },
+      "implementation_readiness": {
+        "status": "runtime_derived",
+        "scope": "组织权限范围×统计期间×业务对象×规则版本",
+        "requirements": {
+          "configuration": [
+            "已审核生效的子场景/规则版本",
+            "适用条件、期间和必要参数已定义",
+            "用户具有本对象数据权限"
+          ],
+          "inputs": [
+            "期初期末投资余额",
+            "去重会计收益",
+            "同期现金分红/适用处置收益",
+            "批准目标",
+            "财务确认减值准备",
+            "评价范围与时间"
+          ],
+          "confirmation": [
+            "需要专业确认的输入已确认，或以专业核查任务执行"
+          ],
+          "data_source_note": "来源为落地取数要求，不表示真实企业系统已完成接入"
+        },
+        "no_sample_is_not_disabled": true,
+        "no_current_objects_is_applicability_not_readiness": true
+      },
+      "display_policy": {
+        "catalog_visible": true,
+        "business_page": "只显示当前已启用且适用范围匹配的子场景；没有业务对象显示明确空态，不生成数据不足卡片",
+        "atomic_configuration_unit": "regulatory_subscenario",
+        "children_allowed": false,
+        "rules_under_subscenario": "可配置多条原子规则和关联多个指标，规则不是更下一级监管子场景",
+        "professional_review_display": "核查要点、证据、待人工核查/已核查及明确结论；未核查不显示0命中或合规率",
+        "source_trace_in_product_ui": false,
+        "ui_labels": {
+          "original_scene": "一级监管场景",
+          "name": "监管子场景",
+          "description": "子场景描述",
+          "execution": "监管执行方式"
+        },
+        "display_name": "投资价值实现偏差"
+      },
+      "source_review_v1_4": {
+        "reviewed_columns": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "review_date": "2026-09-15",
+        "comparison": "逐列与原XLSX核对一致（仅既有首尾空白规范化）；原文、KRI、阶段ID未改",
+        "source_only_in_development": true
+      }
     }
   ],
   "indicators": [
@@ -2225,6 +6126,104 @@
       "结构化监测": 40,
       "线索核查": 10,
       "核查依据": 3
-    }
+    },
+    "legacy_adoption_modes": {
+      "结构化监测": 40,
+      "线索核查": 10,
+      "核查依据": 3
+    },
+    "supervision_execution_modes": {
+      "结构化自动识别": 21,
+      "线索识别与人工复核": 29,
+      "专业核查支撑": 3
+    },
+    "adoption_modes_note": "原40/10/3为历史适配标签，不是上线数量或自动判定全场景数量。当前主执行方式见supervision_execution_modes。"
+  },
+  "runtime_state_contract": {
+    "version": "1.4",
+    "instance_key": [
+      "organization_scope",
+      "period",
+      "subscenario_id",
+      "object_type",
+      "object_id",
+      "rule_version"
+    ],
+    "applicability": {
+      "applicable": "适用",
+      "not_applicable": "不适用，须有具体原因与适用依据",
+      "no_current_objects": "本期无适用对象，不表示不能上线"
+    },
+    "readiness": {
+      "ready": "具备监测条件",
+      "pending_configuration": "待配置：条件、公式、参数或有效版本未确定",
+      "pending_integration": "待接入：必要来源尚未取得",
+      "data_issue": "数据待核对：已接入但具体字段错误、缺失或口径冲突"
+    },
+    "execution": {
+      "not_started": "尚未执行",
+      "evaluated_not_hit": "已执行，未命中",
+      "evaluated_hit": "已执行，命中待核查",
+      "pending_human_review": "待人工核查",
+      "human_review_completed": "已完成人工核查，结论和证据必填"
+    },
+    "derivation_order": [
+      "按用户权限裁剪对象和来源",
+      "按启用版本、业务类型、阶段与期间判断适用性",
+      "按具体规则所需配置和输入判断准备状态",
+      "执行能运行的原子规则，专业内容进入核查",
+      "按评估/核查事实推导指标、计数和事项，不按目录条目数补0或补风险"
+    ],
+    "readiness_without_object": null,
+    "professional_mode_can_be_ready": true,
+    "execution_result_not_equal_risk_case_state": true,
+    "partial_rule_coverage": "同一子场景有可执行规则和待接入规则时分别列示，完成部分标覆盖范围；不能整场景变成数据不足或全覆盖正常",
+    "human_review_outcome_required": [
+      "confirmed_finding",
+      "reasonably_explained",
+      "needs_additional_evidence",
+      "no_finding"
+    ],
+    "metric_surface": "非重点、无完整计算样本的38项原指标继续在指标目录保留定义；不自动在首页生成空卡。当前指标详情必须绑定当前指标ID、组织节点、期间和输入来源。",
+    "source_absence_rule": "业务源系统应有记录不等于监管平台已取得记录。未获取只能标待接入/待核对；仅在确认数据覆盖、匹配范围与有效时点后，才可将已核实不存在的必要审批/材料作为核查事实。"
+  },
+  "ui_projection_contract": {
+    "labels": {
+      "A": "一级监管场景",
+      "B": "监管子场景",
+      "C": "子场景描述",
+      "D": "管控要求",
+      "E": "监控指标与规则",
+      "F": "监测逻辑"
+    },
+    "developer_only_fields": [
+      "source_sheet",
+      "source_row",
+      "source_range",
+      "original_columns",
+      "source_review_v1_4",
+      "source_references",
+      "source_blocks",
+      "legacy_adoption_mode",
+      "parameter_status",
+      "phase_mapping_note",
+      "adoption_mode_status",
+      "counts.adoption_modes",
+      "counts.legacy_adoption_modes"
+    ],
+    "business_detail_fields": [
+      "display_policy.display_name",
+      "original_scene",
+      "primary_phase",
+      "supervision_execution.label",
+      "关联指标及当前值",
+      "命中规则与依据",
+      "核查结论",
+      "责任与整改"
+    ],
+    "source_evidence": "产品显示业务来源文件/记录的名称、日期、页码、字段和查询权限；研发底稿行列不作为业务数据证据。",
+    "data_declaration": "采用脱敏样例数据，统一在关于/数据说明中说明，不在单位、项目名称和每张卡片反复加入演示字样。",
+    "ai_boundary": "未接入模型的可交互AI说明须在AI面板标明基于预置资料与规则生成的分析示例；不得伪装实时联网或外部企业数据已接通。",
+    "indicator_parameter_label": "规则参数；版本状态从正式配置对象取得，不直接渲染底稿中的parameter_status文案。"
   }
 }

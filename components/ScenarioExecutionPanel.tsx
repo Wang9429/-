@@ -95,6 +95,8 @@ export default function ScenarioExecutionPanel({
   phaseId,
   topicId,
   subtopicId,
+  orgIds,
+  allowedObjectIds,
   scopeTitle,
   focusNote,
   subtopicOptions,
@@ -108,6 +110,8 @@ export default function ScenarioExecutionPanel({
   phaseId?: string | null;
   topicId?: string | null;
   subtopicId?: string | null;
+  orgIds: Set<string>;
+  allowedObjectIds: string[] | null;
   scopeTitle: string;
   focusNote?: string;
   subtopicOptions?: SubtopicOption[];
@@ -124,29 +128,19 @@ export default function ScenarioExecutionPanel({
   const [statusFilter, setStatusFilter] = useState("all");
   const [objectTypeFilter, setObjectTypeFilter] = useState("all");
 
-  const orgScopeSet = useMemo(() => {
-    const ids = new Set<string>();
-    const walk = (id: string) => {
-      ids.add(id);
-      if (!filters.includeChildren) return;
-      seed.organizations.filter((o) => o.parent_id === id).forEach((c) => walk(c.id));
-    };
-    walk(filters.orgId);
-    return ids;
-  }, [filters.orgId, filters.includeChildren]);
-
   const baseScope: ScopeFilter = useMemo(
     () => ({
       domain,
-      orgScope: orgScopeSet,
+      orgScope: orgIds,
       periodStart: filters.periodStart,
       periodEnd: filters.periodEnd,
       asOf: filters.asOf,
       phaseId: phaseId ?? null,
       topicId: topicId ?? null,
       subtopicId: subtopicId ?? null,
+      allowedObjectIds,
     }),
-    [domain, orgScopeSet, filters.periodStart, filters.periodEnd, filters.asOf, phaseId, topicId, subtopicId],
+    [domain, orgIds, filters.periodStart, filters.periodEnd, filters.asOf, phaseId, topicId, subtopicId, allowedObjectIds],
   );
 
   const summary = useMemo(() => computeFiveCounts(baseScope, risks), [baseScope, risks]);
@@ -729,7 +723,7 @@ export default function ScenarioExecutionPanel({
         )}
 
         <div className="mt-3 flex items-center gap-2">
-          <SimulatedBadge text="模拟演示数据" />
+          <SimulatedBadge text="合成样例" />
           <span className="text-[12px] text-textsub">
             对象数按 object_type+object_id 去重，事项数按 risk_id 去重，二者不是同一计数单位。
           </span>

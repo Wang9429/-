@@ -97,12 +97,11 @@ export default function DataSourcesPage() {
         <div>
           <h1 className="text-[22px] font-semibold text-textmain leading-7">数据依据</h1>
           <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
-            数据情况、拟来源边界、规则与数据版本、导入模板与演示状态维护。可判定覆盖率 = 适用且具备完整判断数据的
+            数据情况、拟来源边界、规则与数据版本、导入模板与办理状态维护。可判定覆盖率 = 适用且具备完整判断数据的
             对象×规则实例数 ÷ 应评估的适用对象×规则实例数；分母是对象与规则的组合实例，不是配置规则数量，覆盖率也不称为合规率。
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Tag tone="neutral">P76</Tag>
           <Tag tone="brand">种子版本 {seed.version}</Tag>
         </div>
       </div>
@@ -172,7 +171,7 @@ export default function DataSourcesPage() {
             </div>
           </Card>
 
-          <Card title="演示数据范围" subtitle="完整业需 16.1">
+          <Card title="样例数据范围" subtitle="完整业需 16.1">
             <DescList
               cols={4}
               items={[
@@ -191,7 +190,7 @@ export default function DataSourcesPage() {
               ]}
             />
             <div className="mt-3 flex items-center gap-2">
-              <SimulatedBadge text="模拟演示数据" />
+              <SimulatedBadge text="合成样例" />
               <span className="text-[12px] text-textsub">{seed.data_nature}｜{seed.display_notice}</span>
             </div>
           </Card>
@@ -258,7 +257,7 @@ export default function DataSourcesPage() {
 
           <Card title="导入批次记录" subtitle="确认导入后重新计算受影响指标并保留批次，不随意覆盖已批准基准">
             {imports.length === 0 ? (
-              <EmptyState title="尚无导入批次" detail="本次会话还没有确认导入的批次；演示重置会清除本地批次记录。" />
+              <EmptyState title="尚无导入批次" detail="本次会话还没有确认导入的批次；重置业务办理状态会清除本地批次记录。" />
             ) : (
               <DataTable
                 rows={imports}
@@ -293,12 +292,12 @@ export default function DataSourcesPage() {
             <DescList
               cols={3}
               items={[
-                { label: "演示种子版本", value: seed.version },
+                { label: "种子版本", value: seed.version },
                 { label: "规则参数版本", value: String(seed.demo_rule_parameters.version) },
                 { label: "业务截至日", value: <span className="num">{AS_OF}</span> },
                 { label: "场景目录版本", value: `investment_catalog ${seed.version}` },
                 { label: "阶段模板版本", value: "V1.2 命名（FA/EQ/ENG/PR-*-V12）" },
-                { label: "当前会话状态", value: dirty ? "含本地演示办理修改" : "与种子一致" },
+                { label: "当前会话状态", value: dirty ? "含本地办理修改" : "与种子一致" },
               ]}
             />
           </Card>
@@ -327,16 +326,16 @@ export default function DataSourcesPage() {
             />
           </Card>
 
-          <Card title="演示状态维护" subtitle="数据撤回与演示重置恢复到固定种子数据；原始种子文件不会被修改">
+          <Card title="业务办理状态" subtitle="重置只恢复核查整改等办理状态，不清除用户与规则配置；原始种子文件不会被修改">
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="primary"
                 onClick={() => {
                   resetDemo();
-                  setFlash("已恢复种子基线：未关闭 8 件（红 4、黄 4），待核查 5、整改中 3、当前逾期整改 1，R09 保持已排除。");
+                  setFlash("已重置业务办理状态：未关闭 8 件（红 4、黄 4），待核查 5、整改中 3、当前逾期整改 1，R09 保持已排除。");
                 }}
               >
-                重置演示数据
+                重置业务办理状态
               </Button>
               <span className="text-[12px] text-textsub">
                 当前会话{dirty ? "存在本地办理修改" : "没有本地办理修改"}；截至日固定为 {filters.asOf}。

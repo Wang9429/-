@@ -92,8 +92,15 @@ export const scenarioAdoption = (id: string): string => {
 
 export const scenarioSourceLabel = (id: string): string => {
   const c = catalog.scenarios.find((s) => s.id === id);
-  if (c) return `${c.source_sheet} ${c.source_range}（第${c.source_row}行）`;
-  return "本业需补充设计（非投资底稿原始场景）";
+  if (c) return "投资监管子场景目录";
+  return "本业需补充设计";
+};
+
+/** 研发审计用，仅配置页展示，不进入业务字段标签 */
+export const scenarioAuditSource = (id: string): string => {
+  const c = catalog.scenarios.find((s) => s.id === id);
+  if (c) return `${c.source_sheet} ${c.source_range}`;
+  return "本业需补充设计";
 };
 
 export const objectTypeLabel: Record<string, string> = {
@@ -110,12 +117,12 @@ export const objectTypeLabel: Record<string, string> = {
 };
 
 export const monitoringStatusLabel: Record<string, string> = {
-  evaluated_hit: "已完成监测·命中",
-  evaluated_clear: "已完成监测·未命中",
-  data_insufficient: "数据不足",
-  not_due: "未到监测时点",
-  not_applicable: "不适用",
-  reference_only: "参考/专业核查依据",
+  evaluated_hit: "发现关注事项",
+  evaluated_clear: "本次监测未发现异常",
+  data_insufficient: "覆盖规划候选（待确认适用）",
+  not_due: "尚未到核查时点",
+  not_applicable: "当前范围无此类事项",
+  reference_only: "待专业核查",
 };
 
 export const riskStatusLabel: Record<string, string> = seed.status_labels as Record<string, string>;

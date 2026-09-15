@@ -74,7 +74,7 @@ export default function ScenarioLibraryPage() {
           { id: "scenarios", label: `投资子场景（${catalog.counts.source_scenarios}）` },
           { id: "supplemental", label: `本业需补充场景（${supplemental.length}）` },
           { id: "indicators", label: `原 KRI 指标（${catalog.counts.unique_indicators}）` },
-          { id: "rules", label: `演示监测规则（${rules.length}）` },
+          { id: "rules", label: `监测规则（${rules.length}）` },
           { id: "params", label: "规则参数与边界" },
         ]}
         value={tab}
@@ -104,7 +104,7 @@ export default function ScenarioLibraryPage() {
             onClick={() =>
               downloadCsv(
                 "监管场景清单.csv",
-                ["场景ID", "领域", "子场景名称", "A列监管场景原文", "纳入方式", "主归属阶段", "来源工作表", "来源行号", "关联KRI"],
+                ["场景ID", "领域", "子场景名称", "监管场景原文", "纳入方式", "主归属阶段", "来源工作表", "来源行号", "关联KRI"],
                 (tab === "scenarios" ? catalogRows : []).map((s) => [
                   s.id,
                   DOMAIN_META[s.domain].label,
@@ -131,7 +131,7 @@ export default function ScenarioLibraryPage() {
       )}
 
       {tab === "scenarios" && (
-        <Card title="投资子场景" subtitle="点击行打开场景详情 P72；可定位到附件工作表与行号">
+        <Card title="投资子场景" subtitle="点击行打开场景详情；可定位到来源工作表与行号">
           <DataTable<CatalogScenario>
             rows={catalogRows}
             rowKey={(s) => s.id}
@@ -140,10 +140,10 @@ export default function ScenarioLibraryPage() {
             columns={[
               { key: "id", title: "场景ID", width: "96px", render: (s) => <span className="num">{s.id}</span> },
               { key: "domain", title: "领域", width: "110px", render: (s) => DOMAIN_META[s.domain].label },
-              { key: "name", title: "子场景（B列）", render: (s) => s.name },
+              { key: "name", title: "子场景名称", render: (s) => s.name },
               {
                 key: "origin",
-                title: "监管场景原文（A列）",
+                title: "监管场景原文",
                 render: (s) => <span className="text-[13px] text-textsub">{s.original_scene}</span>,
               },
               {
@@ -243,7 +243,7 @@ export default function ScenarioLibraryPage() {
       )}
 
       {tab === "rules" && (
-        <Card title="演示监测规则定义" subtitle="草稿或失效规则不参与评估；启用规则采用明确的演示版本，不暗示已完成企业制度审批">
+        <Card title="监测规则定义" subtitle="草稿或失效规则不参与评估；启用规则采用明确的配置版本，不暗示已完成企业制度审批">
           <DataTable<MonitoringRuleDefinition>
             rows={rules}
             rowKey={(r) => r.id}
@@ -299,7 +299,7 @@ export default function ScenarioLibraryPage() {
 
       {tab === "params" && (
         <div className="space-y-4">
-          <Card title="演示规则参数" subtitle="原底稿参数与演示补充参数分别标注；正式启用前需业务确认">
+          <Card title="规则参数" subtitle="原底稿参数与配置补充参数分别标注；正式启用前需业务确认">
             <DataTable
               rows={Object.entries(seed.demo_rule_parameters).filter(([, v]) => typeof v === "object" && v !== null)}
               rowKey={([k]) => k}

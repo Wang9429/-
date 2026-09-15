@@ -169,6 +169,7 @@ export function DataTable<T>({
   onRowClick,
   dense = false,
   highlight,
+  className = "",
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -177,9 +178,10 @@ export function DataTable<T>({
   onRowClick?: (row: T) => void;
   dense?: boolean;
   highlight?: (row: T) => boolean;
+  className?: string;
 }) {
   return (
-    <div className="overflow-x-auto -mx-1 px-1">
+    <div className={`overflow-x-auto -mx-1 px-1 ${className}`}>
       <table className="w-full border-collapse text-[14px]">
         <thead>
           <tr className="bg-[#f6f8fc]">
@@ -516,14 +518,16 @@ export function Field({
   required,
   hint,
   children,
+  className = "",
 }: {
   label: string;
   required?: boolean;
   hint?: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <label className="block mb-3">
+    <label className={`block mb-3 ${className}`}>
       <span className="text-[13px] text-textmain">
         {label}
         {required && <span className="text-[#b42318] ml-0.5">*</span>}
@@ -544,7 +548,7 @@ export const selectClass = inputClass;
 
 /* ------------------------------ 模拟数据角标 ------------------------------ */
 
-export function SimulatedBadge({ text = "模拟数据" }: { text?: string }) {
+export function SimulatedBadge({ text = "合成样例" }: { text?: string }) {
   return (
     <span className="inline-flex items-center px-1.5 py-px rounded-[3px] border border-line bg-[#f3f6fb] text-[11px] text-textsub whitespace-nowrap">
       {text}

@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
 import { Button, Card, DataTable, Notice, Tag } from "@/components/ui";
 import { seed } from "@/lib/seed";
-import { orgName, orgScope } from "@/lib/org";
+import { orgName } from "@/lib/org";
 import { fmtAmount, fmtDate, fmtPct, fmtPp } from "@/lib/format";
 import { isOpen } from "@/lib/risks";
 import { downloadCsv } from "@/lib/export";
@@ -30,7 +30,7 @@ const PHASE_FOCUS: Record<string, string> = {
 
 function EngLedger({ helpers }: { helpers: DomainHelpers }) {
   const { filters, risks } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const rows = useMemo(() => seed.engineering_projects.filter((p) => orgIds.has(p.owner_org_id)), [orgIds]);
 
   return (
@@ -182,7 +182,7 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
 
 function CostAndCash({ helpers }: { helpers: DomainHelpers }) {
   const { filters } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const projects = seed.engineering_projects.filter((p) => orgIds.has(p.owner_org_id));
   const costItems = seed.cost_items.filter((c) => projects.some((p) => p.id === c.project_id));
   const obligations = seed.obligations.filter((o) => projects.some((p) => p.id === o.project_id));

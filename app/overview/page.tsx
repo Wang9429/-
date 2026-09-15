@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import IndicatorDrawer from "@/components/IndicatorDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
-import { Card, DataTable, KpiCard, Notice, SeverityTag, SimulatedBadge, Tag } from "@/components/ui";
+import { Card, DataTable, KpiCard, Notice, SeverityTag, Tag } from "@/components/ui";
 import { DOMAIN_META, coverageRows, seed } from "@/lib/seed";
 import { INDICATORS, computeIndicator, indicatorById, type IndicatorDef } from "@/lib/metrics";
-import { childOrgs, descendantOrgIds, orgName, orgScope, ROOT_ORG_ID } from "@/lib/org";
+import { childOrgs, descendantOrgIds, orgName, ROOT_ORG_ID } from "@/lib/org";
+import { authorizedObjectIds, can, canDomain, intersectOrgScope, riskVisible } from "@/lib/config";
 import { isOpen, isCurrentTaskOverdue, isOverdueRectification, rectificationDueDate, riskMatches, statusLabel } from "@/lib/risks";
 import { fmtAmount, fmtDate, fmtPct } from "@/lib/format";
 import { formatMetric } from "@/components/IndicatorDrawer";
@@ -21,109 +22,85 @@ import type { DomainId, RiskCase } from "@/lib/types";
  * 重点事项、近期事件与督办入口在下。按 risk_id 去重，不做综合风险评分。
  */
 
-const DOMAIN_KPI: Record<DomainId, [string, string]> = {
-  FA: ["FA-CNT-PROJECT", "FA-I06"],
-  EQ: ["EQ-BALANCE", "EQ-I11"],
-  INTL: ["INTL-CNT", "INTL-EXPOSURE"],
-  CASH: ["CASH-I01", "CASH-I02"],
-  RIGHTS: ["RIGHTS-ENTITIES", "RIGHTS-MATTERS"],
-  ENG: ["ENG-CNT", "ENG-I01"],
+const DOMAIN_KPI: Record<DomainId, string> = {
+  FA: "FA-I06",
+  EQ: "EQ-I11",
+  INTL: "INTL-CNT",
+  CASH: "CASH-I02",
+  RIGHTS: "RIGHTS-DIFF",
+  ENG: "ENG-I01",
+};
+
+const DOMAIN_FOCUS: Record<DomainId, string> = {
+  FA: "投资成本偏差及转固后资产利用",
+  EQ: "出资履约、收益回收及权益信息",
+  INTL: "航线与成本敞口",
+  CASH: "支付授权核查及出资、分红义务",
+  RIGHTS: "同有效期的批准、登记与产权台账核对",
+  ENG: "成本预测与 15% 目标的差距",
 };
 
 const DOMAIN_ORDER: DomainId[] = ["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"];
 
 export default function OverviewPage() {
   const router = useRouter();
-  const { filters, risks, setFilters } = useDemoStore();
+  const { filters, risks, setFilters, user } = useDemoStore();
   const [riskId, setRiskId] = useState<string | null>(null);
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
   const [caseScope, setCaseScope] = useState<{ title: string; ids: string[] } | null>(null);
 
   const orgIds = useMemo(
-    () => orgScope(filters.orgId, filters.includeChildren),
-    [filters.orgId, filters.includeChildren],
+    () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
+    [filters.orgId, filters.includeChildren, user],
   );
 
   const ctx = useMemo(
-    () => ({ periodStart: filters.periodStart, periodEnd: filters.periodEnd, asOf: filters.asOf, risks }),
-    [filters.periodStart, filters.periodEnd, filters.asOf, risks],
+    () => ({
+      periodStart: filters.periodStart,
+      periodEnd: filters.periodEnd,
+      asOf: filters.asOf,
+      risks,
+      allowedObjectIds: authorizedObjectIds(user),
+    }),
+    [filters.periodStart, filters.periodEnd, filters.asOf, risks, user],
   );
 
-  const scoped = useMemo(() => risks.filter((r) => orgIds.has(r.owner_org_id)), [risks, orgIds]);
+  const scoped = useMemo(() => risks.filter((r) => riskVisible(user, r) && orgIds.has(r.owner_org_id)), [risks, orgIds, user]);
   const open = scoped.filter(isOpen);
   const red = open.filter((r) => r.severity === "red");
   const overdue = open.filter((r) => isOverdueRectification(r, filters.asOf) || isCurrentTaskOverdue(r, filters.asOf));
   const pendingVerification = open.filter((r) => r.status === "pending_verification");
 
-  const unitCount = useMemo(() => [...orgIds].length, [orgIds]);
-  const entityCount = useMemo(
-    () => new Set(seed.organizations.filter((o) => orgIds.has(o.id)).map((o) => o.legal_entity_id)).size,
-    [orgIds],
-  );
-  const projectCount = useMemo(() => {
-    const ids = new Set<string>();
-    seed.fixed_asset_projects.filter((p) => orgIds.has(p.owner_org_id)).forEach((p) => ids.add(p.id));
-    seed.equity_projects.filter((p) => orgIds.has(p.owner_org_id)).forEach((p) => ids.add(p.id));
-    seed.engineering_projects.filter((p) => orgIds.has(p.owner_org_id)).forEach((p) => ids.add(p.id));
-    return ids.size;
-  }, [orgIds]);
-
-  const coverage = useMemo(() => {
-    const rows = coverageRows.filter(
-      (r) =>
-        orgIds.has(r.owner_org_id) &&
-        r.window_end >= filters.periodStart &&
-        r.window_end <= filters.periodEnd &&
-        r.snapshot_date <= filters.asOf,
-    );
-    const required = rows.filter((r) => r.required && r.status !== "not_applicable" && r.status !== "reference_only");
-    const evaluated = required.filter((r) => r.status === "evaluated_hit" || r.status === "evaluated_clear");
-    return {
-      pct: required.length ? (evaluated.length / required.length) * 100 : null,
-      evaluated: evaluated.length,
-      required: required.length,
-      insufficient: rows.filter((r) => r.status === "data_insufficient").length,
-      notDue: rows.filter((r) => r.status === "not_due").length,
-      reference: rows.filter((r) => r.status === "reference_only").length,
-    };
-  }, [orgIds, filters.periodStart, filters.periodEnd, filters.asOf]);
-
   const domainSummary = useMemo(
     () =>
-      DOMAIN_ORDER.map((d) => {
-        const domainRisks = risks.filter((r) => riskMatches(r, { domain: d, orgScope: orgIds }));
+      DOMAIN_ORDER.filter((d) => canDomain(user, d)).map((d) => {
+        const domainRisks = risks.filter((r) => riskVisible(user, r) && riskMatches(r, { domain: d, orgScope: orgIds }));
         const o = domainRisks.filter(isOpen);
-        const kpis = DOMAIN_KPI[d]
-          .map((id) => indicatorById(id))
-          .filter((x): x is IndicatorDef => Boolean(x))
-          .map((def) => ({ def, metric: computeIndicator(def, orgIds, ctx) }));
+        const kpiId = DOMAIN_KPI[d];
+        const def = indicatorById(kpiId);
+        const kpis = def ? [{ def, metric: computeIndicator(def, orgIds, ctx) }] : [];
         const top = o
           .slice()
           .sort((a, b) => (a.severity === "red" ? -1 : 1) - (b.severity === "red" ? -1 : 1))[0];
         return { domain: d, open: o, red: o.filter((r) => r.severity === "red"), kpis, top };
       }),
-    [risks, orgIds, ctx],
+    [risks, orgIds, ctx, user],
   );
 
   const matrixOrgs = useMemo(() => {
     const base = filters.orgId === ROOT_ORG_ID ? childOrgs(ROOT_ORG_ID) : childOrgs(filters.orgId);
-    return base.length ? base : seed.organizations.filter((o) => o.id === filters.orgId);
-  }, [filters.orgId]);
+    const list = (base.length ? base : seed.organizations.filter((o) => o.id === filters.orgId)).filter((o) =>
+      orgIds.has(o.id),
+    );
+    return list;
+  }, [filters.orgId, orgIds]);
 
-  const highlightCases = useMemo(
-    () =>
-      open
-        .slice()
-        .sort((a, b) => {
-          const rank = (r: RiskCase) =>
-            (r.severity === "red" ? 0 : 10) +
-            (isOverdueRectification(r, filters.asOf) ? -5 : 0) +
-            (r.status === "pending_review" ? 1 : 0);
-          return rank(a) - rank(b) || a.id.localeCompare(b.id);
-        })
-        .slice(0, 8),
-    [open, filters.asOf],
-  );
+  const highlightCases = useMemo(() => {
+    const preferred = ["R01", "R02", "R05"].map((id) => open.find((r) => r.id === id)).filter(Boolean) as RiskCase[];
+    if (preferred.length >= 3) return preferred;
+    const rest = open.filter((r) => !preferred.some((p) => p.id === r.id));
+    return [...preferred, ...rest].slice(0, 3);
+  }, [open]);
 
   const scopeLabel = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}`;
 
@@ -131,80 +108,80 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-4">
+      {!can(user, "business.read") && (
+        <Notice tone="amber" title="当前身份无业务数据权限">
+          配置维护权限不自动带来业务数据。请切换总部或单位监管身份查看指标与事项，或进入系统配置。
+        </Notice>
+      )}
       <div
         className="rounded-[8px] px-6 py-5 text-white"
         style={{ background: "linear-gradient(100deg, #0b1f3a 0%, #164b8e 68%, #1d5fd1 100%)" }}
       >
         <h1 className="text-[22px] font-semibold leading-7">综合总览</h1>
         <p className="text-[13px] text-[#c6d9f5] mt-1.5 max-w-4xl leading-5">
-          以总部监管问题为主线：未关闭、高风险、逾期与可判定覆盖在上，六领域摘要与单位×领域风险矩阵在中，重点事项、近期外部事件与核查督办入口在下。
-          业务规模辅助理解领域范围，分项列示，不合成“监管总金额”，也不设公司综合风险评分。
+          从总部视角查看所属单位执行情况与重点监管事项。指标可穿透到项目，事项可跟踪核查与整改。
         </p>
         <div className="flex flex-wrap items-center gap-2 mt-3">
           <Tag tone="neutral">{scopeLabel}</Tag>
-          <SimulatedBadge text="模拟演示数据" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-3">
-        <KpiCard
-          name="纳入管理单位数"
-          value={unitCount}
-          unit="个"
-          compare={`法人 ${entityCount} 户`}
-          compareTone="neutral"
-          dataState="管理单位与法人分别统计，项目不计入单位数"
-          onOpen={() => router.push("/property-rights")}
-        />
-        <KpiCard
-          name="在管项目数"
-          value={projectCount}
-          unit="个"
-          compare="投资/股权/工程合计去重"
-          compareTone="neutral"
-          dataState="按项目ID去重，不同领域项目不重复计数"
-          onOpen={() => setIndicatorId("FA-CNT-PROJECT")}
-        />
+      <Notice tone="neutral" title="关注摘要">
+        关注投资成本偏差、设备利用及境外项目履约；当前有 {overdue.filter((r) => isOverdueRectification(r, filters.asOf)).length} 件整改事项逾期。
+      </Notice>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {(() => {
+          const def = indicatorById("FA-I06")!;
+          const m = computeIndicator(def, orgIds, ctx);
+          return (
+            <KpiCard
+              name="固定资产投资计划执行率"
+              value={formatMetric(def, m)}
+              unit={def.unit}
+              compare={`完成 ${fmtAmount(m.numerator)} / 同期计划 ${fmtAmount(m.denominator)} 万元`}
+              compareTone="amber"
+              dataState="固定资产口径｜当前组织及期间"
+              scopeLabel={scopeLabel}
+              onOpen={() => setIndicatorId("FA-I06")}
+            />
+          );
+        })()}
         <KpiCard
           name="未关闭监管事项"
           value={open.length}
           unit="件"
-          compare={`待核查 ${open.filter((r) => r.status === "pending_review").length}`}
+          compare={`待核查 ${open.filter((r) => r.status === "pending_review").length}、整改中 ${open.filter((r) => r.status === "rectifying").length}`}
           compareTone={open.length ? "amber" : "green"}
-          dataState="含待核查、核查中、整改中、待复核；已排除与已关闭不计入"
+          dataState="含待核查、核查中、整改中、待复核"
           onOpen={() => openCases("未关闭监管事项", open)}
         />
         <KpiCard
-          name="高风险事项"
+          name="其中高风险事项"
           value={red.length}
           unit="件"
-          compare={red.length ? "需优先处置" : "无高风险"}
+          compare="需优先处置"
           compareTone={red.length ? "red" : "green"}
-          dataState="未关闭事项中等级为红色的子集"
           onOpen={() => openCases("高风险未关闭事项", red)}
         />
         <KpiCard
-          name="逾期办理事项"
-          value={overdue.length}
+          name="逾期整改事项"
+          value={open.filter((r) => isOverdueRectification(r, filters.asOf)).length}
           unit="件"
-          compare={overdue.length ? "当前节点已超期" : "无逾期"}
-          compareTone={overdue.length ? "red" : "green"}
-          dataState="按当前办理节点有效期限与截至日比较；已排除历史事项不计入"
-          onOpen={() => openCases("逾期办理事项", overdue)}
-        />
-        <KpiCard
-          name="可判定数据覆盖"
-          value={coverage.pct === null ? "—" : fmtPct(coverage.pct)}
-          compare={`已监测 ${coverage.evaluated}/${coverage.required}`}
-          compareTone={coverage.pct !== null && coverage.pct < 100 ? "amber" : "green"}
-          dataState={`数据不足 ${coverage.insufficient}、未到时点 ${coverage.notDue}、专业依据 ${coverage.reference}`}
-          onOpen={() => router.push("/data-sources")}
+          compare="已进入整改责任范围且超过有效期限"
+          compareTone="red"
+          onOpen={() =>
+            openCases(
+              "逾期整改事项",
+              open.filter((r) => isOverdueRectification(r, filters.asOf)),
+            )
+          }
         />
       </div>
 
       <Card
         title="六领域监管摘要"
-        subtitle="每张卡片显示两个代表性业务指标、未关闭与高风险事项数及一个重点问题摘要；点击卡片进入领域并保留筛选"
+        subtitle="每张卡片一个代表性业务数值、未关闭数和一个可追溯关注点。跨领域关联事项按同一事项合并计数。"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {domainSummary.map((s) => {
@@ -218,7 +195,9 @@ export default function OverviewPage() {
                   <Link href={meta.route} className="text-[15px] font-semibold text-textmain hover:text-brand">
                     {meta.label}
                   </Link>
-                  <span className="text-[12px] text-textsub num">{meta.pageId}</span>
+                  <Link href={meta.route} className="text-[12px] text-brand hover:underline">
+                    进入领域 ›
+                  </Link>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   {s.kpis.map(({ def, metric }) => (
@@ -253,6 +232,7 @@ export default function OverviewPage() {
                   </button>
                 </div>
                 <div className="mt-2 min-h-[36px]">
+                  <div className="text-[12px] text-textsub mb-1">{DOMAIN_FOCUS[s.domain]}</div>
                   {s.top ? (
                     <button
                       onClick={() => setRiskId(s.top!.id)}
@@ -271,8 +251,7 @@ export default function OverviewPage() {
         </div>
         <div className="mt-3">
           <Notice tone="neutral" title="跨领域去重">
-            一个资金异常可能同时出现在资金、工程、国际化三个领域，综合总览按 risk_id 只计一件；
-            六领域事项数之和（{domainSummary.reduce((a, s) => a + s.open.length, 0)} 件）可以大于综合总数（{open.length} 件）。
+            一个资金异常可能同时出现在资金、工程、国际化三个领域。综合总览按事项编号只计一件；六领域引用次数之和可以大于综合总数。不得把引用次数称为新发现事项。
           </Notice>
         </div>
       </Card>
@@ -283,7 +262,7 @@ export default function OverviewPage() {
             <thead>
               <tr className="bg-[#f6f8fc]">
                 <th className="px-3 py-2.5 text-left text-[13px] font-semibold text-textsub border-b border-line">单位</th>
-                {DOMAIN_ORDER.map((d) => (
+                {DOMAIN_ORDER.filter((d) => canDomain(user, d)).map((d) => (
                   <th key={d} className="px-3 py-2.5 text-center text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap">
                     {DOMAIN_META[d].short}
                   </th>
@@ -313,7 +292,7 @@ export default function OverviewPage() {
                       </button>
                       {!hasBusiness && <Tag tone="neutral">当前范围无业务</Tag>}
                     </td>
-                    {DOMAIN_ORDER.map((d) => {
+                    {DOMAIN_ORDER.filter((d) => canDomain(user, d)).map((d) => {
                       const cell = unitRisks.filter((r) => riskMatches(r, { domain: d, orgScope: scope }));
                       const cellRed = cell.filter((r) => r.severity === "red").length;
                       return (

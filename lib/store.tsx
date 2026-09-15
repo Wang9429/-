@@ -4,22 +4,24 @@ import React, { createContext, useCallback, useContext, useMemo, useState, useSy
 import { AS_OF, DEFAULT_PERIOD, seed } from "./seed";
 import { nextSequence } from "./risks";
 import type { CaseAction, RiskCase, RiskStatus } from "./types";
+import { can, canCaseAction, config, defaultOrgFor, initialUserId, userById, type ConfigUser } from "./config";
 
 /**
- * 本地演示状态：首次从种子复制，刷新保留修改，重置恢复种子。
- * 所有页面共用同一份状态，办理后各领域与总览同步（完整业需 16.5）。
+ * 本地业务与配置状态：首次从种子复制，刷新保留修改。
+ * 重置业务办理状态与重置配置分开；办理后各领域与总览同步。
  */
 
-const STORAGE_KEY = "cnooc-supervision-demo-state-v1";
+const STORAGE_KEY = "cnooc-supervision-business-v16";
+const CONFIG_KEY = "cnooc-supervision-config-v16";
 
-export type RoleId = "hq_leader" | "hq_domain" | "unit_head" | "operator" | "config_admin";
+export type RoleId = string;
 
 export const ROLES: { id: RoleId; name: string; scopeNote: string; canHandle: boolean; canVerify: boolean }[] = [
-  { id: "hq_leader", name: "总部领导", scopeNote: "全公司概览、指标穿透与重大事项，只读", canHandle: false, canVerify: false },
-  { id: "hq_domain", name: "总部领域管理人员", scopeNote: "本领域全部对象；可认领核查、退回与复核", canHandle: true, canVerify: true },
-  { id: "unit_head", name: "所属单位负责人", scopeNote: "本单位管理范围；可安排措施与责任", canHandle: true, canVerify: false },
-  { id: "operator", name: "项目/业务经办人员", scopeNote: "授权对象；可补充说明、证据与整改进展", canHandle: true, canVerify: false },
-  { id: "config_admin", name: "配置管理人员", scopeNote: "演示规则配置、导入记录与演示数据重置", canHandle: false, canVerify: false },
+  { id: "ROLE-HQ-VIEW", name: "总部查看人员", scopeNote: "总部授权范围只读", canHandle: false, canVerify: false },
+  { id: "ROLE-HQ-SUPERVISE", name: "总部监管人员", scopeNote: "总部授权范围；可核查与复核", canHandle: true, canVerify: true },
+  { id: "ROLE-UNIT", name: "单位管理人员", scopeNote: "本单位授权范围；可核查并提交整改", canHandle: true, canVerify: false },
+  { id: "ROLE-PROJECT", name: "项目经办人员", scopeNote: "授权对象；可补充整改进展", canHandle: true, canVerify: false },
+  { id: "ROLE-SYSTEM-ADMIN", name: "系统配置管理员", scopeNote: "配置维护，不自动拥有业务数据", canHandle: false, canVerify: false },
 ];
 
 export interface GlobalFilters {
@@ -49,26 +51,60 @@ export interface ImportBatch {
   note: string;
 }
 
+export interface AdoptedMaterial {
+  id: string;
+  riskId: string;
+  materialId: string;
+  title: string;
+  actorUserId: string;
+  actorName: string;
+  note: string;
+  effective_date: string;
+  recorded_at: string;
+}
+
 interface PersistedState {
   risks: RiskCase[];
   actions: CaseAction[];
   urges: UrgeRecord[];
   imports: ImportBatch[];
+  adoptedMaterials: AdoptedMaterial[];
   role: RoleId;
+  userId: string;
+}
+
+interface ConfigPersist {
+  users: ConfigUser[];
+  eacTrialPct: number;
+  publishedTrial: boolean;
 }
 
 interface StoreValue extends PersistedState {
   filters: GlobalFilters;
   setFilters: (f: Partial<GlobalFilters>) => void;
   setRole: (r: RoleId) => void;
+  setUserId: (id: string) => void;
+  user: ConfigUser | undefined;
   saveError: string | null;
   dirty: boolean;
   resetDemo: () => void;
+  resetBusiness: () => void;
+  resetConfig: () => void;
   act: (input: ActionInput) => void;
   addUrge: (riskId: string, note: string) => void;
   addImportBatch: (b: Omit<ImportBatch, "id" | "recorded_at" | "effective_date">) => void;
+  adoptMaterial: (input: Omit<AdoptedMaterial, "id" | "recorded_at" | "effective_date">) => void;
   riskById: (id: string) => RiskCase | undefined;
   actionsFor: (id: string) => CaseAction[];
+  materialsFor: (riskId: string) => AdoptedMaterial[];
+  canAct: (action: string) => boolean;
+  canCase: (kind: string) => boolean;
+  eacTrialPct: number;
+  setEacTrialPct: (n: number) => void;
+  publishedTrial: boolean;
+  publishTrial: () => void;
+  configUsers: ConfigUser[];
+  saveConfigUsers: (users: ConfigUser[]) => void;
 }
 
 export type ActionKind =
@@ -84,6 +120,7 @@ export interface ActionInput {
   riskId: string;
   kind: ActionKind;
   actor: string;
+  actorUserId?: string;
   note: string;
   evidenceIds?: string[];
   measure?: string;
@@ -99,7 +136,17 @@ function initialState(): PersistedState {
     actions: JSON.parse(JSON.stringify(seed.case_actions)) as CaseAction[],
     urges: [],
     imports: [],
-    role: "hq_domain",
+    adoptedMaterials: [],
+    role: "ROLE-HQ-SUPERVISE",
+    userId: initialUserId,
+  };
+}
+
+function initialConfig(): ConfigPersist {
+  return {
+    users: JSON.parse(JSON.stringify(config.users)) as ConfigUser[],
+    eacTrialPct: config.rule_editor.new_rule_example.parameters.deviation_gt_pct,
+    publishedTrial: false,
   };
 }
 
@@ -139,7 +186,7 @@ function applyAction(
         measure: input.measure ?? input.note,
         responsible_display_name: input.responsible ?? input.actor,
         due_date: input.dueDate ?? null,
-        progress_note: "本地演示措施执行中。",
+        progress_note: "措施执行中。",
       };
       next.current_task_due_date = input.dueDate ?? null;
       break;
@@ -183,6 +230,9 @@ function applyAction(
       break;
   }
   next.status = to;
+  if (input.kind === "claim" || input.kind === "confirm_rectification" || input.kind === "submit_rectification") {
+    next.last_handler_user_id = input.actorUserId ?? prev.last_handler_user_id ?? null;
+  }
 
   const action: CaseAction = {
     id: `ACT-LOCAL-${input.riskId}-${nextSequence(actions)}`,
@@ -197,7 +247,7 @@ function applyAction(
     effective_date: asOf,
     sequence: nextSequence(actions),
     recorded_at: new Date().toISOString(),
-    recorded_at_nature: "本地演示操作实际时间，不替代业务生效日期",
+    recorded_at_nature: "本地操作实际时间，不替代业务生效日期",
     local: true,
   };
 
@@ -207,17 +257,18 @@ function applyAction(
 }
 
 /**
- * 演示状态放在模块级外部存储中，通过 useSyncExternalStore 订阅：
+ * 业务状态放在模块级外部存储中，通过 useSyncExternalStore 订阅：
  * 服务端渲染与客户端首帧都使用种子快照，读取 localStorage 在订阅时完成，
  * 因此既不会产生水合不一致，也不需要在 effect 里同步 setState。
  */
 interface Snapshot {
   state: PersistedState;
+  config: ConfigPersist;
   dirty: boolean;
   saveError: string | null;
 }
 
-const SERVER_SNAPSHOT: Snapshot = { state: initialState(), dirty: false, saveError: null };
+const SERVER_SNAPSHOT: Snapshot = { state: initialState(), config: initialConfig(), dirty: false, saveError: null };
 let snapshot: Snapshot = SERVER_SNAPSHOT;
 let storageChecked = false;
 const listeners = new Set<() => void>();
@@ -238,10 +289,20 @@ function readStorage() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as PersistedState;
-      if (parsed?.risks?.length) update({ state: parsed, dirty: true });
+      if (parsed?.risks?.length) {
+        if (!parsed.userId) parsed.userId = initialUserId;
+        if (!parsed.role) parsed.role = "ROLE-HQ-SUPERVISE";
+        if (!parsed.adoptedMaterials) parsed.adoptedMaterials = [];
+        update({ state: parsed, dirty: true });
+      }
+    }
+    const cfg = window.localStorage.getItem(CONFIG_KEY);
+    if (cfg) {
+      const parsed = JSON.parse(cfg) as ConfigPersist;
+      if (parsed?.users?.length) update({ config: parsed });
     }
   } catch {
-    update({ saveError: "本地演示状态读取失败，已使用种子数据。" });
+    update({ saveError: "本地状态读取失败，已使用种子数据。" });
   }
 }
 
@@ -261,17 +322,35 @@ function writeState(next: PersistedState, dirty = true) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     update({ state: next, dirty, saveError: null });
   } catch {
-    update({ state: next, dirty, saveError: "本地演示状态保存失败，本次修改仅在当前页面有效。" });
+    update({ state: next, dirty, saveError: "业务办理状态保存失败，本次修改仅在当前页面有效。" });
   }
 }
 
-function clearState() {
+function writeConfig(next: ConfigPersist) {
+  try {
+    window.localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
+    update({ config: next, saveError: null });
+  } catch {
+    update({ config: next, saveError: "配置保存失败，本次修改仅在当前页面有效。" });
+  }
+}
+
+function clearBusiness() {
   storageChecked = true;
   try {
     window.localStorage.removeItem(STORAGE_KEY);
     update({ state: initialState(), dirty: false, saveError: null });
   } catch {
-    update({ state: initialState(), dirty: false, saveError: "本地演示状态清除失败。" });
+    update({ state: initialState(), dirty: false, saveError: "业务办理状态清除失败。" });
+  }
+}
+
+function clearConfig() {
+  try {
+    window.localStorage.removeItem(CONFIG_KEY);
+    update({ config: initialConfig(), saveError: null });
+  } catch {
+    update({ config: initialConfig(), saveError: "配置清除失败。" });
   }
 }
 
@@ -287,6 +366,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const snap = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [filters, setFiltersState] = useState<GlobalFilters>(DEFAULT_FILTERS);
 
+  const user = snap.config.users.find((u) => u.id === snap.state.userId) ?? userById(snap.state.userId);
+
   const act = useCallback(
     (input: ActionInput) => {
       const cur = snapshot.state;
@@ -301,14 +382,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       const rec: UrgeRecord = {
         id: `URGE-${riskId}-${Date.now()}`,
         riskId,
-        actor: "演示监管人员",
+        actor: user?.name ?? "监管人员",
         note,
         effective_date: filters.asOf,
         recorded_at: new Date().toISOString(),
       };
       writeState({ ...snapshot.state, urges: [...snapshot.state.urges, rec] });
     },
-    [filters.asOf],
+    [filters.asOf, user?.name],
   );
 
   const addImportBatch = useCallback(
@@ -324,10 +405,34 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     [filters.asOf],
   );
 
-  const resetDemo = useCallback(() => {
-    clearState();
-    setFiltersState(DEFAULT_FILTERS);
+  const adoptMaterial = useCallback(
+    (input: Omit<AdoptedMaterial, "id" | "recorded_at" | "effective_date">) => {
+      const rec: AdoptedMaterial = {
+        ...input,
+        id: `MAT-ADOPT-${input.materialId}-${Date.now()}`,
+        effective_date: filters.asOf,
+        recorded_at: new Date().toISOString(),
+      };
+      writeState({ ...snapshot.state, adoptedMaterials: [...(snapshot.state.adoptedMaterials ?? []), rec] });
+    },
+    [filters.asOf],
+  );
+
+  const resetBusiness = useCallback(() => {
+    const uid = snapshot.state.userId;
+    clearBusiness();
+    writeState({ ...initialState(), userId: uid }, false);
+    const u = snapshot.config.users.find((x) => x.id === uid);
+    setFiltersState({ ...DEFAULT_FILTERS, ...defaultOrgFor(u) });
   }, []);
+
+  const resetConfig = useCallback(() => {
+    clearConfig();
+  }, []);
+
+  const resetDemo = useCallback(() => {
+    resetBusiness();
+  }, [resetBusiness]);
 
   const setFilters = useCallback((f: Partial<GlobalFilters>) => {
     setFiltersState((cur) => ({ ...cur, ...f }));
@@ -337,23 +442,43 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     writeState({ ...snapshot.state, role: r }, snapshot.dirty);
   }, []);
 
+  const setUserId = useCallback((id: string) => {
+    const u = snapshot.config.users.find((x) => x.id === id) ?? userById(id);
+    writeState({ ...snapshot.state, userId: id, role: u?.role_ids[0] ?? snapshot.state.role }, snapshot.dirty);
+    setFiltersState({ ...DEFAULT_FILTERS, ...defaultOrgFor(u) });
+  }, []);
+
   const value = useMemo<StoreValue>(
     () => ({
       ...snap.state,
       filters,
       setFilters,
       setRole,
+      setUserId,
+      user,
       saveError: snap.saveError,
       dirty: snap.dirty,
       resetDemo,
+      resetBusiness,
+      resetConfig,
       act,
       addUrge,
       addImportBatch,
+      adoptMaterial,
       riskById: (id: string) => snap.state.risks.find((r) => r.id === id),
       actionsFor: (id: string) =>
         snap.state.actions.filter((a) => a.risk_id === id).sort((a, b) => a.sequence - b.sequence),
+      materialsFor: (id: string) => snap.state.adoptedMaterials.filter((m) => m.riskId === id),
+      canAct: (action: string) => can(user, action),
+      canCase: (kind: string) => canCaseAction(user, kind),
+      eacTrialPct: snap.config.eacTrialPct,
+      setEacTrialPct: (n: number) => writeConfig({ ...snapshot.config, eacTrialPct: n }),
+      publishedTrial: snap.config.publishedTrial,
+      publishTrial: () => writeConfig({ ...snapshot.config, publishedTrial: true }),
+      configUsers: snap.config.users,
+      saveConfigUsers: (next) => writeConfig({ ...snapshot.config, users: next }),
     }),
-    [snap, filters, setFilters, setRole, resetDemo, act, addUrge, addImportBatch],
+    [snap, filters, setFilters, setRole, setUserId, resetDemo, resetBusiness, resetConfig, act, addUrge, addImportBatch, adoptMaterial, user],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

@@ -18,7 +18,7 @@ export function downloadCsv(
   const lines: string[] = [];
   lines.push(esc(meta.title));
   meta.scopeLines.forEach((l) => lines.push(esc(l)));
-  lines.push(esc("数据性质：模拟演示数据，不表达海油工程实际经营情况"));
+  lines.push(esc("数据性质：合成样例，用于功能验证，不代表海油工程真实经营数据"));
   lines.push("");
   lines.push(headers.map(esc).join(","));
   rows.forEach((r) => lines.push(r.map(esc).join(",")));

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import ObjectDrawer from "@/components/ObjectDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
-import { Card, Notice, Tag } from "@/components/ui";
+import { Card, Notice } from "@/components/ui";
 import { findObject } from "@/lib/objects";
 import { orgPath } from "@/lib/org";
 
@@ -37,9 +37,8 @@ export default function ObjectPage() {
         subtitle={
           obj
             ? `${obj.typeLabel}｜管理归属：${orgPath(obj.orgId).map((o) => o.name).join(" / ")}`
-            : "该对象不在当前演示数据范围"
+            : "该对象不在当前数据范围"
         }
-        right={<Tag tone="neutral">P74</Tag>}
       >
         {obj ? (
           <p className="text-[13px] text-textsub">
@@ -47,7 +46,7 @@ export default function ObjectPage() {
           </p>
         ) : (
           <Notice tone="amber" title="对象不存在">
-            {id} 在当前演示数据中没有档案记录。按“来源待核实”处理，不创建虚假档案。
+            {id} 在当前样例中没有档案记录。按“来源待核实”处理，不创建虚假档案。
           </Notice>
         )}
       </Card>

@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import { Button, Card, DataTable, Notice, SeverityTag, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
 import { DOMAIN_META, seed } from "@/lib/seed";
-import { orgName, orgScope } from "@/lib/org";
+import { orgName } from "@/lib/org";
 import {
   isCurrentTaskOverdue,
   isMissingRectificationDeadline,
@@ -15,7 +15,8 @@ import {
 } from "@/lib/risks";
 import { daysBetween, fmtDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/export";
-import { ROLES, useDemoStore } from "@/lib/store";
+import { intersectOrgScope, riskVisible } from "@/lib/config";
+import { useDemoStore } from "@/lib/store";
 import type { DomainId, RiskCase } from "@/lib/types";
 
 /**
@@ -31,7 +32,7 @@ const VIEWS = [
 ];
 
 export default function WorkbenchPage() {
-  const { risks, filters, role, urges } = useDemoStore();
+  const { risks, filters, user, urges } = useDemoStore();
   const [view, setView] = useState("pending");
   const [domain, setDomain] = useState<DomainId | "all">("all");
   const [severity, setSeverity] = useState<"all" | "red" | "yellow">("all");
@@ -39,12 +40,14 @@ export default function WorkbenchPage() {
   const [q, setQ] = useState("");
   const [riskId, setRiskId] = useState<string | null>(null);
 
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
-  const roleDef = ROLES.find((r) => r.id === role)!;
+  const orgIds = useMemo(
+    () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
+    [filters.orgId, filters.includeChildren, user],
+  );
 
   const base = useMemo(
-    () => risks.filter((r) => orgIds.has(r.owner_org_id)),
-    [risks, orgIds],
+    () => risks.filter((r) => orgIds.has(r.owner_org_id) && riskVisible(user, r)),
+    [risks, orgIds, user],
   );
 
   const byView = useMemo(() => {
@@ -87,10 +90,9 @@ export default function WorkbenchPage() {
           <h1 className="text-[22px] font-semibold text-textmain leading-7">监管工作台</h1>
           <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">
             从预警确认到整改复核的日常办理入口。与各领域页面共用同一对象、同一 risk_id 与同一状态，不生成第二套统计。
-            当前角色：{roleDef.name}（{roleDef.scopeNote}）。
+            当前用户：{user?.name ?? "—"}。与各领域页面共用同一对象、同一 risk_id 与同一状态。
           </p>
         </div>
-        <Tag tone="neutral">P77</Tag>
       </div>
 
       <Tabs
@@ -258,7 +260,7 @@ export default function WorkbenchPage() {
             仅指标恢复、计划改期或源系统状态改变不自动关闭监管事项。
           </Notice>
           <Notice tone="amber" title="Demo 办理边界">
-            本 Demo 的认领、说明、整改提交与复核更新本地演示状态，立即反映到总览与各领域数量，并可重置。
+            认领、说明、整改提交与复核更新本地办理状态，立即反映到总览与各领域数量，并可重置业务办理状态。
             “催办”仅保存带操作者、时间与说明的本地督办记录，不发送邮件、短信或企业消息。正式业务办理仍在相应源系统进行。
           </Notice>
         </div>

@@ -1,3 +1,4 @@
+import { coverageById } from "./config";
 import { coverageRows, seed } from "./seed";
 import {
   isOpen,
@@ -17,6 +18,8 @@ export interface ScopeFilter {
   topicId?: string | null;
   subtopicId?: string | null;
   scenarioId?: string | null;
+  /** null/缺省=组织范围内全部对象；空数组=无对象权限 */
+  allowedObjectIds?: string[] | null;
 }
 
 /**
@@ -24,6 +27,11 @@ export interface ScopeFilter {
  * 且评估取得时间不晚于截至日；季度/滚动窗口不按重叠月份分摊（完整业需 5.3）。
  */
 export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
+  const proj = coverageById.get(row.id);
+  if (proj && !proj.include_in_default_monitoring_table && !f.scenarioId) {
+    // 未确认的覆盖规划候选不进入业务清单与五数分母
+    return false;
+  }
   if (row.domain !== f.domain) return false;
   if (!f.orgScope.has(row.owner_org_id)) return false;
   if (row.window_end < f.periodStart || row.window_end > f.periodEnd) return false;
@@ -33,6 +41,9 @@ export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
   if (f.subtopicId !== undefined && f.subtopicId !== null && row.subtopic_id !== f.subtopicId)
     return false;
   if (f.scenarioId && row.scenario_id !== f.scenarioId) return false;
+  if (f.allowedObjectIds !== undefined && f.allowedObjectIds !== null) {
+    if (!f.allowedObjectIds.includes(row.monitoring_object_id)) return false;
+  }
   return true;
 }
 
@@ -126,6 +137,7 @@ export function computeFiveCounts(f: ScopeFilter, risks: RiskCase[]): FiveCounts
     const r = byId.get(id);
     if (!r) continue;
     if (!f.orgScope.has(r.owner_org_id)) continue;
+    if (f.allowedObjectIds !== undefined && f.allowedObjectIds !== null && !f.allowedObjectIds.includes(r.primary_object_id)) continue;
     if (f.scenarioId && !r.scenario_ids.includes(f.scenarioId)) continue;
     if (isOpen(r)) {
       openRiskIds.push(id);

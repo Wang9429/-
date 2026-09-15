@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
 import { Card, DataTable, Notice, SimulatedBadge, Tag } from "@/components/ui";
 import { seed } from "@/lib/seed";
-import { orgName, orgScope } from "@/lib/org";
+import { orgName } from "@/lib/org";
 import { fmtAmount, fmtPct } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
 import type { Account } from "@/lib/types";
@@ -24,7 +24,7 @@ const TOPIC_FOCUS: Record<string, string> = {
 
 function AccountView({ helpers }: { helpers: DomainHelpers }) {
   const { filters } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const accounts = useMemo(() => seed.accounts.filter((a) => orgIds.has(a.owner_org_id)), [orgIds]);
 
   const totalCny = accounts.reduce((s, a) => s + a.closing_balance_native * a.fx_to_cny, 0);
@@ -126,7 +126,7 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
 
 function PaymentView({ helpers }: { helpers: DomainHelpers }) {
   const { filters } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const accounts = seed.accounts.filter((a) => orgIds.has(a.owner_org_id));
   const txs = seed.cash_transactions.filter((t) => accounts.some((a) => a.id === t.account_id));
 
@@ -200,7 +200,7 @@ function PaymentView({ helpers }: { helpers: DomainHelpers }) {
 function PlanView() {
   return (
     <Card title="资金计划监管" subtitle="期初及有效调整计划、实际收支、预计现金缺口与计划外支出">
-      <Notice tone="neutral" title="当前演示数据范围">
+      <Notice tone="neutral" title="当前样例数据范围">
         本 Demo 的资金计划行、融资与担保业务未纳入种子数据。按业需要求，“当前范围无此业务”与“数据未覆盖”是两种不同状态，
         此处显示为数据未覆盖，不显示零风险。投资资金计划与实际支付的衔接可在固定资产领域 FA-S34 场景与项目台账
         “资金计划/实际支付”列查看；工程与股权的到期收款、出资义务分别在各领域义务清单中跟踪。

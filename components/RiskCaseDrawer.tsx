@@ -27,12 +27,14 @@ import {
 import { DOMAIN_META, evidenceById, phaseName, scenarioName, seed, topicName } from "@/lib/seed";
 import { orgName, orgPath } from "@/lib/org";
 import { daysBetween, fmtDate } from "@/lib/format";
-import { ROLES, useDemoStore, type ActionKind } from "@/lib/store";
+import { isIndependentReviewer, objectAllowed, riskVisible } from "@/lib/config";
+import { draftsForRisk } from "@/lib/materials";
+import { useDemoStore, type ActionKind } from "@/lib/store";
 import type { CaseAction, RiskCase } from "@/lib/types";
 
 /**
- * P73 风险事项详情。所有领域、场景表、工作台共用本抽屉，
- * 办理写回同一份 store，因此同一 risk_id 在各页面状态一致（完整业需 13.2/13.3）。
+ * 风险事项详情。所有领域、场景表、工作台共用本抽屉，
+ * 办理写回同一份 store，因此同一 risk_id 在各页面状态一致。
  */
 
 const ACTION_LABEL: Record<string, string> = {
@@ -59,7 +61,7 @@ function optionsFor(r: RiskCase): ActionOption[] {
   switch (r.status) {
     case "pending_review":
       return [
-        { kind: "claim", label: "认领核查", primary: true, hint: "认领后事项进入核查中，责任人记为当前演示角色。" },
+        { kind: "claim", label: "认领核查", primary: true, hint: "认领后事项进入核查中，责任人记为当前用户。" },
       ];
     case "investigating":
       return [
@@ -114,7 +116,7 @@ function ActionTimeline({ actions }: { actions: CaseAction[] }) {
                 {statusLabel[a.from_status]} → {statusLabel[a.to_status]}
               </Tag>
             )}
-            {a.local && <Tag tone="brand">本地演示办理</Tag>}
+            {a.local && <Tag tone="brand">本地办理</Tag>}
           </div>
           <p className="text-[13px] text-textsub mt-1 leading-5">{a.note}</p>
           <p className="text-[12px] text-textsub/80 mt-0.5">
@@ -153,7 +155,7 @@ function RiskCaseDrawerBody({
   onClose: () => void;
   sourceLabel?: string;
 }) {
-  const { riskById, actionsFor, act, addUrge, urges, filters, role } = useDemoStore();
+  const { riskById, actionsFor, act, addUrge, urges, filters, user, canCase, materialsFor, adoptMaterial } = useDemoStore();
   const [tab, setTab] = useState("overview");
   const [pending, setPending] = useState<ActionOption | null>(null);
   const [note, setNote] = useState("");
@@ -163,16 +165,31 @@ function RiskCaseDrawerBody({
   const [formError, setFormError] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
 
+  const [adoptedFlash, setAdoptedFlash] = useState<string | null>(null);
+
   const risk = riskById(riskId);
   const actions = useMemo(() => actionsFor(riskId), [riskId, actionsFor]);
-  const roleDef = ROLES.find((r) => r.id === role)!;
+  const adopted = useMemo(() => materialsFor(riskId), [riskId, materialsFor]);
+  const drafts = useMemo(() => draftsForRisk(riskId), [riskId]);
 
   if (!risk) {
     return (
       <Drawer open onClose={onClose} title="风险事项不存在" width="60vw">
         <div className="p-6">
           <Notice tone="amber" title="未找到事项">
-            事项 {riskId} 不在当前演示数据中，可能已被重置。请返回清单重新选择。
+            事项 {riskId} 不在当前数据中，可能已被重置。请返回清单重新选择。
+          </Notice>
+        </div>
+      </Drawer>
+    );
+  }
+
+  if (!riskVisible(user, risk) || !objectAllowed(user, risk.owner_org_id, risk.primary_object_id)) {
+    return (
+      <Drawer open onClose={onClose} title="访问受限" width="60vw">
+        <div className="p-6">
+          <Notice tone="amber" title="超出当前授权范围">
+            当前用户不能查看该事项的名称、金额或其他受限信息。请切换已获授权的身份。
           </Notice>
         </div>
       </Drawer>
@@ -188,6 +205,11 @@ function RiskCaseDrawerBody({
   const overdue = isOverdueRectification(risk, filters.asOf);
   const missingDue = isMissingRectificationDeadline(risk);
   const options = optionsFor(risk);
+  const actorName = user?.name ?? "监管人员";
+  const adoptedRect = adopted.some((m) => m.materialId === "MAT-R07-RECT");
+  const adoptedVerify = adopted.some((m) => m.materialId === "MAT-R07-VERIFY");
+  const selfReview = Boolean(risk.last_handler_user_id && user?.id && risk.last_handler_user_id === user.id);
+
   const submit = () => {
     if (!pending) return;
     if (note.trim().length < 4) {
@@ -198,10 +220,23 @@ function RiskCaseDrawerBody({
       setFormError("确认需整改必须填写整改措施。");
       return;
     }
+    if (pending.kind === "submit_rectification" && risk.id === "R07" && !adoptedRect) {
+      setFormError("提交整改前须先采用《付款审批控制核查及措施执行记录》，草稿不能自动当作已执行事实。");
+      return;
+    }
+    if (pending.kind === "pass_verification" && risk.id === "R07" && !adoptedVerify) {
+      setFormError("独立复核前须先采用《付款审批控制整改复核记录》。");
+      return;
+    }
+    if ((pending.kind === "pass_verification" || pending.kind === "return_verification") && selfReview) {
+      setFormError("不能由原办理人自行复核。请切换总部复核人员B后办理。");
+      return;
+    }
     act({
       riskId: risk.id,
       kind: pending.kind,
-      actor: roleDef.name,
+      actor: actorName,
+      actorUserId: user?.id,
       note: note.trim(),
       measure: measure.trim() || undefined,
       responsible: responsible.trim() || undefined,
@@ -244,30 +279,36 @@ function RiskCaseDrawerBody({
             {risk.domains.length > 1 && "（跨领域同一事项，各领域按同一 risk_id 展示，不复制）"}
           </span>
           {sourceLabel && <span>来源：{sourceLabel}</span>}
-          <SimulatedBadge text={`数据性质：${risk.data_nature === "simulated" ? "模拟" : risk.data_nature}`} />
+          <SimulatedBadge text={`数据性质：${risk.data_nature === "simulated" ? "合成样例" : risk.data_nature}`} />
         </span>
       }
       footer={
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] text-textsub mr-auto">
-            当前角色：{roleDef.name}（{roleDef.scopeNote}）
+            当前用户：{actorName}
+            {isIndependentReviewer(user) ? "（独立复核，禁止自审）" : ""}
           </span>
           {options.map((o) => {
-            const allowed =
-              o.kind === "pass_verification" || o.kind === "return_verification"
-                ? roleDef.canVerify
-                : roleDef.canHandle;
+            let allowed = canCase(o.kind);
+            let deny = allowed ? o.hint : `当前用户（${actorName}）不开放该办理动作`;
+            if (allowed && (o.kind === "pass_verification" || o.kind === "return_verification") && selfReview) {
+              allowed = false;
+              deny = "不能由原办理人自行复核，请切换总部复核人员B";
+            }
+            if (allowed && o.kind === "pass_verification" && risk.id === "R07" && !adoptedVerify) {
+              deny = "请先在材料页采用复核记录后再通过";
+            }
             return (
               <Button
                 key={o.kind}
                 variant={o.primary ? "primary" : "secondary"}
                 disabled={!allowed}
-                title={allowed ? o.hint : `当前角色（${roleDef.name}）在本 Demo 中不开放该办理动作`}
+                title={deny}
                 onClick={() => {
                   setPending(o);
                   setNote("");
                   setMeasure(risk.rectification_plan?.measure ?? "");
-                  setResponsible(risk.rectification_plan?.responsible_display_name ?? roleDef.name);
+                  setResponsible(risk.rectification_plan?.responsible_display_name ?? actorName);
                   setDue(risk.rectification_plan?.due_date ?? risk.current_task_due_date ?? "");
                   setFormError(null);
                   setFlash(null);
@@ -318,6 +359,7 @@ function RiskCaseDrawerBody({
             tabs={[
               { id: "overview", label: "事项概览" },
               { id: "evidence", label: `依据与规则（${evidences.length + ruleEvals.length}）` },
+              { id: "materials", label: `整改材料（${drafts.length + adopted.length}）` },
               { id: "timeline", label: `办理日志（${actions.length + myUrges.length}）` },
               { id: "related", label: "关联与跨领域" },
             ]}
@@ -503,7 +545,7 @@ function RiskCaseDrawerBody({
 
               {traces.length > 0 && (
                 <>
-                  <h4 className="text-[15px] font-semibold text-textmain">计算依据（P78 四层追溯）</h4>
+                  <h4 className="text-[15px] font-semibold text-textmain">计算依据（四层追溯）</h4>
                   {traces.map((t) => (
                     <div key={t.id} className="rounded-[6px] border border-line p-3 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -530,6 +572,88 @@ function RiskCaseDrawerBody({
                     </div>
                   ))}
                 </>
+              )}
+            </>
+          )}
+
+          {tab === "materials" && (
+            <>
+              <Notice tone="neutral" title="材料采用规则">
+                下列文字是合成材料草稿，不是原始证据。须由办理人选择、阅读并明确采用后另建记录。未采用完整执行证明时，事项应保持待整改或待复核。独立复核材料须在单位提交后由另一位有权人员采用。
+              </Notice>
+              {adoptedFlash && <Notice tone="green">{adoptedFlash}</Notice>}
+              {drafts.length === 0 && adopted.length === 0 && (
+                <p className="text-[13px] text-textsub">该事项没有预置合成整改材料，可按现有依据办理。</p>
+              )}
+              {drafts.map((d) => {
+                const already = adopted.some((m) => m.materialId === d.id);
+                const canAdoptRect = d.kind === "rectification" && (risk.status === "rectifying" || risk.status === "investigating");
+                const canAdoptVerify =
+                  d.kind === "verification" &&
+                  risk.status === "pending_verification" &&
+                  isIndependentReviewer(user) &&
+                  !selfReview;
+                const canAdopt = !already && (canAdoptRect || canAdoptVerify);
+                return (
+                  <div key={d.id} className="rounded-[8px] border border-line p-4 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-[15px] font-semibold">{d.title}</h4>
+                      <Tag tone={d.kind === "rectification" ? "amber" : "brand"}>
+                        {d.kind === "rectification" ? "整改材料草稿" : "复核材料草稿"}
+                      </Tag>
+                      <SimulatedBadge text={d.dataNature} />
+                      {already && <Tag tone="green">已采用</Tag>}
+                    </div>
+                    {d.pages.map((p) => (
+                      <div key={p.title}>
+                        <div className="text-[13px] font-medium text-textmain">{p.title}</div>
+                        <p className="text-[13px] text-textsub leading-6">{p.body}</p>
+                      </div>
+                    ))}
+                    <Button
+                      variant="primary"
+                      disabled={!canAdopt}
+                      title={
+                        already
+                          ? "已采用并保存为新记录"
+                          : canAdopt
+                            ? "采用后另建记录，不覆盖原始付款事实"
+                            : d.kind === "verification"
+                              ? "须由总部复核人员B在单位提交后独立采用"
+                              : "须由单位办理人员在整改阶段采用"
+                      }
+                      onClick={() => {
+                        adoptMaterial({
+                          riskId: risk.id,
+                          materialId: d.id,
+                          title: d.title,
+                          actorUserId: user?.id ?? "",
+                          actorName,
+                          note: `采用合成材料《${d.title}》，不改变原始付款、批准与可支付上限事实。`,
+                        });
+                        setAdoptedFlash(`已采用《${d.title}》。办理生效日期 ${filters.asOf}。`);
+                      }}
+                    >
+                      采用并保存为新记录
+                    </Button>
+                  </div>
+                );
+              })}
+              {adopted.length > 0 && (
+                <div>
+                  <h4 className="text-[15px] font-semibold text-textmain mb-2">已采用记录</h4>
+                  <DataTable
+                    dense
+                    rows={adopted}
+                    rowKey={(m) => m.id}
+                    columns={[
+                      { key: "title", title: "材料", render: (m) => m.title },
+                      { key: "actor", title: "采用人", width: "140px", render: (m) => m.actorName },
+                      { key: "date", title: "办理生效日", width: "120px", render: (m) => <span className="num">{m.effective_date}</span> },
+                      { key: "note", title: "说明", render: (m) => m.note },
+                    ]}
+                  />
+                </div>
               )}
             </>
           )}

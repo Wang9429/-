@@ -6,6 +6,7 @@ import { findObject } from "@/lib/objects";
 import { DOMAIN_META, evidenceById, phaseName, scenarioName, seed, templateById } from "@/lib/seed";
 import { orgName, orgPath } from "@/lib/org";
 import { fmtAmount, fmtDate, fmtPct } from "@/lib/format";
+import { objectAllowed } from "@/lib/config";
 import { isOpen, statusLabel } from "@/lib/risks";
 import { useDemoStore } from "@/lib/store";
 import type { LifecycleInstance } from "@/lib/types";
@@ -116,7 +117,7 @@ function ObjectDrawerBody({
   onOpenRisk?: (id: string) => void;
   initialTab: string;
 }) {
-  const { risks, filters } = useDemoStore();
+  const { risks, filters, user } = useDemoStore();
   const [tab, setTab] = useState(initialTab);
 
   const obj = findObject(objectId);
@@ -141,12 +142,24 @@ function ObjectDrawerBody({
     [objectId],
   );
 
+  if (obj && !objectAllowed(user, obj.orgId, obj.id)) {
+    return (
+      <Drawer open onClose={onClose} title="访问受限" width="60vw">
+        <div className="p-6">
+          <Notice tone="amber" title="超出当前授权范围">
+            当前用户不能查看该对象的名称、金额或其他受限信息。
+          </Notice>
+        </div>
+      </Drawer>
+    );
+  }
+
   if (!obj) {
     return (
       <Drawer open onClose={onClose} title={`对象 ${objectId}`} width="60vw">
         <div className="p-6">
-          <Notice tone="amber" title="对象不在演示数据范围">
-            {objectId} 在当前演示数据中没有档案记录。可能属于来源待核实的对象，按“来源待核实”处理，不创建虚假档案。
+          <Notice tone="amber" title="对象不在当前数据范围">
+            {objectId} 在当前样例中没有档案记录。可能属于来源待核实的对象，按“来源待核实”处理，不创建虚假档案。
           </Notice>
         </div>
       </Drawer>
@@ -176,7 +189,7 @@ function ObjectDrawerBody({
         <span className="flex flex-wrap gap-x-4 gap-y-1">
           <span>管理归属：{orgPath(obj.orgId).map((o) => o.name).join(" / ")}</span>
           <span>截至日：{filters.asOf}</span>
-          <SimulatedBadge text="模拟演示数据" />
+          <SimulatedBadge text="合成样例" />
         </span>
       }
     >

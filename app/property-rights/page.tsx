@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
 import { Card, DataTable, EmptyState, Notice, Tag } from "@/components/ui";
 import { phaseName, seed, templateById } from "@/lib/seed";
-import { orgName, orgScope } from "@/lib/org";
+import { orgName } from "@/lib/org";
 import { fmtPct } from "@/lib/format";
 import { isOpen } from "@/lib/risks";
 import { useDemoStore } from "@/lib/store";
@@ -30,7 +30,7 @@ const PHASE_FOCUS: Record<string, string> = {
 
 function ConsistencyCheck({ helpers }: { helpers: DomainHelpers }) {
   const { filters, risks } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const matters = seed.property_matters.filter((m) => orgIds.has(m.owner_org_id));
 
   return (
@@ -189,7 +189,7 @@ function RelationView({ helpers }: { helpers: DomainHelpers }) {
 
 function MatterLedger({ helpers }: { helpers: DomainHelpers }) {
   const { filters, risks } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const matters = seed.property_matters.filter((m) => orgIds.has(m.owner_org_id));
 
   return (

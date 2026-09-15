@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import IndicatorDrawer from "@/components/IndicatorDrawer";
-import { Card, Notice, Tag } from "@/components/ui";
+import { Card, Notice } from "@/components/ui";
 import { DOMAIN_META } from "@/lib/seed";
 import { indicatorById, indicatorsForDomain } from "@/lib/metrics";
 import { orgName } from "@/lib/org";
@@ -42,7 +42,6 @@ export default function IndicatorPage() {
       <Card
         title={def ? `${def.name}（${def.unit}）` : `指标 ${id}`}
         subtitle={def ? `${DOMAIN_META[def.domain].label}指标范围｜${scopeLabel}｜截至 ${filters.asOf}` : undefined}
-        right={<Tag tone="neutral">P71</Tag>}
       >
         {def ? (
           <div className="text-[13px] text-textsub space-y-1.5">
@@ -52,7 +51,7 @@ export default function IndicatorPage() {
           </div>
         ) : (
           <Notice tone="amber" title="指标不存在">
-            {id} 不在当前演示指标目录中。可在场景规则库查看原 KRI 与本 Demo 已实现指标的对应关系。
+            {id} 不在当前指标目录中。可在场景规则库查看原 KRI 与已实现指标的对应关系。
           </Notice>
         )}
       </Card>

@@ -1,9 +1,9 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "as_of": "2026-06-30",
   "data_nature": "simulated_except_identified_historical_event_dates",
   "money_default": "万元人民币；银行原币字段另外注明",
-  "display_notice": "演示数据 截至2026年6月30日",
+  "display_notice": "截至2026年6月30日｜数据说明",
   "organizations": [
     {
       "id": "ORG-HQ",
@@ -15,7 +15,7 @@
     },
     {
       "id": "ORG-A",
-      "name": "演示二级单位甲",
+      "name": "下属二级单位A",
       "parent_id": "ORG-HQ",
       "management_level": 2,
       "node_type": "legal_unit",
@@ -23,7 +23,7 @@
     },
     {
       "id": "ORG-A1",
-      "name": "演示三级单位甲一",
+      "name": "下属三级单位A1",
       "parent_id": "ORG-A",
       "management_level": 3,
       "node_type": "management_unit",
@@ -31,7 +31,7 @@
     },
     {
       "id": "ORG-OV",
-      "name": "演示境外分支机构",
+      "name": "境外分支机构A2",
       "parent_id": "ORG-A",
       "management_level": 3,
       "node_type": "branch",
@@ -39,7 +39,7 @@
     },
     {
       "id": "ORG-B",
-      "name": "演示二级单位乙",
+      "name": "下属二级单位B",
       "parent_id": "ORG-HQ",
       "management_level": 2,
       "node_type": "legal_unit",
@@ -47,7 +47,7 @@
     },
     {
       "id": "ORG-C",
-      "name": "演示二级单位丙",
+      "name": "下属二级单位C",
       "parent_id": "ORG-HQ",
       "management_level": 2,
       "node_type": "legal_unit",
@@ -57,49 +57,49 @@
   "legal_entities": [
     {
       "id": "LE-HQ",
-      "name": "海油工程演示主体",
+      "name": "海油工程",
       "country": "中国",
       "role": "managed_entity"
     },
     {
       "id": "LE-A",
-      "name": "演示法人甲",
+      "name": "下属二级单位A",
       "country": "中国",
       "role": "managed_entity"
     },
     {
       "id": "LE-B",
-      "name": "演示法人乙",
+      "name": "下属二级单位B",
       "country": "中国",
       "role": "managed_entity"
     },
     {
       "id": "LE-C",
-      "name": "演示法人丙",
+      "name": "下属二级单位C",
       "country": "中国",
       "role": "managed_entity"
     },
     {
       "id": "JV001",
-      "name": "演示被投企业甲",
+      "name": "被投企业A",
       "country": "中国",
       "role": "investee"
     },
     {
       "id": "JV002",
-      "name": "演示被投企业乙",
+      "name": "被投企业B",
       "country": "中国",
       "role": "investee"
     },
     {
       "id": "CUSTOMER-01",
-      "name": "演示国际客户",
+      "name": "境外客户A",
       "country": "马来西亚",
       "role": "customer"
     },
     {
       "id": "VENDOR-01",
-      "name": "演示分包商",
+      "name": "分包商A",
       "country": "中国",
       "role": "supplier"
     }
@@ -107,7 +107,7 @@
   "fixed_asset_projects": [
     {
       "id": "FA-P001",
-      "name": "演示基地能力提升项目",
+      "name": "基地能力提升项目",
       "owner_org_id": "ORG-A1",
       "legal_entity_id": "LE-A",
       "phase": "建设实施",
@@ -139,7 +139,7 @@
     },
     {
       "id": "FA-P002",
-      "name": "演示大型装备购置项目",
+      "name": "大型装备购置项目",
       "owner_org_id": "ORG-A1",
       "legal_entity_id": "LE-A",
       "phase": "运营及后评价",
@@ -163,7 +163,7 @@
     },
     {
       "id": "FA-P003",
-      "name": "演示设施技改项目",
+      "name": "设施技术改造项目",
       "owner_org_id": "ORG-B",
       "legal_entity_id": "LE-B",
       "phase": "建设实施",
@@ -197,12 +197,12 @@
   "assets": [
     {
       "id": "AS001",
-      "name": "演示专用装备一",
+      "name": "专用装备A",
       "owner_org_id": "ORG-A1",
       "legal_entity_id": "LE-A",
       "source_project_id": "FA-P002",
       "asset_type": "专用装备",
-      "functional_class": "演示同类设备A",
+      "functional_class": "专用装备类别A",
       "is_major": true,
       "gross_value": 4500,
       "accumulated_depreciation": 900,
@@ -248,17 +248,17 @@
           "data_nature": "simulated"
         }
       ],
-      "threshold_nature": "演示参数；按同类别批准目标替换",
+      "threshold_nature": "样例配置参数；按同类别批准目标替换",
       "monthly_trend_note": "月度明细用于趋势展示，不能替代连续两个季度的触发依据"
     },
     {
       "id": "AS002",
-      "name": "演示专用装备二",
+      "name": "专用装备B",
       "owner_org_id": "ORG-A1",
       "legal_entity_id": "LE-A",
       "source_project_id": "FA-P002",
       "asset_type": "专用装备",
-      "functional_class": "演示同类设备A",
+      "functional_class": "专用装备类别A",
       "is_major": true,
       "gross_value": 3000,
       "accumulated_depreciation": 600,
@@ -303,14 +303,14 @@
           "data_nature": "simulated"
         }
       ],
-      "threshold_nature": "演示参数；按同类别批准目标替换",
+      "threshold_nature": "样例配置参数；按同类别批准目标替换",
       "monthly_trend_note": "月度明细用于趋势展示，不能替代连续两个季度的触发依据"
     }
   ],
   "equity_projects": [
     {
       "id": "EQ-P001",
-      "name": "演示产业能力股权投资项目",
+      "name": "产业能力股权投资项目",
       "owner_org_id": "ORG-A1",
       "legal_entity_id": "LE-A",
       "investee_id": "JV001",
@@ -326,7 +326,7 @@
       "opening_book_balance": 2000,
       "closing_book_balance_before_impairment": 2400,
       "impairment_allowance": 0,
-      "accounting_method_demo": "成本法演示",
+      "accounting_method_demo": "成本法",
       "accounting_investment_income_ytd": 200,
       "accounting_income_includes_declared_dividends": true,
       "dividend_due": 200,
@@ -346,7 +346,7 @@
     },
     {
       "id": "EQ-P002",
-      "name": "演示专业服务股权投资项目",
+      "name": "专业服务股权投资项目",
       "owner_org_id": "ORG-B",
       "legal_entity_id": "LE-B",
       "investee_id": "JV002",
@@ -362,7 +362,7 @@
       "opening_book_balance": 1000,
       "closing_book_balance_before_impairment": 1600,
       "impairment_allowance": 0,
-      "accounting_method_demo": "成本法演示",
+      "accounting_method_demo": "成本法",
       "accounting_investment_income_ytd": 80,
       "accounting_income_includes_declared_dividends": true,
       "dividend_due": 80,
@@ -383,7 +383,7 @@
   "engineering_projects": [
     {
       "id": "ENG-P001",
-      "name": "演示境外海工项目",
+      "name": "境外海洋工程项目",
       "owner_org_id": "ORG-OV",
       "legal_entity_id": "LE-A",
       "country": "马来西亚",
@@ -699,7 +699,7 @@
       "id": "ACC-A",
       "owner_org_id": "ORG-A",
       "legal_entity_id": "LE-A",
-      "name": "演示人民币账户甲",
+      "name": "二级单位A人民币结算账户",
       "currency": "CNY",
       "opening_balance_native": 100000000,
       "closing_balance_native": 50800000,
@@ -713,7 +713,7 @@
       "id": "ACC-B",
       "owner_org_id": "ORG-B",
       "legal_entity_id": "LE-B",
-      "name": "演示人民币账户乙",
+      "name": "二级单位B人民币结算账户",
       "currency": "CNY",
       "opening_balance_native": 50000000,
       "closing_balance_native": 14800000,
@@ -727,7 +727,7 @@
       "id": "ACC-USD",
       "owner_org_id": "ORG-OV",
       "legal_entity_id": "LE-A",
-      "name": "演示美元账户",
+      "name": "境外美元结算账户",
       "currency": "USD",
       "opening_balance_native": 100000,
       "closing_balance_native": 100000,
@@ -753,7 +753,7 @@
       "id": "OWN-01B",
       "investor_id": "LE-A",
       "investee_id": "JV001",
-      "source_type": "工商登记模拟快照",
+      "source_type": "工商登记快照",
       "pct": 60,
       "effective_date": "2026-01-01",
       "snapshot_date": "2026-06-30"
@@ -762,7 +762,7 @@
       "id": "OWN-01C",
       "investor_id": "LE-A",
       "investee_id": "JV001",
-      "source_type": "产权台账模拟快照",
+      "source_type": "产权台账快照",
       "pct": 55,
       "effective_date": "2026-01-01",
       "snapshot_date": "2026-06-30"
@@ -780,7 +780,7 @@
   "international_events": [
     {
       "id": "EVT-SIM-01",
-      "title": "模拟事件 航线R1中转港作业受限",
+      "title": "航线R1中转港作业受限",
       "event_date": "2026-05-15",
       "reported_at": "2026-05-15",
       "latest_verified_at": "2026-06-25",
@@ -793,8 +793,8 @@
       "affected_project_ids": [
         "ENG-P001"
       ],
-      "source_name": "演示情景资料",
-      "summary": "仅用于演示外部事件与项目运输安排的关联。"
+      "source_name": "航线事件资料",
+      "summary": "关联航线R1及项目运输安排，实际影响待核查。"
     },
     {
       "id": "EVT-HIST-01",
@@ -823,7 +823,7 @@
       "project_id": "ENG-P001",
       "event_id": "EVT-SIM-01",
       "category": "steel",
-      "specification": "演示海工结构钢板规格A",
+      "specification": "海工结构钢板规格A",
       "quantity_tonnes": 1000,
       "base_price_yuan_per_tonne": 6000,
       "unpriced_share": 1,
@@ -836,7 +836,7 @@
       "project_id": "ENG-P001",
       "event_id": "EVT-SIM-01",
       "route_id": "ROUTE-R1",
-      "ship_type": "演示重件运输船",
+      "ship_type": "重件运输船",
       "category": "freight",
       "unpriced_base_cost_wan": 400,
       "confirmed_pass_through_share": 0,
@@ -867,9 +867,11 @@
         "EVID-R01"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
+      "responsible_role": "固定资产投资监管人员",
       "assignee_display_name": null,
-      "current_task_type": "investigation"
+      "current_task_type": "investigation",
+      "finding_nature": "经营偏差待核查",
+      "finding_note": "预计完工投资高于当前有效概算，属于预测偏差线索；需核实成本预测、概算适用版本和调整程序，不能直接认定已发生超概算支出。"
     },
     {
       "id": "R02",
@@ -893,15 +895,17 @@
         "EVID-R02"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
-      "assignee_display_name": "演示经办人员",
+      "responsible_role": "固定资产投资监管人员",
+      "assignee_display_name": "业务经办人员",
       "current_task_type": "rectification",
       "rectification_plan": {
         "measure": "核查需求和排产，提出跨单位调剂或利用改善安排，按季度跟踪。",
-        "responsible_display_name": "演示项目负责人",
+        "responsible_display_name": "资产管理负责人",
         "due_date": "2026-06-25",
-        "progress_note": "演示措施执行中，尚未提交复核通过。"
-      }
+        "progress_note": "改善措施执行中，尚未经复核通过。"
+      },
+      "finding_nature": "资产效能改善跟踪",
+      "finding_note": "持续低利用率已经核查并进入改善流程，当前改善任务逾期；未正式认定为闲置资产。"
     },
     {
       "id": "R03",
@@ -926,9 +930,11 @@
         "EVID-R03"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
+      "responsible_role": "股权投资监管人员",
       "assignee_display_name": null,
-      "current_task_type": "investigation"
+      "current_task_type": "investigation",
+      "finding_nature": "出资履约差异待核查",
+      "finding_note": "到期出资义务与已匹配出资记录存在缺口；需核实付款到账、履约条件及有效延期安排，不自动认定资金短缺或违法违规。"
     },
     {
       "id": "R04",
@@ -955,15 +961,17 @@
         "EVID-R04"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
-      "assignee_display_name": "演示经办人员",
+      "responsible_role": "股权投资监管人员",
+      "assignee_display_name": "业务经办人员",
       "current_task_type": "rectification",
       "rectification_plan": {
         "measure": "核对分红决议与到账，落实剩余120万元的回收安排和证据。",
-        "responsible_display_name": "演示项目负责人",
+        "responsible_display_name": "股权投资项目负责人",
         "due_date": "2026-07-10",
-        "progress_note": "演示措施执行中，尚未提交复核通过。"
-      }
+        "progress_note": "改善措施执行中，尚未经复核通过。"
+      },
+      "finding_nature": "投资回报改善跟踪",
+      "finding_note": "同一分红义务回收不足及现金回报偏差归并为一项监管事项；跟踪回收安排，不能据此认定投资本金损失或挪用资金。"
     },
     {
       "id": "R05",
@@ -988,15 +996,17 @@
         "EVID-R05"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
-      "assignee_display_name": "演示经办人员",
+      "responsible_role": "工程项目监管人员",
+      "assignee_display_name": "业务经办人员",
       "current_task_type": "rectification",
       "rectification_plan": {
         "measure": "核对成本预测、采购及运输敞口，形成获批的成本改善措施。",
-        "responsible_display_name": "演示项目负责人",
+        "responsible_display_name": "工程项目负责人",
         "due_date": "2026-07-10",
-        "progress_note": "演示措施执行中，尚未提交复核通过。"
-      }
+        "progress_note": "改善措施执行中，尚未经复核通过。"
+      },
+      "finding_nature": "项目盈利偏差改善跟踪",
+      "finding_note": "预计毛利率较目标下降，属于履约盈利偏差；不等同项目已经亏损或已形成国有资产损失。"
     },
     {
       "id": "R06",
@@ -1021,9 +1031,11 @@
         "EVID-R06"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
+      "responsible_role": "国际业务监管人员",
       "assignee_display_name": null,
-      "current_task_type": "investigation"
+      "current_task_type": "investigation",
+      "finding_nature": "外部事件影响待核查",
+      "finding_note": "航线与项目运输安排存在关联，需核实实际运输时点、替代航线及成本影响；历史真实事件不能直接视为本项目已发生事件。"
     },
     {
       "id": "R07",
@@ -1049,9 +1061,11 @@
         "EVID-R07"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
+      "responsible_role": "资金监管人员",
       "assignee_display_name": null,
-      "current_task_type": "investigation"
+      "current_task_type": "investigation",
+      "finding_nature": "付款审批匹配待核查",
+      "finding_note": "实际付款高于已匹配的有效批准金额；需核查完整审批资料及其有效版本，不以规则命中替代违规认定，也不等同超过已确认业务应付金额。"
     },
     {
       "id": "R08",
@@ -1076,9 +1090,11 @@
         "EVID-R08"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
+      "responsible_role": "产权监管人员",
       "assignee_display_name": null,
-      "current_task_type": "investigation"
+      "current_task_type": "investigation",
+      "finding_nature": "产权信息一致性待核查",
+      "finding_note": "同一有效期间的持股比例记录不一致，优先核查数据同步、录入及变更凭据；未确认未经批准的股权变更。"
     },
     {
       "id": "R09",
@@ -1102,660 +1118,662 @@
         "EVID-R09"
       ],
       "data_nature": "simulated",
-      "responsible_role": "演示领域管理人员",
-      "assignee_display_name": "演示经办人员",
+      "responsible_role": "资金监管人员",
+      "assignee_display_name": "业务经办人员",
       "current_task_type": "investigation",
-      "exclusion_reason": "两笔500万元付款对应HSC001和HSC002两个不同合同义务，核查后排除重复付款线索。"
+      "exclusion_reason": "两笔500万元付款对应HSC001和HSC002两个不同合同义务，核查后排除重复付款线索。",
+      "finding_nature": "已排除付款异常线索",
+      "finding_note": "同额付款对应不同合同义务，核查后排除重复付款线索；保留核查证据，不计入未关闭事项。"
     }
   ],
   "evidence": [
     {
       "id": "EVID-R01",
-      "title": "演示依据 预计完工投资超过有效概算",
+      "title": "核查依据 预计完工投资超过有效概算",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
       "body": "有效概算10000万元；实际4800、已履约未入账600、已签未执行3600、合理预计变更800、未签约剩余2000万元，去重合计11800万元，偏差18%。"
     },
     {
       "id": "EVID-R02",
-      "title": "演示依据 重大装备持续低利用率改善逾期",
+      "title": "核查依据 重大装备持续低利用率改善逾期",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
-      "body": "AS001在2025年四季度、2026年一季度利用率48%、46%，连续两个完整季度低于演示预警值50%；6月1日完成低利用率复核确认。2026年二季度利用率44%，月度明细4、5、6月为47%、45%、40%。改善期限6月25日，截至6月30日仍在整改；未正式认定为闲置资产。"
+      "body": "AS001在2025年四季度、2026年一季度利用率48%、46%，连续两个完整季度低于样例配置预警值50%；6月1日完成低利用率复核确认。2026年二季度利用率44%，月度明细4、5、6月为47%、45%、40%。改善期限6月25日，截至6月30日仍在整改；未正式认定为闲置资产。"
     },
     {
       "id": "EVID-R03",
-      "title": "演示依据 到期出资义务存在600万元缺口",
+      "title": "核查依据 到期出资义务存在600万元缺口",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
       "body": "累计截至日应出资3000万元，前期已履约2000万元，本年已投入400万元，总履约2400万元，缺口600万元；本期到期日6月20日。"
     },
     {
       "id": "EVID-R04",
-      "title": "演示依据 同一分红义务回收不足及现金回报偏差",
+      "title": "核查依据 同一分红义务回收不足及现金回报偏差",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
       "body": "同一分红义务到期200万元，实收80万元，未收120万元。同期现金回报目标200万元，偏差-60%。会计已确认收益200万元不视为全部现金到账。"
     },
     {
       "id": "EVID-R05",
-      "title": "演示依据 境外工程预计毛利率低于目标3个百分点",
+      "title": "核查依据 境外工程预计毛利率低于目标3个百分点",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
       "body": "有效不含税合同收入20000万元，预计完工成本17600万元，预计毛利率12%，目标15%，下降3个百分点。"
     },
     {
       "id": "EVID-R06",
-      "title": "演示依据 航线事件影响运输安排待核查",
+      "title": "核查依据 航线事件影响运输安排待核查",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
-      "body": "模拟航线R1中转港作业受限，演示项目运输安排使用该航线。历史真实事件没有绑定为本项目已发生事件。"
+      "body": "航线R1中转港作业受限，项目运输安排使用该航线。历史真实事件没有绑定为本项目已发生事件。"
     },
     {
       "id": "EVID-R07",
-      "title": "演示依据 付款超有效批准金额400万元",
+      "title": "核查依据 付款超有效批准金额400万元",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
       "body": "该笔有效批准800万元，6月12日实际支付1200万元，超批准400万元。合同累计可支付业务上限2000万元，当前不构成超该业务上限付款。"
     },
     {
       "id": "EVID-R08",
-      "title": "演示依据 同有效期产权数据持股比例不一致",
+      "title": "核查依据 同有效期产权数据持股比例不一致",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
-      "body": "同一投资方、被投企业、有效日期和截至日：批准60%、工商模拟快照60%、产权模拟台账55%。待核实同步或录入原因，不认定未经批准股权变更。"
+      "body": "同一投资方、被投企业、有效日期和截至日：批准60%、工商快照60%、产权台账55%。待核实同步或录入原因，不认定未经批准股权变更。"
     },
     {
       "id": "EVID-R09",
-      "title": "演示依据 历史同额付款经核查为不同合同义务",
+      "title": "核查依据 历史同额付款经核查为不同合同义务",
       "data_nature": "simulated",
-      "source_type": "模拟业务材料",
+      "source_type": "业务材料",
       "recorded_at": "2026-06-30",
       "body": "两笔历史付款均为500万元，分别对应HSC001、HSC002的不同义务及回单，已排除重复付款线索。"
     },
     {
       "id": "EVID-SOURCE-SAP-FA001-ACT",
-      "title": "模拟材料 FA-P001 实际已入账",
+      "title": "材料 FA-P001 实际已入账",
       "source_type": "实际已入账",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象FA-P001的实际已入账归集金额为4800万元。来源记录SAP-FA001-ACT仅为本Demo模拟资料，未连接实际业务系统。本记录为归集结果；模拟凭据可继续查看，不把整项归集误称为单笔真实凭证。"
+      "body": "对象FA-P001的实际已入账归集金额为4800万元。来源记录SAP-FA001-ACT对应数据范围见数据说明。本记录为归集结果；凭据可继续查看，不把整项归集误称为单笔真实凭证。"
     },
     {
       "id": "EVID-SOURCE-ACC-FA001-01",
-      "title": "模拟材料 FA-P001 已履约未入账",
+      "title": "材料 FA-P001 已履约未入账",
       "source_type": "已履约未入账",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象FA-P001的已履约未入账归集金额为600万元。来源记录ACC-FA001-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象FA-P001的已履约未入账归集金额为600万元。来源记录ACC-FA001-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-REMAIN-FA001-01",
-      "title": "模拟材料 FA-P001 已签合同未执行",
+      "title": "材料 FA-P001 已签合同未执行",
       "source_type": "已签合同未执行",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象FA-P001的已签合同未执行归集金额为3600万元。来源记录REMAIN-FA001-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象FA-P001的已签合同未执行归集金额为3600万元。来源记录REMAIN-FA001-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-CHANGE-FA001-01",
-      "title": "模拟材料 FA-P001 合理预计变更",
+      "title": "材料 FA-P001 合理预计变更",
       "source_type": "合理预计变更",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象FA-P001的合理预计变更归集金额为800万元。来源记录CHANGE-FA001-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象FA-P001的合理预计变更归集金额为800万元。来源记录CHANGE-FA001-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-UNSIGNED-FA001-01",
-      "title": "模拟材料 FA-P001 未签约剩余工作",
+      "title": "材料 FA-P001 未签约剩余工作",
       "source_type": "未签约剩余工作",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象FA-P001的未签约剩余工作归集金额为2000万元。来源记录UNSIGNED-FA001-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象FA-P001的未签约剩余工作归集金额为2000万元。来源记录UNSIGNED-FA001-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-SAP-FA003-ACT",
-      "title": "模拟材料 FA-P003 实际已入账",
+      "title": "材料 FA-P003 实际已入账",
       "source_type": "实际已入账",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象FA-P003的实际已入账归集金额为3600万元。来源记录SAP-FA003-ACT仅为本Demo模拟资料，未连接实际业务系统。本记录为归集结果；模拟凭据可继续查看，不把整项归集误称为单笔真实凭证。"
+      "body": "对象FA-P003的实际已入账归集金额为3600万元。来源记录SAP-FA003-ACT对应数据范围见数据说明。本记录为归集结果；凭据可继续查看，不把整项归集误称为单笔真实凭证。"
     },
     {
       "id": "EVID-SOURCE-REMAIN-FA003-01",
-      "title": "模拟材料 FA-P003 完工尚需",
+      "title": "材料 FA-P003 完工尚需",
       "source_type": "完工尚需",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象FA-P003的完工尚需归集金额为900万元。来源记录REMAIN-FA003-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象FA-P003的完工尚需归集金额为900万元。来源记录REMAIN-FA003-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-SAP-ENG001-ACT",
-      "title": "模拟材料 ENG-P001 实际已入账",
+      "title": "材料 ENG-P001 实际已入账",
       "source_type": "实际已入账",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象ENG-P001的实际已入账归集金额为8800万元。来源记录SAP-ENG001-ACT仅为本Demo模拟资料，未连接实际业务系统。本记录为归集结果；模拟凭据可继续查看，不把整项归集误称为单笔真实凭证。"
+      "body": "对象ENG-P001的实际已入账归集金额为8800万元。来源记录SAP-ENG001-ACT对应数据范围见数据说明。本记录为归集结果；凭据可继续查看，不把整项归集误称为单笔真实凭证。"
     },
     {
       "id": "EVID-SOURCE-ACC-ENG001-01",
-      "title": "模拟材料 ENG-P001 已履约未入账",
+      "title": "材料 ENG-P001 已履约未入账",
       "source_type": "已履约未入账",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象ENG-P001的已履约未入账归集金额为600万元。来源记录ACC-ENG001-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象ENG-P001的已履约未入账归集金额为600万元。来源记录ACC-ENG001-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-REMAIN-ENG001-01",
-      "title": "模拟材料 ENG-P001 已签合同未执行",
+      "title": "材料 ENG-P001 已签合同未执行",
       "source_type": "已签合同未执行",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象ENG-P001的已签合同未执行归集金额为5200万元。来源记录REMAIN-ENG001-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象ENG-P001的已签合同未执行归集金额为5200万元。来源记录REMAIN-ENG001-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-UNSIGNED-ENG001-01",
-      "title": "模拟材料 ENG-P001 未签约剩余工作",
+      "title": "材料 ENG-P001 未签约剩余工作",
       "source_type": "未签约剩余工作",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示对象ENG-P001的未签约剩余工作归集金额为3000万元。来源记录UNSIGNED-ENG001-01仅为本Demo模拟资料，未连接实际业务系统。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
+      "body": "对象ENG-P001的未签约剩余工作归集金额为3000万元。来源记录UNSIGNED-ENG001-01对应数据范围见数据说明。本项为合同、业务确认或预测资料，未统一视为已经形成会计凭证。"
     },
     {
       "id": "EVID-SOURCE-MOCK-FA001-V01",
-      "title": "模拟材料 FA-P001模拟入账凭据一",
-      "source_type": "模拟会计凭据",
+      "title": "材料 FA-P001入账凭据一",
+      "source_type": "会计凭据",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "模拟凭据一：FA-P001已确认入账投资2400万元，纳入报告期累计归集。"
+      "body": "凭据一：FA-P001已确认入账投资2400万元，纳入报告期累计归集。"
     },
     {
       "id": "EVID-SOURCE-MOCK-FA001-V02",
-      "title": "模拟材料 FA-P001模拟入账凭据二",
-      "source_type": "模拟会计凭据",
+      "title": "材料 FA-P001入账凭据二",
+      "source_type": "会计凭据",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "模拟凭据二：FA-P001已确认入账投资2400万元，与凭据一合计4800万元。"
+      "body": "凭据二：FA-P001已确认入账投资2400万元，与凭据一合计4800万元。"
     },
     {
       "id": "EVID-SOURCE-APPROVAL-FA001-BUDGET",
-      "title": "模拟材料 FA-P001有效概算",
-      "source_type": "模拟批准概算",
+      "title": "材料 FA-P001有效概算",
+      "source_type": "批准概算",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "演示项目有效概算10000万元；V1版本，作为本次预计完工投资比较依据。"
+      "body": "项目有效概算10000万元；V1版本，作为本次预计完工投资比较依据。"
     },
     {
       "id": "EVID-SOURCE-PAY-APPROVAL-PAY001",
-      "title": "模拟材料 P-PAY001有效付款批准",
-      "source_type": "模拟批准记录",
+      "title": "材料 P-PAY001有效付款批准",
+      "source_type": "批准记录",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
       "body": "同一付款事项有效批准金额800万元，适用SC001合同，本次不追加获批金额。"
     },
     {
       "id": "EVID-SOURCE-BANK-RECEIPT-PAY001",
-      "title": "模拟材料 P-PAY001实际付款回单",
-      "source_type": "模拟银行回单",
+      "title": "材料 P-PAY001实际付款回单",
+      "source_type": "银行回单",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "模拟回单记载P-PAY001实际支付1200万元，支付账户ACC-A；与有效批准800万元比较形成400万元差额。"
+      "body": "回单记载P-PAY001实际支付1200万元，支付账户ACC-A；与有效批准800万元比较形成400万元差额。"
     },
     {
       "id": "EVID-SOURCE-BUSINESS-CERT-SC001",
-      "title": "模拟材料 SC001可支付业务确认",
-      "source_type": "模拟业务确认记录",
+      "title": "材料 SC001可支付业务确认",
+      "source_type": "业务确认记录",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
       "body": "截至本笔付款时，SC001已确认业务可支付上限2000万元；实付1200万元未超过本上限。"
     },
     {
       "id": "EVID-DEMO-RELATION-MASTER",
-      "title": "模拟业务对象关系主表",
-      "source_type": "演示对象关联说明",
+      "title": "业务对象关系主表",
+      "source_type": "业务对象关联说明",
       "data_nature": "simulated",
       "recorded_at": "2026-06-30",
-      "body": "以下关系来自本业需包人工配置的虚构演示对象及其外键：项目归属、项目形成资产、投资对应被投企业、合同对应项目、义务与收付款匹配、产权快照、事件及成本敞口。用于演示有明确关系类型的横向穿透，不是外部系统发现的实际关系。"
+      "body": "关联关系包括项目归属、项目形成资产、投资对应被投企业、合同对应项目、义务与收付款匹配、产权快照、事件及成本敞口。各关联按明确的对象编号及关系类型建立；数据性质与来源范围见数据说明。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-01",
-      "title": "演示阶段依据 FA-P001 储备谋划",
+      "title": "阶段依据 FA-P001 储备谋划",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段储备谋划，业务状态completed；计划2025-06-01至2025-06-30，实际开始2025-06-01，实际完成2025-06-30。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段储备谋划，业务状态completed；计划2025-06-01至2025-06-30，实际开始2025-06-01，实际完成2025-06-30。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-02",
-      "title": "演示阶段依据 FA-P001 可研论证",
+      "title": "阶段依据 FA-P001 可研论证",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段可研论证，业务状态completed；计划2025-07-01至2025-08-31，实际开始2025-07-01，实际完成2025-08-25。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段可研论证，业务状态completed；计划2025-07-01至2025-08-31，实际开始2025-07-01，实际完成2025-08-25。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-03",
-      "title": "演示阶段依据 FA-P001 决策审批",
+      "title": "阶段依据 FA-P001 决策审批",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段决策审批，业务状态completed；计划2025-09-01至2025-09-30，实际开始2025-09-01，实际完成2025-09-30。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段决策审批，业务状态completed；计划2025-09-01至2025-09-30，实际开始2025-09-01，实际完成2025-09-30。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-04",
-      "title": "演示阶段依据 FA-P001 设计概算",
+      "title": "阶段依据 FA-P001 设计概算",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段设计概算，业务状态completed；计划2025-10-01至2025-12-31，实际开始2025-10-01，实际完成2025-12-20。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段设计概算，业务状态completed；计划2025-10-01至2025-12-31，实际开始2025-10-01，实际完成2025-12-20。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-05",
-      "title": "演示阶段依据 FA-P001 采办管理",
+      "title": "阶段依据 FA-P001 采办管理",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段采办管理，业务状态in_progress；计划2025-12-21至2027-03-31，实际开始2025-12-21，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段采办管理，业务状态in_progress；计划2025-12-21至2027-03-31，实际开始2025-12-21，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-06",
-      "title": "演示阶段依据 FA-P001 建设实施",
+      "title": "阶段依据 FA-P001 建设实施",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段建设实施，业务状态in_progress；计划2026-01-01至2027-03-31，实际开始2026-01-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段建设实施，业务状态in_progress；计划2026-01-01至2027-03-31，实际开始2026-01-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-07",
-      "title": "演示阶段依据 FA-P001 验收投用",
+      "title": "阶段依据 FA-P001 验收投用",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段验收投用，业务状态not_started；计划2027-04-01至2027-04-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段验收投用，业务状态not_started；计划2027-04-01至2027-04-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P001-FA-V12-08",
-      "title": "演示阶段依据 FA-P001 运营及后评价",
+      "title": "阶段依据 FA-P001 运营及后评价",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P001，阶段运营及后评价，业务状态not_started；计划2027-05-01至持续开展/未设固定截止，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P001，阶段运营及后评价，业务状态not_started；计划2027-05-01至持续开展/未设固定截止，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-01",
-      "title": "演示阶段依据 FA-P002 储备谋划",
+      "title": "阶段依据 FA-P002 储备谋划",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段储备谋划，业务状态completed；计划2024-01-01至2024-01-31，实际开始2024-01-01，实际完成2024-01-31。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段储备谋划，业务状态completed；计划2024-01-01至2024-01-31，实际开始2024-01-01，实际完成2024-01-31。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-02",
-      "title": "演示阶段依据 FA-P002 可研论证",
+      "title": "阶段依据 FA-P002 可研论证",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段可研论证，业务状态completed；计划2024-02-01至2024-03-31，实际开始2024-02-01，实际完成2024-03-20。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段可研论证，业务状态completed；计划2024-02-01至2024-03-31，实际开始2024-02-01，实际完成2024-03-20。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-03",
-      "title": "演示阶段依据 FA-P002 决策审批",
+      "title": "阶段依据 FA-P002 决策审批",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段决策审批，业务状态completed；计划2024-04-01至2024-04-30，实际开始2024-04-01，实际完成2024-04-30。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段决策审批，业务状态completed；计划2024-04-01至2024-04-30，实际开始2024-04-01，实际完成2024-04-30。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-04",
-      "title": "演示阶段依据 FA-P002 设计概算",
+      "title": "阶段依据 FA-P002 设计概算",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段设计概算，业务状态completed；计划2024-05-01至2024-06-30，实际开始2024-05-01，实际完成2024-06-20。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段设计概算，业务状态completed；计划2024-05-01至2024-06-30，实际开始2024-05-01，实际完成2024-06-20。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-05",
-      "title": "演示阶段依据 FA-P002 采办管理",
+      "title": "阶段依据 FA-P002 采办管理",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段采办管理，业务状态completed；计划2024-06-21至2025-03-31，实际开始2024-06-21，实际完成2025-03-20。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段采办管理，业务状态completed；计划2024-06-21至2025-03-31，实际开始2024-06-21，实际完成2025-03-20。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-06",
-      "title": "演示阶段依据 FA-P002 建设实施",
+      "title": "阶段依据 FA-P002 建设实施",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段建设实施，业务状态completed；计划2024-07-01至2025-03-31，实际开始2024-07-01，实际完成2025-03-25。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段建设实施，业务状态completed；计划2024-07-01至2025-03-31，实际开始2024-07-01，实际完成2025-03-25。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-07",
-      "title": "演示阶段依据 FA-P002 验收投用",
+      "title": "阶段依据 FA-P002 验收投用",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段验收投用，业务状态completed；计划2025-03-26至2025-04-30，实际开始2025-03-26，实际完成2025-04-15。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段验收投用，业务状态completed；计划2025-03-26至2025-04-30，实际开始2025-03-26，实际完成2025-04-15。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P002-FA-V12-08",
-      "title": "演示阶段依据 FA-P002 运营及后评价",
+      "title": "阶段依据 FA-P002 运营及后评价",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P002，阶段运营及后评价，业务状态in_progress；计划2025-04-01至持续开展/未设固定截止，实际开始2025-04-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P002，阶段运营及后评价，业务状态in_progress；计划2025-04-01至持续开展/未设固定截止，实际开始2025-04-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-01",
-      "title": "演示阶段依据 FA-P003 储备谋划",
+      "title": "阶段依据 FA-P003 储备谋划",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段储备谋划，业务状态completed；计划2025-07-01至2025-07-31，实际开始2025-07-01，实际完成2025-07-31。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段储备谋划，业务状态completed；计划2025-07-01至2025-07-31，实际开始2025-07-01，实际完成2025-07-31。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-02",
-      "title": "演示阶段依据 FA-P003 可研论证",
+      "title": "阶段依据 FA-P003 可研论证",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段可研论证，业务状态completed；计划2025-08-01至2025-08-31，实际开始2025-08-01，实际完成2025-08-25。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段可研论证，业务状态completed；计划2025-08-01至2025-08-31，实际开始2025-08-01，实际完成2025-08-25。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-03",
-      "title": "演示阶段依据 FA-P003 决策审批",
+      "title": "阶段依据 FA-P003 决策审批",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段决策审批，业务状态completed；计划2025-09-01至2025-09-30，实际开始2025-09-01，实际完成2025-09-30。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段决策审批，业务状态completed；计划2025-09-01至2025-09-30，实际开始2025-09-01，实际完成2025-09-30。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-04",
-      "title": "演示阶段依据 FA-P003 设计概算",
+      "title": "阶段依据 FA-P003 设计概算",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段设计概算，业务状态completed；计划2025-10-01至2025-12-31，实际开始2025-10-01，实际完成2025-12-20。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段设计概算，业务状态completed；计划2025-10-01至2025-12-31，实际开始2025-10-01，实际完成2025-12-20。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-05",
-      "title": "演示阶段依据 FA-P003 采办管理",
+      "title": "阶段依据 FA-P003 采办管理",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段采办管理，业务状态in_progress；计划2025-12-21至2026-12-31，实际开始2025-12-21，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段采办管理，业务状态in_progress；计划2025-12-21至2026-12-31，实际开始2025-12-21，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-06",
-      "title": "演示阶段依据 FA-P003 建设实施",
+      "title": "阶段依据 FA-P003 建设实施",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段建设实施，业务状态in_progress；计划2026-01-01至2026-12-31，实际开始2026-01-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段建设实施，业务状态in_progress；计划2026-01-01至2026-12-31，实际开始2026-01-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-07",
-      "title": "演示阶段依据 FA-P003 验收投用",
+      "title": "阶段依据 FA-P003 验收投用",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段验收投用，业务状态not_started；计划2027-01-01至2027-01-31，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段验收投用，业务状态not_started；计划2027-01-01至2027-01-31，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-FA-P003-FA-V12-08",
-      "title": "演示阶段依据 FA-P003 运营及后评价",
+      "title": "阶段依据 FA-P003 运营及后评价",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象FA-P003，阶段运营及后评价，业务状态not_started；计划2027-02-01至持续开展/未设固定截止，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象FA-P003，阶段运营及后评价，业务状态not_started；计划2027-02-01至持续开展/未设固定截止，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-01",
-      "title": "演示阶段依据 EQ-P001 尽职调查",
+      "title": "阶段依据 EQ-P001 尽职调查",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段尽职调查，业务状态completed；计划2025-01-01至2025-02-28，实际开始2025-01-01，实际完成2025-02-20。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段尽职调查，业务状态completed；计划2025-01-01至2025-02-28，实际开始2025-01-01，实际完成2025-02-20。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-02",
-      "title": "演示阶段依据 EQ-P001 估值论证",
+      "title": "阶段依据 EQ-P001 估值论证",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段估值论证，业务状态completed；计划2025-03-01至2025-04-30，实际开始2025-03-01，实际完成2025-04-25。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段估值论证，业务状态completed；计划2025-03-01至2025-04-30，实际开始2025-03-01，实际完成2025-04-25。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-03",
-      "title": "演示阶段依据 EQ-P001 决策审批",
+      "title": "阶段依据 EQ-P001 决策审批",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段决策审批，业务状态completed；计划2025-05-01至2025-06-30，实际开始2025-05-01，实际完成2025-06-25。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段决策审批，业务状态completed；计划2025-05-01至2025-06-30，实际开始2025-05-01，实际完成2025-06-25。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-04",
-      "title": "演示阶段依据 EQ-P001 协议交割",
+      "title": "阶段依据 EQ-P001 协议交割",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段协议交割，业务状态completed；计划2025-07-01至2026-01-01，实际开始2025-07-01，实际完成2026-01-01。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段协议交割，业务状态completed；计划2025-07-01至2026-01-01，实际开始2025-07-01，实际完成2026-01-01。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-05",
-      "title": "演示阶段依据 EQ-P001 出资履约",
+      "title": "阶段依据 EQ-P001 出资履约",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段出资履约，业务状态in_progress；计划2025-07-01至2026-06-20，实际开始2025-07-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段出资履约，业务状态in_progress；计划2025-07-01至2026-06-20，实际开始2025-07-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-06",
-      "title": "演示阶段依据 EQ-P001 投后治理",
+      "title": "阶段依据 EQ-P001 投后治理",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段投后治理，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段投后治理，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-07",
-      "title": "演示阶段依据 EQ-P001 收益价值",
+      "title": "阶段依据 EQ-P001 收益价值",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段收益价值，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段收益价值，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P001-EQ-V12-08",
-      "title": "演示阶段依据 EQ-P001 评价与退出",
+      "title": "阶段依据 EQ-P001 评价与退出",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P001，阶段评价与退出，业务状态not_started；计划2027-10-01至2028-09-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P001，阶段评价与退出，业务状态not_started；计划2027-10-01至2028-09-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-01",
-      "title": "演示阶段依据 EQ-P002 尽职调查",
+      "title": "阶段依据 EQ-P002 尽职调查",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段尽职调查，业务状态completed；计划2025-01-01至2025-02-28，实际开始2025-01-01，实际完成2025-02-20。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段尽职调查，业务状态completed；计划2025-01-01至2025-02-28，实际开始2025-01-01，实际完成2025-02-20。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-02",
-      "title": "演示阶段依据 EQ-P002 估值论证",
+      "title": "阶段依据 EQ-P002 估值论证",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段估值论证，业务状态completed；计划2025-03-01至2025-04-30，实际开始2025-03-01，实际完成2025-04-25。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段估值论证，业务状态completed；计划2025-03-01至2025-04-30，实际开始2025-03-01，实际完成2025-04-25。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-03",
-      "title": "演示阶段依据 EQ-P002 决策审批",
+      "title": "阶段依据 EQ-P002 决策审批",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段决策审批，业务状态completed；计划2025-05-01至2025-06-30，实际开始2025-05-01，实际完成2025-06-25。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段决策审批，业务状态completed；计划2025-05-01至2025-06-30，实际开始2025-05-01，实际完成2025-06-25。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-04",
-      "title": "演示阶段依据 EQ-P002 协议交割",
+      "title": "阶段依据 EQ-P002 协议交割",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段协议交割，业务状态completed；计划2025-07-01至2026-01-01，实际开始2025-07-01，实际完成2026-01-01。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段协议交割，业务状态completed；计划2025-07-01至2026-01-01，实际开始2025-07-01，实际完成2026-01-01。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-05",
-      "title": "演示阶段依据 EQ-P002 出资履约",
+      "title": "阶段依据 EQ-P002 出资履约",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段出资履约，业务状态completed；计划2025-07-01至2026-06-10，实际开始2025-07-01，实际完成2026-06-10。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段出资履约，业务状态completed；计划2025-07-01至2026-06-10，实际开始2025-07-01，实际完成2026-06-10。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-06",
-      "title": "演示阶段依据 EQ-P002 投后治理",
+      "title": "阶段依据 EQ-P002 投后治理",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段投后治理，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段投后治理，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-07",
-      "title": "演示阶段依据 EQ-P002 收益价值",
+      "title": "阶段依据 EQ-P002 收益价值",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段收益价值，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段收益价值，业务状态in_progress；计划2025-10-01至持续开展/未设固定截止，实际开始2025-10-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-EQ-P002-EQ-V12-08",
-      "title": "演示阶段依据 EQ-P002 评价与退出",
+      "title": "阶段依据 EQ-P002 评价与退出",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象EQ-P002，阶段评价与退出，业务状态not_started；计划2027-10-01至2028-09-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象EQ-P002，阶段评价与退出，业务状态not_started；计划2027-10-01至2028-09-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-01",
-      "title": "演示阶段依据 ENG-P001 承揽评审",
+      "title": "阶段依据 ENG-P001 承揽评审",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段承揽评审，业务状态completed；计划2025-10-01至2025-10-31，实际开始2025-10-01，实际完成2025-10-31。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段承揽评审，业务状态completed；计划2025-10-01至2025-10-31，实际开始2025-10-01，实际完成2025-10-31。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-02",
-      "title": "演示阶段依据 ENG-P001 合同策划",
+      "title": "阶段依据 ENG-P001 合同策划",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段合同策划，业务状态completed；计划2025-11-01至2025-12-31，实际开始2025-11-01，实际完成2025-12-10。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段合同策划，业务状态completed；计划2025-11-01至2025-12-31，实际开始2025-11-01，实际完成2025-12-10。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-03",
-      "title": "演示阶段依据 ENG-P001 设计管理",
+      "title": "阶段依据 ENG-P001 设计管理",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段设计管理，业务状态in_progress；计划2026-01-10至2026-07-31，实际开始2026-01-10，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段设计管理，业务状态in_progress；计划2026-01-10至2026-07-31，实际开始2026-01-10，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-04",
-      "title": "演示阶段依据 ENG-P001 采购分包",
+      "title": "阶段依据 ENG-P001 采购分包",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段采购分包，业务状态in_progress；计划2026-02-01至2026-09-30，实际开始2026-02-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段采购分包，业务状态in_progress；计划2026-02-01至2026-09-30，实际开始2026-02-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-05",
-      "title": "演示阶段依据 ENG-P001 建造实施",
+      "title": "阶段依据 ENG-P001 建造实施",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段建造实施，业务状态in_progress；计划2026-04-01至2026-12-31，实际开始2026-04-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段建造实施，业务状态in_progress；计划2026-04-01至2026-12-31，实际开始2026-04-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-06",
-      "title": "演示阶段依据 ENG-P001 运输安装",
+      "title": "阶段依据 ENG-P001 运输安装",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段运输安装，业务状态preparing；计划2026-06-15至2027-03-15，实际开始2026-06-15，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段运输安装，业务状态preparing；计划2026-06-15至2027-03-15，实际开始2026-06-15，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-07",
-      "title": "演示阶段依据 ENG-P001 交付验收",
+      "title": "阶段依据 ENG-P001 交付验收",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段交付验收，业务状态not_started；计划2027-03-16至2027-04-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段交付验收，业务状态not_started；计划2027-03-16至2027-04-30，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-08",
-      "title": "演示阶段依据 ENG-P001 结算收款",
+      "title": "阶段依据 ENG-P001 结算收款",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段结算收款，业务状态in_progress；计划2026-06-01至2027-09-30，实际开始2026-06-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段结算收款，业务状态in_progress；计划2026-06-01至2027-09-30，实际开始2026-06-01，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-ENG-P001-ENG-V12-09",
-      "title": "演示阶段依据 ENG-P001 质保收尾",
+      "title": "阶段依据 ENG-P001 质保收尾",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象ENG-P001，阶段质保收尾，业务状态not_started；计划未设固定起日至持续开展/未设固定截止，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象ENG-P001，阶段质保收尾，业务状态not_started；计划未设固定起日至持续开展/未设固定截止，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-PTY-M001-PR-REG-V12-01",
-      "title": "演示阶段依据 PTY-M001 事项识别",
+      "title": "阶段依据 PTY-M001 事项识别",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象PTY-M001，阶段事项识别，业务状态completed；计划2026-05-01至2026-05-05，实际开始2026-05-01，实际完成2026-05-05。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象PTY-M001，阶段事项识别，业务状态completed；计划2026-05-01至2026-05-05，实际开始2026-05-01，实际完成2026-05-05。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-PTY-M001-PR-REG-V12-02",
-      "title": "演示阶段依据 PTY-M001 资料核验",
+      "title": "阶段依据 PTY-M001 资料核验",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象PTY-M001，阶段资料核验，业务状态completed；计划2026-05-06至2026-05-10，实际开始2026-05-06，实际完成2026-05-10。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象PTY-M001，阶段资料核验，业务状态completed；计划2026-05-06至2026-05-10，实际开始2026-05-06，实际完成2026-05-10。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-PTY-M001-PR-REG-V12-03",
-      "title": "演示阶段依据 PTY-M001 申报办理",
+      "title": "阶段依据 PTY-M001 申报办理",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象PTY-M001，阶段申报办理，业务状态completed；计划2026-05-11至2026-06-15，实际开始2026-05-11，实际完成2026-06-15。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象PTY-M001，阶段申报办理，业务状态completed；计划2026-05-11至2026-06-15，实际开始2026-05-11，实际完成2026-06-15。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-PTY-M001-PR-REG-V12-04",
-      "title": "演示阶段依据 PTY-M001 结果核对",
+      "title": "阶段依据 PTY-M001 结果核对",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象PTY-M001，阶段结果核对，业务状态in_progress；计划2026-06-16至2026-07-10，实际开始2026-06-16，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象PTY-M001，阶段结果核对，业务状态in_progress；计划2026-06-16至2026-07-10，实际开始2026-06-16，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     },
     {
       "id": "EVID-STAGE-V12-PTY-M001-PR-REG-V12-05",
-      "title": "演示阶段依据 PTY-M001 归档跟踪",
+      "title": "阶段依据 PTY-M001 归档跟踪",
       "data_nature": "simulated",
-      "source_type": "模拟批准计划及业务状态记录",
+      "source_type": "批准计划及业务状态记录",
       "recorded_at": "2026-06-30",
-      "body": "对象PTY-M001，阶段归档跟踪，业务状态not_started；计划2026-07-11至2026-07-15，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项；仅供演示。"
+      "body": "对象PTY-M001，阶段归档跟踪，业务状态not_started；计划2026-07-11至2026-07-15，实际开始尚未开始，实际完成尚未完成/持续开展。业务阶段完成不自动关闭监管事项。"
     }
   ],
   "price_series": [
@@ -1765,16 +1783,16 @@
       "unit": "USD/桶",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     },
     {
       "id": "CURRENT-steel",
-      "name": "演示规格钢材价格",
+      "name": "指定规格钢材参考价格",
       "unit": "CNY/吨",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     },
     {
@@ -1783,7 +1801,7 @@
       "unit": "USD/吨",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     },
     {
@@ -1792,7 +1810,7 @@
       "unit": "万元CNY/航次",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     },
     {
@@ -1801,16 +1819,16 @@
       "unit": "USD/桶",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     },
     {
       "id": "HISTORY-steel",
-      "name": "演示规格钢材价格",
+      "name": "指定规格钢材参考价格",
       "unit": "CNY/吨",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     },
     {
@@ -1819,7 +1837,7 @@
       "unit": "USD/吨",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     },
     {
@@ -1828,7 +1846,7 @@
       "unit": "万元CNY/航次",
       "frequency": "business_daily",
       "data_nature": "simulated",
-      "source_name": "演示生成序列",
+      "source_name": "市场参考序列",
       "annualization_factor": 252
     }
   ],
@@ -8151,7 +8169,7 @@
         "ENG-V12-06",
         "ENG-V12-01"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "id": "INT-S01",
@@ -8180,7 +8198,7 @@
     {
       "id": "ENG-S02",
       "name": "关键路径及交付节点偏差",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-05",
       "associated_phase_ids": [
         "ENG-V12-03",
@@ -8192,7 +8210,7 @@
     {
       "id": "ENG-S03",
       "name": "工程变更执行异常",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-03",
       "associated_phase_ids": [
         "ENG-V12-02",
@@ -8204,7 +8222,7 @@
     {
       "id": "ENG-S04",
       "name": "工程付款条件异常",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-04",
       "associated_phase_ids": [
         "ENG-V12-05",
@@ -8215,7 +8233,7 @@
     {
       "id": "ENG-S05",
       "name": "关键采购及分包交付异常",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-04",
       "associated_phase_ids": [
         "ENG-V12-05",
@@ -8225,7 +8243,7 @@
     {
       "id": "ENG-S06",
       "name": "工程结算及到期收款异常",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-08",
       "associated_phase_ids": [
         "ENG-V12-02",
@@ -8236,7 +8254,7 @@
     {
       "id": "ENG-S07",
       "name": "外部事件及未锁定成本敞口",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-06",
       "associated_phase_ids": [
         "ENG-V12-02",
@@ -8248,7 +8266,7 @@
     {
       "id": "ENG-S08",
       "name": "质量HSE重大事项响应及整改",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-05",
       "associated_phase_ids": [
         "ENG-V12-03",
@@ -8261,7 +8279,7 @@
     {
       "id": "ENG-S09",
       "name": "资产余料及保函收尾异常",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "ENG-V12-09",
       "associated_phase_ids": [
         "ENG-V12-07",
@@ -8271,7 +8289,7 @@
     {
       "id": "PTY-S02",
       "name": "适用产权登记办理及时性",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "PR-REG-V12-03",
       "associated_phase_ids": [
         "PR-REG-V12-04"
@@ -8280,7 +8298,7 @@
     {
       "id": "PTY-S03",
       "name": "评估及核准备案依据核验",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "PR-TRANSFER-V12-03",
       "associated_phase_ids": [
         "PR-TRANSFER-V12-04",
@@ -8290,7 +8308,7 @@
     {
       "id": "PTY-S04",
       "name": "产权交易程序符合性",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "PR-TRANSFER-V12-04",
       "associated_phase_ids": [
         "PR-TRANSFER-V12-02",
@@ -8300,7 +8318,7 @@
     {
       "id": "PTY-S05",
       "name": "产权实施与批准方案一致性",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "PR-REG-V12-04",
       "associated_phase_ids": [
         "PR-REG-V12-02"
@@ -8309,7 +8327,7 @@
     {
       "id": "PTY-S06",
       "name": "到期价款履行及交割完整性",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "PR-TRANSFER-V12-06",
       "associated_phase_ids": [
         "PR-TRANSFER-V12-07"
@@ -8318,7 +8336,7 @@
     {
       "id": "PTY-S07",
       "name": "控制及权益变化管理响应",
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "primary_phase_id": "PR-REG-V12-04",
       "associated_phase_ids": [
         "PR-REG-V12-05"
@@ -9255,7 +9273,7 @@
         "EVID-STAGE-V12-EQ-P001-EQ-V12-04"
       ],
       "data_nature": "simulated",
-      "note": "以工商登记及交割安排完成为演示业务事实；产权台账差异R08仍待核查。出资按另列到期义务持续监测。"
+      "note": "以工商登记及交割安排完成为当前业务记录；产权台账差异R08仍待核查。出资按另列到期义务持续监测。"
     },
     {
       "id": "STAGE-V12-EQ-P001-EQ-V12-05",
@@ -9406,7 +9424,7 @@
         "EVID-STAGE-V12-EQ-P002-EQ-V12-04"
       ],
       "data_nature": "simulated",
-      "note": "以工商登记及交割安排完成为演示业务事实；产权台账差异R08仍待核查。出资按另列到期义务持续监测。"
+      "note": "以工商登记及交割安排完成为当前业务记录；产权台账差异R08仍待核查。出资按另列到期义务持续监测。"
     },
     {
       "id": "STAGE-V12-EQ-P002-EQ-V12-05",
@@ -9733,7 +9751,7 @@
   "property_matters": [
     {
       "id": "PTY-M001",
-      "name": "演示被投企业甲产权结果核对",
+      "name": "被投企业A产权结果核对",
       "matter_type": "产权登记",
       "owner_org_id": "ORG-A1",
       "investor_id": "LE-A",
@@ -9749,7 +9767,7 @@
       "risk_ids": [
         "R08"
       ],
-      "note": "结果核对差异；示例不认定存在实际未经批准的持股变更",
+      "note": "产权结果核对存在差异；需核查同步或录入原因，不据此认定未经批准的持股变更",
       "data_nature": "simulated"
     }
   ],
@@ -9976,32 +9994,32 @@
     "FA-R20-01": {
       "attention_eac_ratio_gte": 0.95,
       "red_eac_ratio_gt": 1.0,
-      "source": "底稿固定资产第20行"
+      "source": "预计完工投资偏差监测规则"
     },
     "FA-R21-01": {
       "progress_lag_pp_gte": 10,
       "critical_delay_days_gte": 60,
-      "source": "底稿参数；60天边界待确认"
+      "source": "候选参数；60天边界待确认"
     },
     "FA-R29-01": {
       "period_type": "quarter",
       "consecutive_completed_periods_gte": 2,
       "demo_asset_threshold_pct": 50,
       "manual_confirmation_required": true,
-      "note": "50%为演示阈值；月度走势不替代季度观察。R02等级按已确认、持续下降且整改逾期的演示分级。"
+      "note": "50%为样例配置阈值；月度走势不替代季度观察。R02等级按已确认、持续下降且整改逾期的样例配置分级。"
     },
     "FA-R34-01": {
       "annual_forecast_deviation_lt": -0.05,
       "annual_forecast_deviation_gt": 0.05,
-      "source": "底稿固定资产第34行"
+      "source": "年度投资计划偏差监测规则"
     },
     "EQ-R11-01": {
       "cash_return_shortfall_attention_gt": 0.2,
-      "source": "20%为演示配置，底稿未指定统一数值"
+      "source": "20%为样例配置参数，统一阈值待确认"
     },
     "ENG-R01": {
       "red_margin_lag_pp_gte": 3,
-      "source": "演示配置"
+      "source": "样例配置参数"
     },
     "CASH-R01": {
       "cash_excess_approval_gt": 0,
@@ -10010,7 +10028,7 @@
     "PTY-R01": {
       "require_same_effective_date": true,
       "comparison_tolerance_pp": 0.01,
-      "source": "演示差异容差，不是法定标准"
+      "source": "样例差异容差，不是法定标准"
     },
     "default_missing_data_behavior": "未评估并展示缺口，不自动生成正常结果",
     "default_seed_evaluation_scope": "首次展示八件未关闭的完整示例；其余数据前提不全的规则为未评估"
@@ -10021,47 +10039,47 @@
       "risk_id": "R01",
       "action": "create",
       "date": "2026-06-25",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-25",
       "sequence": 1,
       "recorded_at": "2026-06-25T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R02-01",
       "risk_id": "R02",
       "action": "create",
       "date": "2026-05-31",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-05-31",
       "sequence": 2,
       "recorded_at": "2026-05-31T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R02-02",
       "risk_id": "R02",
       "action": "claim",
       "date": "2026-06-01",
-      "actor": "演示经办人员",
+      "actor": "业务经办人员",
       "from_status": "pending_review",
       "to_status": "investigating",
-      "note": "认领并核对模拟依据。",
+      "note": "认领并核对依据。",
       "effective_date": "2026-06-01",
       "sequence": 3,
       "recorded_at": "2026-06-01T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R02-03",
       "risk_id": "R02",
       "action": "confirm_rectification",
       "date": "2026-06-01",
-      "actor": "演示领域管理人员",
+      "actor": "领域监管人员",
       "from_status": "investigating",
       "to_status": "rectifying",
       "note": "核查需求和排产，提出跨单位调剂或利用改善安排，按季度跟踪。",
@@ -10071,54 +10089,54 @@
       "effective_date": "2026-06-01",
       "sequence": 4,
       "recorded_at": "2026-06-01T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R03-01",
       "risk_id": "R03",
       "action": "create",
       "date": "2026-06-21",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-21",
       "sequence": 5,
       "recorded_at": "2026-06-21T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R04-01",
       "risk_id": "R04",
       "action": "create",
       "date": "2026-06-11",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-11",
       "sequence": 6,
       "recorded_at": "2026-06-11T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R04-02",
       "risk_id": "R04",
       "action": "claim",
       "date": "2026-06-16",
-      "actor": "演示经办人员",
+      "actor": "业务经办人员",
       "from_status": "pending_review",
       "to_status": "investigating",
-      "note": "认领并核对模拟依据。",
+      "note": "认领并核对依据。",
       "effective_date": "2026-06-16",
       "sequence": 7,
       "recorded_at": "2026-06-16T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R04-03",
       "risk_id": "R04",
       "action": "confirm_rectification",
       "date": "2026-06-16",
-      "actor": "演示领域管理人员",
+      "actor": "领域监管人员",
       "from_status": "investigating",
       "to_status": "rectifying",
       "note": "核对分红决议与到账，落实剩余120万元的回收安排和证据。",
@@ -10128,41 +10146,41 @@
       "effective_date": "2026-06-16",
       "sequence": 8,
       "recorded_at": "2026-06-16T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R05-01",
       "risk_id": "R05",
       "action": "create",
       "date": "2026-06-05",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-05",
       "sequence": 9,
       "recorded_at": "2026-06-05T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R05-02",
       "risk_id": "R05",
       "action": "claim",
       "date": "2026-06-06",
-      "actor": "演示经办人员",
+      "actor": "业务经办人员",
       "from_status": "pending_review",
       "to_status": "investigating",
-      "note": "认领并核对模拟依据。",
+      "note": "认领并核对依据。",
       "effective_date": "2026-06-06",
       "sequence": 10,
       "recorded_at": "2026-06-06T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R05-03",
       "risk_id": "R05",
       "action": "confirm_rectification",
       "date": "2026-06-06",
-      "actor": "演示领域管理人员",
+      "actor": "领域监管人员",
       "from_status": "investigating",
       "to_status": "rectifying",
       "note": "核对成本预测、采购及运输敞口，形成获批的成本改善措施。",
@@ -10172,80 +10190,80 @@
       "effective_date": "2026-06-06",
       "sequence": 11,
       "recorded_at": "2026-06-06T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R06-01",
       "risk_id": "R06",
       "action": "create",
       "date": "2026-06-25",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-25",
       "sequence": 12,
       "recorded_at": "2026-06-25T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R07-01",
       "risk_id": "R07",
       "action": "create",
       "date": "2026-06-13",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-13",
       "sequence": 13,
       "recorded_at": "2026-06-13T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R08-01",
       "risk_id": "R08",
       "action": "create",
       "date": "2026-06-30",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-30",
       "sequence": 14,
       "recorded_at": "2026-06-30T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R09-01",
       "risk_id": "R09",
       "action": "create",
       "date": "2026-06-01",
-      "actor": "演示监测任务",
+      "actor": "系统监测任务",
       "to_status": "pending_review",
-      "note": "依据模拟业务记录形成待核查事项。",
+      "note": "依据业务记录形成待核查事项。",
       "effective_date": "2026-06-01",
       "sequence": 15,
       "recorded_at": "2026-06-01T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R09-02",
       "risk_id": "R09",
       "action": "claim",
       "date": "2026-06-02",
-      "actor": "演示经办人员",
+      "actor": "业务经办人员",
       "from_status": "pending_review",
       "to_status": "investigating",
       "note": "核对历史合同和付款依据。",
       "effective_date": "2026-06-02",
       "sequence": 16,
       "recorded_at": "2026-06-02T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     },
     {
       "id": "ACT-R09-03",
       "risk_id": "R09",
       "action": "exclude",
       "date": "2026-06-05",
-      "actor": "演示领域管理人员",
+      "actor": "领域监管人员",
       "from_status": "investigating",
       "to_status": "excluded",
       "note": "两笔500万元付款对应HSC001和HSC002两个不同合同义务，核查后排除重复付款线索。",
@@ -10255,7 +10273,7 @@
       "effective_date": "2026-06-05",
       "sequence": 17,
       "recorded_at": "2026-06-05T00:00:00Z",
-      "recorded_at_nature": "模拟历史动作记录时间"
+      "recorded_at_nature": "历史动作记录时间"
     }
   ],
   "navigation": [
@@ -10273,6 +10291,7 @@
       "order": 1,
       "tabs": [
         "监管总览",
+        "流程监管",
         "资产运营监管",
         "项目穿透",
         "监管事项"
@@ -10289,6 +10308,7 @@
       "order": 2,
       "tabs": [
         "监管总览",
+        "流程监管",
         "投后监管",
         "投资穿透",
         "监管事项"
@@ -10334,6 +10354,7 @@
       "tabs": [
         "监管总览",
         "产权关系穿透",
+        "事项流程监管",
         "一致性核查",
         "监管事项"
       ],
@@ -10350,6 +10371,7 @@
       "order": 6,
       "tabs": [
         "监管总览",
+        "履约流程监管",
         "成本与回款穿透",
         "项目穿透",
         "监管事项"
@@ -10402,7 +10424,12 @@
         "ENG": "工程项目",
         "CASH": "账户或业务交易",
         "INTL": "境外项目或敞口"
-      }
+      },
+      "canonical_page_id": "P71",
+      "route_alias": "/indicators/:indicatorId",
+      "canonical_route": "/indicators/:indicatorId",
+      "legacy_id": "P70",
+      "reuse_contract": "P70与P71解析为同一个指标抽屉；旧deep_link重定向至规范路由，不新建第二份指标状态。"
     }
   ],
   "source_records": [
@@ -10415,7 +10442,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "SAP/WBS拟来源（模拟）",
+      "source_system_label": "SAP/WBS",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-SAP-FA001-ACT"
@@ -10434,7 +10461,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-ACC-FA001-01"
@@ -10449,7 +10476,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-REMAIN-FA001-01"
@@ -10464,7 +10491,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-CHANGE-FA001-01"
@@ -10479,7 +10506,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-UNSIGNED-FA001-01"
@@ -10494,7 +10521,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "SAP/WBS拟来源（模拟）",
+      "source_system_label": "SAP/WBS",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-SAP-FA003-ACT"
@@ -10509,7 +10536,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-REMAIN-FA003-01"
@@ -10524,7 +10551,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "SAP/WBS拟来源（模拟）",
+      "source_system_label": "SAP/WBS",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-SAP-ENG001-ACT"
@@ -10539,7 +10566,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-ACC-ENG001-01"
@@ -10554,7 +10581,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-REMAIN-ENG001-01"
@@ -10569,7 +10596,7 @@
       "amount_unit": "万元",
       "business_date": "2026-06-30",
       "updated_at": "2026-06-30",
-      "source_system_label": "项目及合同资料拟来源（模拟）",
+      "source_system_label": "项目及合同资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-UNSIGNED-ENG001-01"
@@ -10577,14 +10604,14 @@
     },
     {
       "id": "MOCK-FA001-V01",
-      "name": "FA-P001模拟入账凭据一",
-      "record_type": "模拟会计凭据",
+      "name": "FA-P001入账凭据一",
+      "record_type": "会计凭据",
       "amount": 2400,
       "currency": "CNY",
       "amount_unit": "万元",
       "business_date": "2026-05-31",
       "updated_at": "2026-06-30",
-      "source_system_label": "SAP/WBS拟来源（模拟）",
+      "source_system_label": "SAP/WBS",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-MOCK-FA001-V01"
@@ -10592,14 +10619,14 @@
     },
     {
       "id": "MOCK-FA001-V02",
-      "name": "FA-P001模拟入账凭据二",
-      "record_type": "模拟会计凭据",
+      "name": "FA-P001入账凭据二",
+      "record_type": "会计凭据",
       "amount": 2400,
       "currency": "CNY",
       "amount_unit": "万元",
       "business_date": "2026-06-25",
       "updated_at": "2026-06-30",
-      "source_system_label": "SAP/WBS拟来源（模拟）",
+      "source_system_label": "SAP/WBS",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-MOCK-FA001-V02"
@@ -10608,13 +10635,13 @@
     {
       "id": "APPROVAL-FA001-BUDGET",
       "name": "FA-P001有效概算",
-      "record_type": "模拟批准概算",
+      "record_type": "批准概算",
       "amount": 10000,
       "currency": "CNY",
       "amount_unit": "万元",
       "business_date": "2025-12-20",
       "updated_at": "2026-06-30",
-      "source_system_label": "投资计划拟来源（模拟）",
+      "source_system_label": "投资计划资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-APPROVAL-FA001-BUDGET"
@@ -10623,13 +10650,13 @@
     {
       "id": "PAY-APPROVAL-PAY001",
       "name": "P-PAY001有效付款批准",
-      "record_type": "模拟批准记录",
+      "record_type": "批准记录",
       "amount": 800,
       "currency": "CNY",
       "amount_unit": "万元",
       "business_date": "2026-06-11",
       "updated_at": "2026-06-30",
-      "source_system_label": "财务云拟来源（模拟）",
+      "source_system_label": "财务云",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-PAY-APPROVAL-PAY001"
@@ -10638,13 +10665,13 @@
     {
       "id": "BANK-RECEIPT-PAY001",
       "name": "P-PAY001实际付款回单",
-      "record_type": "模拟银行回单",
+      "record_type": "银行回单",
       "amount": 1200,
       "currency": "CNY",
       "amount_unit": "万元",
       "business_date": "2026-06-12",
       "updated_at": "2026-06-30",
-      "source_system_label": "银行付款资料拟来源（模拟）",
+      "source_system_label": "银行付款资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-BANK-RECEIPT-PAY001"
@@ -10653,13 +10680,13 @@
     {
       "id": "BUSINESS-CERT-SC001",
       "name": "SC001可支付业务确认",
-      "record_type": "模拟业务确认记录",
+      "record_type": "业务确认记录",
       "amount": 2000,
       "currency": "CNY",
       "amount_unit": "万元",
       "business_date": "2026-06-10",
       "updated_at": "2026-06-30",
-      "source_system_label": "工程履约资料拟来源（模拟）",
+      "source_system_label": "工程履约资料",
       "data_nature": "simulated",
       "evidence_ids": [
         "EVID-SOURCE-BUSINESS-CERT-SC001"
@@ -10706,7 +10733,7 @@
         "UNSIGNED-FA001-01",
         "APPROVAL-FA001-BUDGET"
       ],
-      "detail_note": "已入账4800可以展开两个2400的模拟凭据；其他预计成本查看合同或预测说明。"
+      "detail_note": "已入账4800可以展开两个2400的凭据；其他预计成本查看合同或预测说明。"
     },
     {
       "id": "TRACE-P-PAY001",
@@ -11579,7 +11606,7 @@
       "id": "BL-059",
       "from_id": "ENG-P001",
       "to_id": "EVT-SIM-01",
-      "relation_type": "模拟运输安排受到事件影响",
+      "relation_type": "运输安排受到事件影响",
       "domains": [
         "ENG",
         "INTL"
@@ -11798,7 +11825,7 @@
     }
   ],
   "supplemental_display_notes": {
-    "source_records": "模拟来源记录仅服务数据追溯，不计入原业务金额第二次汇总。",
+    "source_records": "来源记录仅服务数据追溯，不计入原业务金额第二次汇总。",
     "business_links": "关系表是已有主对象外键的展示索引，不复制业务对象、不增加风险事项。",
     "vendor_reference": "公开产品借鉴与页面设计_V1.3.md",
     "visual_theme": "统一采用主文3.2及设计参考第9章的蓝色企业监管工作台主题；本版不改变业务示例或流程。"
@@ -11815,7 +11842,7 @@
         "ENG-V12-06",
         "ENG-V12-01"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S02",
@@ -11828,7 +11855,7 @@
         "ENG-V12-06",
         "ENG-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S03",
@@ -11841,7 +11868,7 @@
         "ENG-V12-05",
         "ENG-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S04",
@@ -11853,7 +11880,7 @@
         "ENG-V12-06",
         "ENG-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S05",
@@ -11864,7 +11891,7 @@
         "ENG-V12-05",
         "ENG-V12-06"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S06",
@@ -11876,7 +11903,7 @@
         "ENG-V12-07",
         "ENG-V12-09"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S07",
@@ -11889,7 +11916,7 @@
         "ENG-V12-05",
         "ENG-V12-01"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S08",
@@ -11903,7 +11930,7 @@
         "ENG-V12-07",
         "ENG-V12-09"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "ENG-S09",
@@ -11914,7 +11941,7 @@
         "ENG-V12-07",
         "ENG-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景"
+      "source": "补充监管场景"
     },
     {
       "scenario_id": "PTY-S01",
@@ -11925,7 +11952,7 @@
       "associated_phase_ids": [
         "PR-REG-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -11937,7 +11964,7 @@
       "associated_phase_ids": [
         "PR-TRANSFER-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -11949,7 +11976,7 @@
       "associated_phase_ids": [
         "PR-CAPITAL-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -11961,7 +11988,7 @@
       "associated_phase_ids": [
         "PR-FREE-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -11973,7 +12000,7 @@
       "associated_phase_ids": [
         "PR-CLOSE-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -11985,7 +12012,7 @@
       "associated_phase_ids": [
         "PR-REG-V12-04"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -11997,7 +12024,7 @@
       "associated_phase_ids": [
         "PR-TRANSFER-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12009,7 +12036,7 @@
       "associated_phase_ids": [
         "PR-CAPITAL-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12021,7 +12048,7 @@
       "associated_phase_ids": [
         "PR-FREE-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12033,7 +12060,7 @@
       "associated_phase_ids": [
         "PR-CLOSE-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12046,7 +12073,7 @@
         "PR-TRANSFER-V12-04",
         "PR-TRANSFER-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12059,7 +12086,7 @@
         "PR-CAPITAL-V12-04",
         "PR-CAPITAL-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12072,7 +12099,7 @@
         "PR-TRANSFER-V12-02",
         "PR-TRANSFER-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12085,7 +12112,7 @@
         "PR-CAPITAL-V12-02",
         "PR-CAPITAL-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12098,7 +12125,7 @@
         "PR-FREE-V12-04",
         "PR-FREE-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12110,7 +12137,7 @@
       "associated_phase_ids": [
         "PR-REG-V12-02"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12124,7 +12151,7 @@
         "PR-TRANSFER-V12-05",
         "PR-TRANSFER-V12-06"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12138,7 +12165,7 @@
         "PR-CAPITAL-V12-05",
         "PR-CAPITAL-V12-06"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12151,7 +12178,7 @@
         "PR-FREE-V12-04",
         "PR-FREE-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12164,7 +12191,7 @@
         "PR-CLOSE-V12-02",
         "PR-CLOSE-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12176,7 +12203,7 @@
       "associated_phase_ids": [
         "PR-TRANSFER-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12188,7 +12215,7 @@
       "associated_phase_ids": [
         "PR-CAPITAL-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12200,7 +12227,7 @@
       "associated_phase_ids": [
         "PR-FREE-V12-06"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12212,7 +12239,7 @@
       "associated_phase_ids": [
         "PR-CLOSE-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12224,7 +12251,7 @@
       "associated_phase_ids": [
         "PR-REG-V12-05"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12237,7 +12264,7 @@
         "PR-TRANSFER-V12-01",
         "PR-TRANSFER-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12250,7 +12277,7 @@
         "PR-CAPITAL-V12-01",
         "PR-CAPITAL-V12-08"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12263,7 +12290,7 @@
         "PR-FREE-V12-01",
         "PR-FREE-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12276,7 +12303,7 @@
         "PR-CLOSE-V12-02",
         "PR-CLOSE-V12-07"
       ],
-      "source": "本业需补充场景，非投资附件原始场景",
+      "source": "补充监管场景",
       "applicability_note": "先确认义务适用；无偿划转不监测不存在的交易价款，清算注销仅监测适用债权回收及交接；非货币增资监测交付及确认价值。"
     },
     {
@@ -12337,7 +12364,7 @@
     "rule_status_labels": {
       "evaluated_hit": "已监测·有命中",
       "evaluated_clear": "已监测·未命中",
-      "data_insufficient": "数据不足",
+      "data_insufficient": "待补齐监测数据",
       "not_due": "未到监测时点",
       "not_applicable": "不适用",
       "reference_only": "核查依据"
@@ -12466,7 +12493,7 @@
         "threshold_pct": 50,
         "confirmed": true
       },
-      "formula": "连续两个完整季度利用率低于适用演示阈值形成线索；核查确认及整改状态独立",
+      "formula": "连续两个完整季度利用率低于适用样例配置阈值形成线索；核查确认及整改状态独立",
       "risk_ids": [
         "R02"
       ],
@@ -12539,7 +12566,7 @@
         "threshold_pct": 50,
         "confirmed": false
       },
-      "formula": "连续两个完整季度利用率低于适用演示阈值形成线索；核查确认及整改状态独立",
+      "formula": "连续两个完整季度利用率低于适用样例配置阈值形成线索；核查确认及整改状态独立",
       "risk_ids": [],
       "evidence_ids": [],
       "data_nature": "simulated",
@@ -12647,7 +12674,7 @@
         "dividend_due": 200,
         "dividend_due_date": "2026-06-10"
       },
-      "formula": "(实际现金回报-同期现金回报目标)/同期目标<-20%演示阈值；同一分红事实仅建一事项",
+      "formula": "(实际现金回报-同期现金回报目标)/同期目标<-20%样例配置阈值；同一分红事实仅建一事项",
       "risk_ids": [
         "R04"
       ],
@@ -12757,7 +12784,7 @@
         "dividend_due": 80,
         "dividend_due_date": "2026-06-10"
       },
-      "formula": "(实际现金回报-同期现金回报目标)/同期目标<-20%演示阈值；同一分红事实仅建一事项",
+      "formula": "(实际现金回报-同期现金回报目标)/同期目标<-20%样例配置阈值；同一分红事实仅建一事项",
       "risk_ids": [],
       "evidence_ids": [],
       "data_nature": "simulated",
@@ -12813,7 +12840,7 @@
         "forecast_completion_cost": 17600,
         "target_margin_pct": 15
       },
-      "formula": "目标毛利率-(收入-预计总成本)/收入*100>=3个百分点演示红色",
+      "formula": "目标毛利率-(收入-预计总成本)/收入*100>=3个百分点触发红色预警",
       "risk_ids": [
         "R05"
       ],
@@ -13115,9 +13142,9 @@
       "scenario_ids": [
         "CASH-S01"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "本业需补充演示规则",
+      "rule_source": "补充监测规则",
       "parameters": {
         "cash_excess_approval_gt": 0,
         "note": "已确认金额与有效批准同口径；示例为红色核查线索"
@@ -13137,9 +13164,9 @@
       "scenario_ids": [
         "CASH-S05"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "本业需补充演示规则",
+      "rule_source": "补充监测规则",
       "parameters": {},
       "active_demo": true
     },
@@ -13147,7 +13174,7 @@
       "id": "ENG-R01",
       "name": "工程预计毛利率偏差",
       "generic_formula": "target_margin_pct-(contract_revenue_ex_vat-forecast_completion_cost)/contract_revenue_ex_vat*100>=configured_margin_lag_pp",
-      "example_formula": "目标毛利率-(收入-预计总成本)/收入*100>=3个百分点演示红色",
+      "example_formula": "目标毛利率-(收入-预计总成本)/收入*100>=3个百分点触发红色预警",
       "required_fields": [
         "contract_revenue_ex_vat",
         "forecast_completion_cost",
@@ -13156,12 +13183,12 @@
       "scenario_ids": [
         "ENG-S01"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "本业需补充演示规则",
+      "rule_source": "补充监测规则",
       "parameters": {
         "red_margin_lag_pp_gte": 3,
-        "source": "演示配置"
+        "source": "样例配置参数"
       },
       "active_demo": true
     },
@@ -13169,7 +13196,7 @@
       "id": "EQ-R11-01",
       "name": "现金投资回报偏差",
       "generic_formula": "(cash_dividend_received-cash_return_target_ytd)/cash_return_target_ytd<-configured_shortfall_threshold，分母须大于0；同一义务事项去重",
-      "example_formula": "(实际现金回报-同期现金回报目标)/同期目标<-20%演示阈值；同一分红事实仅建一事项",
+      "example_formula": "(实际现金回报-同期现金回报目标)/同期目标<-20%样例配置阈值；同一分红事实仅建一事项",
       "required_fields": [
         "cash_dividend_received",
         "cash_return_target_ytd",
@@ -13181,12 +13208,12 @@
         "EQ-S20",
         "EQ-X02"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "投资底稿适配",
+      "rule_source": "投资监管场景适配",
       "parameters": {
         "cash_return_shortfall_attention_gt": 0.2,
-        "source": "20%为演示配置，底稿未指定统一数值"
+        "source": "20%为样例配置参数，统一阈值待确认"
       },
       "active_demo": true
     },
@@ -13203,9 +13230,9 @@
       "scenario_ids": [
         "EQ-X01"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "本业需补充演示规则",
+      "rule_source": "补充监测规则",
       "parameters": {},
       "active_demo": true
     },
@@ -13222,13 +13249,13 @@
       "scenario_ids": [
         "FA-S20"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "投资底稿适配",
+      "rule_source": "投资监管场景适配",
       "parameters": {
         "attention_eac_ratio_gte": 0.95,
         "red_eac_ratio_gt": 1.0,
-        "source": "底稿固定资产第20行"
+        "source": "预计完工投资偏差监测规则"
       },
       "active_demo": true
     },
@@ -13236,7 +13263,7 @@
       "id": "FA-R29-01",
       "name": "持续低资产利用率",
       "generic_formula": "连续两个完整观察季度actual_pct低于适用threshold_pct，形成核查线索；人工确认与整改状态独立",
-      "example_formula": "连续两个完整季度利用率低于适用演示阈值形成线索；核查确认及整改状态独立",
+      "example_formula": "连续两个完整季度利用率低于适用样例配置阈值形成线索；核查确认及整改状态独立",
       "required_fields": [
         "last_two_completed_quarters",
         "threshold_pct",
@@ -13245,15 +13272,15 @@
       "scenario_ids": [
         "FA-S29"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "投资底稿适配",
+      "rule_source": "投资监管场景适配",
       "parameters": {
         "period_type": "quarter",
         "consecutive_completed_periods_gte": 2,
         "demo_asset_threshold_pct": 50,
         "manual_confirmation_required": true,
-        "note": "50%为演示阈值；月度走势不替代季度观察。R02等级按已确认、持续下降且整改逾期的演示分级。"
+        "note": "50%为样例配置阈值；月度走势不替代季度观察。R02等级按已确认、持续下降且整改逾期的样例配置分级。"
       },
       "active_demo": true
     },
@@ -13270,9 +13297,9 @@
       "scenario_ids": [
         "INT-S01"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "本业需补充演示规则",
+      "rule_source": "补充监测规则",
       "parameters": {},
       "active_demo": true
     },
@@ -13290,13 +13317,13 @@
       "scenario_ids": [
         "PTY-S01"
       ],
-      "evaluation_mode": "演示结构化计算及核查结果",
+      "evaluation_mode": "结构化计算及核查结果",
       "data_missing_behavior": "数据不足/未评估，不生成未命中结果",
-      "rule_source": "本业需补充演示规则",
+      "rule_source": "补充监测规则",
       "parameters": {
         "require_same_effective_date": true,
         "comparison_tolerance_pp": 0.01,
-        "source": "演示差异容差，不是法定标准"
+        "source": "样例差异容差，不是法定标准"
       },
       "active_demo": true
     },
@@ -13309,7 +13336,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "ENG-R03",
@@ -13320,7 +13347,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "ENG-R04",
@@ -13331,7 +13358,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "ENG-R05",
@@ -13342,7 +13369,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "ENG-R06",
@@ -13353,7 +13380,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "ENG-R07",
@@ -13364,7 +13391,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "ENG-R08",
@@ -13375,7 +13402,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "ENG-R09",
@@ -13386,7 +13413,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "PTY-R02",
@@ -13397,7 +13424,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "PTY-R03",
@@ -13408,7 +13435,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "PTY-R04",
@@ -13419,7 +13446,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "PTY-R05",
@@ -13430,7 +13457,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "PTY-R06",
@@ -13441,7 +13468,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     },
     {
       "id": "PTY-R07",
@@ -13452,7 +13479,7 @@
       "evaluation_mode": "场景定义待数据完整后执行",
       "active_demo": false,
       "data_missing_behavior": "数据不足/未评估",
-      "rule_source": "本业需补充演示规则"
+      "rule_source": "补充监测规则"
     }
   ],
   "scenario_monitoring_coverage": [
@@ -17385,7 +17412,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P001-FA-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0120",
@@ -17451,7 +17478,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P003-FA-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0122",
@@ -18920,7 +18947,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P002-FA-V12-08"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0167",
@@ -18955,7 +18982,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P002-FA-V12-08"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0168",
@@ -21873,7 +21900,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0258",
@@ -21908,7 +21935,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0259",
@@ -23959,7 +23986,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0322",
@@ -23994,7 +24021,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0323",
@@ -25368,7 +25395,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0365",
@@ -25403,7 +25430,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0366",
@@ -25440,7 +25467,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0367",
@@ -25475,7 +25502,7 @@
       "rule_coverage": "partial",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0368",
@@ -25510,7 +25537,7 @@
       "rule_coverage": "partial",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0369",
@@ -25545,7 +25572,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0370",
@@ -25582,7 +25609,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0371",
@@ -25619,7 +25646,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-02"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0372",
@@ -25656,7 +25683,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0373",
@@ -25693,7 +25720,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0374",
@@ -25728,7 +25755,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0375",
@@ -25765,7 +25792,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0376",
@@ -25802,7 +25829,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0377",
@@ -25837,7 +25864,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0378",
@@ -25874,7 +25901,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0379",
@@ -25911,7 +25938,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0380",
@@ -25946,7 +25973,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0381",
@@ -25981,7 +26008,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0382",
@@ -26018,7 +26045,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-PTY-M001-PR-REG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0383",
@@ -26055,7 +26082,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0384",
@@ -26090,7 +26117,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0385",
@@ -26125,7 +26152,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0386",
@@ -26160,7 +26187,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0387",
@@ -26294,7 +26321,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P001-FA-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0121",
@@ -26329,7 +26356,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P003-FA-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0166",
@@ -26366,7 +26393,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P002-FA-V12-08"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0167",
@@ -26401,7 +26428,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-FA-P002-FA-V12-08"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0257",
@@ -26438,7 +26465,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0258",
@@ -26473,7 +26500,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0321",
@@ -26510,7 +26537,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0322",
@@ -26545,7 +26572,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0364",
@@ -26582,7 +26609,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0365",
@@ -26617,7 +26644,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0366",
@@ -26654,7 +26681,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0367",
@@ -26689,7 +26716,7 @@
       "rule_coverage": "partial",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0368",
@@ -26724,7 +26751,7 @@
       "rule_coverage": "partial",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0369",
@@ -26759,7 +26786,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0370",
@@ -26796,7 +26823,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0371",
@@ -26833,7 +26860,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-02"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0372",
@@ -26870,7 +26897,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0373",
@@ -26907,7 +26934,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0374",
@@ -26942,7 +26969,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0375",
@@ -26979,7 +27006,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-06"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0376",
@@ -27016,7 +27043,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0377",
@@ -27051,7 +27078,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0378",
@@ -27088,7 +27115,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0379",
@@ -27125,7 +27152,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-ENG-P001-ENG-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0380",
@@ -27160,7 +27187,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0381",
@@ -27195,7 +27222,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0382",
@@ -27232,7 +27259,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-PTY-M001-PR-REG-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0383",
@@ -27269,7 +27296,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P001-EQ-V12-04"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0384",
@@ -27304,7 +27331,7 @@
       "rule_coverage": "demo_defined_rules_only",
       "stage_instance_id": null,
       "scope_evidence_ids": [],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0385",
@@ -27339,7 +27366,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-05"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     },
     {
       "id": "MON-0386",
@@ -27374,7 +27401,7 @@
       "scope_evidence_ids": [
         "EVID-STAGE-V12-EQ-P002-EQ-V12-07"
       ],
-      "scope_basis": "模拟业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
+      "scope_basis": "业务对象与实际阶段实例及规则评估证据明确关联；不按场景模板自动复制命中。"
     }
   ],
   "monitoring_count_contract": {
@@ -27416,7 +27443,7 @@
     },
     {
       "id": "r02_review_passed",
-      "name": "演示R02完成复核闭环",
+      "name": "R02完成复核闭环",
       "is_initial": false,
       "requires_user_action": true,
       "target_risk_id": "R02",
@@ -27426,8 +27453,8 @@
         "pass_verification"
       ],
       "prerequisites": [
-        "填写模拟措施与结果",
-        "上传/选择模拟复核证据",
+        "填写措施与结果",
+        "上传/选择复核证据",
         "复核人确认通过"
       ],
       "effects": {
@@ -27444,12 +27471,12 @@
         "rectified_closed_FA_cases": 1,
         "overdue_rectification_cases": 0
       },
-      "note": "模拟业务原始利用率事实保留；整改复核闭环是事项状态变化。重置恢复R02整改中、活动事项8条。",
+      "note": "原始业务利用率事实保留；整改复核闭环是事项状态变化。重置恢复R02整改中、活动事项8条。",
       "action_clock": "effective_date=selected_as_of；recorded_at=runtime_utc_now；sequence递增"
     },
     {
       "id": "r07_review_passed",
-      "name": "演示R07完成复核闭环",
+      "name": "R07完成复核闭环",
       "is_initial": false,
       "requires_user_action": true,
       "target_risk_id": "R07",
@@ -27462,7 +27489,7 @@
       ],
       "prerequisites": [
         "核查确认问题与整改要求",
-        "填写模拟措施与整改证据",
+        "填写措施与整改证据",
         "复核人验证并通过"
       ],
       "effects": {
@@ -27592,5 +27619,319 @@
       ]
     },
     "notes": "预期值只作验收断言，禁止用来代替查询/计算函数。"
-  }
+  },
+  "metadata": {
+    "data_provenance": {
+      "display_label": "样例数据",
+      "classification": "synthetic_business_and_market_data_with_identified_real_historical_events",
+      "statement": "单位、项目、资产、交易、金额、风险事项、价格序列、审批及业务材料均为合成样例，不代表海油工程及其下属单位的真实经营、监管结果或实际违规情况。机构名称采用匿名业务名称，不对应真实组织名单。",
+      "historical_event_exception": "仅标注real_event并附官方来源的历史事件及日期来源于公开资料；关联的市场价格序列仍为合成样例。",
+      "source_system_scope": "SAP/WBS、财务云及投资计划等名称说明预设业务数据来源，当前文件未连接真实业务系统，不能显示“已实时接入”等状态。",
+      "parameter_scope": "除可追溯的已给定规则口径外，样例阈值不代表海油工程已批准参数或法定标准；配置页必须展示来源和待确认状态。",
+      "accounting_scope": "股权项目按当前样例单体成本法口径提供计算输入，正式核算方法及适用范围须以实际会计政策确认。",
+      "visible_entry_points": [
+        "关于",
+        "数据说明",
+        "帮助"
+      ],
+      "business_page_policy": "业务页面、对象名称、流程标题及按钮不反复增加数据性质前缀；保留可发现的数据说明入口。导出和分享须携带“样例数据”性质说明。",
+      "business_page_entry": "页头提供“数据说明”入口，点击显示样例数据性质与来源说明。"
+    },
+    "original_source_texts": {
+      "/assets/0/threshold_nature": "演示参数；按同类别批准目标替换",
+      "/assets/1/threshold_nature": "演示参数；按同类别批准目标替换",
+      "/ownership_snapshots/1/source_type": "工商登记模拟快照",
+      "/ownership_snapshots/2/source_type": "产权台账模拟快照",
+      "/international_events/0/source_name": "演示情景资料",
+      "/evidence/0/source_type": "模拟业务材料",
+      "/evidence/1/source_type": "模拟业务材料",
+      "/evidence/2/source_type": "模拟业务材料",
+      "/evidence/3/source_type": "模拟业务材料",
+      "/evidence/4/source_type": "模拟业务材料",
+      "/evidence/5/source_type": "模拟业务材料",
+      "/evidence/6/source_type": "模拟业务材料",
+      "/evidence/7/source_type": "模拟业务材料",
+      "/evidence/8/source_type": "模拟业务材料",
+      "/evidence/20/source_type": "模拟会计凭据",
+      "/evidence/21/source_type": "模拟会计凭据",
+      "/evidence/22/source_type": "模拟批准概算",
+      "/evidence/23/source_type": "模拟批准记录",
+      "/evidence/24/source_type": "模拟银行回单",
+      "/evidence/25/source_type": "模拟业务确认记录",
+      "/evidence/26/source_type": "演示对象关联说明",
+      "/evidence/27/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/28/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/29/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/30/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/31/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/32/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/33/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/34/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/35/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/36/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/37/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/38/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/39/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/40/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/41/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/42/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/43/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/44/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/45/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/46/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/47/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/48/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/49/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/50/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/51/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/52/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/53/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/54/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/55/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/56/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/57/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/58/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/59/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/60/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/61/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/62/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/63/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/64/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/65/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/66/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/67/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/68/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/69/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/70/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/71/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/72/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/73/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/74/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/75/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/76/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/77/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/78/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/79/source_type": "模拟批准计划及业务状态记录",
+      "/evidence/80/source_type": "模拟批准计划及业务状态记录",
+      "/price_series/0/source_name": "演示生成序列",
+      "/price_series/1/source_name": "演示生成序列",
+      "/price_series/2/source_name": "演示生成序列",
+      "/price_series/3/source_name": "演示生成序列",
+      "/price_series/4/source_name": "演示生成序列",
+      "/price_series/5/source_name": "演示生成序列",
+      "/price_series/6/source_name": "演示生成序列",
+      "/price_series/7/source_name": "演示生成序列",
+      "/supplemental_scenarios/2/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/8/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/9/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/10/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/11/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/12/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/13/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/14/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/15/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/16/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/17/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/18/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/19/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/20/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_scenarios/21/source": "本业需补充场景，非投资附件原始场景",
+      "/demo_rule_parameters/FA-R20-01/source": "底稿固定资产第20行",
+      "/demo_rule_parameters/FA-R21-01/source": "底稿参数；60天边界待确认",
+      "/demo_rule_parameters/FA-R34-01/source": "底稿固定资产第34行",
+      "/demo_rule_parameters/EQ-R11-01/source": "20%为演示配置，底稿未指定统一数值",
+      "/demo_rule_parameters/ENG-R01/source": "演示配置",
+      "/demo_rule_parameters/PTY-R01/source": "演示差异容差，不是法定标准",
+      "/case_actions/0/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/1/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/2/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/3/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/4/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/5/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/6/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/7/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/8/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/9/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/10/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/11/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/12/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/13/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/14/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/15/recorded_at_nature": "模拟历史动作记录时间",
+      "/case_actions/16/recorded_at_nature": "模拟历史动作记录时间",
+      "/source_records/0/source_system_label": "SAP/WBS拟来源（模拟）",
+      "/source_records/1/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/2/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/3/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/4/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/5/source_system_label": "SAP/WBS拟来源（模拟）",
+      "/source_records/6/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/7/source_system_label": "SAP/WBS拟来源（模拟）",
+      "/source_records/8/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/9/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/10/source_system_label": "项目及合同资料拟来源（模拟）",
+      "/source_records/11/name": "FA-P001模拟入账凭据一",
+      "/source_records/11/record_type": "模拟会计凭据",
+      "/source_records/11/source_system_label": "SAP/WBS拟来源（模拟）",
+      "/source_records/12/name": "FA-P001模拟入账凭据二",
+      "/source_records/12/record_type": "模拟会计凭据",
+      "/source_records/12/source_system_label": "SAP/WBS拟来源（模拟）",
+      "/source_records/13/record_type": "模拟批准概算",
+      "/source_records/13/source_system_label": "投资计划拟来源（模拟）",
+      "/source_records/14/record_type": "模拟批准记录",
+      "/source_records/14/source_system_label": "财务云拟来源（模拟）",
+      "/source_records/15/record_type": "模拟银行回单",
+      "/source_records/15/source_system_label": "银行付款资料拟来源（模拟）",
+      "/source_records/16/record_type": "模拟业务确认记录",
+      "/source_records/16/source_system_label": "工程履约资料拟来源（模拟）",
+      "/supplemental_display_notes/source_records": "模拟来源记录仅服务数据追溯，不计入原业务金额第二次汇总。",
+      "/supplemental_phase_mappings/0/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/1/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/2/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/3/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/4/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/5/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/6/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/7/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/8/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/9/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/10/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/11/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/12/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/13/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/14/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/15/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/16/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/17/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/18/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/19/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/20/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/21/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/22/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/23/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/24/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/25/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/26/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/27/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/28/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/29/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/30/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/31/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/32/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/33/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/34/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/35/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/36/source": "本业需补充场景，非投资附件原始场景",
+      "/supplemental_phase_mappings/37/source": "本业需补充场景，非投资附件原始场景",
+      "/monitoring_rule_definitions/0/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/1/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/2/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/2/parameters/source": "演示配置",
+      "/monitoring_rule_definitions/3/rule_source": "投资底稿适配",
+      "/monitoring_rule_definitions/3/parameters/source": "20%为演示配置，底稿未指定统一数值",
+      "/monitoring_rule_definitions/4/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/5/rule_source": "投资底稿适配",
+      "/monitoring_rule_definitions/5/parameters/source": "底稿固定资产第20行",
+      "/monitoring_rule_definitions/6/rule_source": "投资底稿适配",
+      "/monitoring_rule_definitions/7/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/8/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/8/parameters/source": "演示差异容差，不是法定标准",
+      "/monitoring_rule_definitions/9/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/10/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/11/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/12/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/13/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/14/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/15/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/16/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/17/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/18/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/19/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/20/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/21/rule_source": "本业需补充演示规则",
+      "/monitoring_rule_definitions/22/rule_source": "本业需补充演示规则"
+    },
+    "display_redaction": {
+      "do_not_render_as_business_fields": [
+        "original_columns",
+        "source_sheet",
+        "source_row",
+        "source_range",
+        "source_filename",
+        "phase_mapping_version",
+        "phase_mapping_note",
+        "active_demo",
+        "data_nature",
+        "recorded_at_nature",
+        "metadata.original_source_texts",
+        "expected_results",
+        "expected_stage_results_v1_2",
+        "risk_fixture_scope_note"
+      ],
+      "rules": [
+        "只通过已定义的业务字段标签渲染详情，禁止对JSON对象直接遍历生成表单。",
+        "一级监管场景、监管子场景及其描述必须读取对应结构字段，禁止展示“附件A列”“附件B列”“原表C列”等来源坐标。",
+        "原始工作表、行列、规则来源及版本继续保留用于审计核验，放入有权限的配置追溯信息中，不当作业务字段标题。",
+        "P70至P79等页面编码、FA-S等内部关联编码保留内部跳转和日志使用；页面标题及按钮只显示业务名称。业务对象编号可在编号专栏显示。",
+        "技术字段名、原始JSON指针和英文状态码使用业务标签与中文状态显示，计算公式以业务名称表达；技术映射只在配置页授权详情可查。",
+        "样例配置阈值须如实说明来源与待确认状态，不得删去“不适用”“待人工核查”“尚未接入”“未到监测时点”等真实业务或接入状态。",
+        "不得仅因数据记录存在就显示“已监测”，也不得把待核查线索直接称为已经确认的违规事项。"
+      ]
+    },
+    "display_aliases": {
+      "original_scene": "一级监管场景",
+      "scenario_name": "监管子场景",
+      "scenario_description": "子场景描述",
+      "original_columns.A": "一级监管场景",
+      "original_columns.B": "监管子场景",
+      "original_columns.C": "子场景描述",
+      "original_columns.D": "流程控制要求与管控规则",
+      "original_columns.E": "指标及监控规则",
+      "original_columns.F": "系统实现逻辑",
+      "附件A列": "一级监管场景",
+      "附件B列": "监管子场景",
+      "附件C列": "子场景描述",
+      "source_sheet": "来源工作表",
+      "source_row": "来源行号",
+      "source_range": "来源范围",
+      "primary_phase": "主要监管环节",
+      "adoption_mode": "监测方式",
+      "platform_behavior": "监管处理方式",
+      "rule_id": "规则编号",
+      "indicator_id": "指标编号",
+      "owner_org_id": "责任单位",
+      "monitoring_object_id": "监测对象",
+      "source_system_label": "业务来源",
+      "effective_approved_budget": "有效批准概算",
+      "eac": "预计完工投资",
+      "accounting_method_demo": "核算方法",
+      "recorded_at": "操作记录时间",
+      "effective_date": "业务生效日期",
+      "P70": "指标组织穿透",
+      "P71": "指标组织穿透",
+      "P72": "监管场景详情",
+      "P73": "监管事项详情",
+      "P74": "对象档案",
+      "P75": "事件详情",
+      "P76": "系统配置",
+      "P77": "监管工作台",
+      "P78": "计算依据",
+      "P79": "业务关联",
+      "查看对象档案 P74": "查看对象档案",
+      "查看计算依据 P78": "查看计算依据",
+      "业务关联 P79": "业务关联",
+      "重置演示数据": "恢复初始数据",
+      "重置模拟数据": "恢复初始数据"
+    }
+  },
+  "utility_navigation": [
+    {
+      "id": "P76",
+      "label": "系统配置",
+      "route": "/settings",
+      "placement": "sidebar_bottom",
+      "config_source": "configuration_seed.json",
+      "visibility": "按配置访问权限显示；无配置访问权限不显示入口"
+    }
+  ]
 }

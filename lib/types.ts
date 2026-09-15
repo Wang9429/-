@@ -337,6 +337,7 @@ export interface RiskCase {
   investigation_conclusion?: string;
   rectification_completion_note?: string;
   reopened_count?: number;
+  last_handler_user_id?: string | null;
 }
 
 export interface Evidence {

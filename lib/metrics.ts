@@ -48,6 +48,8 @@ export interface IndicatorContext {
   periodEnd: string;
   asOf: string;
   risks: RiskCase[];
+  /** null/缺省=组织范围内全部对象；空数组=无对象权限 */
+  allowedObjectIds?: string[] | null;
 }
 
 export interface IndicatorDef {
@@ -1242,7 +1244,11 @@ export function computeIndicator(
   orgIds: Set<string>,
   ctx: IndicatorContext,
 ): NodeMetric {
-  return aggregate(def, def.leaves(ctx), orgIds);
+  const leaves = def.leaves(ctx).filter((l) => {
+    if (ctx.allowedObjectIds === undefined || ctx.allowedObjectIds === null) return true;
+    return ctx.allowedObjectIds.includes(l.objectId);
+  });
+  return aggregate(def, leaves, orgIds);
 }
 
 export const DEFAULT_CTX: IndicatorContext = {

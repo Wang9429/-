@@ -6,7 +6,7 @@ import NormalizedChart from "@/components/NormalizedChart";
 import { Card, DataTable, DescList, Field, Notice, SimulatedBadge, Tag, inputClass, selectClass } from "@/components/ui";
 import { analyzeWindow, overlappingEvents } from "@/lib/market";
 import { seed } from "@/lib/seed";
-import { orgName, orgScope } from "@/lib/org";
+import { orgName } from "@/lib/org";
 import { fmtAmount, fmtPct, fmtPp, fmtSignedPct } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
 
@@ -370,7 +370,7 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
 
 function OverseasProjects({ helpers }: { helpers: DomainHelpers }) {
   const { filters } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const projects = seed.engineering_projects.filter((p) => orgIds.has(p.owner_org_id) && p.country !== "中国");
   const overseasOrgs = seed.organizations.filter((o) => o.node_type === "branch");
 
@@ -418,7 +418,7 @@ function OverseasProjects({ helpers }: { helpers: DomainHelpers }) {
             value: `管理层级 ${o.management_level}｜节点类型：分支机构｜法律主体：${o.legal_entity_id}`,
           }))}
         />
-        {overseasOrgs.length === 0 && <p className="text-[13px] text-textsub">当前演示数据没有境外机构节点。</p>}
+        {overseasOrgs.length === 0 && <p className="text-[13px] text-textsub">当前授权范围内没有境外机构节点。</p>}
       </Card>
     </div>
   );

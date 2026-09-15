@@ -4,7 +4,8 @@ import React, { useMemo, useState } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
 import { Button, Card, DataTable, Notice, SimulatedBadge, Tag, inputClass, selectClass } from "@/components/ui";
 import { seed } from "@/lib/seed";
-import { orgName, orgScope } from "@/lib/org";
+import { intersectOrgScope } from "@/lib/config";
+import { orgName } from "@/lib/org";
 import { fmtAmount, fmtDate, fmtPct, fmtSignedPct } from "@/lib/format";
 import { isOpen } from "@/lib/risks";
 import { downloadCsv } from "@/lib/export";
@@ -33,19 +34,19 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [onlyOver, setOnlyOver] = useState(false);
   const [q, setQ] = useState("");
-
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
 
   const rows = useMemo(() => {
     return seed.fixed_asset_projects
       .filter((p) => orgIds.has(p.owner_org_id))
+      .filter((p) => helpers.allowedObjectIds === null || helpers.allowedObjectIds.includes(p.id))
       .filter((p) => (phaseFilter === "all" ? true : p.phase === phaseFilter))
       .filter((p) => (typeFilter === "all" ? true : p.project_type === typeFilter))
       .filter((p) => (onlyOver ? (p.eac ?? 0) > p.effective_approved_budget : true))
       .filter((p) =>
         q.trim() ? `${p.id}${p.name}`.toLowerCase().includes(q.trim().toLowerCase()) : true,
       );
-  }, [orgIds, phaseFilter, typeFilter, onlyOver, q]);
+  }, [orgIds, phaseFilter, typeFilter, onlyOver, q, helpers.allowedObjectIds]);
 
   const openFor = (id: string) => risks.filter((r) => isOpen(r) && r.primary_object_id === id);
 
@@ -262,7 +263,7 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
 
 function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
   const { filters, risks } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const orgIds = helpers.orgIds;
   const assets = useMemo(() => seed.assets.filter((a) => orgIds.has(a.owner_org_id)), [orgIds]);
 
   const majors = assets.filter((a) => a.is_major);
@@ -391,7 +392,7 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
             资产利用率只汇总同类别、同计量口径的使用量与可利用量，小时、天数与产能不相加。
           </Notice>
           <div className="flex items-center gap-2">
-            <SimulatedBadge text="演示阈值参数" />
+            <SimulatedBadge text="配置阈值参数" />
             <span className="text-[12px] text-textsub">
               利用率目标为演示参数，正式落地按同类别批准目标替换（见数据依据页“待确认参数”）。
             </span>
@@ -403,8 +404,11 @@ function AssetOperation({ helpers }: { helpers: DomainHelpers }) {
 }
 
 function TransferLedger() {
-  const { filters } = useDemoStore();
-  const orgIds = useMemo(() => orgScope(filters.orgId, filters.includeChildren), [filters.orgId, filters.includeChildren]);
+  const { filters, user } = useDemoStore();
+  const orgIds = useMemo(
+    () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
+    [filters.orgId, filters.includeChildren, user],
+  );
   const projects = seed.fixed_asset_projects.filter((p) => orgIds.has(p.owner_org_id));
 
   return (

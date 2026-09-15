@@ -8,6 +8,7 @@ import { fmtAmount, fmtInt, fmtPct, fmtSignedPct } from "@/lib/format";
 import { objectTypeLabel, seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import { isOpen } from "@/lib/risks";
+import { authorizedObjectIds, authorizedOrgIds, objectAllowed, riskVisible } from "@/lib/config";
 
 type Selection = { kind: "org"; id: string } | { kind: "leaf"; id: string };
 
@@ -42,9 +43,9 @@ export interface IndicatorDrawerProps {
   onSwitchIndicator: (id: string) => void;
   initialOrgId: string;
   scopeLabel: string;
-  /** 对象档案 P74；传入后在浮层之上继续打开，不跳离背景页 */
+  /** 对象档案；传入后在浮层之上继续打开，不跳离背景页 */
   onOpenObject?: (id: string, tab?: string) => void;
-  /** 事项办理 P73 */
+  /** 事项办理 */
   onOpenRisk?: (id: string) => void;
 }
 
@@ -65,7 +66,7 @@ function IndicatorDrawerBody({
   onOpenObject,
   onOpenRisk,
 }: IndicatorDrawerProps) {
-  const { filters, risks } = useDemoStore();
+  const { filters, risks, user } = useDemoStore();
   const [selection, setSelection] = useState<Selection>({ kind: "org", id: initialOrgId });
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(descendantOrgIds(ROOT_ORG_ID)),
@@ -76,19 +77,24 @@ function IndicatorDrawerBody({
   const openObject = (id: string, tab?: string) => onOpenObject?.(id, tab);
   const openRisk = (id: string) => onOpenRisk?.(id);
 
+  const allowedOrgs = useMemo(() => authorizedOrgIds(user), [user]);
+  const allowedObjectIds = useMemo(() => authorizedObjectIds(user), [user]);
+
   const ctx = useMemo(
     () => ({
       periodStart: filters.periodStart,
       periodEnd: filters.periodEnd,
       asOf: filters.asOf,
       risks,
+      allowedObjectIds,
     }),
-    [filters.periodStart, filters.periodEnd, filters.asOf, risks],
+    [filters.periodStart, filters.periodEnd, filters.asOf, risks, allowedObjectIds],
   );
 
   const allLeaves: LeafMetric[] = useMemo(
-    () => (indicator ? indicator.leaves(ctx) : []),
-    [indicator, ctx],
+    () =>
+      (indicator ? indicator.leaves(ctx) : []).filter((l) => objectAllowed(user, l.orgId, l.objectId)),
+    [indicator, ctx, user],
   );
 
   const nodeMetric = (orgId: string): NodeMetric =>
@@ -112,14 +118,20 @@ function IndicatorDrawerBody({
 
   const openRiskCountForOrg = (orgId: string) => {
     const scope = new Set(descendantOrgIds(orgId));
-    return risks.filter((r) => isOpen(r) && scope.has(r.owner_org_id)).length;
+    return risks.filter((r) => isOpen(r) && scope.has(r.owner_org_id) && riskVisible(user, r)).length;
   };
 
   const renderTreeNode = (orgId: string, depth: number): React.ReactNode => {
     const org = orgById(orgId);
     if (!org) return null;
+    const kids = childOrgs(orgId).filter((c) => {
+      const desc = descendantOrgIds(c.id);
+      return [...desc].some((id) => allowedOrgs.has(id));
+    });
+    if (!allowedOrgs.has(orgId) && kids.length === 0 && !allLeaves.some((l) => l.orgId === orgId)) {
+      return null;
+    }
     const metric = nodeMetric(orgId);
-    const kids = childOrgs(orgId);
     const leaves = allLeaves.filter((l) => l.orgId === orgId);
     const isExpanded = expanded.has(orgId);
     const selected = selection.kind === "org" && selection.id === orgId;
@@ -264,7 +276,7 @@ function IndicatorDrawerBody({
       title={
         <span className="flex items-center gap-2 flex-wrap">
           {indicator.name}
-          <Tag tone="brand">P71 指标组织穿透</Tag>
+          <Tag tone="brand">组织穿透</Tag>
           <Tag tone="neutral">单位 {indicator.unit}</Tag>
         </span>
       }
@@ -276,7 +288,7 @@ function IndicatorDrawerBody({
           </span>
           <span className="num">截至日 {filters.asOf}</span>
           <span>口径版本 DEMO-RULES-V1.2</span>
-          <span>数据性质：模拟</span>
+          <span>数据性质：合成样例</span>
         </span>
       }
       footer={
@@ -307,7 +319,16 @@ function IndicatorDrawerBody({
             缺层按真实管理关系跳过，被投企业不并入管理树。
           </div>
           <div className="flex-1 overflow-auto py-2 px-2" role="tree">
-            {renderTreeNode(ROOT_ORG_ID, 0)}
+            {allowedOrgs.size === 0 ? (
+              <p className="px-3 py-6 text-[13px] text-textsub">当前身份无业务组织范围。</p>
+            ) : (
+              [...allowedOrgs]
+                .filter((id) => {
+                  const o = orgById(id);
+                  return o && (!o.parent_id || !allowedOrgs.has(o.parent_id));
+                })
+                .map((id) => renderTreeNode(id, 0))
+            )}
           </div>
         </aside>
 
@@ -502,13 +523,13 @@ function IndicatorDrawerBody({
                       </div>
                       <div className="mt-2 flex items-center gap-3 flex-wrap">
                         <LinkButton onClick={() => openObject(leaf.objectId)}>
-                          查看对象档案 P74
+                          查看对象档案
                         </LinkButton>
                         <LinkButton onClick={() => openObject(leaf.objectId, "relations")}>
-                          业务关联 P79
+                          业务关联
                         </LinkButton>
                         <LinkButton onClick={() => setTraceLeafId(leaf.objectId)}>
-                          查看计算依据 P78
+                          查看计算依据
                         </LinkButton>
                       </div>
                     </div>
@@ -529,7 +550,7 @@ function IndicatorDrawerBody({
                     label: "版本与性质",
                     value: (
                       <span className="text-[13px]">
-                        演示规则版本 DEMO-RULES-V1.2；参数为底稿参数或演示参数，正式阈值由业务部门确认后配置。
+                        规则版本 DEMO-RULES-V1.2；参数为底稿参数或配置参数，正式阈值由业务部门确认后配置。
                       </span>
                     ),
                   },
@@ -538,7 +559,7 @@ function IndicatorDrawerBody({
               {selectedLeaf && (
                 <div className="mt-3">
                   <Button variant="primary" size="sm" onClick={() => setTraceLeafId(selectedLeaf.objectId)}>
-                    进入数据追溯 P78：{indicator.name}·{selectedLeaf.name}
+                    查看计算依据：{indicator.name}·{selectedLeaf.name}
                   </Button>
                 </div>
               )}
@@ -561,7 +582,7 @@ function IndicatorDrawerBody({
 }
 
 /**
- * P78 数据追溯：公式、输入值与结果全部按“当前指标 + 当前对象 + 当前期间”实算，
+ * 数据追溯：公式、输入值与结果全部按“当前指标 + 当前对象 + 当前期间”实算，
  * 不复用其他指标已登记的追溯记录。种子追溯只有在 object_id 与 indicator_id
  * 同时对上时才作为源记录补充展示（完整业需 16.3）。
  */
@@ -591,7 +612,7 @@ function TraceModal({
     <Modal
       open
       onClose={onClose}
-      title={`数据追溯 P78：${indicator.name}·${leaf.name}`}
+      title={`计算依据：${indicator.name}·${leaf.name}`}
       width={760}
     >
       <div className="space-y-4">
@@ -669,7 +690,7 @@ function TraceModal({
           </div>
         ) : (
           <Notice tone="neutral" title="源记录明细">
-            演示数据未对「{indicator.name}」登记逐笔源记录，上方取值来自该对象的业务台账字段，
+            当前样例未对「{indicator.name}」登记逐笔源记录，上方取值来自该对象的业务台账字段，
             接入后按拟来源系统补充逐笔凭据。
           </Notice>
         )}
@@ -704,7 +725,7 @@ function TraceModal({
           rows={sources}
           rowKey={(s) => s.id}
           dense
-          empty="本指标在演示数据中没有逐笔源记录。"
+          empty="本指标在当前样例中没有逐笔源记录。"
         />
         {leaf.riskIds.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">

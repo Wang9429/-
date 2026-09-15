@@ -242,7 +242,7 @@ export default function ScenarioDrawer({
         )}
 
         <div className="flex items-center gap-2">
-          <SimulatedBadge text="模拟演示数据" />
+          <SimulatedBadge text="合成样例" />
           <span className="text-[12px] text-textsub">
             场景定义可展示在主阶段和关联阶段；监测与命中只按评估记录实际关联阶段统计，不由场景配置复制。
           </span>

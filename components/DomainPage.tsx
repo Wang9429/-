@@ -11,7 +11,8 @@ import { Button, Card, DataTable, KpiCard, Notice, SeverityTag, Tabs, Tag } from
 import { DOMAIN_META, phaseName, seed, templatesByDomain, topicName } from "@/lib/seed";
 import { computeIndicator, indicatorById, type IndicatorDef, type NodeMetric } from "@/lib/metrics";
 import { openCountForPhase, openCountForTopic } from "@/lib/monitoring";
-import { orgName, orgScope } from "@/lib/org";
+import { orgName } from "@/lib/org";
+import { authorizedObjectIds, intersectOrgScope, riskVisible } from "@/lib/config";
 import { isOpen, isOverdueRectification, rectificationDueDate, statusLabel } from "@/lib/risks";
 import { riskMatches } from "@/lib/risks";
 import { fmtDate } from "@/lib/format";
@@ -36,6 +37,7 @@ export interface DomainHelpers {
   openObject: (id: string) => void;
   openIndicator: (id: string) => void;
   orgIds: Set<string>;
+  allowedObjectIds: string[] | null;
 }
 
 export interface KpiSpec {
@@ -95,7 +97,7 @@ export default function DomainPage({
   ledger?: (helpers: DomainHelpers) => React.ReactNode;
 }) {
   const meta = DOMAIN_META[domain];
-  const { filters, risks } = useDemoStore();
+  const { filters, risks, user } = useDemoStore();
   const [tab, setTab] = useState("overview");
   const [phaseId, setPhaseId] = useState<string | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null);
@@ -109,9 +111,10 @@ export default function DomainPage({
   const [riskFilter, setRiskFilter] = useState<"all" | "open" | "red" | "overdue">("all");
 
   const orgIds = useMemo(
-    () => orgScope(filters.orgId, filters.includeChildren),
-    [filters.orgId, filters.includeChildren],
+    () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
+    [filters.orgId, filters.includeChildren, user],
   );
+  const allowedObjectIds = useMemo(() => authorizedObjectIds(user), [user]);
 
   const ctx = useMemo(
     () => ({
@@ -119,8 +122,9 @@ export default function DomainPage({
       periodEnd: filters.periodEnd,
       asOf: filters.asOf,
       risks,
+      allowedObjectIds,
     }),
-    [filters.periodStart, filters.periodEnd, filters.asOf, risks],
+    [filters.periodStart, filters.periodEnd, filters.asOf, risks, allowedObjectIds],
   );
 
   const helpers: DomainHelpers = useMemo(
@@ -129,8 +133,9 @@ export default function DomainPage({
       openObject: setObjectId,
       openIndicator: setIndicatorId,
       orgIds,
+      allowedObjectIds,
     }),
-    [orgIds],
+    [orgIds, allowedObjectIds],
   );
 
   const templates = useMemo(() => templatesByDomain(domain), [domain]);
@@ -140,8 +145,8 @@ export default function DomainPage({
   );
 
   const domainRisks = useMemo(
-    () => risks.filter((r) => riskMatches(r, { domain, orgScope: orgIds })),
-    [risks, domain, orgIds],
+    () => risks.filter((r) => riskVisible(user, r) && riskMatches(r, { domain, orgScope: orgIds })),
+    [risks, domain, orgIds, user],
   );
 
   const chevronItems: ChevronItem[] = useMemo(() => {
@@ -150,10 +155,10 @@ export default function DomainPage({
       .slice()
       .sort((a, b) => a.display_order - b.display_order)
       .map((n) => {
-        const c = openCountForPhase(domain, n.id, orgIds, risks, filters.asOf);
+        const c = openCountForPhase(domain, n.id, orgIds, domainRisks, filters.asOf);
         return { id: n.id, name: n.name, openCount: c.open, severity: c.maxSeverity };
       });
-  }, [flowMode, template, domain, orgIds, risks, filters.asOf]);
+  }, [flowMode, template, domain, orgIds, domainRisks, filters.asOf]);
 
   const topics = useMemo(
     () => seed.domain_topics.find((d) => d.domain === domain)?.topics ?? [],
@@ -213,7 +218,6 @@ export default function DomainPage({
           <p className="text-[13px] text-textsub mt-1 max-w-4xl leading-5">{intro}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Tag tone="neutral">{meta.pageId}</Tag>
           <Tag tone="brand">{scopeLabel}</Tag>
         </div>
       </div>
@@ -366,7 +370,7 @@ export default function DomainPage({
                   全部专题
                 </button>
                 {topics.map((t) => {
-                  const c = openCountForTopic(domain, t.id, orgIds, risks);
+                  const c = openCountForTopic(domain, t.id, orgIds, domainRisks);
                   const selected = topicId === t.id;
                   const tone =
                     c.open === 0
@@ -414,6 +418,8 @@ export default function DomainPage({
             phaseId={flowMode === "phases" ? phaseId : null}
             topicId={flowMode === "topics" ? topicId : null}
             subtopicId={effectiveSubtopic}
+            orgIds={orgIds}
+            allowedObjectIds={allowedObjectIds}
             scopeTitle={scopeTitle}
             focusNote={
               flowMode === "phases"
