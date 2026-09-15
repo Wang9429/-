@@ -14,6 +14,14 @@ import type { DomainId } from "../lib/types";
 import { authorizedObjectIds, can, canCaseAction, intersectOrgScope, userById } from "../lib/config";
 import { inDateRange } from "../lib/period";
 import { INDEPENDENT_TRIAL_PROJECTS } from "../lib/trial";
+import {
+  highRiskOwnerOrgIds,
+  inScopeProjectCount,
+  managedOrgCount,
+  openHighRiskCases,
+  overdueHighRiskCases,
+  overviewIndicatorEnabled,
+} from "../lib/overview";
 
 const PERIOD_START = "2026-01-01";
 const PERIOD_END = AS_OF;
@@ -337,6 +345,22 @@ const pay = seed.cash_transactions.find((t) => t.id === "P-PAY001");
 check("R07实付1200", pay?.amount_wan_cny, 1200);
 check("R07批准800", pay?.approved_amount, 800);
 check("R07可支付上限2000", pay?.certified_payable_amount, 2000);
+
+console.log("\n[综合总览主体口径]");
+check("总部含下级纳管单位（含总部）", managedOrgCount(HQ), 6);
+check("总部仅本级纳管单位", managedOrgCount(HQ_SELF), 1);
+check("总部含下级在管项目去重", inScopeProjectCount(HQ, null), 6);
+check("总部仅本级在管项目", inScopeProjectCount(HQ_SELF, null), 0);
+const orgA = orgScope("ORG-A", true);
+check("单位A含下级纳管单位（不含总部）", managedOrgCount(orgA), 3);
+check("单位A含下级在管项目", inScopeProjectCount(orgA, null), 4);
+check("单位C纳管单位", managedOrgCount(orgScope("ORG-C", true)), 1);
+check("单位C在管项目", inScopeProjectCount(orgScope("ORG-C", true), null), 0);
+check("高风险责任单位按实际单位去重", highRiskOwnerOrgIds(seed.risk_cases, HQ).join(","), "ORG-A1,ORG-OV");
+check("未关闭高风险事项", openHighRiskCases(seed.risk_cases, HQ).length, 4);
+check("逾期高风险事项", overdueHighRiskCases(seed.risk_cases, HQ, AS_OF).length, 1);
+check("EQ-I11总览不因首页启用", overviewIndicatorEnabled(indicator("EQ-I11")), false);
+check("现金回报偏差随 EQ-I08 未启用", overviewIndicatorEnabled(indicator("EQ-CASH-DEVIATION")), false);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {
