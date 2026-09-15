@@ -28,6 +28,7 @@ import { DOMAIN_META, evidenceById, phaseName, scenarioName, seed, topicName } f
 import { orgPath } from "@/lib/org";
 import { daysBetween, fmtDate } from "@/lib/format";
 import { isIndependentReviewer, objectAllowed, riskVisible } from "@/lib/config";
+import { isScenarioMonitoringActive, liveRuleLabel } from "@/lib/live-config";
 import { draftsForRisk } from "@/lib/materials";
 import { useDemoStore, type ActionKind } from "@/lib/store";
 import type { CaseAction, RiskCase } from "@/lib/types";
@@ -433,10 +434,37 @@ function RiskCaseDrawerBody({
                   { label: "承办人", value: risk.assignee_display_name ?? "未认领" },
                   { label: "首次发现", value: <span className="num">{fmtDate(risk.first_seen_at)}</span> },
                   { label: "最近命中", value: <span className="num">{fmtDate(risk.last_seen_at)}</span> },
-                  { label: "触发规则", value: <span className="num">{risk.rule_id}</span> },
+                  { label: "触发规则", value: liveRuleLabel(risk.rule_id) },
                   {
                     label: "关联监管场景",
-                    value: risk.scenario_ids.map((s) => `${s} ${scenarioName(s)}`).join("；"),
+                    value: (
+                      <span className="flex flex-wrap gap-1">
+                        {risk.scenario_ids.map((s) => (
+                          <Tag key={s} tone={isScenarioMonitoringActive(s) ? "brand" : "neutral"}>
+                            {s} {scenarioName(s)}
+                            {!isScenarioMonitoringActive(s) ? " · 已停用" : ""}
+                          </Tag>
+                        ))}
+                      </span>
+                    ),
+                  },
+                  {
+                    label: "历史评估版本",
+                    value:
+                      ruleEvals.length > 0 ? (
+                        <span>
+                          {ruleEvals
+                            .map(
+                              (e) =>
+                                `${e.rule_id} ${e.rule_version}｜${Object.entries(e.inputs)
+                                  .map(([k, v]) => `${k}=${String(v)}`)
+                                  .join("，")}`,
+                            )
+                            .join("；")}
+                        </span>
+                      ) : (
+                        "无自动评估记录"
+                      ),
                   },
                   { label: "主对象", value: <span className="num">{risk.primary_object_id}</span> },
                 ]}
@@ -497,7 +525,7 @@ function RiskCaseDrawerBody({
                 empty="该事项没有对应的自动规则评估记录，属人工核查线索。"
                 columns={[
                   { key: "id", title: "评估记录", width: "150px", render: (r) => <span className="num">{r.id}</span> },
-                  { key: "rule", title: "规则/版本", render: (r) => `${r.rule_id}（${r.rule_version}）` },
+                  { key: "rule", title: "规则/版本", render: (r) => `${liveRuleLabel(r.rule_id)}（${r.rule_version}）` },
                   {
                     key: "window",
                     title: "归属观察窗口",
@@ -517,6 +545,17 @@ function RiskCaseDrawerBody({
                     ),
                   },
                   { key: "formula", title: "计算式", render: (r) => <span className="text-[13px]">{r.formula}</span> },
+                  {
+                    key: "inputs",
+                    title: "当时参数",
+                    render: (r) => (
+                      <span className="num text-[12px]">
+                        {Object.entries(r.inputs)
+                          .map(([k, v]) => `${k}=${String(v)}`)
+                          .join("，") || "—"}
+                      </span>
+                    ),
+                  },
                 ]}
               />
               {ruleEvals.length > 0 && (

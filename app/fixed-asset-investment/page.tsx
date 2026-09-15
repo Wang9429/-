@@ -428,7 +428,7 @@ export default function Page() {
   return (
     <DomainPage
       domain="FA"
-      kpiIndicatorIds={["FA-CNT-PROJECT", "FA-I06", "FA-CNT-OVERBUDGET", "FA-I07", "FA-I14", "FA-OPEN"]}
+      kpiIndicatorIds={["FA-CNT-PROJECT", "FA-I06", "FA-CNT-OVERBUDGET", "FA-CNT-WATCH-HIT", "FA-I07", "FA-I14", "FA-OPEN"]}
       subtopicByPhase={{
         "FA-V12-08": [
           { id: "operation", label: "资产运营", note: "按资产统计：利用、盘活、权属及境外安排、减值迹象（FA-S29 至 33、35）" },

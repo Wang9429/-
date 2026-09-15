@@ -60,6 +60,8 @@ export interface ConfigRoot {
     enabled?: boolean;
     execution_mode?: string;
     primary_phase_id?: string;
+    object_types?: string[];
+    applicability_status?: string;
   }[];
   rule_definitions: {
     id: string;

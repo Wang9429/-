@@ -7,6 +7,8 @@ import {
   blankRule,
   nextRuleId,
   nextRuleVersion,
+  ruleRuntimeKind,
+  RULE_RUNTIME_LABEL,
   validateRule,
   type CatalogRule,
   type FieldErrors,
@@ -58,6 +60,12 @@ export default function RulesTab() {
   if (!canRead) return <Notice tone="amber">当前身份不能打开监测规则。</Notice>;
 
   const persist = (rules: CatalogRule[], action: string) => saveCatalog({ ...catalog, rules }, action);
+
+  const runtimeOf = (r: CatalogRule) =>
+    ruleRuntimeKind(
+      r,
+      catalog.subscenarios.find((s) => s.id === r.primary_subscenario_id),
+    );
 
   const openForm = (rule: CatalogRule, next: Mode) => {
     setDraft(structuredClone(rule));
@@ -116,9 +124,20 @@ export default function RulesTab() {
         : [...catalog.rules, published],
       "config.rules.publish",
     );
-    setFlash(
-      `已发布「${rule.name}」${version.version}，生效日 ${version.effective_date}。后续评估采用该版本；历史事项与历史评估不被覆盖。`,
-    );
+    const kind = runtimeOf(published);
+    if (kind === "executable") {
+      setFlash(
+        `已发布「${rule.name}」${version.version}，生效日 ${version.effective_date}。后续评估采用该版本；历史事项与历史评估不被覆盖。`,
+      );
+    } else if (kind === "manual_review") {
+      setFlash(
+        `已发布「${rule.name}」${version.version}。按专业核查办理，不改为自动阈值判断。`,
+      );
+    } else {
+      setFlash(
+        `已记录发布版本「${rule.name}」${version.version}。该规则尚未具备运行条件，不会自动执行。`,
+      );
+    }
     close();
   };
 
@@ -135,7 +154,11 @@ export default function RulesTab() {
       ),
       canPublish ? "config.rules.publish" : "config.rules.edit",
     );
-    setFlash(row.enabled ? `已停用「${row.name}」。历史评估保留。` : `已启用「${row.name}」。`);
+    setFlash(
+      row.enabled
+        ? `已停用「${row.name}」。后续监测停止；未关闭事项仍可查看并办理。`
+        : `已启用「${row.name}」。`,
+    );
   };
 
   const r01 = risks.find((r) => r.id === "R01");
@@ -166,6 +189,19 @@ export default function RulesTab() {
           columns={[
             { key: "name", title: "规则", render: (r) => r.name },
             { key: "st", title: "状态", width: "88px", render: (r) => configStatusLabel(r.status) },
+            {
+              key: "run",
+              title: "运行",
+              width: "148px",
+              render: (r) => {
+                const kind = runtimeOf(r);
+                return (
+                  <Tag tone={kind === "executable" ? "green" : kind === "manual_review" ? "amber" : "neutral"}>
+                    {RULE_RUNTIME_LABEL[kind]}
+                  </Tag>
+                );
+              },
+            },
             { key: "ver", title: "已发布版本", width: "100px", render: (r) => r.published?.version ?? "未发布" },
             { key: "en", title: "启用", width: "64px", render: (r) => (r.enabled ? "是" : "否") },
             {
@@ -223,9 +259,11 @@ export default function RulesTab() {
                 disabled={!canEdit}
                 extra={
                   <>
-                    <Button disabled={!canEdit} onClick={() => setTrialOpen(true)}>
-                      试算
-                    </Button>
+                    {runtimeOf(draft) === "executable" ? (
+                      <Button disabled={!canEdit} onClick={() => setTrialOpen(true)}>
+                        试算
+                      </Button>
+                    ) : null}
                     <Button
                       variant="primary"
                       disabled={!canPublish}
@@ -271,7 +309,15 @@ export default function RulesTab() {
               onChange={(e) => setDraft({ ...draft, condition_description: e.target.value })}
             />
           </Field>
-          <Field label="偏差率阈值（%）" hint="草稿参数，试算用；发布后才进入后续评估" error={errors.deviation_gt_pct}>
+          <Field
+            label="偏差率阈值（%）"
+            hint={
+              runtimeOf(draft) === "executable"
+                ? "草稿参数，试算用；发布后才进入后续评估"
+                : "定义项。当前规则不会按该阈值自动执行。"
+            }
+            error={errors.deviation_gt_pct}
+          >
             <input
               className={fieldClass(errors.deviation_gt_pct) + " w-28"}
               type="number"
@@ -289,8 +335,14 @@ export default function RulesTab() {
             />
           </Field>
           <p className="text-[12px] text-textsub">
-            当前草稿未默认运行。已发布版本 {draft.published?.version ?? "无"}。
-            {r01 ? ` R01 当前状态「${statusLabel[r01.status as keyof typeof statusLabel] ?? r01.status}」，不因草稿消失。` : ""}
+            {RULE_RUNTIME_LABEL[runtimeOf(draft)]}
+            {runtimeOf(draft) === "definition_only"
+              ? "：可维护定义与发布版本，当前不会自动执行。"
+              : runtimeOf(draft) === "manual_review"
+                ? "：按既定人工核查办理。"
+                : "。"}
+            已发布版本 {draft.published?.version ?? "无"}。
+            {r01 ? ` R01 当前状态「${statusLabel[r01.status as keyof typeof statusLabel] ?? r01.status}」，不因新版本关闭。` : ""}
           </p>
         </FormDrawer>
       )}

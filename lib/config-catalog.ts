@@ -45,6 +45,10 @@ export interface CatalogSubscenario {
   primary_phase_id: string;
   status: string;
   enabled: boolean;
+  /** pending=适用范围尚未确定；confirmed=已确定适用 */
+  applicability: "pending" | "confirmed";
+  required_fields: string[];
+  object_types: string[];
 }
 
 export interface RuleVersion {
@@ -189,6 +193,23 @@ function compactParams(raw: unknown): ParamMap {
   return out;
 }
 
+export type RuleRuntimeKind = "executable" | "manual_review" | "definition_only";
+
+export function ruleRuntimeKind(r: CatalogRule, sub?: CatalogSubscenario | null): RuleRuntimeKind {
+  if (sub?.execution_mode === "professional_review_support") return "manual_review";
+  if (r.id === config.rule_editor.new_rule_example.id) return "executable";
+  if (typeof r.draft_parameters.deviation_gt_pct === "number" || typeof r.published?.parameters.deviation_gt_pct === "number") {
+    return "executable";
+  }
+  return "definition_only";
+}
+
+export const RULE_RUNTIME_LABEL: Record<RuleRuntimeKind, string> = {
+  executable: "可执行",
+  manual_review: "专业核查",
+  definition_only: "尚未具备运行条件",
+};
+
 function exampleRule(): CatalogRule {
   const ex = config.rule_editor.new_rule_example;
   const draft = compactParams(ex.parameters);
@@ -222,6 +243,9 @@ export function extractCatalog(): CatalogPersist {
     primary_phase_id: s.primary_phase_id ?? "",
     status: s.status,
     enabled: s.enabled !== false,
+    applicability: s.applicability_status === "pending" ? "pending" : "confirmed",
+    required_fields: [],
+    object_types: s.object_types ?? [],
   }));
   const rules: CatalogRule[] = config.rule_definitions.map((r) => {
     const params = compactParams(r.parameters);
@@ -295,7 +319,12 @@ export function hydrateCatalog(raw: unknown): CatalogPersist {
   return {
     schema: 1,
     groups: mergeById(base.groups, r.groups),
-    subscenarios: mergeById(base.subscenarios, r.subscenarios),
+    subscenarios: mergeById(base.subscenarios, r.subscenarios).map((s) => ({
+      ...s,
+      applicability: s.applicability === "pending" || s.applicability === "confirmed" ? s.applicability : "pending",
+      required_fields: Array.isArray(s.required_fields) ? s.required_fields : [],
+      object_types: Array.isArray(s.object_types) ? s.object_types : [],
+    })),
     rules: mergeById(base.rules, r.rules).map((rule) => ({
       ...rule,
       draft_parameters: { ...(rule.draft_parameters ?? {}) },
@@ -487,6 +516,9 @@ export function blankSub(id: string, parent: CatalogGroup | undefined): CatalogS
     primary_phase_id: "",
     status: "published",
     enabled: true,
+    applicability: "pending",
+    required_fields: [],
+    object_types: [],
   };
 }
 

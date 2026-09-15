@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { DataTable, DescList, Drawer, EmptyState, Notice, SimulatedBadge, SourceEvidence, Tag } from "@/components/ui";
+import { DataTable, DescList, Drawer, SimulatedBadge, SourceEvidence, Tag } from "@/components/ui";
 import {
   catalog,
   monitoringStatusLabel,
@@ -16,7 +16,8 @@ import { objectName } from "@/lib/objects";
 import { orgName } from "@/lib/org";
 import { useDemoStore } from "@/lib/store";
 import { authorizedObjectIds, intersectOrgScope } from "@/lib/config";
-import { computeFiveCounts, scenarioHasPendingApplicability, selectRows } from "@/lib/monitoring";
+import { isScenarioMonitoringActive, liveSub } from "@/lib/live-config";
+import { computeFiveCounts, scenarioRuntimeStatus, selectRows } from "@/lib/monitoring";
 import type { DomainId } from "@/lib/types";
 
 /**
@@ -46,7 +47,8 @@ export default function ScenarioDrawer({
     if (!scenarioId) return null;
     const cat = catalog.scenarios.find((s) => s.id === scenarioId);
     const supp = seed.supplemental_scenarios.find((s) => s.id === scenarioId);
-    const domain = (cat?.domain ?? supp?.domain) as DomainId | undefined;
+    const live = liveSub(scenarioId);
+    const domain = (cat?.domain ?? supp?.domain ?? live?.domain) as DomainId | undefined;
     const scope = domain
       ? {
           domain,
@@ -62,16 +64,18 @@ export default function ScenarioDrawer({
     const counts = scope ? computeFiveCounts(scope, risks) : null;
     const ruleIds = [...new Set(rows.flatMap((r) => r.rule_ids))];
     const evals = seed.rule_evaluations.filter((e) => ruleIds.includes(e.rule_id));
-    const riskIds = [...new Set(rows.flatMap((r) => r.risk_ids))];
-    const pending = scenarioHasPendingApplicability(scenarioId);
-    return { cat, supp, rows, ruleIds, evals, riskIds, counts, pending, domain };
+    const runtime = domain
+      ? scenarioRuntimeStatus(scenarioId, rows, { domain, orgScope: orgIds, allowedObjectIds })
+      : null;
+    return { cat, supp, rows, ruleIds, evals, counts, domain, runtime };
   }, [scenarioId, orgIds, allowedObjectIds, filters.periodStart, filters.periodEnd, filters.asOf, risks]);
 
   if (!scenarioId || !detail) return null;
 
-  const { cat, supp, rows, ruleIds, evals, riskIds, counts, pending } = detail;
+  const { cat, supp, rows, ruleIds, evals, counts, runtime } = detail;
   const hitTypes = new Set(evals.filter((e) => e.effective_result === "hit").map((e) => e.rule_id));
   const scopeLine = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}｜截至 ${filters.asOf}`;
+  const monitoringActive = isScenarioMonitoringActive(scenarioId);
 
   return (
     <Drawer
@@ -85,6 +89,8 @@ export default function ScenarioDrawer({
           <Tag tone={scenarioAdoption(scenarioId) === "结构化监测" ? "brand" : "neutral"}>
             {scenarioAdoption(scenarioId)}
           </Tag>
+          {runtime && <Tag tone={runtime.tone}>{runtime.label}</Tag>}
+          {!monitoringActive && <Tag tone="neutral">已停用</Tag>}
         </span>
       }
       subtitle={
@@ -144,10 +150,8 @@ export default function ScenarioDrawer({
           </>
         )}
 
-        {pending && (
-          <Notice tone="neutral" title="适用性尚未确认">
-            本场景仍有覆盖规划候选，不计入业务应评估分母，也不在业务清单中渲染为数据不足。规划候选见系统配置 · 数据与运行。
-          </Notice>
+        {runtime?.code === "unevaluated_missing" && runtime.missingFields.length > 0 && (
+          <p className="text-[13px] text-textsub">缺 {runtime.missingFields.join("、")}</p>
         )}
 
         <div>
@@ -196,11 +200,7 @@ export default function ScenarioDrawer({
           <DataTable
             rows={rows}
             rowKey={(r) => r.id}
-            empty={
-              pending
-                ? "适用性尚未确认，候选记录在配置规划中，不进入本清单。"
-                : "当前范围没有相应业务。明确监测完整且没有命中才显示 0。"
-            }
+            empty={runtime?.label ?? "待评估"}
             onRowClick={(r) => onOpenObject?.(r.monitoring_object_id)}
             columns={[
               {
@@ -273,12 +273,6 @@ export default function ScenarioDrawer({
             ]}
           />
         </div>
-
-        {rows.length === 0 && riskIds.length === 0 && (
-          <EmptyState
-            title={pending ? "适用性尚未确认" : "当前范围没有相应业务"}
-          />
-        )}
 
         <div>
           <SimulatedBadge text="合成样例" />

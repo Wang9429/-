@@ -1,5 +1,5 @@
-import type { CatalogPersist, CatalogSubscenario } from "./config-catalog";
-import { extractCatalog } from "./config-catalog";
+import type { CatalogPersist, CatalogSubscenario, CatalogRule } from "./config-catalog";
+import { extractCatalog, ruleRuntimeKind } from "./config-catalog";
 import { config } from "./config";
 import { setLiveScenarioNames } from "./scenario-names-live";
 
@@ -8,6 +8,19 @@ export interface LiveExtraScenario {
   domain: string;
   name: string;
   primary_phase_id: string;
+  applicability: "pending" | "confirmed";
+  required_fields: string[];
+  object_types: string[];
+  execution_mode: string;
+  enabled: boolean;
+}
+
+export interface LiveWatchRule {
+  ruleId: string;
+  version: string;
+  pct: number;
+  scope: string;
+  effective_date: string;
 }
 
 export interface LiveIndicatorMeta {
@@ -23,8 +36,10 @@ interface LiveState {
   disabledScenarioIds: Set<string>;
   extraScenarios: LiveExtraScenario[];
   scenarioNames: Map<string, string>;
+  subs: Map<string, CatalogSubscenario>;
   indicators: Map<string, LiveIndicatorMeta>;
-  publishedDeviationPct: number | null;
+  publishedWatch: LiveWatchRule | null;
+  rules: CatalogRule[];
   aiEnabled: boolean;
   aiTasks: Set<string>;
   aiDomains: Set<string>;
@@ -39,8 +54,10 @@ function emptyLive(): LiveState {
     disabledScenarioIds: new Set(),
     extraScenarios: [],
     scenarioNames: new Map(),
+    subs: new Map(),
     indicators: new Map(),
-    publishedDeviationPct: null,
+    publishedWatch: null,
+    rules: [],
     aiEnabled: true,
     aiTasks: new Set(config.ai.tasks.map((t) => t.id)),
     aiDomains: new Set(["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"]),
@@ -74,12 +91,17 @@ export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined):
     scenarioNames.set(s.id, s.name);
     const parentDisabled = disabledGroups.has(s.parent_id);
     if (!isSubActive(s, parentDisabled)) disabledScenarioIds.add(s.id);
-    if (!seedIds.has(s.id) && isSubActive(s, parentDisabled)) {
+    if (!seedIds.has(s.id)) {
       extraScenarios.push({
         id: s.id,
         domain: s.domain,
         name: s.name,
         primary_phase_id: s.primary_phase_id,
+        applicability: s.applicability,
+        required_fields: s.required_fields ?? [],
+        object_types: s.object_types ?? [],
+        execution_mode: s.execution_mode,
+        enabled: isSubActive(s, parentDisabled),
       });
     }
   }
@@ -94,19 +116,32 @@ export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined):
       domain: i.domain,
     });
   }
-  const trialId = config.rule_editor.new_rule_example.id;
-  const trial = catalog.rules.find((r) => r.id === trialId);
-  let publishedDeviationPct: number | null = null;
-  if (trial?.published && trial.status === "published" && trial.enabled !== false) {
-    const n = trial.published.parameters.deviation_gt_pct;
-    if (typeof n === "number") publishedDeviationPct = n;
+  const subs = new Map(catalog.subscenarios.map((s) => [s.id, s]));
+  let publishedWatch: LiveWatchRule | null = null;
+  for (const r of catalog.rules) {
+    if (!r.published || r.status !== "published" || r.enabled === false) continue;
+    const kind = ruleRuntimeKind(r, subs.get(r.primary_subscenario_id));
+    if (kind !== "executable") continue;
+    const n = r.published.parameters.deviation_gt_pct;
+    if (typeof n !== "number") continue;
+    if (!publishedWatch || r.published.effective_date >= publishedWatch.effective_date) {
+      publishedWatch = {
+        ruleId: r.id,
+        version: r.published.version,
+        pct: n,
+        scope: r.published.scope,
+        effective_date: r.published.effective_date,
+      };
+    }
   }
   current = {
     disabledScenarioIds,
     extraScenarios,
     scenarioNames,
+    subs,
     indicators,
-    publishedDeviationPct,
+    publishedWatch,
+    rules: catalog.rules,
     aiEnabled: catalog.ai.enabled !== false,
     aiTasks: new Set(catalog.ai.tasks.filter((t) => t.enabled !== false).map((t) => t.id)),
     aiDomains: new Set(catalog.ai.allowed_domains),
@@ -120,8 +155,29 @@ export function getLiveConfig(): LiveState {
   return current;
 }
 
-export function isScenarioConfiguredVisible(id: string): boolean {
+export function isScenarioMonitoringActive(id: string): boolean {
   return !current.disabledScenarioIds.has(id);
+}
+
+export function liveSub(id: string): CatalogSubscenario | undefined {
+  return current.subs.get(id);
+}
+
+export function publishedWatchRule(): LiveWatchRule | null {
+  return current.publishedWatch;
+}
+
+export function liveRules(): CatalogRule[] {
+  return current.rules;
+}
+
+export function liveRule(id: string): CatalogRule | undefined {
+  return current.rules.find((r) => r.id === id);
+}
+
+export function liveRuleLabel(id: string): string {
+  const r = liveRule(id);
+  return r ? `${r.id} ${r.name}` : id;
 }
 
 export function catalogIndicatorVisible(id: string): boolean {
@@ -143,7 +199,7 @@ export function homepageCatalogIndicatorIds(domain?: string): string[] {
 }
 
 export function publishedDeviationPct(): number | null {
-  return current.publishedDeviationPct;
+  return current.publishedWatch?.pct ?? null;
 }
 
 export function liveAi() {

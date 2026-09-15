@@ -2,7 +2,7 @@ import { AS_OF, seed } from "./seed";
 import { isOpen, riskMatches } from "./risks";
 import type { DomainId, ObjectType, RiskCase } from "./types";
 import { INDICATOR_CALIBER, periodFact } from "./period";
-import { publishedDeviationPct } from "./live-config";
+import { publishedWatchRule } from "./live-config";
 
 /**
  * 指标一律从基础业务记录计算；expected_results 只用于验收核对，
@@ -432,19 +432,12 @@ export const INDICATORS: IndicatorDef[] = [
     kind: "count",
     leafObjectType: "fixed_asset_project",
     formula: "预计完工投资 > 当前有效概算的项目数（按项目去重）",
-    caliber: "逐项判断，不用平均偏差替代逐项异常；数据不完整的项目单列并显示已知下限。",
+    caliber: "逐项判断，不用平均偏差替代逐项异常；数据不完整的项目单列并显示已知下限。与关注规则命中分开统计。",
     sourceNote: "预计完工投资构成及有效概算记录（模拟）",
     evaluate: (v) => (v === null ? "unknown" : (v as number) > 0 ? "risk" : "normal"),
     leaves: (ctx) =>
       faProjects()
-        .filter((p) => {
-          const eac = num(p.eac);
-          if (eac === null) return false;
-          const thr = publishedDeviationPct();
-          if (thr == null) return eac > p.effective_approved_budget;
-          const pct = ((eac - p.effective_approved_budget) / p.effective_approved_budget) * 100;
-          return pct > thr;
-        })
+        .filter((p) => num(p.eac) !== null && (p.eac as number) > p.effective_approved_budget)
         .map((p) => ({
           objectId: p.id,
           objectType: "fixed_asset_project" as ObjectType,
@@ -464,6 +457,51 @@ export const INDICATORS: IndicatorDef[] = [
           riskIds: risksFor(p.id, ctx),
           dataComplete: true,
         })),
+  },
+  {
+    id: "FA-CNT-WATCH-HIT",
+    name: "超概关注规则命中项目数",
+    domain: "FA",
+    unit: "个",
+    kind: "count",
+    leafObjectType: "fixed_asset_project",
+    formula: "已发布关注规则：预计完工投资偏差率 > 发布阈值的项目数。不改变预计超概事实。",
+    caliber: "仅采用已发布且可执行的规则版本；草稿不计入。未发布或未到生效日显示未执行，不当 0。",
+    sourceNote: "与预计超概项目数分列：超概按 EAC>有效概算，命中按发布阈值",
+    evaluate: (v) => (v === null ? "unknown" : (v as number) > 0 ? "attention" : "normal"),
+    leaves: (ctx) => {
+      const watch = publishedWatchRule();
+      return faProjects()
+        .filter((p) => num(p.eac) !== null)
+        .map((p) => {
+          const pct = (((p.eac as number) - p.effective_approved_budget) / p.effective_approved_budget) * 100;
+          const ready = Boolean(watch) && ctx.asOf >= (watch?.effective_date ?? "");
+          const hit = ready && pct > (watch?.pct ?? Infinity);
+          return {
+            objectId: p.id,
+            objectType: "fixed_asset_project" as ObjectType,
+            name: p.name,
+            orgId: p.owner_org_id,
+            numerator: hit ? 1 : 0,
+            denominator: null,
+            countWeight: hit ? 1 : 0,
+            extras: [
+              { label: "预计完工投资", value: `${p.eac} 万元` },
+              { label: "有效概算", value: `${p.effective_approved_budget} 万元` },
+              { label: "偏差率", value: `${pct.toFixed(2)}%` },
+              {
+                label: "关注规则",
+                value: ready
+                  ? `${watch!.ruleId} ${watch!.version} 阈值 ${watch!.pct}%｜${hit ? "命中" : "未命中"}`
+                  : "未发布或未生效，未执行",
+              },
+            ],
+            riskIds: risksFor(p.id, ctx),
+            dataComplete: ready,
+            gapNote: ready ? undefined : "关注规则未发布，未执行",
+          };
+        });
+    },
   },
   {
     id: "FA-OPEN",

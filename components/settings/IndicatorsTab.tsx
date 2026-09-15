@@ -14,7 +14,7 @@ import {
 import { indicatorDisableImpact } from "@/lib/config-impact";
 import { fmtPct } from "@/lib/format";
 import { configStatusLabel, displayPositionLabel, domainCodeLabel } from "@/lib/labels";
-import { INDICATORS, computeIndicator } from "@/lib/metrics";
+import { INDICATORS, computeIndicator, indicatorById } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store";
 import { ActionCell, FormDrawer, SaveBar, denyTitle, fieldClass } from "./shared";
 
@@ -65,7 +65,11 @@ export default function IndicatorsTab() {
     const next =
       mode === "create" ? [...catalog.indicators, draft] : catalog.indicators.map((i) => (i.id === draft.id ? draft : i));
     persist(next);
-    setFlash(`已保存「${draft.name}」。展示位置与启用状态立即作用于业务首页。`);
+    setFlash(
+      indicatorById(draft.id)
+        ? `已保存「${draft.name}」。展示位置与启用状态立即作用于业务首页。`
+        : `已保存「${draft.name}」。仅进入目录，尚未接入计算。`,
+    );
     close();
   };
 
@@ -135,6 +139,16 @@ export default function IndicatorsTab() {
             { key: "name", title: "名称", render: (r) => r.name },
             { key: "domain", title: "领域", width: "80px", render: (r) => domainCodeLabel(r.domain) },
             { key: "st", title: "状态", width: "80px", render: (r) => configStatusLabel(r.status) },
+            {
+              key: "run",
+              title: "运行",
+              width: "110px",
+              render: (r) => (
+                <Tag tone={indicatorById(r.id) ? "green" : "neutral"}>
+                  {indicatorById(r.id) ? "已接入计算" : "仅目录"}
+                </Tag>
+              ),
+            },
             { key: "pos", title: "展示位置", width: "90px", render: (r) => displayPositionLabel(r.display_position) },
             {
               key: "en",

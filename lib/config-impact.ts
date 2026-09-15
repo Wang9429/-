@@ -35,7 +35,7 @@ export function subDisableImpact(sub: CatalogSubscenario, risks: RiskCase[]): Di
   const open = risks.filter((r) => r.scenario_ids.includes(sub.id) && isOpen(r));
   return {
     title: "停用监管子场景",
-    detail: `停用「${sub.name}」后，业务清单不再展示该子场景（当前覆盖 ${rows.length} 条）。未关闭事项 ${open.length} 件及历史评估仍保留原引用，不会被删除或改写。`,
+    detail: `停用「${sub.name}」后，后续监测停止（当前覆盖 ${rows.length} 条）。未关闭事项 ${open.length} 件仍出现在工作台、对象档案及总览，历史评估与来源版本可从事项查看。`,
   };
 }
 
@@ -46,7 +46,7 @@ export function groupDisableImpact(group: CatalogGroup, subs: CatalogSubscenario
   const open = risks.filter((r) => r.scenario_ids.some((id) => childIds.has(id)) && isOpen(r));
   return {
     title: "停用一级监管场景",
-    detail: `停用「${group.name}」后，其下 ${children.length} 个子场景不再进入业务入口（覆盖 ${rows.length} 条）。未关闭事项 ${open.length} 件仍保留历史引用。`,
+    detail: `停用「${group.name}」后，其下 ${children.length} 个子场景停止后续监测（覆盖 ${rows.length} 条）。未关闭事项 ${open.length} 件仍出现在工作台、对象档案及总览。`,
   };
 }
 
@@ -55,7 +55,7 @@ export function ruleDisableImpact(rule: CatalogRule, risks: RiskCase[]): Disable
   const open = risks.filter((r) => r.rule_id === rule.id && isOpen(r));
   return {
     title: "停用监测规则",
-    detail: `停用「${rule.name}」后，后续评估不再采用其已发布版本。历史评估 ${evals.length} 条、未关闭事项 ${open.length} 件保留原参数与结论，不会被覆盖。`,
+    detail: `停用「${rule.name}」后，后续监测停止。历史评估 ${evals.length} 条、未关闭事项 ${open.length} 件仍可查看并办理，原版本与参数可从事项依据中查看，不会被覆盖或关闭。`,
   };
 }
 

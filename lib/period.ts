@@ -56,6 +56,7 @@ export const INDICATOR_CALIBER: Record<string, FactCaliber> = {
   "FA-I21": "period_snapshot",
   "FA-CNT-PROJECT": "balance",
   "FA-CNT-OVERBUDGET": "balance",
+  "FA-CNT-WATCH-HIT": "balance",
   "EQ-BALANCE": "balance",
   "EQ-I11": "ytd",
   "EQ-I15": "period_snapshot",

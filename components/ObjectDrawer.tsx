@@ -7,6 +7,7 @@ import { DOMAIN_META, evidenceById, phaseName, scenarioName, seed, templateById 
 import { orgName, orgPath } from "@/lib/org";
 import { fmtAmount, fmtDate, fmtPct } from "@/lib/format";
 import { objectAllowed } from "@/lib/config";
+import { isScenarioMonitoringActive } from "@/lib/live-config";
 import { isOpen, statusLabel } from "@/lib/risks";
 import { useDemoStore } from "@/lib/store";
 import type { LifecycleInstance } from "@/lib/types";
@@ -397,7 +398,14 @@ function ObjectDrawerBody({
             rowKey={(r) => r.id}
             empty="该对象当前没有监测实例。"
             columns={[
-              { key: "sc", title: "监管场景", render: (r) => `${r.scenario_id} ${scenarioName(r.scenario_id)}` },
+              { key: "sc", title: "监管场景", render: (r) => (
+                <span>
+                  {r.scenario_id} {scenarioName(r.scenario_id)}
+                  {!isScenarioMonitoringActive(r.scenario_id) ? (
+                    <Tag tone="neutral">已停用</Tag>
+                  ) : null}
+                </span>
+              ) },
               { key: "phase", title: "关联环节", width: "130px", render: (r) => (r.phase_id ? phaseName(r.phase_id) : "—") },
               {
                 key: "win",

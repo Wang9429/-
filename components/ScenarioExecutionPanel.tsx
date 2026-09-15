@@ -17,11 +17,12 @@ import {
 import {
   computeFiveCounts,
   configuredScenarios,
-  scenarioHasPendingApplicability,
+  scenarioRuntimeStatus,
   selectRows,
   type FiveCounts,
   type ScopeFilter,
 } from "@/lib/monitoring";
+import { isScenarioMonitoringActive } from "@/lib/live-config";
 import {
   objectTypeLabel,
   scenarioAdoption,
@@ -58,33 +59,6 @@ const DETAIL_TITLE: Record<DetailKind, string> = {
   overdue: "逾期整改事项（截至日）",
 };
 
-function scenarioStatus(
-  rows: MonitoringRow[],
-  scenarioId: string,
-): { label: string; tone: "red" | "amber" | "green" | "neutral" } {
-  const pending = scenarioHasPendingApplicability(scenarioId);
-  if (rows.length === 0) {
-    if (pending) return { label: "适用性尚未确认（覆盖规划）", tone: "neutral" };
-    return { label: "当前范围无业务", tone: "neutral" };
-  }
-  const evaluated = rows.filter((r) => r.status === "evaluated_hit" || r.status === "evaluated_clear");
-  const hit = rows.filter((r) => r.status === "evaluated_hit");
-  const insufficient = rows.filter((r) => r.status === "data_insufficient");
-  const notDue = rows.filter((r) => r.status === "not_due");
-  const reference = rows.filter((r) => r.status === "reference_only");
-  const applicable = rows.filter((r) => r.status !== "not_applicable");
-
-  if (applicable.length === 0) return { label: "不适用", tone: "neutral" };
-  if (hit.length > 0 && evaluated.length < applicable.length) return { label: "部分完成·已有命中", tone: "red" };
-  if (hit.length > 0) return { label: "已完成监测·有命中", tone: "red" };
-  if (reference.length === applicable.length) return { label: "需人工核查", tone: "neutral" };
-  if (insufficient.length > 0 && evaluated.length === 0) return { label: "数据不足", tone: "amber" };
-  if (notDue.length === applicable.length) return { label: "未到监测时点", tone: "neutral" };
-  if (evaluated.length === 0) return { label: "待监测", tone: "neutral" };
-  if (evaluated.length < applicable.length) return { label: "部分完成", tone: "amber" };
-  return { label: "已完成监测·无异常", tone: "green" };
-}
-
 interface ScenarioRow {
   id: string;
   name: string;
@@ -93,6 +67,7 @@ interface ScenarioRow {
   counts: FiveCounts;
   statusLabelText: string;
   statusTone: "red" | "amber" | "green" | "neutral";
+  monitoringActive: boolean;
   redOpen: number;
   objectTypes: string[];
 }
@@ -161,7 +136,11 @@ export default function ScenarioExecutionPanel({
         const scope = { ...baseScope, scenarioId: id };
         const rows = selectRows(scope);
         const counts = computeFiveCounts(scope, risks);
-        const st = scenarioStatus(rows, id);
+        const st = scenarioRuntimeStatus(id, rows, {
+          domain,
+          orgScope: orgIds,
+          allowedObjectIds,
+        });
         const redOpen = counts.openRiskIds.filter(
           (rid) => risks.find((r) => r.id === rid)?.severity === "red",
         ).length;
@@ -173,6 +152,7 @@ export default function ScenarioExecutionPanel({
           counts,
           statusLabelText: st.label,
           statusTone: st.tone,
+          monitoringActive: isScenarioMonitoringActive(id),
           redOpen,
           objectTypes: [...new Set(rows.map((r) => r.object_type))],
         };
@@ -185,13 +165,13 @@ export default function ScenarioExecutionPanel({
               ? 1
               : r.counts.openRiskIds.length > 0
                 ? 2
-                : r.statusLabelText === "数据不足"
+                : r.statusLabelText.startsWith("未评估")
                   ? 3
                   : 4;
         const d = rank(a) - rank(b);
         return d !== 0 ? d : a.id.localeCompare(b.id);
       });
-  }, [domain, phaseId, baseScope, risks, summary.openRiskIds]);
+  }, [domain, phaseId, baseScope, risks, summary.openRiskIds, orgIds, allowedObjectIds]);
 
   const visibleScenarioRows = useMemo(
     () =>
@@ -446,7 +426,12 @@ export default function ScenarioExecutionPanel({
               key: "status",
               title: "监测状态",
               width: "132px",
-              render: (r) => <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>,
+              render: (r) => (
+                <span className="inline-flex flex-wrap items-center gap-1">
+                  <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>
+                  {!r.monitoringActive && <Tag tone="neutral">已停用</Tag>}
+                </span>
+              ),
             },
             {
               key: "monitored",
@@ -455,9 +440,7 @@ export default function ScenarioExecutionPanel({
               width: "110px",
               render: (r) =>
                 r.rows.length === 0 ? (
-                  <span className="text-textsub">
-                    {r.statusLabelText.includes("覆盖规划") ? "—（覆盖规划）" : "无业务"}
-                  </span>
+                  <span className="text-textsub">{r.statusLabelText === "无业务" ? "无业务" : "—"}</span>
                 ) : (
                   <button
                     className="num text-brand hover:underline"

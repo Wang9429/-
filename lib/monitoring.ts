@@ -1,6 +1,6 @@
 import { coverageById } from "./config";
 import { coverageRows, seed } from "./seed";
-import { isScenarioConfiguredVisible, getLiveConfig } from "./live-config";
+import { getLiveConfig, liveSub } from "./live-config";
 import {
   isOpen,
   isOverdueRectification,
@@ -42,7 +42,6 @@ export function scenarioHasPendingApplicability(scenarioId: string): boolean {
 export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
   // 未确认适用性的覆盖规划候选不进入业务清单与应评估分母；传入 scenarioId 也不能重新纳入。
   if (isCoverageCandidate(row)) return false;
-  if (!isScenarioConfiguredVisible(row.scenario_id)) return false;
   if (row.domain !== f.domain) return false;
   if (!f.orgScope.has(row.owner_org_id)) return false;
   if (row.window_end < f.periodStart || row.window_end > f.periodEnd) return false;
@@ -250,25 +249,139 @@ export function scenariosInScope(f: ScopeFilter): string[] {
   return [...set].sort();
 }
 
-/** 领域内所有已配置场景（含无实例场景，用于显示模板与空态）。 */
+/** 领域内已配置场景。停用后仍保留已有覆盖与事项入口；仅未启用且无历史的新增项不进入业务清单。 */
 export function configuredScenarios(domain: DomainId, phaseId?: string | null): string[] {
   const live = getLiveConfig();
   const set = new Set<string>();
   for (const row of coverageRows) {
     if (row.domain !== domain) continue;
     if (phaseId && row.phase_id !== phaseId) continue;
-    if (!isScenarioConfiguredVisible(row.scenario_id)) continue;
     set.add(row.scenario_id);
   }
   if (!phaseId) {
     for (const s of seed.supplemental_scenarios) {
-      if (s.domain === domain && isScenarioConfiguredVisible(s.id)) set.add(s.id);
+      if (s.domain === domain) set.add(s.id);
     }
   }
   for (const extra of live.extraScenarios) {
     if (extra.domain !== domain) continue;
     if (phaseId && extra.primary_phase_id && extra.primary_phase_id !== phaseId) continue;
-    if (isScenarioConfiguredVisible(extra.id)) set.add(extra.id);
+    if (extra.enabled || set.has(extra.id)) set.add(extra.id);
   }
   return [...set].sort();
+}
+
+export function scopedObjectCount(
+  domain: DomainId,
+  orgScope: Set<string>,
+  allowedObjectIds: string[] | null | undefined,
+  objectTypes?: string[],
+): number {
+  const allow = (id: string, orgId: string) => {
+    if (!orgScope.has(orgId)) return false;
+    if (allowedObjectIds !== undefined && allowedObjectIds !== null && !allowedObjectIds.includes(id)) return false;
+    return true;
+  };
+  const want = objectTypes && objectTypes.length ? new Set(objectTypes) : null;
+  const match = (type: string) => !want || want.has(type);
+  let n = 0;
+  if (match("fixed_asset_project") && (domain === "FA" || !want)) {
+    n += seed.fixed_asset_projects.filter((p) => allow(p.id, p.owner_org_id)).length;
+  }
+  if (match("asset") && domain === "FA") n += seed.assets.filter((a) => allow(a.id, a.owner_org_id)).length;
+  if (match("equity_project") && domain === "EQ") n += seed.equity_projects.filter((p) => allow(p.id, p.owner_org_id)).length;
+  if (match("engineering_project") && (domain === "ENG" || domain === "INTL")) {
+    n += seed.engineering_projects.filter((p) => allow(p.id, p.owner_org_id)).length;
+  }
+  if (match("account") && domain === "CASH") n += seed.accounts.filter((a) => allow(a.id, a.owner_org_id)).length;
+  if (match("property_matter") && domain === "RIGHTS") n += seed.property_matters.filter((m) => allow(m.id, m.owner_org_id)).length;
+  return n;
+}
+
+export interface ScenarioRuntimeStatus {
+  code:
+    | "pending_applicability"
+    | "pending_eval"
+    | "unevaluated_missing"
+    | "no_business"
+    | "hit_zero"
+    | "hit"
+    | "partial_hit"
+    | "partial"
+    | "manual"
+    | "not_due"
+    | "not_applicable";
+  label: string;
+  tone: "red" | "amber" | "green" | "neutral";
+  missingFields: string[];
+}
+
+/**
+ * 摘要、清单、详情共用的监测状态。
+ * 无覆盖实例时按适用性、对象、必要字段区分，不统一写成无业务。
+ */
+export function scenarioRuntimeStatus(
+  scenarioId: string,
+  rows: MonitoringRow[],
+  ctx: {
+    domain: DomainId;
+    orgScope: Set<string>;
+    allowedObjectIds?: string[] | null;
+  },
+): ScenarioRuntimeStatus {
+  const sub = liveSub(scenarioId);
+  const pendingByCatalog = sub?.applicability === "pending";
+  const pendingByCoverage = scenarioHasPendingApplicability(scenarioId);
+
+  if (pendingByCatalog) {
+    return { code: "pending_applicability", label: "待确认适用性", tone: "neutral", missingFields: [] };
+  }
+
+  if (rows.length === 0) {
+    if (pendingByCoverage) {
+      return { code: "pending_applicability", label: "待确认适用性", tone: "neutral", missingFields: [] };
+    }
+    const missing = (sub?.required_fields ?? []).map((s) => s.trim()).filter(Boolean);
+    if (missing.length) {
+      return {
+        code: "unevaluated_missing",
+        label: `未评估（缺 ${missing.join("、")}）`,
+        tone: "amber",
+        missingFields: missing,
+      };
+    }
+    const n = scopedObjectCount(ctx.domain, ctx.orgScope, ctx.allowedObjectIds, sub?.object_types);
+    if (n === 0) return { code: "no_business", label: "无业务", tone: "neutral", missingFields: [] };
+    if (sub?.execution_mode === "professional_review_support") {
+      return { code: "manual", label: "待评估", tone: "neutral", missingFields: [] };
+    }
+    return { code: "pending_eval", label: "待评估", tone: "neutral", missingFields: [] };
+  }
+
+  const evaluated = rows.filter((r) => r.status === "evaluated_hit" || r.status === "evaluated_clear");
+  const hit = rows.filter((r) => r.status === "evaluated_hit");
+  const insufficient = rows.filter((r) => r.status === "data_insufficient");
+  const notDue = rows.filter((r) => r.status === "not_due");
+  const reference = rows.filter((r) => r.status === "reference_only");
+  const applicable = rows.filter((r) => r.status !== "not_applicable");
+  const missing = [...new Set(rows.flatMap((r) => r.missing_data ?? []))].filter(Boolean);
+
+  if (applicable.length === 0) return { code: "not_applicable", label: "不适用", tone: "neutral", missingFields: [] };
+  if (insufficient.length > 0 && evaluated.length === 0) {
+    return {
+      code: "unevaluated_missing",
+      label: missing.length ? `未评估（缺 ${missing.join("、")}）` : "未评估",
+      tone: "amber",
+      missingFields: missing,
+    };
+  }
+  if (hit.length > 0 && evaluated.length < applicable.length) {
+    return { code: "partial_hit", label: "部分完成·已有命中", tone: "red", missingFields: missing };
+  }
+  if (hit.length > 0) return { code: "hit", label: "已完成监测·有命中", tone: "red", missingFields: missing };
+  if (reference.length === applicable.length) return { code: "manual", label: "专业核查", tone: "neutral", missingFields: [] };
+  if (notDue.length === applicable.length) return { code: "not_due", label: "待评估", tone: "neutral", missingFields: [] };
+  if (evaluated.length === 0) return { code: "pending_eval", label: "待评估", tone: "neutral", missingFields: missing };
+  if (evaluated.length < applicable.length) return { code: "partial", label: "部分完成", tone: "amber", missingFields: missing };
+  return { code: "hit_zero", label: "命中数为0", tone: "green", missingFields: [] };
 }

@@ -17,6 +17,8 @@ import {
 } from "@/lib/config-catalog";
 import { groupDisableImpact, subDisableImpact } from "@/lib/config-impact";
 import { configStatusLabel, domainCodeLabel, executionModeLabel } from "@/lib/labels";
+import { authorizedObjectIds, intersectOrgScope } from "@/lib/config";
+import { scenarioRuntimeStatus } from "@/lib/monitoring";
 import { phaseName, templatesByDomain } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import type { DomainId } from "@/lib/types";
@@ -41,7 +43,7 @@ function phasesOf(domain: string) {
 }
 
 export default function ScenariosTab() {
-  const { catalog, saveCatalog, canAct, risks } = useDemoStore();
+  const { catalog, saveCatalog, canAct, risks, filters, user } = useDemoStore();
   const canRead = canAct("config.scenarios.read") || canAct("config.scenarios.edit");
   const canEdit = canAct("config.scenarios.edit");
   const [gid, setGid] = useState(catalog.groups[0]?.id ?? "");
@@ -88,7 +90,14 @@ export default function ScenariosTab() {
           : catalog.subscenarios.map((s) => (s.id === target.value.id ? target.value : s));
       persist(catalog.groups, subs);
       setGid(target.value.parent_id);
-      setFlash(`已保存监管子场景「${target.value.name}」。业务清单按启用状态更新。`);
+      const orgIds = intersectOrgScope(filters.orgId, filters.includeChildren, user);
+      const allowedObjectIds = authorizedObjectIds(user);
+      const st = scenarioRuntimeStatus(target.value.id, [], {
+        domain: target.value.domain as DomainId,
+        orgScope: orgIds,
+        allowedObjectIds,
+      });
+      setFlash(`已保存监管子场景「${target.value.name}」。监测状态：${st.label}。`);
     }
     close();
   };
@@ -104,7 +113,7 @@ export default function ScenariosTab() {
       catalog.groups.map((g) => (g.id === row.id ? { ...g, status: disable ? "disabled" : "published" } : g)),
       catalog.subscenarios,
     );
-    setFlash(disable ? `已停用「${row.name}」。历史引用保留。` : `已启用「${row.name}」。`);
+    setFlash(disable ? `已停用「${row.name}」。后续监测停止；未关闭事项仍可查看并办理。` : `已启用「${row.name}」。`);
   };
 
   const toggleSub = (row: CatalogSubscenario) => {
@@ -121,7 +130,7 @@ export default function ScenariosTab() {
           : s,
       ),
     );
-    setFlash(row.enabled ? `已停用「${row.name}」。历史事项仍保留。` : `已启用「${row.name}」。`);
+    setFlash(row.enabled ? `已停用「${row.name}」。后续监测停止；未关闭事项仍可查看并办理。` : `已启用「${row.name}」。`);
   };
 
   const readonly = target?.mode === "view" || !canEdit;
@@ -221,6 +230,16 @@ export default function ScenariosTab() {
               { key: "id", title: "编号", width: "88px", render: (r) => <span className="num text-[12px]">{r.id}</span> },
               { key: "name", title: "名称", render: (r) => r.name },
               { key: "mode", title: "执行方式", width: "110px", render: (r) => executionModeLabel(r.execution_mode) },
+              {
+                key: "app",
+                title: "适用",
+                width: "110px",
+                render: (r) => (
+                  <Tag tone={r.applicability === "confirmed" ? "green" : "neutral"}>
+                    {r.applicability === "confirmed" ? "已确定适用" : "待确认适用"}
+                  </Tag>
+                ),
+              },
               {
                 key: "st",
                 title: "状态",
@@ -373,6 +392,42 @@ export default function ScenariosTab() {
                 </option>
               ))}
             </select>
+          </Field>
+          <Field label="适用性">
+            <select
+              className={fieldClass()}
+              value={target.value.applicability ?? "pending"}
+              disabled={readonly}
+              onChange={(e) =>
+                setTarget({
+                  ...target,
+                  value: { ...target.value, applicability: e.target.value as "pending" | "confirmed" },
+                })
+              }
+            >
+              <option value="pending">待确认适用</option>
+              <option value="confirmed">已确定适用</option>
+            </select>
+          </Field>
+          <Field label="必要字段">
+            <input
+              className={fieldClass()}
+              value={(target.value.required_fields ?? []).join("、")}
+              disabled={readonly}
+              placeholder="无则留空"
+              onChange={(e) =>
+                setTarget({
+                  ...target,
+                  value: {
+                    ...target.value,
+                    required_fields: e.target.value
+                      .split(/[、,，]/)
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  },
+                })
+              }
+            />
           </Field>
           <Field label="主归属阶段">
             <select
