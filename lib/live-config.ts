@@ -1,6 +1,7 @@
 import type { CatalogPersist, CatalogSubscenario } from "./config-catalog";
 import { extractCatalog } from "./config-catalog";
 import { config } from "./config";
+import { setLiveScenarioNames } from "./scenario-names-live";
 
 export interface LiveExtraScenario {
   id: string;
@@ -59,6 +60,7 @@ function isSubActive(s: CatalogSubscenario, parentDisabled: boolean): boolean {
 export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined): void {
   if (!catalog) {
     current = emptyLive();
+    setLiveScenarioNames(current.scenarioNames);
     return;
   }
   const disabledGroups = new Set(
@@ -111,14 +113,11 @@ export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined):
     aiExternalConnected: Boolean(catalog.ai.external_model_connected),
     aiModeDisplay: catalog.ai.mode_display,
   };
+  setLiveScenarioNames(scenarioNames);
 }
 
 export function getLiveConfig(): LiveState {
   return current;
-}
-
-export function liveScenarioName(id: string): string | undefined {
-  return current.scenarioNames.get(id);
 }
 
 export function isScenarioConfiguredVisible(id: string): boolean {

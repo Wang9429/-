@@ -7,7 +7,7 @@ import type {
   LifecycleTemplate,
   MonitoringRow,
 } from "./types";
-import { liveScenarioName } from "./live-config";
+import { liveScenarioName } from "./scenario-names-live";
 
 /**
  * 全平台唯一的种子读取入口。页面与计算模块都从这里取数，
