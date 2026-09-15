@@ -9,6 +9,39 @@ import { INDICATORS, computeIndicator } from "@/lib/metrics";
 import { seed } from "@/lib/seed";
 import { fmtAmount } from "@/lib/format";
 
+const AiUiContext = React.createContext<{
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+} | null>(null);
+
+export function AiUiProvider({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const value = useMemo(() => ({ open, setOpen }), [open]);
+  return <AiUiContext.Provider value={value}>{children}</AiUiContext.Provider>;
+}
+
+function useAiUi() {
+  const ctx = React.useContext(AiUiContext);
+  if (!ctx) throw new Error("AiUiProvider missing");
+  return ctx;
+}
+
+/** 顶栏入口：页面内容不再被右下角悬浮按钮挡住。 */
+export function AiToolbarButton() {
+  const { open, setOpen } = useAiUi();
+  if (open) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="h-9 px-3 rounded-[8px] border border-brand bg-brand text-white text-[13px] font-medium hover:bg-brandstrong"
+      title="AI分析"
+    >
+      AI分析
+    </button>
+  );
+}
+
 /**
  * 右下 AI 分析入口。未连接真实模型时标注预置分析，
  * 只对已有样例事实的任务给出可点击依据。
@@ -16,13 +49,14 @@ import { fmtAmount } from "@/lib/format";
 export default function AiPanel() {
   const pathname = usePathname();
   const { filters, risks, user, canAct } = useDemoStore();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useAiUi();
   const [task, setTask] = useState<string>("explain_metric");
   const [scopeNote, setScopeNote] = useState(false);
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => setOpen(false), [setOpen]);
   const overlayCount = useOverlayCount();
-  const { zIndex, containerRef } = useOverlay(open, close);
+  const { zIndex, containerRef } = useOverlay(open, close, { isolateFocus: true });
   const fabZ = 40 + (overlayCount + 1) * 10;
+  const showFab = !open && overlayCount > 0;
 
   const orgIds = useMemo(
     () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
@@ -117,7 +151,7 @@ export default function AiPanel() {
 
   return (
     <>
-      {!open && (
+      {showFab && (
         <button
           type="button"
           onClick={() => setOpen(true)}

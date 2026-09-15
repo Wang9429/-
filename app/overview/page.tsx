@@ -218,7 +218,7 @@ export default function OverviewPage() {
                     <span className="w-8 h-8 rounded-[8px] bg-[#EAF1FD] text-brand flex items-center justify-center shrink-0">
                       {Icon && <Icon size={16} />}
                     </span>
-                    <Link href={meta.route} className="text-[16px] font-semibold text-textmain hover:text-brand truncate">
+                    <Link href={meta.route} className="text-[16px] font-semibold text-textmain hover:text-brand leading-5">
                       {meta.label}
                     </Link>
                   </div>
@@ -250,7 +250,7 @@ export default function OverviewPage() {
                   </button>
                 )}
                 <div className="mt-auto pt-3 flex items-center justify-between gap-2">
-                  <span className="text-[12px] text-textsub truncate">关注：{DOMAIN_FOCUS[s.domain]}</span>
+                  <span className="text-[12px] text-textsub leading-5 line-clamp-2">关注：{DOMAIN_FOCUS[s.domain]}</span>
                   <Link href={meta.route} className="text-[13px] text-brand shrink-0 hover:underline">
                     进入领域 →
                   </Link>
@@ -268,7 +268,7 @@ export default function OverviewPage() {
         title="重点关注事项"
         subtitle="默认展示有依据的三条记录：投资偏差、资产利用及境外毛利"
         right={
-          <Link href="/supervision-workbench" className="text-[13px] text-brand hover:underline whitespace-nowrap mr-16">
+          <Link href="/supervision-workbench" className="text-[13px] text-brand hover:underline whitespace-nowrap">
             查看全部 →
           </Link>
         }

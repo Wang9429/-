@@ -3,13 +3,21 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import React, { Suspense, useState } from "react";
 import { Button, Card, DataTable, Field, Notice, Tag, Tabs, inputClass } from "@/components/ui";
-import { config, coverageById, type ConfigUser } from "@/lib/config";
+import { config, coverageById, roles, type ConfigUser } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { INDICATORS, computeIndicator } from "@/lib/metrics";
 import { orgScope, orgName } from "@/lib/org";
 import { seed } from "@/lib/seed";
 import { fmtPct } from "@/lib/format";
 import type { RiskCase } from "@/lib/types";
+import { statusLabel } from "@/lib/risks";
+import {
+  configStatusLabel,
+  dataScopeModeLabel,
+  displayPositionLabel,
+  domainCodeLabel,
+  executionModeLabel,
+} from "@/lib/labels";
 
 function SettingsBody() {
   const params = useSearchParams();
@@ -103,7 +111,9 @@ function UsersTab({
                 onClick={() => setId(u.id)}
               >
                 {u.name}
-                <div className="text-[12px] text-textsub">{u.role_ids.join("、")}</div>
+                <div className="text-[12px] text-textsub">
+                  {u.role_ids.map((rid) => roles.find((r) => r.id === rid)?.name ?? rid).join("、")}
+                </div>
               </button>
             </li>
           ))}
@@ -113,7 +123,7 @@ function UsersTab({
         <Card title={current.name} subtitle="组织范围、动作权限与本级/含下级。保存后刷新仍保留。">
           <div className="grid grid-cols-2 gap-3 text-[13px]">
             <div>所属组织：{orgName(current.org_id)}</div>
-            <div>数据范围：{current.data_scope.mode}</div>
+            <div>数据范围：{dataScopeModeLabel(current.data_scope.mode)}</div>
             <div>授权组织：{current.data_scope.root_org_ids.map(orgName).join("、") || "无"}</div>
             <div>对象清单：{current.data_scope.object_ids.join("、") || "组织范围内全部"}</div>
           </div>
@@ -161,8 +171,8 @@ function ScenariosTab() {
             highlight={(r) => r.id === gid}
             columns={[
               { key: "name", title: "名称", render: (r) => r.name },
-              { key: "domain", title: "领域", width: "70px", render: (r) => r.domain },
-              { key: "st", title: "状态", width: "80px", render: (r) => <Tag tone="green">{r.status}</Tag> },
+              { key: "domain", title: "领域", width: "88px", render: (r) => domainCodeLabel(r.domain) },
+              { key: "st", title: "状态", width: "88px", render: (r) => <Tag tone="green">{configStatusLabel(r.status)}</Tag> },
             ]}
           />
         </Card>
@@ -174,7 +184,7 @@ function ScenariosTab() {
             columns={[
               { key: "id", title: "编号", width: "90px", render: (r) => <span className="num text-[12px]">{r.id}</span> },
               { key: "name", title: "名称", render: (r) => r.name },
-              { key: "mode", title: "执行方式", width: "120px", render: (r) => r.execution_mode ?? "—" },
+              { key: "mode", title: "执行方式", width: "140px", render: (r) => executionModeLabel(r.execution_mode) },
             ]}
           />
           <p className="text-[12px] text-textsub mt-2">目录共 {subs.length} 项。本表按所选一级场景筛选，不等于已运行监测数量。</p>
@@ -231,7 +241,7 @@ function RulesTab({
           ]}
         />
         <p className="text-[13px] text-textsub mt-2">
-          阈值 10% 时基地能力提升项目 18% 命中、设施技术改造项目 −10% 不命中；改为 25% 两者都不命中。R01 当前状态仍为「{r01?.status ?? "—"}」，不因草稿消失。
+          阈值 10% 时基地能力提升项目 18% 命中、设施技术改造项目 −10% 不命中；改为 25% 两者都不命中。R01 当前状态仍为「{r01 ? statusLabel[r01.status as keyof typeof statusLabel] ?? r01.status : "—"}」，不因草稿消失。
         </p>
         <div className="mt-3 flex gap-2">
           <Button variant="primary" onClick={publishTrial}>
@@ -246,7 +256,7 @@ function RulesTab({
           rowKey={(r) => r.id}
           columns={[
             { key: "name", title: "规则", render: (r) => r.name },
-            { key: "st", title: "状态", width: "90px", render: (r) => r.status },
+            { key: "st", title: "状态", width: "90px", render: (r) => configStatusLabel(r.status) },
             { key: "en", title: "启用", width: "70px", render: (r) => (r.enabled ? "是" : "否") },
             { key: "desc", title: "条件说明", render: (r) => r.condition_description ?? "—" },
           ]}
@@ -291,8 +301,8 @@ function IndicatorsTab({
           columns={[
             { key: "id", title: "编号", width: "90px", render: (r) => <span className="num text-[12px]">{r.id}</span> },
             { key: "name", title: "名称", render: (r) => r.name },
-            { key: "st", title: "配置状态", width: "90px", render: (r) => r.status },
-            { key: "pos", title: "显示位置", width: "110px", render: (r) => r.display_position ?? "—" },
+            { key: "st", title: "配置状态", width: "90px", render: (r) => configStatusLabel(r.status) },
+            { key: "pos", title: "显示位置", width: "110px", render: (r) => displayPositionLabel(r.display_position) },
           ]}
         />
       </Card>

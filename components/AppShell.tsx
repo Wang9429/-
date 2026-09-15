@@ -8,7 +8,7 @@ import { can, canDomain, config, riskVisible } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { Modal } from "@/components/ui";
 import { isOpen } from "@/lib/risks";
-import AiPanel from "@/components/AiPanel";
+import AiPanel, { AiToolbarButton, AiUiProvider } from "@/components/AiPanel";
 import FilterBar from "@/components/FilterBar";
 import {
   IconBell,
@@ -60,6 +60,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const initial = (user?.name ?? "用").slice(0, 1);
 
   return (
+    <AiUiProvider>
     <div className="reg-app">
       <nav className="reg-sidebar" aria-label="一级导航">
         <div className="reg-brand">
@@ -143,6 +144,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             >
               {config.data_notice.entry_label}
             </button>
+            <AiToolbarButton />
             <div className="relative">
               <button
                 type="button"
@@ -233,5 +235,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </p>
       </Modal>
     </div>
+    </AiUiProvider>
   );
 }

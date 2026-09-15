@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { DataTable, DescList, Drawer, EmptyState, Notice, SimulatedBadge, Tag } from "@/components/ui";
+import { DataTable, DescList, Drawer, EmptyState, Notice, SimulatedBadge, SourceEvidence, Tag } from "@/components/ui";
 import {
   catalog,
   monitoringStatusLabel,
@@ -83,8 +83,7 @@ export default function ScenarioDrawer({
                 { label: "关联监管指标", value: cat.indicator_ids.join("、") || "本场景无对应监管指标" },
               ]}
             />
-            <div>
-              <h4 className="text-[15px] font-semibold text-textmain mb-2">来源依据</h4>
+            <SourceEvidence>
               <DescList
                 cols={2}
                 items={[
@@ -95,7 +94,7 @@ export default function ScenarioDrawer({
                   { label: "落地说明", value: cat.implementation_note },
                 ]}
               />
-            </div>
+            </SourceEvidence>
           </>
         ) : (
           <>

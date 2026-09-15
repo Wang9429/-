@@ -302,7 +302,7 @@ export function KpiCard({
       )}
       <span className="min-w-0 flex-1 flex flex-col justify-between">
         <span className="flex items-start justify-between gap-2">
-          <span className="text-[13px] text-textsub leading-5">{name}</span>
+          <span className="text-[13px] text-textsub leading-5 break-words">{name}</span>
           {onOpen && (
             <span className="text-[16px] text-[#B8C9E3] shrink-0 leading-none" aria-hidden>
               ›
@@ -339,6 +339,32 @@ export function KpiCard({
         </span>
       </span>
     </button>
+  );
+}
+
+/* ------------------------------ 来源依据 ------------------------------ */
+
+/** 追溯信息默认折叠，业务页先展示名称与结果。 */
+export function SourceEvidence({
+  title = "来源依据",
+  children,
+  defaultOpen = false,
+}: {
+  title?: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <details
+      className="rounded-[8px] border border-line bg-[#fafcff] group"
+      open={defaultOpen || undefined}
+    >
+      <summary className="cursor-pointer list-none px-4 py-2.5 text-[14px] font-medium text-textmain select-none">
+        {title}
+        <span className="ml-2 text-[12px] font-normal text-textsub">工作表、行号与映射说明</span>
+      </summary>
+      <div className="px-4 pb-4 pt-1 border-t border-line">{children}</div>
+    </details>
   );
 }
 
@@ -385,7 +411,10 @@ function focusableIn(root: HTMLElement): HTMLElement[] {
   });
 }
 
-export function useOverlay(open: boolean, onClose: () => void) {
+export function useOverlay(open: boolean, onClose: () => void, options?: { isolateFocus?: boolean }) {
+  const isolateFocus = options?.isolateFocus !== false;
+  const isolateRef = React.useRef(isolateFocus);
+  isolateRef.current = isolateFocus;
   const idRef = React.useRef<symbol | null>(null);
   const restoreFocusRef = React.useRef<HTMLElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -416,19 +445,25 @@ export function useOverlay(open: boolean, onClose: () => void) {
       if (e.key !== "Tab") return;
       const root = containerRef.current;
       if (!root) return;
-      if (!root.contains(document.activeElement)) return;
       const nodes = focusableIn(root);
       if (nodes.length === 0) {
+        if (isolateRef.current) e.preventDefault();
+        return;
+      }
+      const inside = root.contains(document.activeElement);
+      if (!inside) {
+        if (!isolateRef.current) return;
         e.preventDefault();
+        (e.shiftKey ? nodes[nodes.length - 1] : nodes[0]).focus();
         return;
       }
       const first = nodes[0];
       const last = nodes[nodes.length - 1];
       const active = document.activeElement;
-      if (e.shiftKey && (active === first || !root.contains(active))) {
+      if (e.shiftKey && (active === first || !inside)) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && (active === last || !root.contains(active))) {
+      } else if (!e.shiftKey && active === last) {
         e.preventDefault();
         first.focus();
       }
