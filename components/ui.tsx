@@ -733,12 +733,14 @@ export function Field({
   label,
   required,
   hint,
+  error,
   children,
   className = "",
 }: {
   label: string;
   required?: boolean;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -750,12 +752,15 @@ export function Field({
       </span>
       {hint && <span className="block text-[12px] text-textsub mb-1">{hint}</span>}
       <div className="mt-1">{children}</div>
+      {error && <span className="block mt-1 text-[12px] text-[#b42318] leading-5">{error}</span>}
     </label>
   );
 }
 
 export const inputClass =
   "w-full h-9 px-3 rounded-[8px] border border-line bg-surface text-[14px] text-textmain whitespace-nowrap focus:border-brand outline-none transition-colors duration-150";
+
+export const inputErrorClass = `${inputClass} border-[#b42318] focus:border-[#b42318]`;
 
 export const textareaClass =
   "w-full min-h-[76px] px-3 py-2 rounded-[8px] border border-line bg-surface text-[14px] text-textmain focus:border-brand outline-none transition-colors duration-150 resize-y";

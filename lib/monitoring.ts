@@ -1,5 +1,6 @@
 import { coverageById } from "./config";
 import { coverageRows, seed } from "./seed";
+import { isScenarioConfiguredVisible, getLiveConfig } from "./live-config";
 import {
   isOpen,
   isOverdueRectification,
@@ -41,6 +42,7 @@ export function scenarioHasPendingApplicability(scenarioId: string): boolean {
 export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
   // 未确认适用性的覆盖规划候选不进入业务清单与应评估分母；传入 scenarioId 也不能重新纳入。
   if (isCoverageCandidate(row)) return false;
+  if (!isScenarioConfiguredVisible(row.scenario_id)) return false;
   if (row.domain !== f.domain) return false;
   if (!f.orgScope.has(row.owner_org_id)) return false;
   if (row.window_end < f.periodStart || row.window_end > f.periodEnd) return false;
@@ -250,16 +252,23 @@ export function scenariosInScope(f: ScopeFilter): string[] {
 
 /** 领域内所有已配置场景（含无实例场景，用于显示模板与空态）。 */
 export function configuredScenarios(domain: DomainId, phaseId?: string | null): string[] {
+  const live = getLiveConfig();
   const set = new Set<string>();
   for (const row of coverageRows) {
     if (row.domain !== domain) continue;
     if (phaseId && row.phase_id !== phaseId) continue;
+    if (!isScenarioConfiguredVisible(row.scenario_id)) continue;
     set.add(row.scenario_id);
   }
   if (!phaseId) {
     for (const s of seed.supplemental_scenarios) {
-      if (s.domain === domain) set.add(s.id);
+      if (s.domain === domain && isScenarioConfiguredVisible(s.id)) set.add(s.id);
     }
+  }
+  for (const extra of live.extraScenarios) {
+    if (extra.domain !== domain) continue;
+    if (phaseId && extra.primary_phase_id && extra.primary_phase_id !== phaseId) continue;
+    if (isScenarioConfiguredVisible(extra.id)) set.add(extra.id);
   }
   return [...set].sort();
 }

@@ -57,6 +57,7 @@ export interface ConfigRoot {
     parent_id?: string;
     group_id?: string;
     status: string;
+    enabled?: boolean;
     execution_mode?: string;
     primary_phase_id?: string;
   }[];
@@ -69,6 +70,7 @@ export interface ConfigRoot {
     condition_description?: string;
     parameters?: Record<string, unknown>;
     version_id?: string;
+    effective_from?: string;
   }[];
   indicator_definitions: {
     id: string;
@@ -84,11 +86,14 @@ export interface ConfigRoot {
     new_rule_example: {
       id: string;
       name: string;
+      primary_subscenario_id: string;
       parameters: { deviation_gt_pct: number };
       note: string;
+      version_id: string;
     };
   };
   ai: {
+    enabled?: boolean;
     label: string;
     mode_display: string;
     external_model_connected: boolean;
@@ -119,6 +124,7 @@ export function actionsFor(user: ConfigUser): Set<string> {
 
 export function can(user: ConfigUser | undefined, action: string): boolean {
   if (!user) return false;
+  if (user.status === "disabled" || user.status === "retired") return false;
   return actionsFor(user).has(action);
 }
 

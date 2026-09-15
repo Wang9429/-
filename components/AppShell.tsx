@@ -172,7 +172,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                         setUserMenu(false);
                       }}
                     >
-                      {u.name}
+                    {u.name}
+                    {(u.status === "disabled" || u.status === "retired") && (
+                      <span className="text-textsub">（停用）</span>
+                    )}
                     </button>
                   ))}
                 </div>

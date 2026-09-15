@@ -12,6 +12,7 @@ import FilterBar from "@/components/FilterBar";
 import PageHeader from "@/components/PageHeader";
 import { DOMAIN_META, phaseName, seed, templatesByDomain, topicName } from "@/lib/seed";
 import { computeIndicator, indicatorById, type IndicatorDef, type NodeMetric } from "@/lib/metrics";
+import { catalogIndicatorOnHomepage, homepageCatalogIndicatorIds } from "@/lib/live-config";
 import { openCountForPhase, openCountForTopic } from "@/lib/monitoring";
 import { orgName } from "@/lib/org";
 import { authorizedObjectIds, intersectOrgScope, riskVisible } from "@/lib/config";
@@ -94,7 +95,7 @@ export default function DomainPage({
   ledger?: (helpers: DomainHelpers) => React.ReactNode;
 }) {
   const meta = DOMAIN_META[domain];
-  const { filters, risks, user, canAct } = useDemoStore();
+  const { filters, risks, user, canAct, catalog } = useDemoStore();
   const [tab, setTab] = useState("overview");
   const [phaseId, setPhaseId] = useState<string | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null);
@@ -174,9 +175,22 @@ export default function DomainPage({
       .slice(0, 3);
   }, [domainRisks, filters.asOf]);
 
-  const kpiDefs = kpiIndicatorIds
-    .map((id) => indicatorById(id))
-    .filter((d): d is IndicatorDef => Boolean(d));
+  const kpiDefs = useMemo(() => {
+    const ids: string[] = [];
+    const seen = new Set<string>();
+    for (const id of kpiIndicatorIds) {
+      if (!catalogIndicatorOnHomepage(id)) continue;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      ids.push(id);
+    }
+    for (const id of homepageCatalogIndicatorIds(domain)) {
+      if (!indicatorById(id) || seen.has(id)) continue;
+      seen.add(id);
+      ids.push(id);
+    }
+    return ids.map((id) => indicatorById(id)).filter((d): d is IndicatorDef => Boolean(d));
+  }, [kpiIndicatorIds, domain, catalog]);
 
   const scopeTitle =
     flowMode === "phases"

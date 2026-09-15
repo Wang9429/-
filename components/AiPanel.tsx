@@ -4,6 +4,7 @@ import React, { useMemo, useState, useCallback, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button, Tag, useOverlay, useOverlayCount } from "@/components/ui";
 import { config, intersectOrgScope, objectAllowed, riskVisible } from "@/lib/config";
+import { liveAi } from "@/lib/live-config";
 import { findObject } from "@/lib/objects";
 import { useDemoStore } from "@/lib/store";
 import { INDICATORS, computeIndicator } from "@/lib/metrics";
@@ -30,13 +31,17 @@ function useAiUi() {
 /** 顶栏入口：页面内容不再被右下角悬浮按钮挡住。 */
 export function AiToolbarButton() {
   const { open, setOpen } = useAiUi();
+  const { catalog } = useDemoStore();
+  const ai = liveAi();
+  void catalog;
   if (open) return null;
   return (
     <button
       type="button"
-      onClick={() => setOpen(true)}
-      className="h-9 px-3 rounded-[8px] border border-brand bg-brand text-white text-[13px] font-medium hover:bg-brandstrong"
-      title="AI分析"
+      disabled={!ai.enabled}
+      onClick={() => ai.enabled && setOpen(true)}
+      className="h-9 px-3 rounded-[8px] border border-brand bg-brand text-white text-[13px] font-medium hover:bg-brandstrong disabled:opacity-45 disabled:cursor-not-allowed"
+      title={ai.enabled ? "AI分析" : "AI分析已关闭"}
     >
       AI分析
     </button>
@@ -48,7 +53,7 @@ export function AiToolbarButton() {
  * 只对已有样例事实的任务给出可点击依据。
  */
 export default function AiPanel() {
-  const { filters, risks, user, canAct } = useDemoStore();
+  const { filters, risks, user, canAct, catalog } = useDemoStore();
   const { open, setOpen } = useAiUi();
   const [task, setTask] = useState<string>("explain_metric");
   const [scopeNote, setScopeNote] = useState(false);
@@ -72,7 +77,30 @@ export default function AiPanel() {
     [filters.orgId, filters.includeChildren, user],
   );
 
+  const ai = liveAi();
+  const enabledTasks = (catalog.ai.tasks.length ? catalog.ai.tasks : config.ai.tasks.map((t) => ({ ...t, enabled: true }))).filter(
+    (t) => t.enabled !== false && ai.tasks.has(t.id),
+  );
+
   const content = useMemo(() => {
+    if (!ai.enabled) {
+      return {
+        title: "AI分析已关闭",
+        sections: [{ h: "说明", p: "请在系统配置 · AI分析设置中开启后再使用。" }],
+      };
+    }
+    if (!enabledTasks.some((t) => t.id === task)) {
+      return {
+        title: "当前任务未纳入可用范围",
+        sections: [{ h: "说明", p: "请在系统配置 · AI分析设置中启用对应任务，或选择其他已开放任务。" }],
+      };
+    }
+    if (user && !user.domain_ids.some((d) => ai.domains.has(d))) {
+      return {
+        title: "当前使用范围未覆盖",
+        sections: [{ h: "说明", p: "AI 使用范围未包含当前用户业务领域。请在系统配置中调整使用范围。" }],
+      };
+    }
     if (!canAct("ai.use")) {
       return {
         title: "当前身份不能使用 AI 分析",
@@ -182,13 +210,13 @@ export default function AiPanel() {
         { h: "建议采取的动作", p: "在国际化业务中调整冲击假设，并回到工程领域核对基础预测未被覆盖。" },
       ],
     };
-  }, [task, filters, risks, canAct, user, orgIds]);
+  }, [task, filters, risks, canAct, user, orgIds, ai.enabled, catalog]);
 
   const fabButton = (
     <button
       type="button"
       data-ai-fab=""
-      onClick={() => setOpen(true)}
+      onClick={() => ai.enabled && setOpen(true)}
       className={
         headerHost
           ? "h-8 px-2.5 rounded-[6px] border border-brand bg-brand text-white text-[12px] font-medium hover:bg-brandstrong"
@@ -204,7 +232,7 @@ export default function AiPanel() {
               zIndex: fabZ,
             }
       }
-      title="AI分析（抽屉打开时仍可使用）"
+      title={ai.enabled ? "AI分析（抽屉打开时仍可使用）" : "AI分析已关闭"}
     >
       AI分析
     </button>
@@ -229,7 +257,7 @@ export default function AiPanel() {
             <div>
               <div className="text-[15px] font-semibold">AI分析</div>
               <button type="button" className="text-[12px] text-brand hover:underline" onClick={() => setScopeNote((v) => !v)}>
-                {config.ai.mode_display} · 未连接模型服务
+                {ai.modeDisplay} · {ai.externalConnected ? "已连接模型服务" : "未连接模型服务"}
               </button>
             </div>
             <button type="button" className="text-textsub hover:text-textmain" onClick={close} aria-label="关闭">
@@ -242,7 +270,7 @@ export default function AiPanel() {
             </div>
           )}
           <div className="px-5 py-3 flex flex-wrap gap-1.5 border-b border-line">
-            {config.ai.tasks.map((t) => (
+            {enabledTasks.map((t) => (
               <button
                 type="button"
                 key={t.id}

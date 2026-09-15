@@ -5,6 +5,14 @@ import { AS_OF, DEFAULT_PERIOD, seed } from "./seed";
 import { nextSequence } from "./risks";
 import type { CaseAction, RiskCase, RiskStatus } from "./types";
 import { can, canCaseAction, config, defaultOrgFor, initialUserId, userById, type ConfigUser } from "./config";
+import {
+  extractCatalog,
+  hydrateCatalog,
+  isTrialRulePublished,
+  trialPctFromCatalog,
+  type CatalogPersist,
+} from "./config-catalog";
+import { syncLiveFromCatalog } from "./live-config";
 
 /**
  * 本地业务与配置状态：首次从种子复制，刷新保留修改。
@@ -77,6 +85,7 @@ interface ConfigPersist {
   users: ConfigUser[];
   eacTrialPct: number;
   publishedTrial: boolean;
+  catalog: CatalogPersist;
 }
 
 interface StoreValue extends PersistedState {
@@ -105,6 +114,8 @@ interface StoreValue extends PersistedState {
   publishTrial: () => void;
   configUsers: ConfigUser[];
   saveConfigUsers: (users: ConfigUser[]) => void;
+  catalog: CatalogPersist;
+  saveCatalog: (catalog: CatalogPersist, action: string) => boolean;
 }
 
 export type ActionKind =
@@ -143,10 +154,12 @@ function initialState(): PersistedState {
 }
 
 function initialConfig(): ConfigPersist {
+  const catalog = extractCatalog();
   return {
     users: JSON.parse(JSON.stringify(config.users)) as ConfigUser[],
-    eacTrialPct: config.rule_editor.new_rule_example.parameters.deviation_gt_pct,
+    eacTrialPct: trialPctFromCatalog(catalog, config.rule_editor.new_rule_example.parameters.deviation_gt_pct),
     publishedTrial: false,
+    catalog,
   };
 }
 
@@ -298,8 +311,35 @@ function readStorage() {
     }
     const cfg = window.localStorage.getItem(CONFIG_KEY);
     if (cfg) {
-      const parsed = JSON.parse(cfg) as ConfigPersist;
-      if (parsed?.users?.length) update({ config: parsed });
+      const parsed = JSON.parse(cfg) as Partial<ConfigPersist> & { users?: ConfigUser[] };
+      if (parsed?.users?.length) {
+        const catalog = hydrateCatalog(parsed.catalog);
+        const trialId = config.rule_editor.new_rule_example.id;
+        const trial = catalog.rules.find((r) => r.id === trialId);
+        if (parsed.publishedTrial && trial && !trial.published) {
+          const published = {
+            version: "V1",
+            at: new Date().toISOString(),
+            operator: "历史发布记录",
+            scope: "授权范围内固定资产投资项目",
+            effective_date: "2026-06-30",
+            parameters: { deviation_gt_pct: parsed.eacTrialPct ?? 10 },
+          };
+          trial.published = published;
+          trial.versions = [published];
+          trial.status = "published";
+          trial.enabled = true;
+          trial.version_id = published.version;
+        }
+        const next: ConfigPersist = {
+          users: parsed.users,
+          eacTrialPct: trialPctFromCatalog(catalog, parsed.eacTrialPct ?? 10),
+          publishedTrial: isTrialRulePublished(catalog) || Boolean(parsed.publishedTrial),
+          catalog,
+        };
+        syncLiveFromCatalog(catalog);
+        update({ config: next });
+      }
     }
   } catch {
     update({ saveError: "本地状态读取失败，已使用种子数据。" });
@@ -327,11 +367,19 @@ function writeState(next: PersistedState, dirty = true) {
 }
 
 function writeConfig(next: ConfigPersist) {
+  const catalog = hydrateCatalog(next.catalog);
+  const normalized: ConfigPersist = {
+    ...next,
+    catalog,
+    eacTrialPct: trialPctFromCatalog(catalog, next.eacTrialPct),
+    publishedTrial: isTrialRulePublished(catalog),
+  };
+  syncLiveFromCatalog(catalog);
   try {
-    window.localStorage.setItem(CONFIG_KEY, JSON.stringify(next));
-    update({ config: next, saveError: null });
+    window.localStorage.setItem(CONFIG_KEY, JSON.stringify(normalized));
+    update({ config: normalized, saveError: null });
   } catch {
-    update({ config: next, saveError: "配置保存失败，本次修改仅在当前页面有效。" });
+    update({ config: normalized, saveError: "配置保存失败，本次修改仅在当前页面有效。" });
   }
 }
 
@@ -348,9 +396,13 @@ function clearBusiness() {
 function clearConfig() {
   try {
     window.localStorage.removeItem(CONFIG_KEY);
-    update({ config: initialConfig(), saveError: null });
+    const next = initialConfig();
+    syncLiveFromCatalog(next.catalog);
+    update({ config: next, saveError: null });
   } catch {
-    update({ config: initialConfig(), saveError: "配置清除失败。" });
+    const next = initialConfig();
+    syncLiveFromCatalog(next.catalog);
+    update({ config: next, saveError: "配置清除失败。" });
   }
 }
 
@@ -481,17 +533,45 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       eacTrialPct: snap.config.eacTrialPct,
       setEacTrialPct: (n: number) => {
         if (!can(user, "config.rules.edit") && !can(user, "config.test")) return;
-        writeConfig({ ...snapshot.config, eacTrialPct: n });
+        const catalog = structuredClone(snapshot.config.catalog);
+        const trialId = config.rule_editor.new_rule_example.id;
+        const rule = catalog.rules.find((r) => r.id === trialId);
+        if (rule) rule.draft_parameters = { ...rule.draft_parameters, deviation_gt_pct: n };
+        writeConfig({ ...snapshot.config, catalog, eacTrialPct: n });
       },
       publishedTrial: snap.config.publishedTrial,
       publishTrial: () => {
         if (!can(user, "config.rules.publish")) return;
-        writeConfig({ ...snapshot.config, publishedTrial: true });
+        const catalog = structuredClone(snapshot.config.catalog);
+        const trialId = config.rule_editor.new_rule_example.id;
+        const rule = catalog.rules.find((r) => r.id === trialId);
+        if (rule) {
+          const version = {
+            version: `V${rule.versions.length + 1}`,
+            at: new Date().toISOString(),
+            operator: user?.name ?? "监管人员",
+            scope: "授权范围内固定资产投资项目",
+            effective_date: filters.asOf,
+            parameters: { ...rule.draft_parameters },
+          };
+          rule.published = version;
+          rule.versions = [...rule.versions, version];
+          rule.status = "published";
+          rule.enabled = true;
+          rule.version_id = version.version;
+        }
+        writeConfig({ ...snapshot.config, catalog, publishedTrial: true });
       },
       configUsers: snap.config.users,
       saveConfigUsers: (next) => {
         if (!can(user, "config.users.edit")) return;
         writeConfig({ ...snapshot.config, users: next });
+      },
+      catalog: snap.config.catalog,
+      saveCatalog: (next, action) => {
+        if (!can(user, action)) return false;
+        writeConfig({ ...snapshot.config, catalog: next });
+        return true;
       },
     }),
     [snap, filters, setFilters, setRole, setUserId, resetDemo, resetBusiness, resetConfig, act, addUrge, addImportBatch, adoptMaterial, user],

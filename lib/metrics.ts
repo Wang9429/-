@@ -2,6 +2,7 @@ import { AS_OF, seed } from "./seed";
 import { isOpen, riskMatches } from "./risks";
 import type { DomainId, ObjectType, RiskCase } from "./types";
 import { INDICATOR_CALIBER, periodFact } from "./period";
+import { publishedDeviationPct } from "./live-config";
 
 /**
  * 指标一律从基础业务记录计算；expected_results 只用于验收核对，
@@ -436,7 +437,14 @@ export const INDICATORS: IndicatorDef[] = [
     evaluate: (v) => (v === null ? "unknown" : (v as number) > 0 ? "risk" : "normal"),
     leaves: (ctx) =>
       faProjects()
-        .filter((p) => num(p.eac) !== null && (p.eac as number) > p.effective_approved_budget)
+        .filter((p) => {
+          const eac = num(p.eac);
+          if (eac === null) return false;
+          const thr = publishedDeviationPct();
+          if (thr == null) return eac > p.effective_approved_budget;
+          const pct = ((eac - p.effective_approved_budget) / p.effective_approved_budget) * 100;
+          return pct > thr;
+        })
         .map((p) => ({
           objectId: p.id,
           objectType: "fixed_asset_project" as ObjectType,

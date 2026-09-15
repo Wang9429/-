@@ -7,6 +7,7 @@ import type {
   LifecycleTemplate,
   MonitoringRow,
 } from "./types";
+import { liveScenarioName } from "./live-config";
 
 /**
  * 全平台唯一的种子读取入口。页面与计算模块都从这里取数，
@@ -79,7 +80,7 @@ export const SCENARIO_NAMES: Record<string, string> = (() => {
   return map;
 })();
 
-export const scenarioName = (id: string) => SCENARIO_NAMES[id] ?? id;
+export const scenarioName = (id: string) => liveScenarioName(id) ?? SCENARIO_NAMES[id] ?? id;
 
 /** 场景的纳入方式标签：结构化监测 / 线索核查 / 核查依据 / 本业需补充场景 */
 export const scenarioAdoption = (id: string): string => {

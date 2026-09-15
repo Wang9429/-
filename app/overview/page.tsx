@@ -24,6 +24,7 @@ import { isOpen, isOverdueRectification, riskMatches, statusLabel } from "@/lib/
 import { fmtAmountSmart } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
 import type { DomainId, RiskCase } from "@/lib/types";
+import { catalogIndicatorOnHomepage } from "@/lib/live-config";
 
 /**
  * 综合总览（V1.6 口径 + V1.6.1 视觉）。
@@ -66,7 +67,7 @@ function progressOf(r: RiskCase, asOf: string): { text: string; tone: "red" | "a
 
 export default function OverviewPage() {
   const router = useRouter();
-  const { filters, risks, setFilters, user } = useDemoStore();
+  const { filters, risks, setFilters, user, catalog } = useDemoStore();
   const [riskId, setRiskId] = useState<string | null>(null);
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
   const [caseScope, setCaseScope] = useState<{ title: string; ids: string[] } | null>(null);
@@ -101,11 +102,11 @@ export default function OverviewPage() {
         const domainRisks = risks.filter((r) => riskVisible(user, r) && riskMatches(r, { domain: d, orgScope: orgIds }));
         const o = domainRisks.filter(isOpen);
         const kpiId = DOMAIN_KPI[d];
-        const def = indicatorById(kpiId);
+        const def = catalogIndicatorOnHomepage(kpiId) ? indicatorById(kpiId) : undefined;
         const kpis = def ? [{ def, metric: computeIndicator(def, orgIds, ctx) }] : [];
         return { domain: d, open: o, red: o.filter((r) => r.severity === "red"), kpis };
       }),
-    [risks, orgIds, ctx, user],
+    [risks, orgIds, ctx, user, catalog],
   );
 
   const matrixOrgs = useMemo(() => {
@@ -126,6 +127,7 @@ export default function OverviewPage() {
   const scopeLabel = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}`;
   const openCases = (title: string, list: RiskCase[]) => setCaseScope({ title, ids: list.map((r) => r.id) });
 
+  const showFaPlan = catalogIndicatorOnHomepage("FA-I06");
   const faDef = indicatorById("FA-I06")!;
   const faMetric = computeIndicator(faDef, orgIds, ctx);
   const faParts = formatMetricParts(faDef, faMetric);
@@ -143,6 +145,7 @@ export default function OverviewPage() {
       </PageHeader>
 
       <div className="reg-kpis">
+        {showFaPlan && (
         <KpiCard
           name="固定资产投资计划执行率"
           value={faParts.value}
@@ -159,6 +162,7 @@ export default function OverviewPage() {
           onOpen={() => setIndicatorId("FA-I06")}
           returnKey="FA-I06"
         />
+        )}
         <KpiCard
           name="未关闭监管事项"
           value={open.length}
