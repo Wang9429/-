@@ -48,6 +48,23 @@ export function formatMetric(def: IndicatorDef, m: NodeMetric): string {
   return parts.unit === "%" ? `${parts.value}%` : `${parts.value} ${parts.unit}`;
 }
 
+/** KPI 辅助行：状态只出现一次，不与覆盖说明重复拼接同一句。 */
+export function formatKpiCaption(
+  m: NodeMetric,
+  def?: IndicatorDef,
+): { compare: string; dataState?: string } {
+  if (m.status === "no_business") return { compare: "当前范围无业务" };
+  if (m.status === "unknown" || m.value === null) {
+    return { compare: m.emptyReason ?? "数据不足，未评估" };
+  }
+  const compare = m.status === "risk" ? "高风险" : m.status === "attention" ? "关注" : "有效监测正常";
+  const cov = m.coverage.partial
+    ? `已覆盖 ${m.coverage.evaluated}/${m.coverage.expected}`
+    : `全覆盖 ${m.coverage.evaluated}/${m.coverage.expected}`;
+  const dataState = def?.targetLabel ? `${def.targetLabel}｜${cov}` : cov;
+  return { compare, dataState };
+}
+
 export interface IndicatorDrawerProps {
   open: boolean;
   onClose: () => void;

@@ -82,26 +82,26 @@ export const SCENARIO_NAMES: Record<string, string> = (() => {
 
 export const scenarioName = (id: string) => liveScenarioName(id) ?? SCENARIO_NAMES[id] ?? id;
 
-/** 场景的纳入方式标签：结构化监测 / 线索核查 / 核查依据 / 本业需补充场景 */
+/** 场景的纳入方式标签：结构化监测 / 线索核查 / 核查依据 / 补充监管场景 */
+export const SUPPLEMENTAL_SCENARIO_LABEL = "补充监管场景";
+
 export const scenarioAdoption = (id: string): string => {
   const c = catalog.scenarios.find((s) => s.id === id);
   if (c) return c.adoption_mode;
-  const s = seed.supplemental_scenarios.find((x) => x.id === id);
-  if (s?.source) return "本业需补充场景";
-  return "本业需补充场景";
+  return SUPPLEMENTAL_SCENARIO_LABEL;
 };
 
 export const scenarioSourceLabel = (id: string): string => {
   const c = catalog.scenarios.find((s) => s.id === id);
   if (c) return "投资监管子场景目录";
-  return "本业需补充设计";
+  return SUPPLEMENTAL_SCENARIO_LABEL;
 };
 
 /** 研发审计用，仅配置页展示，不进入业务字段标签 */
 export const scenarioAuditSource = (id: string): string => {
   const c = catalog.scenarios.find((s) => s.id === id);
   if (c) return `${c.source_sheet} ${c.source_range}`;
-  return "本业需补充设计";
+  return SUPPLEMENTAL_SCENARIO_LABEL;
 };
 
 export const objectTypeLabel: Record<string, string> = {

@@ -4,15 +4,15 @@ import React, { useMemo, useState } from "react";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import PageHeader from "@/components/PageHeader";
-import { Button, Card, DataTable, DescList, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
-import { DOMAIN_META, catalog, coverageRows, phaseName, scenarioName, seed } from "@/lib/seed";
+import { Button, Card, DataTable, DescList, LinkButton, Modal, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
+import { DOMAIN_META, SUPPLEMENTAL_SCENARIO_LABEL, catalog, coverageRows, phaseName, scenarioName, seed } from "@/lib/seed";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
-import type { CatalogScenario, MonitoringRuleDefinition } from "@/lib/types";
+import type { CatalogIndicator, CatalogScenario, MonitoringRuleDefinition } from "@/lib/types";
 
 /**
- * 场景规则库：53 项投资子场景与 38 项原 KRI 保留附件工作表与行号，
- * 本业需补充场景单独标注来源，不伪装为投资底稿原始场景。
+ * 场景规则库：投资子场景与监管指标保留附件工作表与行号，
+ * 补充监管场景单独标注来源，不伪装为投资底稿原始场景。
  */
 
 export default function ScenarioLibraryPage() {
@@ -22,7 +22,14 @@ export default function ScenarioLibraryPage() {
   const [domainFilter, setDomainFilter] = useState("all");
   const [adoptionFilter, setAdoptionFilter] = useState("all");
   const [scenarioId, setScenarioId] = useState<string | null>(null);
+  const [sourceOpen, setSourceOpen] = useState(false);
   const [riskId, setRiskId] = useState<string | null>(null);
+  const [indicatorSource, setIndicatorSource] = useState<CatalogIndicator | null>(null);
+
+  const openScenario = (id: string, withSource = false) => {
+    setSourceOpen(withSource);
+    setScenarioId(id);
+  };
 
   const supplemental = seed.supplemental_scenarios;
 
@@ -44,7 +51,7 @@ export default function ScenarioLibraryPage() {
     () =>
       supplemental.filter((s) => {
         if (domainFilter !== "all" && s.domain !== domainFilter) return false;
-        if (adoptionFilter !== "all" && adoptionFilter !== "本业需补充场景") return false;
+        if (adoptionFilter !== "all" && adoptionFilter !== SUPPLEMENTAL_SCENARIO_LABEL) return false;
         if (q.trim()) {
           const k = q.trim().toLowerCase();
           return `${s.id}${s.name}`.toLowerCase().includes(k);
@@ -67,8 +74,8 @@ export default function ScenarioLibraryPage() {
       <Tabs
         tabs={[
           { id: "scenarios", label: `投资子场景（${catalog.counts.source_scenarios}）` },
-          { id: "supplemental", label: `本业需补充场景（${supplemental.length}）` },
-          { id: "indicators", label: `原 KRI 指标（${catalog.counts.unique_indicators}）` },
+          { id: "supplemental", label: `补充监管场景（${supplemental.length}）` },
+          { id: "indicators", label: `监管指标（${catalog.counts.unique_indicators}）` },
           { id: "rules", label: `监测规则（${rules.length}）` },
           { id: "params", label: "规则参数与边界" },
         ]}
@@ -138,7 +145,7 @@ export default function ScenarioLibraryPage() {
           <DataTable<CatalogScenario>
             rows={catalogRows}
             rowKey={(s) => s.id}
-            onRowClick={(s) => setScenarioId(s.id)}
+            onRowClick={(s) => openScenario(s.id)}
             empty="当前筛选条件下没有匹配场景。"
             pageSize={10}
             compactEmpty
@@ -164,12 +171,18 @@ export default function ScenarioLibraryPage() {
               { key: "phase", title: "主归属阶段", width: "120px", render: (s) => phaseName(s.primary_phase_id) },
               {
                 key: "src",
-                title: "来源依据",
-                width: "180px",
+                title: "来源",
+                width: "100px",
+                nowrap: true,
                 render: (s) => (
-                  <span className="num text-[12px] text-textsub">
-                    {s.source_sheet} {s.source_range}（第{s.source_row}行）
-                  </span>
+                  <LinkButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openScenario(s.id, true);
+                    }}
+                  >
+                    查看依据
+                  </LinkButton>
                 ),
               },
               {
@@ -184,11 +197,11 @@ export default function ScenarioLibraryPage() {
       )}
 
       {tab === "supplemental" && (
-        <Card title="本业需补充场景">
+        <Card title="补充监管场景">
           <DataTable
             rows={suppRows}
             rowKey={(s) => s.id}
-            onRowClick={(s) => setScenarioId(s.id)}
+            onRowClick={(s) => openScenario(s.id)}
             empty="当前筛选条件下没有匹配场景。"
             pageSize={10}
             compactEmpty
@@ -208,14 +221,32 @@ export default function ScenarioLibraryPage() {
                 title: "关联阶段",
                 render: (s) => s.associated_phase_ids?.map((p) => phaseName(p)).join("、") || "—",
               },
-              { key: "src", title: "来源标注", width: "200px", render: () => <Tag tone="amber">本业需补充设计</Tag> },
+              {
+                key: "src",
+                title: "来源",
+                width: "160px",
+                nowrap: true,
+                render: (s) => (
+                  <span className="inline-flex items-center gap-2">
+                    <Tag tone="amber">{SUPPLEMENTAL_SCENARIO_LABEL}</Tag>
+                    <LinkButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openScenario(s.id, true);
+                      }}
+                    >
+                      查看依据
+                    </LinkButton>
+                  </span>
+                ),
+              },
             ]}
           />
         </Card>
       )}
 
       {tab === "indicators" && (
-        <Card title="原 KRI 指标">
+        <Card title="监管指标">
           <DataTable
             rows={catalog.indicators}
             rowKey={(i) => i.id}
@@ -239,9 +270,12 @@ export default function ScenarioLibraryPage() {
               },
               {
                 key: "src",
-                title: "来源引用",
-                width: "230px",
-                render: (i) => <span className="num text-[12px] text-textsub">{i.source_references.join("；")}</span>,
+                title: "来源",
+                width: "100px",
+                nowrap: true,
+                render: (i) => (
+                  <LinkButton onClick={() => setIndicatorSource(i)}>查看依据</LinkButton>
+                ),
               },
             ]}
           />
@@ -398,12 +432,41 @@ export default function ScenarioLibraryPage() {
 
       <ScenarioDrawer
         scenarioId={scenarioId}
-        onClose={() => setScenarioId(null)}
+        sourceOpen={sourceOpen}
+        onClose={() => {
+          setScenarioId(null);
+          setSourceOpen(false);
+        }}
         onOpenRisk={(id) => {
           setScenarioId(null);
+          setSourceOpen(false);
           setRiskId(id);
         }}
       />
+      <Modal
+        open={Boolean(indicatorSource)}
+        onClose={() => setIndicatorSource(null)}
+        title={indicatorSource ? `${indicatorSource.id} ${indicatorSource.name}` : "查看依据"}
+      >
+        {indicatorSource && (
+          <DescList
+            cols={1}
+            items={[
+              { label: "来源引用", value: <span className="num">{indicatorSource.source_references.join("；")}</span> },
+              {
+                label: "原文",
+                value: (
+                  <div className="space-y-2 whitespace-pre-wrap text-[13px] text-textmain">
+                    {indicatorSource.source_blocks.map((b, i) => (
+                      <p key={i}>{b}</p>
+                    ))}
+                  </div>
+                ),
+              },
+            ]}
+          />
+        )}
+      </Modal>
       <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel={`场景规则库${scenarioId ? `·${scenarioName(scenarioId)}` : ""}`} />
     </div>
   );

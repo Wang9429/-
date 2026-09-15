@@ -1,6 +1,12 @@
 /** 金额、比例、日期显示口径统一在此维护（完整业需 3.2.2 / 14.3）。 */
 
 export const WAN = "万元";
+/** 人民币「元」折万元。账户原币×汇率得到的是元，展示万元时用此函数；已经是万元的金额不要再除。 */
+export const YUAN_PER_WAN = 10000;
+
+export function yuanToWan(yuan: number): number {
+  return yuan / YUAN_PER_WAN;
+}
 
 function trimFixed(v: number, digits: number): string {
   if (digits <= 0) return v.toFixed(0);

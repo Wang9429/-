@@ -29,11 +29,13 @@ export default function ScenarioDrawer({
   onClose,
   onOpenRisk,
   onOpenObject,
+  sourceOpen = false,
 }: {
   scenarioId: string | null;
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
   onOpenObject?: (id: string) => void;
+  sourceOpen?: boolean;
 }) {
   const { filters, risks, user } = useDemoStore();
 
@@ -93,11 +95,7 @@ export default function ScenarioDrawer({
           {!monitoringActive && <Tag tone="neutral">已停用</Tag>}
         </span>
       }
-      subtitle={
-        <span>
-          来源：{scenarioSourceLabel(scenarioId)}｜当前范围 {scopeLine}
-        </span>
-      }
+      subtitle={<span>当前范围 {scopeLine}</span>}
     >
       <div className="h-full overflow-auto px-6 py-4 space-y-5">
         {cat ? (
@@ -115,12 +113,10 @@ export default function ScenarioDrawer({
                       ? cat.associated_phase_ids.map((p) => phaseName(p)).join("、")
                       : "无",
                 },
-                { label: "平台行为", value: cat.platform_behavior },
-                { label: "明确排除的操作", value: cat.excluded_operations || "—" },
                 { label: "关联监管指标", value: cat.indicator_ids.join("、") || "本场景无对应监管指标" },
               ]}
             />
-            <SourceEvidence>
+            <SourceEvidence defaultOpen={sourceOpen}>
               <DescList
                 cols={2}
                 items={[
@@ -128,7 +124,6 @@ export default function ScenarioDrawer({
                   { label: "工作表", value: cat.source_sheet },
                   { label: "行号", value: <span className="num">第 {cat.source_row} 行（{cat.source_range}）</span> },
                   { label: "阶段对应说明", value: cat.phase_mapping_note },
-                  { label: "落地说明", value: cat.implementation_note },
                 ]}
               />
             </SourceEvidence>
@@ -144,9 +139,17 @@ export default function ScenarioDrawer({
                   value: supp?.primary_phase_id ? phaseName(supp.primary_phase_id) : "—",
                 },
                 { label: "关联规则", value: supp?.rule_id ?? "—" },
-                { label: "来源", value: supp?.source ?? "本业需补充设计" },
               ]}
             />
+            <SourceEvidence defaultOpen={sourceOpen}>
+              <DescList
+                cols={2}
+                items={[
+                  { label: "目录来源", value: scenarioSourceLabel(scenarioId) },
+                  { label: "来源说明", value: supp?.source ?? "—" },
+                ]}
+              />
+            </SourceEvidence>
           </>
         )}
 

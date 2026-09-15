@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import ChevronFlow, { type ChevronItem } from "@/components/ChevronFlow";
-import IndicatorDrawer, { formatMetricParts } from "@/components/IndicatorDrawer";
+import IndicatorDrawer, { formatKpiCaption, formatMetricParts } from "@/components/IndicatorDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import ScenarioExecutionPanel, { type SubtopicOption } from "@/components/ScenarioExecutionPanel";
@@ -67,16 +67,6 @@ function metricTone(m: NodeMetric): "red" | "amber" | "green" | "neutral" {
   }
 }
 
-function metricStateText(m: NodeMetric, def: IndicatorDef): string {
-  if (m.status === "no_business") return "当前范围无业务";
-  if (m.status === "unknown") return m.emptyReason ?? "数据不足，未评估";
-  if (m.value === null) return m.emptyReason ?? "数据不足，未评估";
-  const cov = m.coverage.partial
-    ? `已覆盖 ${m.coverage.evaluated}/${m.coverage.expected}`
-    : `全覆盖 ${m.coverage.evaluated}/${m.coverage.expected}`;
-  return def.targetLabel ? `${def.targetLabel}｜${cov}` : cov;
-}
-
 export default function DomainPage({
   domain,
   kpiIndicatorIds,
@@ -106,6 +96,7 @@ export default function DomainPage({
   const [objectId, setObjectId] = useState<string | null>(null);
   const [objectTab, setObjectTab] = useState("profile");
   const [scenarioId, setScenarioId] = useState<string | null>(null);
+  const [scenarioSourceOpen, setScenarioSourceOpen] = useState(false);
   const [riskFilter, setRiskFilter] = useState<"all" | "open" | "red" | "overdue">("all");
 
   const orgIds = useMemo(
@@ -235,27 +226,16 @@ export default function DomainPage({
             {kpiDefs.map((def) => {
               const m = computeIndicator(def, orgIds, ctx);
               const parts = formatMetricParts(def, m);
+              const caption = formatKpiCaption(m, def);
               return (
                 <KpiCard
                   key={def.id}
                   name={def.name}
                   value={parts.value}
                   unit={parts.unit}
-                  compare={
-                    m.status === "no_business" ? (
-                      "当前范围无业务"
-                    ) : m.status === "unknown" ? (
-                      m.emptyReason ?? "数据不足，未评估"
-                    ) : m.status === "risk" ? (
-                      "高风险"
-                    ) : m.status === "attention" ? (
-                      "关注"
-                    ) : (
-                      "有效监测正常"
-                    )
-                  }
+                  compare={caption.compare}
                   compareTone={metricTone(m) === "red" ? "red" : "neutral"}
-                  dataState={metricStateText(m, def)}
+                  dataState={caption.dataState}
                   scopeLabel={scopeLabel}
                   onOpen={() => setIndicatorId(def.id)}
                   returnKey={def.id}
@@ -432,7 +412,10 @@ export default function DomainPage({
             onSubtopicChange={setSubtopicId}
             onOpenRisk={setRiskId}
             onOpenObject={setObjectId}
-            onOpenScenario={setScenarioId}
+            onOpenScenario={(id, source) => {
+              setScenarioSourceOpen(Boolean(source));
+              setScenarioId(id);
+            }}
           />
 
           {ledger?.(helpers)}
@@ -558,13 +541,19 @@ export default function DomainPage({
       <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel={`${meta.label}·${scopeTitle}`} />
       <ScenarioDrawer
         scenarioId={scenarioId}
-        onClose={() => setScenarioId(null)}
+        sourceOpen={scenarioSourceOpen}
+        onClose={() => {
+          setScenarioId(null);
+          setScenarioSourceOpen(false);
+        }}
         onOpenRisk={(id) => {
           setScenarioId(null);
+          setScenarioSourceOpen(false);
           setRiskId(id);
         }}
         onOpenObject={(id) => {
           setScenarioId(null);
+          setScenarioSourceOpen(false);
           setObjectId(id);
         }}
       />

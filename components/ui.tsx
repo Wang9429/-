@@ -318,6 +318,9 @@ export function KpiCard({
   };
   const tone = iconBg[iconTone];
   const valueText = typeof value === "string" ? value.replace(/%%+$/, "%") : value;
+  const compareText = typeof compare === "string" ? compare : null;
+  const dataText = typeof dataState === "string" ? dataState : null;
+  const showDataState = Boolean(dataState) && !(compareText !== null && dataText !== null && compareText === dataText);
   const showUnit =
     Boolean(unit) &&
     !(
@@ -378,8 +381,8 @@ export function KpiCard({
         </span>
         <span className="mt-2 min-h-10 text-[12px] text-textsub leading-5">
           {compare}
-          {compare && dataState ? "　" : null}
-          {dataState}
+          {compare && showDataState ? "　" : null}
+          {showDataState ? dataState : null}
         </span>
       </span>
     </button>
@@ -390,7 +393,7 @@ export function KpiCard({
 
 /** 追溯信息默认折叠，业务页先展示名称与结果。 */
 export function SourceEvidence({
-  title = "来源依据",
+  title = "查看依据",
   children,
   defaultOpen = false,
 }: {
@@ -405,7 +408,6 @@ export function SourceEvidence({
     >
       <summary className="cursor-pointer list-none px-4 py-2.5 text-[14px] font-medium text-textmain select-none">
         {title}
-        <span className="ml-2 text-[12px] font-normal text-textsub">工作表、行号与映射说明</span>
       </summary>
       <div className="px-4 pb-4 pt-1 border-t border-line">{children}</div>
     </details>

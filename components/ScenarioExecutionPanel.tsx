@@ -6,6 +6,7 @@ import {
   Card,
   DataTable,
   EmptyState,
+  LinkButton,
   Modal,
   Notice,
   SeverityTag,
@@ -97,7 +98,7 @@ export default function ScenarioExecutionPanel({
   onSubtopicChange?: (id: string) => void;
   onOpenRisk: (id: string) => void;
   onOpenObject?: (id: string) => void;
-  onOpenScenario?: (id: string) => void;
+  onOpenScenario?: (id: string, source?: boolean) => void;
 }) {
   const { filters, risks, canAct } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
@@ -423,6 +424,22 @@ export default function ScenarioExecutionPanel({
                   <span className="num text-[12px] text-textsub">{r.id}</span>
                   <Tag tone={r.adoption === "结构化监测" ? "brand" : "neutral"}>{r.adoption}</Tag>
                 </button>
+              ),
+            },
+            {
+              key: "src",
+              title: "来源",
+              width: "100px",
+              nowrap: true,
+              render: (r) => (
+                <LinkButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenScenario?.(r.id, true);
+                  }}
+                >
+                  查看依据
+                </LinkButton>
               ),
             },
             {

@@ -5,7 +5,7 @@ import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
 import { Card, DataTable, EmptyState, SimulatedBadge, Tag } from "@/components/ui";
 import { seed } from "@/lib/seed";
 import { orgName } from "@/lib/org";
-import { fmtAmount, fmtPct } from "@/lib/format";
+import { fmtAmount, fmtAmountSmart, fmtPct, yuanToWan } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
 import { inDateRange } from "@/lib/period";
 import type { Account } from "@/lib/types";
@@ -19,8 +19,8 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
   const orgIds = helpers.orgIds;
   const accounts = useMemo(() => seed.accounts.filter((a) => orgIds.has(a.owner_org_id)), [orgIds]);
 
-  const totalCny = accounts.reduce((s, a) => s + a.closing_balance_native * a.fx_to_cny, 0);
-  const restrictedCny = accounts.reduce((s, a) => s + a.restricted_balance_native * a.fx_to_cny, 0);
+  const totalWan = accounts.reduce((s, a) => s + yuanToWan(a.closing_balance_native * a.fx_to_cny), 0);
+  const restrictedWan = accounts.reduce((s, a) => s + yuanToWan(a.restricted_balance_native * a.fx_to_cny), 0);
 
   return (
     <div className="space-y-4">
@@ -72,40 +72,40 @@ function AccountView({ helpers }: { helpers: DomainHelpers }) {
             },
             {
               key: "cny",
-              title: "折人民币余额",
+              title: "折人民币（万元）",
               align: "right",
-              width: "130px",
-              render: (a) => <span className="num">{fmtAmount(a.closing_balance_native * a.fx_to_cny)}</span>,
+              width: "140px",
+              render: (a) => <span className="num">{fmtAmountSmart(yuanToWan(a.closing_balance_native * a.fx_to_cny))}</span>,
             },
             {
               key: "restricted",
-              title: "受限（折人民币）",
+              title: "受限（万元）",
               align: "right",
-              width: "140px",
+              width: "120px",
               render: (a) => (
                 <span className="num" style={{ color: a.restricted_balance_native > 0 ? "var(--risk-amber-fg)" : undefined }}>
-                  {fmtAmount(a.restricted_balance_native * a.fx_to_cny)}
+                  {fmtAmountSmart(yuanToWan(a.restricted_balance_native * a.fx_to_cny))}
                 </span>
               ),
             },
             {
               key: "avail",
-              title: "可动用（折人民币）",
+              title: "可动用（万元）",
               align: "right",
-              width: "150px",
+              width: "130px",
               render: (a) => (
-                <span className="num">{fmtAmount((a.closing_balance_native - a.restricted_balance_native) * a.fx_to_cny)}</span>
+                <span className="num">
+                  {fmtAmountSmart(yuanToWan((a.closing_balance_native - a.restricted_balance_native) * a.fx_to_cny))}
+                </span>
               ),
             },
           ]}
         />
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <Tag tone="brand">
-            期末资金余额合计 {fmtAmount(totalCny)} 万元
-          </Tag>
-          <Tag tone="amber">受限 {fmtAmount(restrictedCny)} 万元</Tag>
-          <Tag tone="neutral">可用 {fmtAmount(totalCny - restrictedCny)} 万元</Tag>
-          <Tag tone="neutral">受限占比 {fmtPct((restrictedCny / totalCny) * 100)}</Tag>
+          <Tag tone="brand">期末资金余额合计 {fmtAmountSmart(totalWan)} 万元</Tag>
+          <Tag tone="amber">受限资金 {fmtAmountSmart(restrictedWan)} 万元</Tag>
+          <Tag tone="neutral">可用资金 {fmtAmountSmart(totalWan - restrictedWan)} 万元</Tag>
+          <Tag tone="neutral">受限占比 {fmtPct(totalWan === 0 ? null : (restrictedWan / totalWan) * 100)}</Tag>
           <SimulatedBadge text="模拟汇率" />
         </div>
       </Card>
