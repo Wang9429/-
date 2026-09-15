@@ -90,9 +90,8 @@ export default function WorkbenchPage() {
       <PageHeader
         title="监管工作台"
         subtitle="从预警确认到整改复核的日常办理入口。与各领域页面共用同一对象与同一事项状态，不生成第二套统计。"
-      >
-        <FilterBar />
-      </PageHeader>
+      />
+      <FilterBar />
 
       <Tabs
         tabs={VIEWS.map((v) => ({ id: v.id, label: `${v.label}（${counts[v.id as keyof typeof counts]}）` }))}

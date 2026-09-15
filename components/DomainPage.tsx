@@ -214,15 +214,14 @@ export default function DomainPage({
 
   return (
     <div className="space-y-4">
-      <PageHeader title={meta.label} subtitle={intro}>
-        <FilterBar />
-      </PageHeader>
+      <PageHeader title={meta.label} subtitle={intro} />
+      <FilterBar />
 
       <Tabs tabs={allTabs} value={tab} onChange={setTab} />
 
       {tab === "overview" && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 min-[1440px]:grid-cols-4 gap-4">
             {kpiDefs.map((def) => {
               const m = computeIndicator(def, orgIds, ctx);
               const parts = formatMetricParts(def, m);

@@ -284,7 +284,7 @@ export function KpiCard({
       type="button"
       onClick={onOpen}
       title={scopeLabel}
-      className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[132px] flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] ${
+      className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[132px] flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] whitespace-normal ${
         active ? "border-brand" : "border-line"
       } shadow-[0_2px_10px_rgba(17,43,77,0.04)] relative`}
     >
@@ -326,7 +326,7 @@ export function KpiCard({
             </span>
           )}
         </span>
-        <span className="mt-2 min-h-[20px] text-[12px] text-textsub leading-5 truncate">
+        <span className="mt-2 min-h-[20px] text-[12px] text-textsub leading-5 line-clamp-2 whitespace-normal">
           {compare}
           {compare && dataState ? "　" : null}
           {dataState}

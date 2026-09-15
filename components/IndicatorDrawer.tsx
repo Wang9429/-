@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { Drawer, Tag, DataTable, Notice, Button, LinkButton, DescList, Modal } from "@/components/ui";
 import { aggregate, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
 import { childOrgs, descendantOrgIds, orgLevelLabel, orgById, ROOT_ORG_ID } from "@/lib/org";
-import { fmtAmount, fmtInt, fmtPctNumber, fmtSignedPct } from "@/lib/format";
+import { fmtAmount, fmtAmountSmart, fmtInt, fmtPctNumber, fmtSignedPct } from "@/lib/format";
 import { objectTypeLabel, seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import { isOpen } from "@/lib/risks";
@@ -33,7 +33,7 @@ export function formatMetricParts(
 ): { value: string; unit: string } {
   if (m.value === null) return { value: "—", unit: "" };
   if (def.kind === "count") return { value: fmtInt(m.value), unit: def.unit };
-  if (def.kind === "amount") return { value: fmtAmount(m.value), unit: def.unit };
+  if (def.kind === "amount") return { value: fmtAmountSmart(m.value), unit: def.unit };
   if (def.kind === "signed_ratio") {
     const signed = fmtSignedPct(m.value);
     return { value: signed.replace(/%$/, ""), unit: "%" };
