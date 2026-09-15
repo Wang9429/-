@@ -2,13 +2,13 @@
 
 import React, { useMemo, useState } from "react";
 import { Drawer, Tag, DataTable, Notice, Button, LinkButton, DescList, Modal } from "@/components/ui";
-import { aggregate, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
+import { aggregate, indicatorLeaves, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
 import { childOrgs, descendantOrgIds, orgLevelLabel, orgById, ROOT_ORG_ID } from "@/lib/org";
 import { fmtAmount, fmtAmountSmart, fmtInt, fmtPctNumber, fmtSignedPct } from "@/lib/format";
 import { objectTypeLabel, seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import { isOpen } from "@/lib/risks";
-import { authorizedObjectIds, authorizedOrgIds, objectAllowed, riskVisible } from "@/lib/config";
+import { authorizedObjectIds, authorizedOrgIds, riskVisible } from "@/lib/config";
 
 type Selection = { kind: "org"; id: string } | { kind: "leaf"; id: string };
 
@@ -60,12 +60,19 @@ export interface IndicatorDrawerProps {
   onOpenObject?: (id: string, tab?: string) => void;
   /** 事项办理 */
   onOpenRisk?: (id: string) => void;
+  /** 与背景 KPI 一致的含下级/仅本级。抽屉内再选下级只改变浮层。 */
+  includeChildren?: boolean;
 }
 
 /** 每次打开或换口径时以 key 重挂载，穿透定位回到当前范围的顶层节点。 */
 export default function IndicatorDrawer(props: IndicatorDrawerProps) {
   if (!props.open) return null;
-  return <IndicatorDrawerBody key={props.initialOrgId} {...props} />;
+  return (
+    <IndicatorDrawerBody
+      key={`${props.initialOrgId}:${props.includeChildren ? "desc" : "self"}`}
+      {...props}
+    />
+  );
 }
 
 function IndicatorDrawerBody({
@@ -78,6 +85,7 @@ function IndicatorDrawerBody({
   scopeLabel,
   onOpenObject,
   onOpenRisk,
+  includeChildren = true,
 }: IndicatorDrawerProps) {
   const { filters, risks, user } = useDemoStore();
   const [selection, setSelection] = useState<Selection>({ kind: "org", id: initialOrgId });
@@ -89,6 +97,13 @@ function IndicatorDrawerBody({
 
   const openObject = (id: string, tab?: string) => onOpenObject?.(id, tab);
   const openRisk = (id: string) => onOpenRisk?.(id);
+  const openLeaf = (leaf: LeafMetric) => {
+    if (leaf.objectType === "risk_case") {
+      openRisk(leaf.objectId);
+      return;
+    }
+    openObject(leaf.objectId);
+  };
 
   const allowedOrgs = useMemo(() => authorizedOrgIds(user), [user]);
   const allowedObjectIds = useMemo(() => authorizedObjectIds(user), [user]);
@@ -105,15 +120,39 @@ function IndicatorDrawerBody({
   );
 
   const allLeaves: LeafMetric[] = useMemo(
-    () =>
-      (indicator ? indicator.leaves(ctx) : []).filter((l) => objectAllowed(user, l.orgId, l.objectId)),
-    [indicator, ctx, user],
+    () => (indicator ? indicatorLeaves(indicator, ctx) : []),
+    [indicator, ctx],
   );
 
-  const nodeMetric = (orgId: string): NodeMetric =>
-    indicator
-      ? aggregate(indicator, allLeaves, new Set(descendantOrgIds(orgId)))
-      : ({ value: null, numerator: null, denominator: null, leaves: [], status: "unknown", coverage: { evaluated: 0, expected: 0, partial: false } } as NodeMetric);
+  const nodeMetric = (orgId: string): NodeMetric => {
+    if (!indicator) {
+      return {
+        value: null,
+        numerator: null,
+        denominator: null,
+        leaves: [],
+        status: "unknown",
+        coverage: { evaluated: 0, expected: 0, partial: false },
+      };
+    }
+    const navOnly = !allowedOrgs.has(orgId);
+    if (navOnly) {
+      return {
+        value: null,
+        numerator: null,
+        denominator: null,
+        leaves: [],
+        status: "unknown",
+        emptyReason: "上级导航节点，不含未授权数据",
+        coverage: { evaluated: 0, expected: 0, partial: false },
+      };
+    }
+    const rollup =
+      orgId === initialOrgId && !includeChildren
+        ? new Set([orgId])
+        : new Set(descendantOrgIds(orgId).filter((id) => allowedOrgs.has(id)));
+    return aggregate(indicator, allLeaves, rollup);
+  };
 
   const selectedMetric: NodeMetric = useMemo(() => {
     if (!indicator) return nodeMetric(ROOT_ORG_ID);
@@ -130,7 +169,10 @@ function IndicatorDrawerBody({
   if (!indicator) return null;
 
   const openRiskCountForOrg = (orgId: string) => {
-    const scope = new Set(descendantOrgIds(orgId));
+    const scope =
+      orgId === initialOrgId && !includeChildren
+        ? new Set([orgId])
+        : new Set(descendantOrgIds(orgId).filter((id) => allowedOrgs.has(id)));
     return risks.filter((r) => isOpen(r) && scope.has(r.owner_org_id) && riskVisible(user, r)).length;
   };
 
@@ -507,7 +549,7 @@ function IndicatorDrawerBody({
                         <div className="flex items-center gap-2 flex-wrap">
                           <button
                             type="button"
-                            onClick={() => openObject(leaf.objectId)}
+                            onClick={() => openLeaf(leaf)}
                             className="text-brand text-[14px] hover:underline"
                           >
                             {leaf.name}
@@ -542,12 +584,14 @@ function IndicatorDrawerBody({
                         ))}
                       </div>
                       <div className="mt-2 flex items-center gap-3 flex-wrap">
-                        <LinkButton onClick={() => openObject(leaf.objectId)}>
-                          查看对象档案
+                        <LinkButton onClick={() => openLeaf(leaf)}>
+                          {leaf.objectType === "risk_case" ? "查看事项详情" : "查看对象档案"}
                         </LinkButton>
+                        {leaf.objectType !== "risk_case" && (
                         <LinkButton onClick={() => openObject(leaf.objectId, "relations")}>
                           业务关联
                         </LinkButton>
+                        )}
                         <LinkButton onClick={() => setTraceLeafId(leaf.objectId)}>
                           查看计算依据
                         </LinkButton>

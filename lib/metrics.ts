@@ -1,6 +1,7 @@
 import { AS_OF, seed } from "./seed";
 import { isOpen, riskMatches } from "./risks";
 import type { DomainId, ObjectType, RiskCase } from "./types";
+import { INDICATOR_CALIBER, periodFact } from "./period";
 
 /**
  * 指标一律从基础业务记录计算；expected_results 只用于验收核对，
@@ -93,6 +94,17 @@ export function aggregate(
   const evaluated = inScope.filter((l) => l.dataComplete).length;
 
   if (inScope.length === 0) {
+    if (def.kind === "count" && hasCountBusiness(def, orgIds)) {
+      const status = def.evaluate ? def.evaluate(0) : "normal";
+      return {
+        value: 0,
+        numerator: 0,
+        denominator: null,
+        leaves: [],
+        status,
+        coverage: { evaluated: 0, expected: 0, partial: false },
+      };
+    }
     return {
       value: null,
       numerator: null,
@@ -106,13 +118,14 @@ export function aggregate(
 
   const usable = inScope.filter((l) => l.dataComplete);
   if (usable.length === 0) {
+    const gap = inScope.find((l) => l.gapNote)?.gapNote;
     return {
       value: null,
       numerator: null,
       denominator: null,
       leaves: inScope,
       status: "unknown",
-      emptyReason: "必要事实不足，显示未评估",
+      emptyReason: gap ?? "必要事实不足，显示未评估",
       coverage: { evaluated: 0, expected, partial: true },
     };
   }
@@ -162,12 +175,37 @@ function risksFor(objectId: string, ctx: IndicatorContext): string[] {
   return ctx.risks.filter((r) => isOpen(r) && r.primary_object_id === objectId).map((r) => r.id);
 }
 
+function hasDomainObjects(domain: DomainId, orgIds: Set<string>): boolean {
+  switch (domain) {
+    case "FA":
+      return (
+        seed.fixed_asset_projects.some((p) => orgIds.has(p.owner_org_id)) ||
+        seed.assets.some((a) => orgIds.has(a.owner_org_id))
+      );
+    case "EQ":
+      return seed.equity_projects.some((p) => orgIds.has(p.owner_org_id));
+    case "ENG":
+    case "INTL":
+      return seed.engineering_projects.some((p) => orgIds.has(p.owner_org_id));
+    case "CASH":
+      return seed.accounts.some((a) => orgIds.has(a.owner_org_id));
+    case "RIGHTS":
+      return seed.property_matters.some((m) => orgIds.has(m.owner_org_id));
+    default:
+      return false;
+  }
+}
+
+function hasCountBusiness(def: IndicatorDef, orgIds: Set<string>): boolean {
+  return hasDomainObjects(def.domain, orgIds);
+}
+
 function openRiskLeaves(domain: DomainId, ctx: IndicatorContext): LeafMetric[] {
   return ctx.risks
     .filter((r) => isOpen(r) && riskMatches(r, { domain, orgScope: undefined }))
     .map((r) => ({
       objectId: r.id,
-      objectType: "fixed_asset_project" as ObjectType,
+      objectType: "risk_case" as ObjectType,
       name: r.title,
       orgId: r.owner_org_id,
       numerator: 1,
@@ -425,7 +463,7 @@ export const INDICATORS: IndicatorDef[] = [
     domain: "FA",
     unit: "件",
     kind: "count",
-    leafObjectType: "fixed_asset_project",
+    leafObjectType: "risk_case",
     formula: "截至日仍待核查/核查中/整改中/待复核的唯一事项数",
     caliber: "按事项去重；已排除、已关闭不计入。跨领域同一事项不重复计数。",
     sourceNote: "本平台监管事项与处理记录",
@@ -632,7 +670,7 @@ export const INDICATORS: IndicatorDef[] = [
     domain: "EQ",
     unit: "件",
     kind: "count",
-    leafObjectType: "equity_project",
+    leafObjectType: "risk_case",
     formula: "截至日仍未关闭的唯一事项数",
     caliber: "按事项去重；跨领域引用同一事项不重复计数。",
     sourceNote: "本平台监管事项",
@@ -777,7 +815,7 @@ export const INDICATORS: IndicatorDef[] = [
     domain: "ENG",
     unit: "件",
     kind: "count",
-    leafObjectType: "engineering_project",
+    leafObjectType: "risk_case",
     formula: "截至日仍未关闭的唯一事项数",
     caliber: "按事项去重；同一事项在资金、国际化出现时不重复计数。",
     sourceNote: "本平台监管事项",
@@ -970,7 +1008,7 @@ export const INDICATORS: IndicatorDef[] = [
     domain: "CASH",
     unit: "件",
     kind: "count",
-    leafObjectType: "cash_transaction",
+    leafObjectType: "risk_case",
     formula: "截至日仍未关闭的唯一事项数",
     caliber: "按事项去重；R03/R04 与股权领域为同一事项。",
     sourceNote: "本平台监管事项",
@@ -1096,7 +1134,7 @@ export const INDICATORS: IndicatorDef[] = [
     domain: "INTL",
     unit: "件",
     kind: "count",
-    leafObjectType: "engineering_project",
+    leafObjectType: "risk_case",
     formula: "截至日仍未关闭的唯一事项数",
     caliber: "按事项去重；R05/R06/R07 与工程、资金领域为同一事项。",
     sourceNote: "本平台监管事项",
@@ -1224,7 +1262,7 @@ export const INDICATORS: IndicatorDef[] = [
     domain: "RIGHTS",
     unit: "件",
     kind: "count",
-    leafObjectType: "property_matter",
+    leafObjectType: "risk_case",
     formula: "截至日仍未关闭的唯一事项数",
     caliber: "按事项去重；R08 与股权领域为同一事项。",
     sourceNote: "本平台监管事项",
@@ -1239,16 +1277,44 @@ export const indicatorById = (id: string): IndicatorDef | undefined =>
 export const indicatorsForDomain = (d: DomainId): IndicatorDef[] =>
   INDICATORS.filter((i) => i.domain === d);
 
+export function indicatorLeaves(def: IndicatorDef, ctx: IndicatorContext): LeafMetric[] {
+  let leaves = def.leaves(ctx).filter((l) => {
+    if (ctx.allowedObjectIds === undefined || ctx.allowedObjectIds === null) return true;
+    if (l.objectType === "risk_case") {
+      const r = ctx.risks.find((x) => x.id === l.objectId);
+      return r ? ctx.allowedObjectIds.includes(r.primary_object_id) : false;
+    }
+    return ctx.allowedObjectIds.includes(l.objectId);
+  });
+  const caliber = INDICATOR_CALIBER[def.id];
+  if (caliber) {
+    const fact = periodFact(ctx, caliber);
+    if (!fact.ok) {
+      leaves = leaves.map((l) => ({
+        ...l,
+        dataComplete: false,
+        gapNote: fact.reason,
+        numerator: null,
+        denominator: null,
+        extras: [...l.extras, { label: "取数口径", value: fact.reason ?? "该期间数据未覆盖" }],
+      }));
+    } else {
+      leaves = leaves.map((l) =>
+        l.extras.some((e) => e.label === "取数口径")
+          ? l
+          : { ...l, extras: [...l.extras, { label: "取数口径", value: fact.label }] },
+      );
+    }
+  }
+  return leaves;
+}
+
 export function computeIndicator(
   def: IndicatorDef,
   orgIds: Set<string>,
   ctx: IndicatorContext,
 ): NodeMetric {
-  const leaves = def.leaves(ctx).filter((l) => {
-    if (ctx.allowedObjectIds === undefined || ctx.allowedObjectIds === null) return true;
-    return ctx.allowedObjectIds.includes(l.objectId);
-  });
-  return aggregate(def, leaves, orgIds);
+  return aggregate(def, indicatorLeaves(def, ctx), orgIds);
 }
 
 export const DEFAULT_CTX: IndicatorContext = {

@@ -28,7 +28,7 @@ const PHASE_FOCUS: Record<string, string> = {
 };
 
 function EquityLedger({ helpers }: { helpers: DomainHelpers }) {
-  const { filters, risks } = useDemoStore();
+  const { filters, risks, canAct } = useDemoStore();
   const orgIds = helpers.orgIds;
   const rows = useMemo(() => seed.equity_projects.filter((p) => orgIds.has(p.owner_org_id)), [orgIds]);
 
@@ -38,7 +38,10 @@ function EquityLedger({ helpers }: { helpers: DomainHelpers }) {
       subtitle="一个被投企业可关联多个投资项目；法人事件按唯一事件计数后再关联项目，不按持股比例替代会计确认"
       right={
         <Button
-          onClick={() =>
+          disabled={!canAct("business.export")}
+          title={canAct("business.export") ? "导出当前筛选" : "当前身份不能导出业务数据"}
+          onClick={() => {
+            if (!canAct("business.export")) return;
             downloadCsv(
               "股权投资项目台账.csv",
               [
@@ -84,8 +87,8 @@ function EquityLedger({ helpers }: { helpers: DomainHelpers }) {
                   "金额单位：万元人民币",
                 ],
               },
-            )
-          }
+            );
+          }}
         >
           导出当前筛选
         </Button>

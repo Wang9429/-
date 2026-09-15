@@ -201,7 +201,14 @@ const ACTION_MAP: Record<string, string[]> = {
   pass_verification: ["case.verify"],
   return_verification: ["case.verify"],
   reopen: ["case.reopen"],
+  urge: ["case.assign"],
+  adopt_rectification: ["case.rectify.submit", "case.investigate"],
+  adopt_verification: ["case.verify"],
 };
+
+export function canUrge(user: ConfigUser | undefined): boolean {
+  return canCaseAction(user, "urge");
+}
 
 export function canCaseAction(user: ConfigUser | undefined, kind: string): boolean {
   if (!user) return false;

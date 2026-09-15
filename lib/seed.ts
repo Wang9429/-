@@ -114,6 +114,7 @@ export const objectTypeLabel: Record<string, string> = {
   legal_entity: "法律主体",
   contract: "合同",
   obligation: "义务",
+  risk_case: "监管事项",
 };
 
 export const monitoringStatusLabel: Record<string, string> = {

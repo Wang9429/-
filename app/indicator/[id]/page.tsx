@@ -64,6 +64,7 @@ export default function IndicatorPage() {
           indicatorOptions={indicatorsForDomain(def.domain)}
           onSwitchIndicator={(next) => router.replace(`/indicator/${next}`)}
           initialOrgId={filters.orgId}
+          includeChildren={filters.includeChildren}
           scopeLabel={scopeLabel}
           onOpenObject={(oid) => router.push(`/object/${oid}`)}
           onOpenRisk={() => router.push("/supervision-workbench")}

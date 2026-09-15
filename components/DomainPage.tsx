@@ -68,6 +68,7 @@ function metricTone(m: NodeMetric): "red" | "amber" | "green" | "neutral" {
 
 function metricStateText(m: NodeMetric, def: IndicatorDef): string {
   if (m.status === "no_business") return "当前范围无业务";
+  if (m.status === "unknown") return m.emptyReason ?? "数据不足，未评估";
   if (m.value === null) return m.emptyReason ?? "数据不足，未评估";
   const cov = m.coverage.partial
     ? `已覆盖 ${m.coverage.evaluated}/${m.coverage.expected}`
@@ -99,7 +100,7 @@ export default function DomainPage({
   ledger?: (helpers: DomainHelpers) => React.ReactNode;
 }) {
   const meta = DOMAIN_META[domain];
-  const { filters, risks, user } = useDemoStore();
+  const { filters, risks, user, canAct } = useDemoStore();
   const [tab, setTab] = useState("overview");
   const [phaseId, setPhaseId] = useState<string | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null);
@@ -235,7 +236,7 @@ export default function DomainPage({
                     m.status === "no_business" ? (
                       "当前范围无业务"
                     ) : m.status === "unknown" ? (
-                      "数据不足"
+                      m.emptyReason ?? "数据不足，未评估"
                     ) : m.status === "risk" ? (
                       "高风险"
                     ) : m.status === "attention" ? (
@@ -483,7 +484,10 @@ export default function DomainPage({
                 ))}
               </div>
               <Button
-                onClick={() =>
+                disabled={!canAct("business.export")}
+                title={canAct("business.export") ? "导出当前筛选范围内的事项" : "当前身份不能导出业务数据"}
+                onClick={() => {
+                  if (!canAct("business.export")) return;
                   downloadCsv(
                     `监管事项_${domain}.csv`,
                     ["事项ID", "名称", "等级", "办理状态", "责任单位", "主对象", "规则", "场景", "有效整改期限", "是否逾期"],
@@ -503,8 +507,8 @@ export default function DomainPage({
                       title: `${meta.label}监管事项清单`,
                       scopeLines: [scopeLabel, `截至日 ${filters.asOf}`, `筛选：${riskFilter}`],
                     },
-                  )
-                }
+                  );
+                }}
               >
                 导出当前筛选
               </Button>
@@ -567,6 +571,7 @@ export default function DomainPage({
         indicatorOptions={kpiDefs}
         onSwitchIndicator={setIndicatorId}
         initialOrgId={filters.orgId}
+        includeChildren={filters.includeChildren}
         scopeLabel={scopeLabel}
         onOpenObject={(id, t) => {
           setObjectId(id);

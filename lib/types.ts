@@ -24,7 +24,8 @@ export type ObjectType =
   | "account"
   | "legal_entity"
   | "contract"
-  | "obligation";
+  | "obligation"
+  | "risk_case";
 
 export interface Organization {
   id: string;

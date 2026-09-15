@@ -6,6 +6,7 @@ import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import { Button, Card, DataTable, DescList, Notice, Tabs, Tag, inputClass, selectClass } from "@/components/ui";
 import { DOMAIN_META, catalog, coverageRows, phaseName, scenarioName, seed } from "@/lib/seed";
 import { downloadCsv } from "@/lib/export";
+import { useDemoStore } from "@/lib/store";
 import type { CatalogScenario, MonitoringRuleDefinition } from "@/lib/types";
 
 /**
@@ -14,6 +15,7 @@ import type { CatalogScenario, MonitoringRuleDefinition } from "@/lib/types";
  */
 
 export default function ScenarioLibraryPage() {
+  const { canAct } = useDemoStore();
   const [tab, setTab] = useState("scenarios");
   const [q, setQ] = useState("");
   const [domainFilter, setDomainFilter] = useState("all");
@@ -101,7 +103,14 @@ export default function ScenarioLibraryPage() {
             </select>
           )}
           <Button
-            onClick={() =>
+            disabled={!canAct("business.export") && !canAct("config.export")}
+            title={
+              canAct("business.export") || canAct("config.export")
+                ? "导出当前筛选"
+                : "当前身份不能导出"
+            }
+            onClick={() => {
+              if (!canAct("business.export") && !canAct("config.export")) return;
               downloadCsv(
                 "监管场景清单.csv",
                 ["场景ID", "领域", "监管子场景", "一级监管场景", "纳入方式", "主归属阶段", "来源工作表", "来源行号", "关联指标"],
@@ -117,8 +126,8 @@ export default function ScenarioLibraryPage() {
                   s.indicator_ids.join("/"),
                 ]),
                 { title: "投资监管场景清单", scopeLines: [`版本 ${catalog.version}`, `来源文件 ${catalog.source.filename}`] },
-              )
-            }
+              );
+            }}
           >
             导出当前筛选
           </Button>

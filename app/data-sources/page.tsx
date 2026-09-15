@@ -17,6 +17,7 @@ import {
 } from "@/components/ui";
 import { AS_OF, DOMAIN_META, coverageRows, monitoringStatusLabel, seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
+import { can } from "@/lib/config";
 
 /**
  * P76 数据依据：数据情况、拟来源边界、规则版本、导入与演示重置。
@@ -56,11 +57,16 @@ const SAMPLE_ROWS = [
 ];
 
 export default function DataSourcesPage() {
-  const { imports, addImportBatch, resetDemo, dirty, filters } = useDemoStore();
+  const { imports, addImportBatch, resetBusiness, dirty, filters, user, canAct } = useDemoStore();
   const [tab, setTab] = useState("coverage");
   const [importOpen, setImportOpen] = useState(false);
   const [note, setNote] = useState("演示进度补录批次");
   const [flash, setFlash] = useState<string | null>(null);
+
+  const canData = canAct("config.data.read") || can(user, "business.read");
+  const canSeeCounts = can(user, "business.read");
+  const canImport = canAct("config.import") || canAct("config.data.validate");
+  const canResetBusiness = canAct("config.reset") || canAct("config.data.rerun");
 
   const statusBreakdown = useMemo(() => {
     const m: Record<string, number> = {};
@@ -93,6 +99,11 @@ export default function DataSourcesPage() {
 
   return (
     <div className="space-y-4">
+      {!canData && (
+        <Notice tone="amber" title="访问受限">
+          当前身份不能打开数据依据。请切换配置管理员或具备业务/配置数据权限的账号。
+        </Notice>
+      )}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-[24px] font-semibold text-textmain leading-[34px]">数据依据</h1>
@@ -172,6 +183,7 @@ export default function DataSourcesPage() {
           </Card>
 
           <Card title="样例数据范围" subtitle="完整业需 16.1">
+            {canSeeCounts ? (
             <DescList
               cols={4}
               items={[
@@ -189,6 +201,11 @@ export default function DataSourcesPage() {
                 { label: "证据材料", value: <span className="num">{seed.evidence.length} 份</span> },
               ]}
             />
+            ) : (
+              <Notice tone="neutral">
+                当前身份无业务数据权限，不展示项目、账户与事项的全量计数。覆盖规划候选见上方“按领域的可判定覆盖”。
+              </Notice>
+            )}
             <div className="mt-3 flex items-center gap-2">
               <SimulatedBadge text="合成样例" />
               <span className="text-[12px] text-textsub">{seed.data_nature}｜{seed.display_notice}</span>
@@ -229,7 +246,7 @@ export default function DataSourcesPage() {
             title="导入模板"
             subtitle="至少提供进度、预测补充、境外付款、资产运行、被投企业经营数据五类；首版实现进度模板的预览、错误提示与确认导入联动"
             right={
-              <Button variant="primary" onClick={() => setImportOpen(true)}>
+              <Button variant="primary" disabled={!canImport} title={canImport ? "预览进度模板" : "当前身份不能导入"} onClick={() => setImportOpen(true)}>
                 预览并导入进度模板
               </Button>
             }
@@ -330,9 +347,21 @@ export default function DataSourcesPage() {
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="primary"
+                disabled={!canResetBusiness}
+                title={
+                  canResetBusiness
+                    ? "清除本地核查、整改、复核、采用材料与导入批次，恢复种子业务办理状态；配置保留。"
+                    : "当前身份不能重置业务办理状态"
+                }
                 onClick={() => {
-                  resetDemo();
-                  setFlash("已重置业务办理状态：未关闭 8 件（红 4、黄 4），待核查 5、整改中 3、当前逾期整改 1，R09 保持已排除。");
+                  if (
+                    window.confirm(
+                      "业务重置将清除本地核查、整改、复核、采用材料与导入批次，恢复种子业务办理状态。用户权限与规则草稿保留。确认？",
+                    )
+                  ) {
+                    resetBusiness();
+                    setFlash("已重置业务办理状态：未关闭 8 件（红 4、黄 4），待核查 5、整改中 3、当前逾期整改 1，R09 保持已排除。");
+                  }
                 }}
               >
                 重置业务办理状态
@@ -365,7 +394,9 @@ export default function DataSourcesPage() {
             <Button onClick={() => setImportOpen(false)}>取消</Button>
             <Button
               variant="primary"
+              disabled={!canImport}
               onClick={() => {
+                if (!canImport) return;
                 addImportBatch({
                   template: "进度导入模板",
                   validRows,

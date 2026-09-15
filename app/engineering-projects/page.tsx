@@ -9,6 +9,7 @@ import { fmtAmount, fmtDate, fmtPct, fmtPp } from "@/lib/format";
 import { isOpen } from "@/lib/risks";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
+import { inDateRange } from "@/lib/period";
 import type { EngineeringProject } from "@/lib/types";
 
 /**
@@ -29,7 +30,7 @@ const PHASE_FOCUS: Record<string, string> = {
 };
 
 function EngLedger({ helpers }: { helpers: DomainHelpers }) {
-  const { filters, risks } = useDemoStore();
+  const { filters, risks, canAct } = useDemoStore();
   const orgIds = helpers.orgIds;
   const rows = useMemo(() => seed.engineering_projects.filter((p) => orgIds.has(p.owner_org_id)), [orgIds]);
 
@@ -39,7 +40,10 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
       subtitle="管理主体与合同法律主体分别标明；境外分支机构不是自动独立法人"
       right={
         <Button
-          onClick={() =>
+          disabled={!canAct("business.export")}
+          title={canAct("business.export") ? "导出当前筛选" : "当前身份不能导出业务数据"}
+          onClick={() => {
+            if (!canAct("business.export")) return;
             downloadCsv(
               "工程项目台账.csv",
               [
@@ -83,8 +87,8 @@ function EngLedger({ helpers }: { helpers: DomainHelpers }) {
                   "金额单位：万元人民币；收入口径：有效不含税合同收入",
                 ],
               },
-            )
-          }
+            );
+          }}
         >
           导出当前筛选
         </Button>
@@ -186,7 +190,11 @@ function CostAndCash({ helpers }: { helpers: DomainHelpers }) {
   const projects = seed.engineering_projects.filter((p) => orgIds.has(p.owner_org_id));
   const costItems = seed.cost_items.filter((c) => projects.some((p) => p.id === c.project_id));
   const obligations = seed.obligations.filter((o) => projects.some((p) => p.id === o.project_id));
-  const payments = seed.cash_transactions.filter((t) => projects.some((p) => p.id === t.project_id));
+  const payments = seed.cash_transactions.filter(
+    (t) =>
+      projects.some((p) => p.id === t.project_id) &&
+      inDateRange(t.date, filters.periodStart, filters.periodEnd),
+  );
 
   return (
     <div className="space-y-4">

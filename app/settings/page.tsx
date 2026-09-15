@@ -3,13 +3,13 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import React, { Suspense, useState } from "react";
 import { Button, Card, DataTable, Field, Notice, Tag, Tabs, inputClass } from "@/components/ui";
-import { config, coverageById, roles, type ConfigUser } from "@/lib/config";
+import { config, coverageById, intersectOrgScope, objectAllowed, roles, type ConfigUser } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { INDICATORS, computeIndicator } from "@/lib/metrics";
-import { orgScope, orgName } from "@/lib/org";
+import { orgName } from "@/lib/org";
 import { seed } from "@/lib/seed";
 import { fmtPct } from "@/lib/format";
-import type { RiskCase } from "@/lib/types";
+import { INDEPENDENT_TRIAL_PROJECTS } from "@/lib/trial";
 import { statusLabel } from "@/lib/risks";
 import {
   configStatusLabel,
@@ -35,7 +35,6 @@ function SettingsBody() {
     publishTrial,
     resetBusiness,
     resetConfig,
-    filters,
     risks,
   } = useDemoStore();
 
@@ -68,13 +67,14 @@ function SettingsBody() {
           risks={risks}
         />
       )}
-      {tab === "indicators" && <IndicatorsTab filters={filters} risks={risks} />}
+      {tab === "indicators" && <IndicatorsTab />}
       {tab === "ai" && <AiTab />}
       {tab === "data" && (
         <DataTab
           resetBusiness={resetBusiness}
           resetConfig={resetConfig}
-          canReset={canAct("config.reset") || canAct("config.data.read")}
+          canResetBusiness={canAct("config.reset") || canAct("config.data.rerun")}
+          canResetConfig={canAct("config.reset")}
         />
       )}
       {!canConfig && tab !== "users" && (
@@ -211,22 +211,38 @@ function RulesTab({
   publishTrial: () => void;
   risks: { id: string; status: string }[];
 }) {
+  const { user, canAct } = useDemoStore();
+  const canBusiness = canAct("business.read");
+  const canPublish = canAct("config.rules.publish");
+  const canEdit = canAct("config.rules.edit") || canAct("config.test");
   const ex = config.rule_editor.new_rule_example;
-  const fa = seed.fixed_asset_projects.filter((p) => p.eac != null);
-  const trials = fa.map((p) => {
-    const pct = ((p.eac! - p.effective_approved_budget) / p.effective_approved_budget) * 100;
-    return { id: p.id, name: p.name, pct, hit: pct > eacTrialPct };
-  });
+  const trials: { id: string; name: string; pct: number; hit: boolean; source: "business" | "test" }[] = canBusiness
+    ? seed.fixed_asset_projects
+        .filter((p) => p.eac != null && objectAllowed(user, p.owner_org_id, p.id))
+        .map((p) => {
+          const pct = ((p.eac! - p.effective_approved_budget) / p.effective_approved_budget) * 100;
+          return { id: p.id, name: p.name, pct, hit: pct > eacTrialPct, source: "business" as const };
+        })
+    : INDEPENDENT_TRIAL_PROJECTS.map((p) => {
+        const pct = ((p.eac - p.effective_approved_budget) / p.effective_approved_budget) * 100;
+        return { id: p.id, name: p.name, pct, hit: pct > eacTrialPct, source: "test" as const };
+      });
   const r01 = risks.find((r) => r.id === "R01");
   return (
     <div className="space-y-3">
       <Card title={ex.name} subtitle="独立草稿。试算不改变历史事项，发布前不进入首页统计。">
+        {!canBusiness && (
+          <Notice tone="neutral" title="独立测试输入">
+            当前身份无业务数据权限，试算只使用独立测试样本，不读取总部或单位项目金额。
+          </Notice>
+        )}
         <div className="flex items-end gap-3 flex-wrap">
           <Field label="偏差率阈值（%）">
             <input
               className={inputClass + " w-28"}
               type="number"
               value={eacTrialPct}
+              disabled={!canEdit}
               onChange={(e) => setEacTrialPct(Number(e.target.value))}
             />
           </Field>
@@ -245,10 +261,12 @@ function RulesTab({
           ]}
         />
         <p className="text-[13px] text-textsub mt-2">
-          阈值 10% 时基地能力提升项目 18% 命中、设施技术改造项目 −10% 不命中；改为 25% 两者都不命中。R01 当前状态仍为「{r01 ? statusLabel[r01.status as keyof typeof statusLabel] ?? r01.status : "—"}」，不因草稿消失。
+          {canBusiness
+            ? `阈值 10% 时基地能力提升项目 18% 命中、设施技术改造项目 −10% 不命中；改为 25% 两者都不命中。R01 当前状态仍为「${r01 ? statusLabel[r01.status as keyof typeof statusLabel] ?? r01.status : "—"}」，不因草稿消失。`
+            : "样本甲 18%（10000/11800）、样本乙 −10%（5000/4500）。无业务权限时不会出现总部项目名称或金额。"}
         </p>
         <div className="mt-3 flex gap-2">
-          <Button variant="primary" onClick={publishTrial}>
+          <Button variant="primary" disabled={!canPublish} title={canPublish ? "发布草稿" : "当前身份不能发布规则"} onClick={publishTrial}>
             发布草稿（不覆盖历史评估）
           </Button>
         </div>
@@ -270,32 +288,47 @@ function RulesTab({
   );
 }
 
-function IndicatorsTab({
-  filters,
-  risks,
-}: {
-  filters: { periodStart: string; periodEnd: string; asOf: string };
-  risks: RiskCase[];
-}) {
+function IndicatorsTab() {
+  const { filters, risks, user, canAct } = useDemoStore();
+  const canBusiness = canAct("business.read");
   const ctx = { periodStart: filters.periodStart, periodEnd: filters.periodEnd, asOf: filters.asOf, risks };
-  const hq = orgScope("ORG-HQ", true);
+  const orgIds = intersectOrgScope(filters.orgId, filters.includeChildren, user);
   const trial = INDICATORS.filter((i) => i.id === "FA-I06" || i.id === "FA-I07").map((def) => {
-    const m = computeIndicator(def, hq, ctx);
-    return { id: def.id, name: def.name, value: m.value, formula: def.formula };
+    const m = computeIndicator(def, orgIds, ctx);
+    return { id: def.id, name: def.name, value: m.value, status: m.status, reason: m.emptyReason, formula: def.formula };
   });
   return (
     <div className="space-y-3">
       <Card title="指标试算（已有计算器）" subtitle="公式属于指标定义；阈值属于规则，不混在一条公式里。">
-        <DataTable
-          dense
-          rows={trial}
-          rowKey={(r) => r.id}
-          columns={[
-            { key: "name", title: "指标", render: (r) => r.name },
-            { key: "formula", title: "计算公式", render: (r) => r.formula },
-            { key: "v", title: "总部试算", align: "right", render: (r) => <span className="num">{r.value === null ? "—" : fmtPct(r.value)}</span> },
-          ]}
-        />
+        {!canBusiness ? (
+          <Notice tone="neutral">
+            当前身份无业务数据权限，不能用总部项目金额试算指标。规则与指标定义仍可查阅；监测规则 Tab 提供独立测试输入。
+          </Notice>
+        ) : (
+          <DataTable
+            dense
+            rows={trial}
+            rowKey={(r) => r.id}
+            columns={[
+              { key: "name", title: "指标", render: (r) => r.name },
+              { key: "formula", title: "计算公式", render: (r) => r.formula },
+              {
+                key: "v",
+                title: "当前范围试算",
+                align: "right",
+                render: (r) => (
+                  <span className="num">
+                    {r.status === "no_business"
+                      ? "无业务"
+                      : r.value === null
+                        ? r.reason ?? "—"
+                        : fmtPct(r.value)}
+                  </span>
+                ),
+              },
+            ]}
+          />
+        )}
       </Card>
       <Card title={`指标目录（${config.indicator_definitions.length}）`} subtitle="38 项原指标均可查定义；首页只展示已具备可靠输入的重点指标。">
         <DataTable
@@ -332,11 +365,13 @@ function AiTab() {
 function DataTab({
   resetBusiness,
   resetConfig,
-  canReset,
+  canResetBusiness,
+  canResetConfig,
 }: {
   resetBusiness: () => void;
   resetConfig: () => void;
-  canReset: boolean;
+  canResetBusiness: boolean;
+  canResetConfig: boolean;
 }) {
   const [msg, setMsg] = useState<string | null>(null);
   const candidates = [...coverageById.values()].filter((p) => p.record_kind === "coverage_candidate").length;
@@ -362,19 +397,31 @@ function DataTab({
       <Card title="重置范围">
         <div className="flex flex-wrap gap-2">
           <Button
-            disabled={!canReset}
+            disabled={!canResetBusiness}
+            title={
+              canResetBusiness
+                ? "清除本地核查、整改、复核、采用材料与导入批次，恢复种子业务办理状态；用户权限与规则草稿保留。"
+                : "当前身份不能重置业务办理状态"
+            }
             onClick={() => {
-              resetBusiness();
-              setMsg("已重置业务办理状态。配置保留。");
+              if (
+                window.confirm(
+                  "业务重置将清除本地核查、整改、复核、采用材料与导入批次，恢复种子业务办理状态。用户权限、规则草稿与试算参数保留。确认？",
+                )
+              ) {
+                resetBusiness();
+                setMsg("已重置业务办理状态。配置保留。");
+              }
             }}
           >
             重置业务办理状态
           </Button>
           <Button
-            disabled={!canReset}
+            disabled={!canResetConfig}
             variant="danger"
+            title={canResetConfig ? "恢复初始用户、规则草稿与试算参数，不影响业务办理记录。" : "当前身份不能重置配置"}
             onClick={() => {
-              if (window.confirm("将恢复本包初始用户、规则草稿与试算参数，不影响业务办理记录。确认？")) {
+              if (window.confirm("配置重置将恢复本包初始用户、规则草稿与试算参数，不影响业务办理记录。确认？")) {
                 resetConfig();
                 setMsg("已重置配置。");
               }

@@ -29,7 +29,7 @@ const PHASE_FOCUS: Record<string, string> = {
 };
 
 function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
-  const { filters, risks } = useDemoStore();
+  const { filters, risks, canAct } = useDemoStore();
   const [phaseFilter, setPhaseFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [onlyOver, setOnlyOver] = useState(false);
@@ -56,7 +56,10 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
       subtitle="“项目当前业务阶段”筛选与首页“问题所属环节”筛选是两个独立条件，不互相覆盖"
       right={
         <Button
-          onClick={() =>
+          disabled={!canAct("business.export")}
+          title={canAct("business.export") ? "导出当前筛选" : "当前身份不能导出业务数据"}
+          onClick={() => {
+            if (!canAct("business.export")) return;
             downloadCsv(
               "固定资产投资项目台账.csv",
               [
@@ -101,8 +104,8 @@ function ProjectLedger({ helpers }: { helpers: DomainHelpers }) {
                   `筛选：阶段=${phaseFilter}，类型=${typeFilter}，仅看超概=${onlyOver ? "是" : "否"}`,
                 ],
               },
-            )
-          }
+            );
+          }}
         >
           导出当前筛选
         </Button>

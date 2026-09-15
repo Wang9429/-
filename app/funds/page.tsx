@@ -7,6 +7,7 @@ import { seed } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { fmtAmount, fmtPct } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
+import { inDateRange } from "@/lib/period";
 import type { Account } from "@/lib/types";
 
 /**
@@ -128,7 +129,11 @@ function PaymentView({ helpers }: { helpers: DomainHelpers }) {
   const { filters } = useDemoStore();
   const orgIds = helpers.orgIds;
   const accounts = seed.accounts.filter((a) => orgIds.has(a.owner_org_id));
-  const txs = seed.cash_transactions.filter((t) => accounts.some((a) => a.id === t.account_id));
+  const txs = seed.cash_transactions.filter(
+    (t) =>
+      accounts.some((a) => a.id === t.account_id) &&
+      inDateRange(t.date, filters.periodStart, filters.periodEnd),
+  );
 
   return (
     <div className="space-y-4">

@@ -17,6 +17,7 @@ import {
 import {
   computeFiveCounts,
   configuredScenarios,
+  scenarioHasPendingApplicability,
   selectRows,
   type FiveCounts,
   type ScopeFilter,
@@ -58,8 +59,15 @@ const DETAIL_TITLE: Record<DetailKind, string> = {
   overdue: "逾期整改事项（截至日）",
 };
 
-function scenarioStatus(rows: MonitoringRow[]): { label: string; tone: "red" | "amber" | "green" | "neutral" } {
-  if (rows.length === 0) return { label: "当前筛选无事项", tone: "neutral" };
+function scenarioStatus(
+  rows: MonitoringRow[],
+  scenarioId: string,
+): { label: string; tone: "red" | "amber" | "green" | "neutral" } {
+  const pending = scenarioHasPendingApplicability(scenarioId);
+  if (rows.length === 0) {
+    if (pending) return { label: "适用性尚未确认（覆盖规划）", tone: "neutral" };
+    return { label: "当前范围无业务", tone: "neutral" };
+  }
   const evaluated = rows.filter((r) => r.status === "evaluated_hit" || r.status === "evaluated_clear");
   const hit = rows.filter((r) => r.status === "evaluated_hit");
   const insufficient = rows.filter((r) => r.status === "data_insufficient");
@@ -75,7 +83,7 @@ function scenarioStatus(rows: MonitoringRow[]): { label: string; tone: "red" | "
   if (notDue.length === applicable.length) return { label: "未到监测时点", tone: "neutral" };
   if (evaluated.length === 0) return { label: "待监测", tone: "neutral" };
   if (evaluated.length < applicable.length) return { label: "部分完成", tone: "amber" };
-  return { label: "已完成监测", tone: "green" };
+  return { label: "已完成监测·无异常", tone: "green" };
 }
 
 interface ScenarioRow {
@@ -121,7 +129,7 @@ export default function ScenarioExecutionPanel({
   onOpenScenario?: (id: string) => void;
   extraScopeNote?: string;
 }) {
-  const { filters, risks } = useDemoStore();
+  const { filters, risks, canAct } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
   const [search, setSearch] = useState("");
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
@@ -158,7 +166,7 @@ export default function ScenarioExecutionPanel({
         const scope = { ...baseScope, scenarioId: id };
         const rows = selectRows(scope);
         const counts = computeFiveCounts(scope, risks);
-        const st = scenarioStatus(rows);
+        const st = scenarioStatus(rows, id);
         const redOpen = counts.openRiskIds.filter(
           (rid) => risks.find((r) => r.id === rid)?.severity === "red",
         ).length;
@@ -349,7 +357,10 @@ export default function ScenarioExecutionPanel({
         subtitle="默认按“有高风险未关闭、逾期整改、其他未关闭、数据不足、其余”排序；分页与筛选不影响上方摘要的全量计算"
         right={
           <Button
-            onClick={() =>
+            disabled={!canAct("business.export")}
+            title={canAct("business.export") ? "导出当前筛选范围内的场景执行清单" : "当前身份不能导出业务数据"}
+            onClick={() => {
+              if (!canAct("business.export")) return;
               downloadCsv(
                 `场景执行清单_${domain}_${phaseId ?? topicId ?? "全部"}.csv`,
                 [
@@ -380,8 +391,8 @@ export default function ScenarioExecutionPanel({
                   title: "监管场景执行清单",
                   scopeLines: [scopeLine, "金额单位：万元人民币", "口径：对象数按对象类型与对象编号去重，事项数按事项去重"],
                 },
-              )
-            }
+              );
+            }}
           >
             导出当前筛选
           </Button>
@@ -477,7 +488,9 @@ export default function ScenarioExecutionPanel({
               hint: "至少完成一项适用规则评估或一次有结果的人工核查的对象去重数",
               render: (r) =>
                 r.rows.length === 0 ? (
-                  <span className="text-textsub">—</span>
+                  <span className="text-textsub">
+                    {r.statusLabelText.includes("覆盖规划") ? "—（覆盖规划）" : "无业务"}
+                  </span>
                 ) : (
                   <button
                     className="num text-brand hover:underline"

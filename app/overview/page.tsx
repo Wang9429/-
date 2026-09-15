@@ -19,6 +19,7 @@ import { DOMAIN_META, coverageRows, seed } from "@/lib/seed";
 import { INDICATORS, computeIndicator, indicatorById } from "@/lib/metrics";
 import { childOrgs, descendantOrgIds, orgName, ROOT_ORG_ID } from "@/lib/org";
 import { authorizedObjectIds, can, canDomain, intersectOrgScope, riskVisible } from "@/lib/config";
+import { findObject } from "@/lib/objects";
 import { isOpen, isOverdueRectification, riskMatches, statusLabel } from "@/lib/risks";
 import { fmtAmountSmart } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
@@ -162,7 +163,13 @@ export default function OverviewPage() {
           name="固定资产投资计划执行率"
           value={faParts.value}
           unit={faParts.unit}
-          compare={`完成 ${fmtAmountSmart(faMetric.numerator)}／同期计划 ${fmtAmountSmart(faMetric.denominator)} 万元`}
+          compare={
+            faMetric.status === "no_business"
+              ? "当前范围无业务"
+              : faMetric.status === "unknown"
+                ? faMetric.emptyReason ?? "数据不足，未评估"
+                : `完成 ${fmtAmountSmart(faMetric.numerator)}／同期计划 ${fmtAmountSmart(faMetric.denominator)} 万元`
+          }
           icon={<IconBars size={20} />}
           scopeLabel={scopeLabel}
           onOpen={() => setIndicatorId("FA-I06")}
@@ -335,7 +342,9 @@ export default function OverviewPage() {
             <tbody>
               {matrixOrgs.map((o) => {
                 const scope = new Set([o.id, ...descendantOrgIds(o.id)]);
-                const unitRisks = risks.filter((r) => isOpen(r) && scope.has(r.owner_org_id));
+                const unitRisks = risks.filter(
+                  (r) => isOpen(r) && scope.has(r.owner_org_id) && riskVisible(user, r),
+                );
                 const hasBusiness =
                   coverageRows.some((r) => scope.has(r.owner_org_id)) ||
                   seed.fixed_asset_projects.some((p) => scope.has(p.owner_org_id)) ||
@@ -430,7 +439,13 @@ export default function OverviewPage() {
               {
                 key: "affected",
                 title: "受影响对象",
-                render: (e) => (e.affected_project_ids?.length ? e.affected_project_ids.join("、") : "待核实"),
+                render: (e) => {
+                  const ids = (e.affected_project_ids ?? []).filter((id) => {
+                    const obj = findObject(id);
+                    return obj ? orgIds.has(obj.orgId) : false;
+                  });
+                  return ids.length ? ids.join("、") : "当前范围无受影响对象";
+                },
               },
             ]}
           />
@@ -475,6 +490,7 @@ export default function OverviewPage() {
         indicatorOptions={INDICATORS}
         onSwitchIndicator={setIndicatorId}
         initialOrgId={filters.orgId}
+        includeChildren={filters.includeChildren}
         scopeLabel={scopeLabel}
       />
     </div>

@@ -6,11 +6,14 @@
  * 运行：npm run verify
  */
 import { seed, AS_OF } from "../lib/seed";
-import { INDICATORS, computeIndicator, type IndicatorDef, type NodeMetric } from "../lib/metrics";
+import { INDICATORS, computeIndicator, indicatorLeaves, type IndicatorDef, type NodeMetric } from "../lib/metrics";
 import { orgScope, ROOT_ORG_ID } from "../lib/org";
 import { computeFiveCounts, openCountForPhase } from "../lib/monitoring";
 import { isOpen, isOverdueRectification } from "../lib/risks";
 import type { DomainId } from "../lib/types";
+import { authorizedObjectIds, can, canCaseAction, intersectOrgScope, userById } from "../lib/config";
+import { inDateRange } from "../lib/period";
+import { INDEPENDENT_TRIAL_PROJECTS } from "../lib/trial";
 
 const PERIOD_START = "2026-01-01";
 const PERIOD_END = AS_OF;
@@ -257,6 +260,83 @@ check(
   openCountForPhase("EQ", hist.phase_id, HQ, risks, AS_OF).riskIds,
   hist.still_open_risk_ids,
 );
+
+console.log("\n[9] 第二批：范围、期间、覆盖与权限");
+const HQ_SELF = orgScope(ROOT_ORG_ID, false);
+const hqSelfFa = computeIndicator(indicator("FA-I06"), HQ_SELF, CTX);
+check("总部仅本级投资计划执行率状态", hqSelfFa.status, "no_business");
+check("总部含下级投资计划执行率(%)", nodeValue("FA-I06").value, EXPECT.fa_root_ytd_execution_pct);
+
+const unitBUser = userById("USER-UNIT-B");
+const bOrgs = intersectOrgScope("ORG-B", true, unitBUser);
+check("单位B范围不含A1", bOrgs.has("ORG-A1"), false);
+check("单位B执行率(%)", computeIndicator(indicator("FA-I06"), bOrgs, CTX).value, EXPECT.fa_p003_ytd_execution_pct);
+const bFaOpen = computeIndicator(indicator("FA-OPEN"), bOrgs, CTX);
+check("单位B未关闭事项为0而非无业务", bFaOpen.value, 0);
+check("单位B未关闭事项状态", bFaOpen.status, "normal");
+const bLeaves = indicatorLeaves(indicator("FA-I06"), {
+  ...CTX,
+  allowedObjectIds: authorizedObjectIds(unitBUser),
+}).filter((l) => bOrgs.has(l.orgId));
+check("单位B执行率明细不含FA-P001", bLeaves.some((l) => l.objectId === "FA-P001"), false);
+
+const faS02 = computeFiveCounts(
+  {
+    domain: "FA",
+    orgScope: HQ,
+    periodStart: PERIOD_START,
+    periodEnd: PERIOD_END,
+    asOf: AS_OF,
+    scenarioId: "FA-S02",
+  },
+  risks,
+);
+const faS21 = computeFiveCounts(
+  {
+    domain: "FA",
+    orgScope: HQ,
+    periodStart: PERIOD_START,
+    periodEnd: PERIOD_END,
+    asOf: AS_OF,
+    scenarioId: "FA-S21",
+  },
+  risks,
+);
+check("FA-S02应评估分母不含候选", faS02.requiredObjects.length, 0);
+check("FA-S21应评估分母不含候选", faS21.requiredObjects.length, 0);
+
+const Q1_CTX = { periodStart: "2026-01-01", periodEnd: "2026-03-31", asOf: AS_OF, risks };
+const q1Fa = computeIndicator(indicator("FA-I06"), HQ, Q1_CTX);
+check("Q1投资计划执行率未覆盖", q1Fa.status, "unknown");
+check("Q1投资计划执行率原因", q1Fa.emptyReason, "该期间数据未覆盖");
+check("Q1不含P-PAY001", seed.cash_transactions.some((t) => t.id === "P-PAY001" && inDateRange(t.date, "2026-01-01", "2026-03-31")), false);
+check(
+  "2025H2含历史付款",
+  seed.cash_transactions.some((t) => t.id === "HIST-PAY01" && inDateRange(t.date, "2025-07-01", "2025-12-31")),
+  true,
+);
+
+const viewUser = userById("USER-HQ-VIEW");
+check("只读不能发布规则", can(viewUser, "config.rules.publish"), false);
+check("只读不能重置配置", can(viewUser, "config.reset"), false);
+check("只读不能督办", canCaseAction(viewUser, "urge"), false);
+check("只读不能采用整改材料", canCaseAction(viewUser, "adopt_rectification"), false);
+
+const configUser = userById("USER-CONFIG");
+const configOrgs = intersectOrgScope("ORG-HQ", true, configUser);
+check("配置管理员业务组织交集为空", configOrgs.size, 0);
+check(
+  "配置管理员执行率无业务",
+  computeIndicator(indicator("FA-I06"), configOrgs, CTX).status,
+  "no_business",
+);
+check("独立试算样本不含总部项目名", INDEPENDENT_TRIAL_PROJECTS.some((p) => p.name.includes("基地能力")), false);
+check("独立试算样本甲预算", INDEPENDENT_TRIAL_PROJECTS[0].effective_approved_budget, 10000);
+
+const pay = seed.cash_transactions.find((t) => t.id === "P-PAY001");
+check("R07实付1200", pay?.amount_wan_cny, 1200);
+check("R07批准800", pay?.approved_amount, 800);
+check("R07可支付上限2000", pay?.certified_payable_amount, 2000);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

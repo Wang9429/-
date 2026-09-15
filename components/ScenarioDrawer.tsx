@@ -14,10 +14,14 @@ import {
 } from "@/lib/seed";
 import { objectName } from "@/lib/objects";
 import { orgName } from "@/lib/org";
+import { useDemoStore } from "@/lib/store";
+import { authorizedObjectIds, intersectOrgScope } from "@/lib/config";
+import { computeFiveCounts, scenarioHasPendingApplicability, selectRows } from "@/lib/monitoring";
+import type { DomainId } from "@/lib/types";
 
 /**
- * 监管场景详情：业务名称用一级监管场景 / 监管子场景；
- * 工作表、行号与映射说明放在来源依据。
+ * 监管场景详情：摘要、清单与执行面板共用同一套覆盖判定；
+ * 未确认适用性的候选不进入业务应评估分母。
  */
 export default function ScenarioDrawer({
   scenarioId,
@@ -30,21 +34,44 @@ export default function ScenarioDrawer({
   onOpenRisk?: (id: string) => void;
   onOpenObject?: (id: string) => void;
 }) {
+  const { filters, risks, user } = useDemoStore();
+
+  const orgIds = useMemo(
+    () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
+    [filters.orgId, filters.includeChildren, user],
+  );
+  const allowedObjectIds = useMemo(() => authorizedObjectIds(user), [user]);
+
   const detail = useMemo(() => {
     if (!scenarioId) return null;
     const cat = catalog.scenarios.find((s) => s.id === scenarioId);
     const supp = seed.supplemental_scenarios.find((s) => s.id === scenarioId);
-    const rows = seed.scenario_monitoring_coverage.filter((r) => r.scenario_id === scenarioId);
+    const domain = (cat?.domain ?? supp?.domain) as DomainId | undefined;
+    const scope = domain
+      ? {
+          domain,
+          orgScope: orgIds,
+          periodStart: filters.periodStart,
+          periodEnd: filters.periodEnd,
+          asOf: filters.asOf,
+          scenarioId,
+          allowedObjectIds,
+        }
+      : null;
+    const rows = scope ? selectRows(scope) : [];
+    const counts = scope ? computeFiveCounts(scope, risks) : null;
     const ruleIds = [...new Set(rows.flatMap((r) => r.rule_ids))];
     const evals = seed.rule_evaluations.filter((e) => ruleIds.includes(e.rule_id));
     const riskIds = [...new Set(rows.flatMap((r) => r.risk_ids))];
-    return { cat, supp, rows, ruleIds, evals, riskIds };
-  }, [scenarioId]);
+    const pending = scenarioHasPendingApplicability(scenarioId);
+    return { cat, supp, rows, ruleIds, evals, riskIds, counts, pending, domain };
+  }, [scenarioId, orgIds, allowedObjectIds, filters.periodStart, filters.periodEnd, filters.asOf, risks]);
 
   if (!scenarioId || !detail) return null;
 
-  const { cat, supp, rows, ruleIds, evals, riskIds } = detail;
+  const { cat, supp, rows, ruleIds, evals, riskIds, counts, pending } = detail;
   const hitTypes = new Set(evals.filter((e) => e.effective_result === "hit").map((e) => e.rule_id));
+  const scopeLine = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}｜截至 ${filters.asOf}`;
 
   return (
     <Drawer
@@ -60,7 +87,11 @@ export default function ScenarioDrawer({
           </Tag>
         </span>
       }
-      subtitle={<span>来源：{scenarioSourceLabel(scenarioId)}</span>}
+      subtitle={
+        <span>
+          来源：{scenarioSourceLabel(scenarioId)}｜当前范围 {scopeLine}
+        </span>
+      }
     >
       <div className="h-full overflow-auto px-6 py-4 space-y-5">
         {cat ? (
@@ -121,27 +152,36 @@ export default function ScenarioDrawer({
           与附件的逐条对应关系保留为制度条款核对项。
         </Notice>
 
+        {pending && (
+          <Notice tone="neutral" title="适用性尚未确认">
+            本场景仍有覆盖规划候选，不计入业务应评估分母，也不在业务清单中渲染为数据不足。规划候选见系统配置 · 数据与运行。
+          </Notice>
+        )}
+
         <div>
           <h4 className="text-[15px] font-semibold text-textmain mb-2">规则与执行统计</h4>
           <DescList
             cols={4}
             items={[
               { label: "配置规则数", value: <span className="num">{ruleIds.length}</span> },
-              { label: "应执行规则实例数", value: <span className="num">{rows.filter((r) => r.required && r.status !== "not_applicable" && r.status !== "reference_only").length}</span> },
               {
-                label: "已执行实例数",
-                value: (
-                  <span className="num">
-                    {rows.filter((r) => r.status === "evaluated_hit" || r.status === "evaluated_clear").length}
-                  </span>
-                ),
+                label: "应评估对象数",
+                value: <span className="num">{counts?.requiredObjects.length ?? 0}</span>,
+                hint: "与场景执行面板同一套覆盖判定；未确认候选不计入",
               },
-                { label: "命中规则种类数", value: <span className="num">{hitTypes.size}</span>, hint: "按规则去重" },
               {
-                label: "有效命中次数",
-                value: <span className="num">{evals.filter((e) => e.effective_result === "hit").length}</span>,
+                label: "已监测对象数",
+                value: <span className="num">{counts?.monitoredObjects.length ?? 0}</span>,
               },
-              { label: "涉及责任单位数", value: <span className="num">{new Set(rows.map((r) => r.owner_org_id)).size}</span> },
+              { label: "命中规则种类数", value: <span className="num">{hitTypes.size}</span>, hint: "按规则去重" },
+              {
+                label: "命中对象数",
+                value: <span className="num">{counts?.hitObjects.length ?? 0}</span>,
+              },
+              {
+                label: "涉及责任单位数",
+                value: <span className="num">{new Set(rows.map((r) => r.owner_org_id)).size}</span>,
+              },
               {
                 label: "数据缺口",
                 value: rows.filter((r) => r.status === "data_insufficient").length
@@ -159,16 +199,20 @@ export default function ScenarioDrawer({
             ]}
           />
           <p className="text-[12px] text-textsub mt-2">
-            重复跑批的相同命中不累计成多条监管事项；前台不显示无解释的“执行率”。
+            重复跑批的相同命中不累计成多条监管事项；前台不显示无解释的“执行率”。统计继承当前组织、期间与授权范围。
           </p>
         </div>
 
         <div>
-          <h4 className="text-[15px] font-semibold text-textmain mb-2">监测实例（全部组织范围）</h4>
+          <h4 className="text-[15px] font-semibold text-textmain mb-2">监测实例（当前授权范围）</h4>
           <DataTable
             rows={rows}
             rowKey={(r) => r.id}
-            empty="该场景暂无监测实例，显示适用流程与场景定义即可，数量用“—”。"
+            empty={
+              pending
+                ? "适用性尚未确认，候选记录在配置规划中，不进入本清单。"
+                : "当前范围没有相应业务。明确监测完整且没有命中才显示 0。"
+            }
             onRowClick={(r) => onOpenObject?.(r.monitoring_object_id)}
             columns={[
               {
@@ -244,8 +288,12 @@ export default function ScenarioDrawer({
 
         {rows.length === 0 && riskIds.length === 0 && (
           <EmptyState
-            title="本场景当前没有监测实例"
-            detail="显示场景定义与适用流程；明确监测完整且没有命中才显示 0，尚缺资料时显示缺口数量与所需材料。"
+            title={pending ? "适用性尚未确认" : "当前范围没有相应业务"}
+            detail={
+              pending
+                ? "覆盖规划候选不计入业务应评估分母，也不显示为数据不足。"
+                : "显示场景定义与适用流程；明确监测完整且没有命中才显示 0，尚缺资料时显示缺口数量与所需材料。"
+            }
           />
         )}
 

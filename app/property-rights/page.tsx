@@ -109,8 +109,22 @@ function ConsistencyCheck({ helpers }: { helpers: DomainHelpers }) {
 }
 
 function RelationView({ helpers }: { helpers: DomainHelpers }) {
-  const entities = seed.legal_entities;
-  const snapshots = seed.ownership_snapshots;
+  const matters = seed.property_matters.filter((m) => helpers.orgIds.has(m.owner_org_id));
+  const snapshotIds = new Set(matters.flatMap((m) => m.snapshot_ids));
+  const snapshots = seed.ownership_snapshots.filter((s) => snapshotIds.has(s.id));
+  const entityIds = new Set<string>();
+  snapshots.forEach((s) => {
+    entityIds.add(s.investor_id);
+    entityIds.add(s.investee_id);
+  });
+  matters.forEach((m) => {
+    entityIds.add(m.investor_id);
+    entityIds.add(m.investee_id);
+  });
+  seed.organizations
+    .filter((o) => helpers.orgIds.has(o.id) && o.legal_entity_id)
+    .forEach((o) => entityIds.add(o.legal_entity_id));
+  const entities = seed.legal_entities.filter((e) => entityIds.has(e.id));
 
   return (
     <div className="space-y-4">
@@ -118,6 +132,7 @@ function RelationView({ helpers }: { helpers: DomainHelpers }) {
         <DataTable
           rows={snapshots}
           rowKey={(s) => s.id}
+          empty="当前组织范围内没有与产权事项关联的持股关系。"
           columns={[
             {
               key: "investor",
@@ -158,6 +173,7 @@ function RelationView({ helpers }: { helpers: DomainHelpers }) {
           rows={entities}
           rowKey={(e) => e.id}
           onRowClick={(e) => helpers.openObject(e.id)}
+          empty="当前组织范围内没有纳入产权管理的法律主体。"
           columns={[
             { key: "id", title: "法人ID", width: "130px", render: (e) => <span className="num">{e.id}</span> },
             { key: "name", title: "名称", render: (e) => e.name },

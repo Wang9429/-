@@ -26,12 +26,21 @@ export interface ScopeFilter {
  * 观察归属：按业务窗口结束日 window_end 落入所选期间（含端点），
  * 且评估取得时间不晚于截至日；季度/滚动窗口不按重叠月份分摊（完整业需 5.3）。
  */
-export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
+export function isCoverageCandidate(row: MonitoringRow): boolean {
   const proj = coverageById.get(row.id);
-  if (proj && !proj.include_in_default_monitoring_table && !f.scenarioId) {
-    // 未确认的覆盖规划候选不进入业务清单与五数分母
-    return false;
-  }
+  if (!proj) return false;
+  return proj.record_kind === "coverage_candidate" || proj.include_in_default_monitoring_table === false;
+}
+
+export function scenarioHasPendingApplicability(scenarioId: string): boolean {
+  return [...coverageById.values()].some(
+    (p) => p.scenario_id === scenarioId && p.record_kind === "coverage_candidate",
+  );
+}
+
+export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
+  // 未确认适用性的覆盖规划候选不进入业务清单与应评估分母；传入 scenarioId 也不能重新纳入。
+  if (isCoverageCandidate(row)) return false;
   if (row.domain !== f.domain) return false;
   if (!f.orgScope.has(row.owner_org_id)) return false;
   if (row.window_end < f.periodStart || row.window_end > f.periodEnd) return false;
@@ -97,9 +106,11 @@ export function computeFiveCounts(f: ScopeFilter, risks: RiskCase[]): FiveCounts
   const monitoredRows = rows.filter(
     (r) => r.status === "evaluated_hit" || r.status === "evaluated_clear",
   );
-  const requiredRows = rows.filter(
-    (r) => r.required && r.status !== "not_applicable" && r.status !== "reference_only",
-  );
+  const requiredRows = rows.filter((r) => {
+    const proj = coverageById.get(r.id);
+    if (proj && proj.include_in_required_denominator === false) return false;
+    return r.required && r.status !== "not_applicable" && r.status !== "reference_only";
+  });
   const hitRows = rows.filter((r) => r.status === "evaluated_hit");
 
   const monitoredObjects = dedupe(monitoredRows);

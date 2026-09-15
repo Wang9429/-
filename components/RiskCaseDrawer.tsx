@@ -320,7 +320,10 @@ function RiskCaseDrawerBody({
           })}
           {(risk.status === "rectifying" || risk.status === "pending_verification") && (
             <Button
+              disabled={!canCase("urge")}
+              title={canCase("urge") ? "写入督办记录" : `当前用户（${actorName}）不能督办`}
               onClick={() => {
+                if (!canCase("urge")) return;
                 addUrge(risk.id, `对 ${risk.id} 发起督办，要求说明整改进展。`);
                 setFlash("督办记录已写入事项日志，并显示在整改跟踪清单。");
               }}
@@ -593,7 +596,10 @@ function RiskCaseDrawerBody({
                   risk.status === "pending_verification" &&
                   isIndependentReviewer(user) &&
                   !selfReview;
-                const canAdopt = !already && (canAdoptRect || canAdoptVerify);
+                const canAdopt =
+                  !already &&
+                  (canAdoptRect || canAdoptVerify) &&
+                  canCase(d.kind === "verification" ? "adopt_verification" : "adopt_rectification");
                 return (
                   <div key={d.id} className="rounded-[8px] border border-line p-4 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -618,6 +624,8 @@ function RiskCaseDrawerBody({
                           ? "已采用并保存为新记录"
                           : canAdopt
                             ? "采用后另建记录，不覆盖原始付款事实"
+                            : !canCase(d.kind === "verification" ? "adopt_verification" : "adopt_rectification")
+                              ? `当前用户（${actorName}）不能采用材料`
                             : d.kind === "verification"
                               ? "须由总部复核人员B在单位提交后独立采用"
                               : "须由单位办理人员在整改阶段采用"

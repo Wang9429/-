@@ -34,7 +34,7 @@ const VIEWS = [
 ];
 
 export default function WorkbenchPage() {
-  const { risks, filters, user, urges } = useDemoStore();
+  const { risks, filters, user, urges, canAct } = useDemoStore();
   const [view, setView] = useState("pending");
   const [domain, setDomain] = useState<DomainId | "all">("all");
   const [severity, setSeverity] = useState<"all" | "red" | "yellow">("all");
@@ -112,7 +112,10 @@ export default function WorkbenchPage() {
         }
         right={
           <Button
-            onClick={() =>
+            disabled={!canAct("business.export")}
+            title={canAct("business.export") ? "导出当前筛选" : "当前身份不能导出业务数据"}
+            onClick={() => {
+              if (!canAct("business.export")) return;
               downloadCsv(
                 `监管工作台_${view}.csv`,
                 ["事项编号", "问题摘要", "主对象", "关联领域", "触发规则", "办理状态", "当前节点", "当前期限", "有效整改期限", "责任单位", "承办人"],
@@ -136,8 +139,8 @@ export default function WorkbenchPage() {
                     `筛选：领域=${domain}，等级=${severity}，仅看逾期=${onlyOverdue ? "是" : "否"}`,
                   ],
                 },
-              )
-            }
+              );
+            }}
           >
             导出当前筛选
           </Button>

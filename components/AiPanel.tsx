@@ -2,9 +2,9 @@
 
 import React, { useMemo, useState, useCallback, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { usePathname } from "next/navigation";
 import { Button, Tag, useOverlay, useOverlayCount } from "@/components/ui";
-import { config, intersectOrgScope } from "@/lib/config";
+import { config, intersectOrgScope, objectAllowed, riskVisible } from "@/lib/config";
+import { findObject } from "@/lib/objects";
 import { useDemoStore } from "@/lib/store";
 import { INDICATORS, computeIndicator } from "@/lib/metrics";
 import { seed } from "@/lib/seed";
@@ -48,7 +48,6 @@ export function AiToolbarButton() {
  * 只对已有样例事实的任务给出可点击依据。
  */
 export default function AiPanel() {
-  const pathname = usePathname();
   const { filters, risks, user, canAct } = useDemoStore();
   const { open, setOpen } = useAiUi();
   const [task, setTask] = useState<string>("explain_metric");
@@ -74,28 +73,36 @@ export default function AiPanel() {
   );
 
   const content = useMemo(() => {
-    if (!canAct("ai.use") && user && user.data_scope.mode === "none") {
+    if (!canAct("ai.use")) {
+      return {
+        title: "当前身份不能使用 AI 分析",
+        sections: [{ h: "说明", p: "只读或配置维护身份不能读取业务分析。请切换已获授权的监管身份后再分析。" }],
+      };
+    }
+    if (user && user.data_scope.mode === "none") {
       return {
         title: "当前身份不能读取业务分析",
         sections: [{ h: "说明", p: "系统配置管理员不自动获得业务数据。请切换总部或单位监管身份后再分析。" }],
       };
     }
-    if (task === "explain_metric" && !orgIds.has("ORG-A1")) {
-      return {
-        title: "超出当前授权范围",
-        sections: [{ h: "说明", p: "投资成本偏差分析绑定基地能力提升项目，当前用户授权范围内不可见该对象。" }],
-      };
-    }
-    if (task === "explain_hit") {
-      const r = risks.find((x) => x.id === "R07");
-      if (r && !orgIds.has(r.owner_org_id)) {
+
+    const objectInScope = (objectId: string) => {
+      const obj = findObject(objectId);
+      if (!obj) return false;
+      return orgIds.has(obj.orgId) && objectAllowed(user, obj.orgId, objectId);
+    };
+    const riskInScope = (id: string) => {
+      const r = risks.find((x) => x.id === id);
+      return Boolean(r && orgIds.has(r.owner_org_id) && riskVisible(user, r));
+    };
+
+    if (task === "explain_metric") {
+      if (!objectInScope("FA-P001")) {
         return {
           title: "超出当前授权范围",
-          sections: [{ h: "说明", p: "付款事项不在当前用户授权范围内。" }],
+          sections: [{ h: "说明", p: "投资成本偏差分析绑定基地能力提升项目，当前用户授权范围或筛选范围内不可见该对象。" }],
         };
       }
-    }
-    if (task === "explain_metric") {
       const def = INDICATORS.find((i) => i.id === "FA-I07")!;
       const leaf = def.leaves({ ...filters, risks }).find((l) => l.objectId === "FA-P001");
       const m = computeIndicator(def, new Set(["ORG-A1"]), { ...filters, risks });
@@ -124,6 +131,12 @@ export default function AiPanel() {
       };
     }
     if (task === "explain_hit") {
+      if (!riskInScope("R07") || !objectInScope("P-PAY001")) {
+        return {
+          title: "超出当前授权范围",
+          sections: [{ h: "说明", p: "付款事项不在当前用户授权范围或筛选范围内。" }],
+        };
+      }
       const r = risks.find((x) => x.id === "R07");
       return {
         title: "付款事项命中依据",
@@ -136,6 +149,12 @@ export default function AiPanel() {
       };
     }
     if (task === "compare_materials") {
+      if (!objectInScope("AS001")) {
+        return {
+          title: "超出当前授权范围",
+          sections: [{ h: "说明", p: "专用装备A 不在当前用户授权范围或筛选范围内。" }],
+        };
+      }
       const as001 = seed.assets.find((a) => a.id === "AS001");
       return {
         title: "资产利用核查建议",
@@ -145,6 +164,12 @@ export default function AiPanel() {
           { h: "待核查问题", p: "数据本身不能证明投资决策失误或资产已经闲置。需核任务需求、可用工时、检维修和调配。" },
           { h: "建议采取的动作", p: as001 ? `打开 ${as001.name} 档案，对照专用装备B 本期利用率。` : "打开资产档案。" },
         ],
+      };
+    }
+    if (!objectInScope("ENG-P001")) {
+      return {
+        title: "超出当前授权范围",
+        sections: [{ h: "说明", p: "境外工程项目不在当前用户授权范围或筛选范围内。" }],
       };
     }
     const eng = seed.engineering_projects.find((p) => p.id === "ENG-P001");
@@ -157,7 +182,7 @@ export default function AiPanel() {
         { h: "建议采取的动作", p: "在国际化业务中调整冲击假设，并回到工程领域核对基础预测未被覆盖。" },
       ],
     };
-  }, [task, filters, risks, canAct, user, orgIds, pathname]);
+  }, [task, filters, risks, canAct, user, orgIds]);
 
   const fabButton = (
     <button

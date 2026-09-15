@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import DomainPage, { type DomainHelpers } from "@/components/DomainPage";
 import NormalizedChart from "@/components/NormalizedChart";
-import { Card, DataTable, DescList, Field, Notice, SimulatedBadge, Tag, inputClass, selectClass } from "@/components/ui";
+import { Card, DataTable, DescList, EmptyState, Field, Notice, SimulatedBadge, Tag, inputClass, selectClass } from "@/components/ui";
 import { analyzeWindow, overlappingEvents } from "@/lib/market";
 import { seed } from "@/lib/seed";
 import { orgName } from "@/lib/org";
@@ -235,16 +235,30 @@ function EventMarket() {
 }
 
 function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
-  const steel = seed.exposures.find((e) => e.category === "steel")!;
-  const freight = seed.exposures.find((e) => e.category === "freight")!;
-  const project = seed.engineering_projects.find((p) => p.id === steel.project_id)!;
+  const steel = seed.exposures.find((e) => e.category === "steel");
+  const freight = seed.exposures.find((e) => e.category === "freight");
+  const project = steel ? seed.engineering_projects.find((p) => p.id === steel.project_id) : undefined;
+  const inScope = Boolean(project && helpers.orgIds.has(project.owner_org_id));
+  const exposures = seed.exposures.filter((e) => {
+    const p = seed.engineering_projects.find((x) => x.id === e.project_id);
+    return Boolean(p && helpers.orgIds.has(p.owner_org_id));
+  });
 
-  const [steelShock, setSteelShock] = useState(steel.default_shock_pct);
-  const [passThrough, setPassThrough] = useState(steel.confirmed_pass_through_share * 100);
-  const [qty, setQty] = useState(steel.quantity_tonnes ?? 0);
-  const [basePrice, setBasePrice] = useState(steel.base_price_yuan_per_tonne ?? 0);
-  const [freightShock, setFreightShock] = useState(freight.default_shock_pct);
-  const [freightBase, setFreightBase] = useState(freight.unpriced_base_cost_wan ?? 0);
+  const [steelShock, setSteelShock] = useState(steel?.default_shock_pct ?? 10);
+  const [passThrough, setPassThrough] = useState((steel?.confirmed_pass_through_share ?? 0) * 100);
+  const [qty, setQty] = useState(steel?.quantity_tonnes ?? 0);
+  const [basePrice, setBasePrice] = useState(steel?.base_price_yuan_per_tonne ?? 0);
+  const [freightShock, setFreightShock] = useState(freight?.default_shock_pct ?? 25);
+  const [freightBase, setFreightBase] = useState(freight?.unpriced_base_cost_wan ?? 0);
+
+  if (!inScope || !steel || !freight || !project) {
+    return (
+      <EmptyState
+        title="当前范围没有可测算敞口"
+        detail="钢材与运费敞口归属境外工程项目。授权范围或筛选范围内没有该项目时，不读取全量敞口金额。"
+      />
+    );
+  }
 
   // 钢材净增成本（万元）= 未定价数量 × 基准单价 × 价格变化比例 × 不能转嫁比例 ÷ 10000
   const steelIncrease = (qty * basePrice * (steelShock / 100) * (1 - passThrough / 100)) / 10000;
@@ -333,8 +347,9 @@ function ImpactPanel({ helpers }: { helpers: DomainHelpers }) {
 
       <Card title="敞口台账" subtitle="敞口按项目、事件与类别登记；已包含在基准 EAC 的敞口单独标注">
         <DataTable
-          rows={seed.exposures}
+          rows={exposures}
           rowKey={(e) => e.id}
+          empty="当前组织范围内没有敞口记录。"
           columns={[
             { key: "id", title: "敞口", width: "130px", render: (e) => <span className="num">{e.id}</span> },
             { key: "proj", title: "项目", width: "120px", render: (e) => <span className="num">{e.project_id}</span> },

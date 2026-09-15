@@ -370,15 +370,17 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
   const act = useCallback(
     (input: ActionInput) => {
+      if (!canCaseAction(user, input.kind)) return;
       const cur = snapshot.state;
       const res = applyAction(cur.risks, cur.actions, input, filters.asOf);
       writeState({ ...cur, ...res });
     },
-    [filters.asOf],
+    [filters.asOf, user],
   );
 
   const addUrge = useCallback(
     (riskId: string, note: string) => {
+      if (!canCaseAction(user, "urge")) return;
       const rec: UrgeRecord = {
         id: `URGE-${riskId}-${Date.now()}`,
         riskId,
@@ -389,11 +391,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       };
       writeState({ ...snapshot.state, urges: [...snapshot.state.urges, rec] });
     },
-    [filters.asOf, user?.name],
+    [filters.asOf, user],
   );
 
   const addImportBatch = useCallback(
     (b: Omit<ImportBatch, "id" | "recorded_at" | "effective_date">) => {
+      if (!can(user, "config.import") && !can(user, "config.data.validate")) return;
       const rec: ImportBatch = {
         ...b,
         id: `IMP-${Date.now()}`,
@@ -402,11 +405,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       };
       writeState({ ...snapshot.state, imports: [...snapshot.state.imports, rec] });
     },
-    [filters.asOf],
+    [filters.asOf, user],
   );
 
   const adoptMaterial = useCallback(
     (input: Omit<AdoptedMaterial, "id" | "recorded_at" | "effective_date">) => {
+      const verify = /VERIFY|复核/.test(input.materialId + input.title);
+      if (!canCaseAction(user, verify ? "adopt_verification" : "adopt_rectification")) return;
       const rec: AdoptedMaterial = {
         ...input,
         id: `MAT-ADOPT-${input.materialId}-${Date.now()}`,
@@ -415,20 +420,22 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       };
       writeState({ ...snapshot.state, adoptedMaterials: [...(snapshot.state.adoptedMaterials ?? []), rec] });
     },
-    [filters.asOf],
+    [filters.asOf, user],
   );
 
   const resetBusiness = useCallback(() => {
+    if (!can(user, "config.reset") && !can(user, "config.data.rerun")) return;
     const uid = snapshot.state.userId;
     clearBusiness();
     writeState({ ...initialState(), userId: uid }, false);
     const u = snapshot.config.users.find((x) => x.id === uid);
     setFiltersState({ ...DEFAULT_FILTERS, ...defaultOrgFor(u) });
-  }, []);
+  }, [user]);
 
   const resetConfig = useCallback(() => {
+    if (!can(user, "config.reset")) return;
     clearConfig();
-  }, []);
+  }, [user]);
 
   const resetDemo = useCallback(() => {
     resetBusiness();
@@ -472,11 +479,20 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       canAct: (action: string) => can(user, action),
       canCase: (kind: string) => canCaseAction(user, kind),
       eacTrialPct: snap.config.eacTrialPct,
-      setEacTrialPct: (n: number) => writeConfig({ ...snapshot.config, eacTrialPct: n }),
+      setEacTrialPct: (n: number) => {
+        if (!can(user, "config.rules.edit") && !can(user, "config.test")) return;
+        writeConfig({ ...snapshot.config, eacTrialPct: n });
+      },
       publishedTrial: snap.config.publishedTrial,
-      publishTrial: () => writeConfig({ ...snapshot.config, publishedTrial: true }),
+      publishTrial: () => {
+        if (!can(user, "config.rules.publish")) return;
+        writeConfig({ ...snapshot.config, publishedTrial: true });
+      },
       configUsers: snap.config.users,
-      saveConfigUsers: (next) => writeConfig({ ...snapshot.config, users: next }),
+      saveConfigUsers: (next) => {
+        if (!can(user, "config.users.edit")) return;
+        writeConfig({ ...snapshot.config, users: next });
+      },
     }),
     [snap, filters, setFilters, setRole, setUserId, resetDemo, resetBusiness, resetConfig, act, addUrge, addImportBatch, adoptMaterial, user],
   );
