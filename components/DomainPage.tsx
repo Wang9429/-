@@ -248,6 +248,7 @@ export default function DomainPage({
                   dataState={metricStateText(m, def)}
                   scopeLabel={`${def.name}｜${scopeLabel}｜口径：${def.caliber}`}
                   onOpen={() => setIndicatorId(def.id)}
+                  returnKey={def.id}
                 />
               );
             })}
@@ -270,6 +271,7 @@ export default function DomainPage({
                   compareTone={k.compareTone === "red" ? "red" : "neutral"}
                   dataState={k.dataState}
                   onOpen={k.onOpen}
+                  returnKey={k.name ?? `extra-${i}`}
                 />
               );
             })}

@@ -166,6 +166,7 @@ export default function OverviewPage() {
           icon={<IconBars size={20} />}
           scopeLabel={scopeLabel}
           onOpen={() => setIndicatorId("FA-I06")}
+          returnKey="FA-I06"
         />
         <KpiCard
           name="未关闭监管事项"

@@ -253,6 +253,7 @@ export function KpiCard({
   active,
   icon,
   iconTone = "brand",
+  returnKey,
 }: {
   name: string;
   value: React.ReactNode;
@@ -265,6 +266,7 @@ export function KpiCard({
   active?: boolean;
   icon?: React.ReactNode;
   iconTone?: ToneName;
+  returnKey?: string;
 }) {
   const iconBg: Record<ToneName, { bg: string; fg: string }> = {
     brand: { bg: "#EAF1FD", fg: "var(--brand)" },
@@ -288,6 +290,7 @@ export function KpiCard({
       type="button"
       onClick={onOpen}
       title={scopeLabel}
+      data-overlay-return={returnKey || name}
       className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[132px] flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] whitespace-normal ${
         active ? "border-brand" : "border-line"
       } shadow-[0_2px_10px_rgba(17,43,77,0.04)] relative`}
@@ -431,6 +434,9 @@ export function useOverlay(open: boolean, onClose: () => void, options?: { isola
     const id = idRef.current!;
     restoreFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const returnKey =
+      restoreFocusRef.current?.getAttribute("data-overlay-return") ||
+      restoreFocusRef.current?.closest("[data-overlay-return]")?.getAttribute("data-overlay-return");
     overlayStack.push(id);
     setRank(overlayStack.length);
     emitOverlayChange();
@@ -487,9 +493,14 @@ export function useOverlay(open: boolean, onClose: () => void, options?: { isola
       emitOverlayChange();
       if (overlayStack.length === 0) document.body.style.overflow = prevOverflow;
       const prev = restoreFocusRef.current;
-      if (prev && document.contains(prev)) {
+      const still = prev && document.contains(prev) ? prev : null;
+      const fallback = returnKey
+        ? document.querySelector<HTMLElement>(`[data-overlay-return="${CSS.escape(returnKey)}"]`)
+        : null;
+      const target = still ?? fallback;
+      if (target) {
         try {
-          prev.focus();
+          target.focus();
         } catch {
           /* ignore */
         }
