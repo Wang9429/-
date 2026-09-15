@@ -113,6 +113,8 @@ function UsersTab({
                 {u.name}
                 <div className="text-[12px] text-textsub">
                   {u.role_ids.map((rid) => roles.find((r) => r.id === rid)?.name ?? rid).join("、")}
+                  {" · "}
+                  {configStatusLabel(u.status)}
                 </div>
               </button>
             </li>
@@ -123,6 +125,7 @@ function UsersTab({
         <Card title={current.name} subtitle="组织范围、动作权限与本级/含下级。保存后刷新仍保留。">
           <div className="grid grid-cols-2 gap-3 text-[13px]">
             <div>所属组织：{orgName(current.org_id)}</div>
+            <div>账号状态：{configStatusLabel(current.status)}</div>
             <div>数据范围：{dataScopeModeLabel(current.data_scope.mode)}</div>
             <div>授权组织：{current.data_scope.root_org_ids.map(orgName).join("、") || "无"}</div>
             <div>对象清单：{current.data_scope.object_ids.join("、") || "组织范围内全部"}</div>
@@ -185,6 +188,7 @@ function ScenariosTab() {
               { key: "id", title: "编号", width: "90px", render: (r) => <span className="num text-[12px]">{r.id}</span> },
               { key: "name", title: "名称", render: (r) => r.name },
               { key: "mode", title: "执行方式", width: "140px", render: (r) => executionModeLabel(r.execution_mode) },
+              { key: "st", title: "状态", width: "88px", render: (r) => configStatusLabel(r.status) },
             ]}
           />
           <p className="text-[12px] text-textsub mt-2">目录共 {subs.length} 项。本表按所选一级场景筛选，不等于已运行监测数量。</p>

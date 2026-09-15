@@ -456,7 +456,7 @@ export default function ScenarioExecutionPanel({
                   onClick={() => onOpenScenario?.(r.id)}
                   title={scenarioSourceLabel(r.id)}
                 >
-                  <span className="text-[14px] text-textmain block">{r.name}</span>
+                  <span className="text-[14px] text-textmain block break-words whitespace-normal">{r.name}</span>
                   <span className="num text-[12px] text-textsub">{r.id}</span>
                   <Tag tone={r.adoption === "结构化监测" ? "brand" : "neutral"}>{r.adoption}</Tag>
                 </button>

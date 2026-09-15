@@ -154,10 +154,17 @@ export default function AiPanel() {
       {showFab && (
         <button
           type="button"
+          data-ai-fab=""
           onClick={() => setOpen(true)}
-          className="fixed min-w-12 h-12 px-3 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
-          style={{ right: 24, bottom: 24, background: "var(--brand)", zIndex: fabZ }}
-          title="AI分析"
+          className="fixed h-11 px-3 rounded-full text-white text-[13px] font-medium shadow-[0_8px_20px_rgba(11,31,58,0.25)] hover:bg-brandstrong"
+          style={{
+            left: 16,
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "var(--brand)",
+            zIndex: fabZ,
+          }}
+          title="AI分析（抽屉打开时仍可使用）"
         >
           AI分析
         </button>
