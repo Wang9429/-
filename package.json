@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 43917",
     "preview": "next build && next start -H 0.0.0.0 -p 43917",
+    "serve": "bash scripts/serve-demo.sh",
     "lint": "eslint",
     "verify": "tsx scripts/verify-acceptance.ts"
   },

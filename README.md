@@ -18,6 +18,7 @@ npm run dev
 | 命令 | 说明 |
 | --- | --- |
 | `npm run preview` | 生产构建并启动（43917 端口），用于演示 |
+| `npm run serve` | 常驻演示服务：缺少构建产物时先构建，进程退出后自动拉起 |
 | `npm run build` / `npm start` | 分步执行生产构建与启动 |
 | `npm run lint` | ESLint + React Compiler 检查 |
 | `npm run verify` | 验收自检：48 项指标、阶段与五数口径对照种子预期值 |
