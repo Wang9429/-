@@ -368,7 +368,7 @@ details > summary::-webkit-details-marker {
 }
 
 .reg-matrix {
-  min-width: 980px;
+  min-width: 920px;
   table-layout: fixed;
 }
 
@@ -384,7 +384,7 @@ details > summary::-webkit-details-marker {
 }
 
 .reg-matrix .col-domain {
-  width: 92px;
+  width: 112px;
   text-align: center;
 }
 
@@ -395,7 +395,7 @@ details > summary::-webkit-details-marker {
 }
 
 .reg-event-table {
-  min-width: 640px;
+  width: 100%;
   table-layout: fixed;
 }
 

@@ -443,12 +443,12 @@ export default function OverviewPage() {
             onRowClick={() => router.push("/international-business")}
             tableClassName="reg-event-table"
             columns={[
-              { key: "date", title: "发生时间", width: "108px", nowrap: true, render: (e) => <span className="num">{e.event_date}</span> },
+              { key: "date", title: "发生时间", width: "102px", nowrap: true, render: (e) => <span className="num">{e.event_date}</span> },
               { key: "title", title: "事件", render: (e) => e.title },
               {
                 key: "nature",
                 title: "数据性质",
-                width: "112px",
+                width: "108px",
                 nowrap: true,
                 render: (e) => (
                   <Tag tone={e.data_nature === "real_event" ? "brand" : "neutral"}>
@@ -459,7 +459,7 @@ export default function OverviewPage() {
               {
                 key: "affected",
                 title: "受影响对象",
-                width: "148px",
+                width: "136px",
                 render: (e) => {
                   const ids = (e.affected_project_ids ?? []).filter((id) => {
                     const obj = findObject(id);
@@ -494,7 +494,8 @@ export default function OverviewPage() {
             {
               key: "domains",
               title: "涉及领域",
-              width: "140px",
+              width: "168px",
+              nowrap: true,
               render: (r) => r.domains.map((d) => DOMAIN_META[d].short).join("、"),
             },
             {
