@@ -3,8 +3,8 @@
  * 将已打好的源码 ZIP 放到服务端下载目录，并生成 2 小时有效的随机令牌。
  * 不把令牌写入仓库。
  */
-const { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } = require("fs");
-const { createHash, randomBytes } = require("crypto");
+import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { createHash, randomBytes } from "crypto";
 
 const SRC = "/opt/cursor/artifacts/cnooc-eng-supervision-demo-v1.6.1-src.zip";
 const DIR = "/tmp/cnooc-src-export";
