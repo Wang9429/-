@@ -78,22 +78,28 @@ export default function ScenarioLibraryPage() {
 
       {(tab === "scenarios" || tab === "supplemental") && (
         <div className="flex flex-wrap items-center gap-2">
-          <input className={`${inputClass} w-[240px]`} placeholder="搜索场景ID、名称或原文" value={q} onChange={(e) => setQ(e.target.value)} />
-          <select className={`${selectClass} w-[160px]`} value={domainFilter} onChange={(e) => setDomainFilter(e.target.value)}>
-            <option value="all">全部领域</option>
-            {Object.values(DOMAIN_META).map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-          {tab === "scenarios" && (
-            <select className={`${selectClass} w-[150px]`} value={adoptionFilter} onChange={(e) => setAdoptionFilter(e.target.value)}>
-              <option value="all">全部纳入方式</option>
-              <option value="结构化监测">结构化监测</option>
-              <option value="线索核查">线索核查</option>
-              <option value="核查依据">核查依据</option>
+          <div className="w-[240px] max-w-full">
+            <input className={inputClass} placeholder="搜索场景ID、名称或原文" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          <div className="w-[160px] max-w-full">
+            <select className={selectClass} value={domainFilter} onChange={(e) => setDomainFilter(e.target.value)}>
+              <option value="all">全部领域</option>
+              {Object.values(DOMAIN_META).map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                </option>
+              ))}
             </select>
+          </div>
+          {tab === "scenarios" && (
+            <div className="w-[150px] max-w-full">
+              <select className={selectClass} value={adoptionFilter} onChange={(e) => setAdoptionFilter(e.target.value)}>
+                <option value="all">全部纳入方式</option>
+                <option value="结构化监测">结构化监测</option>
+                <option value="线索核查">线索核查</option>
+                <option value="核查依据">核查依据</option>
+              </select>
+            </div>
           )}
           <Button
             disabled={!canAct("business.export") && !canAct("config.export")}
