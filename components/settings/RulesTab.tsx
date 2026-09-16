@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Button, Card, DataTable, Field, Modal, Notice, Tag } from "@/components/ui";
+import { Button, Card, DataTable, Field, Modal, Notice, Tag, inputClass } from "@/components/ui";
 import { objectAllowed } from "@/lib/config";
 import {
   blankRule,
@@ -40,6 +40,7 @@ export default function RulesTab() {
   const [flash, setFlash] = useState<string | null>(null);
   const [versionsOf, setVersionsOf] = useState<CatalogRule | null>(null);
   const [trialOpen, setTrialOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   const pct = Number(draft?.draft_parameters.deviation_gt_pct ?? 10);
   const fpSubId = draft?.primary_subscenario_id ?? "";
@@ -72,6 +73,14 @@ export default function RulesTab() {
       hit: p.pct > pct,
     }));
   }, [draft, canBusiness, user, pct, isFpTrial, fpSubId]);
+
+  const filteredRules = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return catalog.rules;
+    return catalog.rules.filter(
+      (r) => r.id.toLowerCase().includes(q) || r.name.toLowerCase().includes(q) || r.primary_subscenario_id.toLowerCase().includes(q),
+    );
+  }, [catalog.rules, query]);
 
   if (!canRead) return <Notice tone="amber">当前身份不能打开监测规则。</Notice>;
 
@@ -202,9 +211,17 @@ export default function RulesTab() {
           </Button>
         }
       >
+        <div className="mb-3">
+          <input
+            className={`${inputClass} w-[280px]`}
+            placeholder="搜索规则编号、名称或子场景"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
         <DataTable
           dense
-          rows={catalog.rules}
+          rows={filteredRules}
           rowKey={(r) => r.id}
           pageSize={10}
           compactEmpty

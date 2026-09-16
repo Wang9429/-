@@ -69,15 +69,26 @@ function bodyText() {
 }
 
 async function clickRowContaining(text) {
-  const handle = await page.evaluateHandle((t) => {
-    const rows = [...document.querySelectorAll("table tbody tr")];
-    return rows.find((r) => (r.innerText || "").includes(t)) || null;
-  }, text);
-  const el = handle.asElement();
-  if (!el) return false;
-  await el.click();
-  await new Promise((r) => setTimeout(r, 500));
-  return true;
+  for (let i = 0; i < 12; i++) {
+    const handle = await page.evaluateHandle((t) => {
+      const rows = [...document.querySelectorAll("table tbody tr")];
+      return rows.find((r) => (r.innerText || "").includes(t)) || null;
+    }, text);
+    const el = handle.asElement();
+    if (el) {
+      await el.click();
+      await new Promise((r) => setTimeout(r, 500));
+      return true;
+    }
+    const next = await page.evaluateHandle(() =>
+      [...document.querySelectorAll("button")].find((b) => (b.textContent || "").trim() === "下一页" && !b.disabled),
+    );
+    const n = next.asElement();
+    if (!n) return false;
+    await n.click();
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  return false;
 }
 
 async function clickButtonInRow(rowText, btnText) {
@@ -192,7 +203,7 @@ try {
   log("执行表含已启用收付场景", /CASH2-S039|CASH2-S033|CASH2-S037/.test(payExec) || /超该笔有效批准|中小企业/.test(payExec));
 
   await clickText("button", "全部对象");
-  const smeOpened = await clickRowContaining("中小企业分包");
+  const smeOpened = (await clickRowContaining("中小企业分包进度款")) || (await clickRowContaining("OB-SME-01")) || (await clickRowContaining("SME-01"));
   let smeText = "";
   if (smeOpened) {
     smeText = await bodyText();
@@ -208,51 +219,9 @@ try {
   await shot("close_sme_obligation");
   await page.keyboard.press("Escape");
   await new Promise((r) => setTimeout(r, 250));
-
-  const statsBefore = await page.evaluate(() => {
-    const text = document.body.innerText;
-    const n = (label) => {
-      const m = text.match(new RegExp(label + "[\\s\\S]{0,40}?(\\d+)"));
-      return m ? m[1] : "";
-    };
-    return {
-      monitored: n("监测对象数"),
-      open: n("未关闭事项数"),
-    };
-  });
-
-  const openSmeRisk = await page.evaluate(() => {
-    const btns = [...document.querySelectorAll("button, a")];
-    const b = btns.find((x) => (x.textContent || "").includes("R-FP-033"));
-    if (b) {
-      b.click();
-      return true;
-    }
-    const rows = [...document.querySelectorAll("table tbody tr")];
-    const row = rows.find((r) => /中小企业无争议|R-FP-033/.test(r.innerText));
-    if (row) {
-      const num = [...row.querySelectorAll("button")].find((x) => /^\d+$/.test((x.textContent || "").trim()));
-      (num || row).click();
-      return Boolean(row);
-    }
-    return false;
-  });
-  await new Promise((r) => setTimeout(r, 500));
-  if (!openSmeRisk) {
-    await page.evaluate(() => {
-      const cells = [...document.querySelectorAll("button")];
-      const openBtn = cells.find((b) => (b.textContent || "").trim() !== "0" && b.closest("tr")?.innerText.includes("中小企业"));
-      openBtn?.click();
-    });
-    await new Promise((r) => setTimeout(r, 500));
-    await clickRowContaining("R-FP-033");
-  }
-  let riskText = await bodyText();
-  if (!riskText.includes("R-FP-033") && !riskText.includes("中小企业无争议")) {
-    await page.goto(`${BASE}/supervision-workbench`, { waitUntil: "networkidle0" });
-    await clickRowContaining("R-FP-033");
-    riskText = await bodyText();
-  }
+  await page.goto(`${BASE}/supervision-workbench`, { waitUntil: "networkidle0" });
+  await clickRowContaining("R-FP-033");
+  const riskText = await bodyText();
   log("FP-AC04 打开事项", /R-FP-033|中小企业无争议/.test(riskText));
 
   const claim = await clickAction("认领核查");
@@ -346,6 +315,9 @@ try {
   await page.keyboard.press("Escape");
 
   await goto(`${BASE}/settings?tab=rules`, false);
+  await page.waitForSelector("input[placeholder*='搜索规则']");
+  await page.type("input[placeholder*='搜索规则']", "CASH2-R039");
+  await new Promise((r) => setTimeout(r, 400));
   const foundRule = await paginateFind("CASH2-R039");
   log("配置找到CASH2-R039", foundRule);
   if (foundRule) {
@@ -381,25 +353,19 @@ try {
 
   await page.goto(`${BASE}/settings?tab=scenarios`, { waitUntil: "networkidle0" });
   await new Promise((r) => setTimeout(r, 400));
-  await page.evaluate(() => {
-    const sel = document.querySelector("select");
-    if (sel) {
-      const opt = [...sel.options].find((o) => /资金/.test(o.textContent || ""));
-      if (opt) {
-        sel.value = opt.value;
-        sel.dispatchEvent(new Event("change", { bubbles: true }));
-      }
-    }
-  });
-  await new Promise((r) => setTimeout(r, 400));
+  await clickText("button", "资金");
+  await page.waitForSelector("input[placeholder*='搜索一级场景']");
+  const q = await page.$("input[placeholder*='搜索一级场景']");
+  if (q) {
+    await q.click({ clickCount: 3 });
+    await q.type("CASH2-S035");
+  }
+  await new Promise((r) => setTimeout(r, 500));
   const foundS035 = await paginateFind("CASH2-S035");
   if (foundS035) {
     page.once("dialog", (d) => d.accept());
     await clickButtonInRow("CASH2-S035", "停用");
     await new Promise((r) => setTimeout(r, 500));
-  } else {
-    const groups = await page.$$("button, [role='option']");
-    log("定位CASH2-S035", false, "需在一级场景中切换");
   }
   const afterDis = await bodyText();
   log("停用子场景", /已停用|后续监测停止/.test(afterDis) || foundS035);

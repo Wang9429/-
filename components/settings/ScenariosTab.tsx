@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Button, Card, DataTable, Field, Notice, Tag } from "@/components/ui";
+import React, { useMemo, useState, useEffect } from "react";
+import { Button, Card, DataTable, Field, Notice, Tag, inputClass } from "@/components/ui";
 import {
   DOMAIN_OPTIONS,
   EXECUTION_MODE_OPTIONS,
@@ -49,15 +49,19 @@ export default function ScenariosTab() {
   const canEdit = canAct("config.scenarios.edit");
   const [gid, setGid] = useState(catalog.groups[0]?.id ?? "");
   const [domainFilter, setDomainFilter] = useState<string>("all");
+  const [query, setQuery] = useState("");
   const [target, setTarget] = useState<Target>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [flash, setFlash] = useState<string | null>(null);
 
   const group = catalog.groups.find((g) => g.id === gid) ?? catalog.groups[0];
-  const children = useMemo(
-    () => catalog.subscenarios.filter((s) => s.parent_id === (group?.id ?? gid)),
-    [catalog.subscenarios, group?.id, gid],
-  );
+  const children = useMemo(() => {
+    const list = catalog.subscenarios.filter((s) => s.parent_id === (group?.id ?? gid));
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+    const hit = list.filter((s) => s.id.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+    return hit.length ? hit : list;
+  }, [catalog.subscenarios, group?.id, gid, query]);
 
   if (!canRead) return <Notice tone="amber">当前身份不能打开监管场景。</Notice>;
 
@@ -135,10 +139,24 @@ export default function ScenariosTab() {
     setFlash(row.enabled ? `已停用「${row.name}」。后续监测停止；未关闭事项仍可查看并办理。` : `已启用「${row.name}」。`);
   };
 
-  const groupList = useMemo(
-    () => (domainFilter === "all" ? catalog.groups : catalog.groups.filter((g) => g.domain === domainFilter)),
-    [catalog.groups, domainFilter],
-  );
+  const groupList = useMemo(() => {
+    const base = domainFilter === "all" ? catalog.groups : catalog.groups.filter((g) => g.domain === domainFilter);
+    const q = query.trim().toLowerCase();
+    if (!q) return base;
+    return base.filter(
+      (g) =>
+        g.id.toLowerCase().includes(q) ||
+        g.name.toLowerCase().includes(q) ||
+        catalog.subscenarios.some(
+          (s) => s.parent_id === g.id && (s.id.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)),
+        ),
+    );
+  }, [catalog.groups, catalog.subscenarios, domainFilter, query]);
+
+  useEffect(() => {
+    if (!query.trim()) return;
+    if (groupList[0] && groupList[0].id !== gid) setGid(groupList[0].id);
+  }, [query, groupList, gid]);
 
   const readonly = target?.mode === "view" || !canEdit;
 
@@ -168,6 +186,12 @@ export default function ScenariosTab() {
           </button>
         ))}
       </div>
+      <input
+        className={`${inputClass} w-[280px]`}
+        placeholder="搜索一级场景或子场景编号、名称"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
       <div className="reg-settings-pair">
         <Card
           title={`一级监管场景（${catalog.groups.length}）`}
