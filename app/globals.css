@@ -424,11 +424,49 @@ details > summary::-webkit-details-marker {
   cursor: pointer;
 }
 
+.reg-org-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.reg-org-search {
+  min-width: 0;
+  flex: 1 1 220px;
+  max-width: 320px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 13px;
+  background: #fff;
+  color: var(--text-main);
+}
+
+.reg-org-node-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
 .reg-org-node-name {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-main);
   line-height: 22px;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.reg-org-node-name:hover {
+  color: var(--brand);
 }
 
 .reg-org-node-meta {
@@ -440,8 +478,27 @@ details > summary::-webkit-details-marker {
   line-height: 20px;
 }
 
+.reg-org-stat {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.reg-org-stat:hover {
+  color: var(--brand);
+}
+
 .reg-org-node-tags {
   min-height: 22px;
+}
+
+.reg-org-node-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 
 .reg-org-expand {
@@ -463,11 +520,13 @@ details > summary::-webkit-details-marker {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 12px;
   min-width: 0;
+  max-height: 420px;
+  overflow: auto;
 }
 
 .reg-domain-metrics {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
   gap: 8px 16px;
   min-width: 0;
 }

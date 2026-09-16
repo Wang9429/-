@@ -8,7 +8,14 @@ export const OPEN_STATUSES: RiskStatus[] = [
   "pending_verification",
 ];
 
+/** 已确认需要整改、尚未复核关闭。不含待核查、核查中、已排除、确认无需整改。 */
+export const OPEN_RECTIFICATION_STATUSES: RiskStatus[] = ["rectifying", "pending_verification"];
+
 export const isOpen = (r: RiskCase) => OPEN_STATUSES.includes(r.status);
+
+export function isOpenRectificationStatus(status: RiskStatus | null | undefined): boolean {
+  return Boolean(status && OPEN_RECTIFICATION_STATUSES.includes(status));
+}
 
 export const severityLabel: Record<string, string> = { red: "高风险", yellow: "关注" };
 
@@ -62,6 +69,7 @@ export function isCurrentTaskOverdue(r: RiskCase, asOf: string): boolean {
 
 /**
  * 本期已整改闭环：所选期间内复核通过关闭、截至日仍为 closed 且 close_reason=rectified。
+ * 已重开事项当前不是 closed，不计入。
  */
 export function isRectifiedClosedInPeriod(
   r: RiskCase,
@@ -71,10 +79,46 @@ export function isRectifiedClosedInPeriod(
 ): boolean {
   if (r.status !== "closed") return false;
   if (r.close_reason !== "rectified") return false;
+  if ((r.reopened_count ?? 0) > 0) return false;
   const closed = r.verified_closed_at ?? r.closed_at;
   if (!closed) return false;
   if (closed > asOf) return false;
   return closed >= periodStart && closed <= periodEnd;
+}
+
+/**
+ * 按截至日还原事项状态：优先重放 effective_date ≤ 截至日的办理记录；
+ * 事项尚未发生则返回 null。不能把今天的状态套到历史截至日。
+ */
+export function statusAtAsOf(r: RiskCase, asOf: string, actions: CaseAction[] = seed.case_actions): RiskStatus | null {
+  if (r.first_seen_at > asOf) return null;
+  const relevant = actions
+    .filter((a) => a.risk_id === r.id && a.effective_date <= asOf)
+    .sort((a, b) => a.sequence - b.sequence || a.effective_date.localeCompare(b.effective_date));
+  if (relevant.length) {
+    const last = relevant[relevant.length - 1];
+    return (last.to_status as RiskStatus | undefined) ?? r.status;
+  }
+  if (r.verified_closed_at && r.verified_closed_at > asOf) {
+    if (r.first_seen_at <= asOf) return "rectifying";
+  }
+  if (r.closed_at && r.closed_at > asOf) {
+    return isOpenRectificationStatus(r.status) ? r.status : "rectifying";
+  }
+  return r.status;
+}
+
+export function riskAtAsOf(r: RiskCase, asOf: string, actions: CaseAction[] = seed.case_actions): RiskCase | null {
+  const status = statusAtAsOf(r, asOf, actions);
+  if (!status) return null;
+  if (status === r.status) return r;
+  return { ...r, status };
+}
+
+export function isOpenRectificationAt(r: RiskCase, asOf: string): boolean {
+  const snapshot = riskAtAsOf(r, asOf);
+  if (!snapshot) return false;
+  return isOpenRectificationStatus(snapshot.status);
 }
 
 /** 事项在某领域出现（按 risk_context_links 的实际关联，不按场景模板铺开）。 */

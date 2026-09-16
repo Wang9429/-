@@ -40,13 +40,30 @@ export function orgPath(id: string): Organization[] {
 
 export const orgNodeTypeLabel: Record<string, string> = {
   headquarters: "总部",
-  legal_unit: "二级单位",
-  management_unit: "三级单位",
+  legal_unit: "所属公司",
+  management_unit: "业务单元",
   branch: "分支机构",
+  department: "总部部门",
+  project_department: "项目部",
 };
 
+/** 计入纳管单位数的组织类型：所属公司、分支机构、确需纳管的业务单元及范围内总部。 */
+export const MANAGED_UNIT_NODE_TYPES = new Set(["headquarters", "legal_unit", "management_unit", "branch"]);
+
+export function isManagedUnit(o: Organization): boolean {
+  if (o.unit_category === "department" || o.unit_category === "project_department") return false;
+  if (o.node_type === "department" || o.node_type === "project_department") return false;
+  return MANAGED_UNIT_NODE_TYPES.has(o.node_type);
+}
+
+export function orgUnitTypeLabel(o: Organization): string {
+  if (o.unit_category === "company" || o.node_type === "legal_unit") return "所属公司";
+  if (o.unit_category === "branch" || o.node_type === "branch") return "分支机构";
+  if (o.unit_category === "business_unit" || o.node_type === "management_unit") return "业务单元";
+  if (o.node_type === "headquarters") return "总部";
+  return orgNodeTypeLabel[o.node_type] ?? "单位";
+}
+
 export function orgLevelLabel(o: Organization): string {
-  if (o.management_level === 1) return "总部";
-  if (o.management_level === 2) return "二级单位";
-  return orgNodeTypeLabel[o.node_type] ?? "三级单位";
+  return orgUnitTypeLabel(o);
 }

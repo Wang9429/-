@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { NAV_ITEMS, seed } from "@/lib/seed";
+import { NAV_ITEMS } from "@/lib/seed";
 import { can, canDomain, config, riskVisible } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { Modal } from "@/components/ui";
@@ -237,12 +237,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <dd className="text-textmain">V1.6</dd>
           </div>
           <div className="flex gap-3">
-            <dt className="text-textsub shrink-0 w-24">种子组织</dt>
-            <dd className="text-textmain">{seed.organizations.map((o) => o.name).join("、")}</dd>
+            <dt className="text-textsub shrink-0 w-24">样例规模</dt>
+            <dd className="text-textmain">
+              纳管单位按组织主数据去重；工程项目按期间实施 64 个（含原 ENG-P001）、其中本期完工 9 个。公开 12 家子公司与 64 个项目是披露参照，合成台账另行记录来源。
+            </dd>
           </div>
         </dl>
         <p className="text-[13px] text-textsub mt-3 leading-6">
-          真实历史事件日期与样例行情分别标识。AI 面板当前为预置分析，未连接模型服务。匿名名称不等于真实经营数据。
+          真实历史事件日期与样例行情分别标识。AI 面板当前为预置分析，未连接模型服务。匿名名称不等于真实经营数据。业务页面不标注“演示”。
         </p>
       </Modal>
     </div>

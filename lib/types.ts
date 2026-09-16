@@ -34,6 +34,9 @@ export interface Organization {
   management_level: number;
   node_type: string;
   legal_entity_id: string;
+  /** 纳管单位分类；总部部门/项目部不计入单位数 */
+  unit_category?: "headquarters" | "company" | "branch" | "business_unit" | "department" | "project_department";
+  data_source?: string;
 }
 
 export interface LegalEntity {
@@ -77,6 +80,11 @@ export interface FixedAssetProject {
   asset_ids?: string[];
   primary_phase_id: string;
   active_phase_ids: string[];
+  managed_start?: string;
+  managed_end?: string | null;
+  status?: string;
+  data_source?: string;
+  domain_ids?: DomainId[];
 }
 
 export interface UtilizationPoint {
@@ -144,6 +152,11 @@ export interface EquityProject {
   major_risk_events: string[];
   primary_phase_id: string;
   active_phase_ids: string[];
+  managed_start?: string;
+  managed_end?: string | null;
+  status?: string;
+  data_source?: string;
+  domain_ids?: DomainId[];
 }
 
 export interface EngineeringProject {
@@ -170,6 +183,12 @@ export interface EngineeringProject {
   primary_phase_id: string;
   active_phase_ids: string[];
   preparing_phase_ids?: string[];
+  managed_start?: string;
+  managed_end?: string | null;
+  completed_at?: string | null;
+  status?: string;
+  data_source?: string;
+  domain_ids?: DomainId[];
 }
 
 export interface CostItem {

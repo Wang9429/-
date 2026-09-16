@@ -1,4 +1,5 @@
 import seedJson from "@/data/demo_seed.json";
+import scaleJson from "@/data/overview_scale_seed.json";
 import catalogJson from "@/data/investment_catalog.json";
 import type {
   DemoSeed,
@@ -6,14 +7,82 @@ import type {
   InvestmentCatalog,
   LifecycleTemplate,
   MonitoringRow,
+  Organization,
 } from "./types";
 import { liveScenarioName } from "./scenario-names-live";
 
 /**
  * 全平台唯一的种子读取入口。页面与计算模块都从这里取数，
  * 不在各领域另造 mock 数组（AGENTS.md “统一数据与关联”）。
+ * 扩容匿名样例追加到原种子，不改写 R01–R09 及原项目金额事实。
  */
-export const seed = seedJson as unknown as DemoSeed;
+const base = seedJson as unknown as DemoSeed;
+const extra = scaleJson as unknown as Partial<DemoSeed> & {
+  source_notes?: Record<string, unknown>;
+  organizations?: Organization[];
+};
+
+function concatUnique<T extends { id?: string; risk_id?: string; domain?: string }>(
+  a: T[] | undefined,
+  b: T[] | undefined,
+  key: (row: T) => string,
+): T[] {
+  const out = [...(a ?? [])];
+  const seen = new Set(out.map(key));
+  for (const row of b ?? []) {
+    const k = key(row);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(row);
+  }
+  return out;
+}
+
+const SURVEY_ORG = new Set(["ORG-HQ", "ORG-A", "ORG-A1", "ORG-OV", "ORG-B", "ORG-C"]);
+const SURVEY_UNIT: Record<string, Organization["unit_category"]> = {
+  "ORG-HQ": "headquarters",
+  "ORG-A": "company",
+  "ORG-A1": "business_unit",
+  "ORG-OV": "branch",
+  "ORG-B": "company",
+  "ORG-C": "company",
+};
+
+const mergedOrgs: Organization[] = concatUnique(base.organizations, extra.organizations, (o) => o.id).map((o) => {
+  if (!SURVEY_ORG.has(o.id)) return o;
+  return {
+    ...o,
+    unit_category: o.unit_category ?? SURVEY_UNIT[o.id],
+    data_source: o.data_source ?? "survey_confirmed",
+  };
+});
+
+export const seed = {
+  ...base,
+  organizations: mergedOrgs,
+  legal_entities: concatUnique(base.legal_entities, extra.legal_entities, (x) => x.id),
+  fixed_asset_projects: concatUnique(base.fixed_asset_projects, extra.fixed_asset_projects, (x) => x.id),
+  assets: concatUnique(base.assets, extra.assets, (x) => x.id),
+  equity_projects: concatUnique(base.equity_projects, extra.equity_projects, (x) => x.id),
+  engineering_projects: concatUnique(base.engineering_projects, extra.engineering_projects, (x) => x.id),
+  contracts: concatUnique(base.contracts, extra.contracts, (x) => x.id),
+  rule_evaluations: concatUnique(base.rule_evaluations, extra.rule_evaluations, (x) => x.id),
+  scenario_monitoring_coverage: concatUnique(
+    base.scenario_monitoring_coverage,
+    extra.scenario_monitoring_coverage,
+    (x) => x.id,
+  ),
+  risk_cases: concatUnique(base.risk_cases, extra.risk_cases, (x) => x.id),
+  evidence: concatUnique(base.evidence, extra.evidence, (x) => x.id),
+  risk_context_links: [
+    ...(base.risk_context_links ?? []),
+    ...((extra.risk_context_links ?? []) as DemoSeed["risk_context_links"]),
+  ],
+  case_actions: concatUnique(base.case_actions, extra.case_actions, (x) => x.id),
+  business_links: concatUnique(base.business_links, extra.business_links, (x) => x.id),
+} as DemoSeed;
+
+export const scaleSourceNotes = extra.source_notes ?? {};
 export const catalog = catalogJson as unknown as InvestmentCatalog;
 
 export const AS_OF = seed.as_of; // 2026-06-30，业务截至日固定，不随电脑日期改变

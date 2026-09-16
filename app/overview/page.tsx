@@ -6,48 +6,54 @@ import IndicatorDrawer, { formatMetricParts } from "@/components/IndicatorDrawer
 import ObjectDrawer from "@/components/ObjectDrawer";
 import OrgPanorama from "@/components/OrgPanorama";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
+import ScenarioDrawer from "@/components/ScenarioDrawer";
 import FilterBar from "@/components/FilterBar";
 import PageHeader from "@/components/PageHeader";
-import { Card, DataTable, KpiCard, Modal, Notice, SeverityTag, Tag } from "@/components/ui";
+import { Card, DataTable, KpiCard, Modal, Notice } from "@/components/ui";
 import { IconAlert, IconClipboard, IconLayers, IconOverview, DOMAIN_ICONS } from "@/components/icons";
-import { DOMAIN_META } from "@/lib/seed";
+import { DOMAIN_META, objectTypeLabel, scenarioName, seed } from "@/lib/seed";
 import { INDICATORS, indicatorById } from "@/lib/metrics";
-import { orgName, ROOT_ORG_ID } from "@/lib/org";
+import { orgName, orgUnitTypeLabel, orgById, ROOT_ORG_ID } from "@/lib/org";
 import { authorizedObjectIds, authorizedOrgIds, can, canDomain, intersectOrgScope, riskVisible } from "@/lib/config";
+import { liveRuleLabel } from "@/lib/live-config";
 import { findObject } from "@/lib/objects";
 import { statusLabel } from "@/lib/risks";
 import { fmtAmountSmart } from "@/lib/format";
 import { useDemoStore } from "@/lib/store";
-import type { RiskCase } from "@/lib/types";
+import type { DomainId, RiskCase } from "@/lib/types";
 import {
-  highRiskOwnerOrgIds,
+  completedRectificationCases,
+  hitObjectsByType,
+  hitOwnerOrgIds,
+  hitRuleIds,
   includesHeadquarters,
   inScopeProjects,
+  managedOrganizations,
   managedOrgCount,
-  openHighRiskCases,
-  overdueHighRiskCases,
+  openRectificationCases,
+  overdueRectificationCases,
   overviewDomainCards,
   relatedObjects,
+  validHitRecords,
   type DomainCardModel,
-  type ExceptionSlot,
+  type HitRecord,
   type MetricSlot,
+  type OverviewProjectRow,
   type OverviewScope,
 } from "@/lib/overview";
 
-/**
- * 综合总览：总部领导首页。
- * 监管主体全景 + 专项领域监管概况。口径见 lib/overview.ts 与业需第 6 章。
- */
-
 type CaseQuery =
-  | { title: string; mode: "high-risk" }
-  | { title: string; mode: "high-risk-overdue" }
+  | { title: string; mode: "open-rectification"; orgIds?: Set<string>; domain?: DomainId }
+  | { title: string; mode: "overdue-rectification"; orgIds?: Set<string>; domain?: DomainId }
+  | { title: string; mode: "completed-rectification"; orgIds?: Set<string> }
   | { title: string; mode: "ids"; ids: string[] };
 
 type ObjectQuery =
-  | { title: string; mode: "projects" }
-  | { title: string; mode: "related" }
+  | { title: string; mode: "projects"; orgIds: Set<string> }
+  | { title: string; mode: "related"; orgIds: Set<string> }
   | { title: string; mode: "ids"; ids: string[] };
+
+type UnitQuery = { title: string; orgIds: Set<string>; hitOnly?: boolean };
 
 function metricValueText(slot: MetricSlot): { value: string; unit: string } {
   if (slot.status !== "ok" || !slot.def || !slot.metric) return { value: "—", unit: "" };
@@ -57,14 +63,23 @@ function metricValueText(slot: MetricSlot): { value: string; unit: string } {
   return formatMetricParts(slot.def, slot.metric);
 }
 
+function scenariosForRule(ruleId: string): string[] {
+  const fromRisk = seed.risk_cases.filter((r) => r.rule_id === ruleId).flatMap((r) => r.scenario_ids);
+  const fromCov = seed.scenario_monitoring_coverage.filter((r) => r.rule_ids?.includes(ruleId)).map((r) => r.scenario_id);
+  return [...new Set([...fromRisk, ...fromCov])];
+}
+
 export default function OverviewPage() {
   const { filters, risks, setFilters, user, catalog } = useDemoStore();
   const [riskId, setRiskId] = useState<string | null>(null);
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
   const [objectId, setObjectId] = useState<string | null>(null);
+  const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [caseScope, setCaseScope] = useState<CaseQuery | null>(null);
   const [objectScope, setObjectScope] = useState<ObjectQuery | null>(null);
-  const [ownerListOpen, setOwnerListOpen] = useState(false);
+  const [unitScope, setUnitScope] = useState<UnitQuery | null>(null);
+  const [hitList, setHitList] = useState<{ title: string; orgIds: Set<string>; domain?: DomainId } | null>(null);
+  const [projectType, setProjectType] = useState<string>("all");
   const listScrollRef = useRef(0);
 
   const orgIds = useMemo(
@@ -93,22 +108,22 @@ export default function OverviewPage() {
       allowedObjectIds: ctx.allowedObjectIds ?? null,
       risks: visibleRisks,
       asOf: filters.asOf,
+      periodStart: filters.periodStart,
+      periodEnd: filters.periodEnd,
       ctx,
     }),
-    [orgIds, authOrgs, ctx, visibleRisks, filters.asOf],
+    [orgIds, authOrgs, ctx, visibleRisks, filters.asOf, filters.periodStart, filters.periodEnd],
   );
 
-  const unitCount = managedOrgCount(orgIds);
+  const unitRows = useMemo(() => managedOrganizations(orgIds), [orgIds]);
   const projectRows = useMemo(
-    () => inScopeProjects(orgIds, overviewScope.allowedObjectIds),
-    [orgIds, overviewScope.allowedObjectIds],
+    () => inScopeProjects(orgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd),
+    [orgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd],
   );
-  const highRisk = useMemo(() => openHighRiskCases(visibleRisks, orgIds), [visibleRisks, orgIds]);
-  const overdueHighRisk = useMemo(
-    () => overdueHighRiskCases(visibleRisks, orgIds, filters.asOf),
-    [visibleRisks, orgIds, filters.asOf],
-  );
-  const ownerIds = useMemo(() => highRiskOwnerOrgIds(visibleRisks, orgIds), [visibleRisks, orgIds]);
+  const openRect = useMemo(() => openRectificationCases(overviewScope), [overviewScope]);
+  const overdueRect = useMemo(() => overdueRectificationCases(overviewScope), [overviewScope]);
+  const completedRect = useMemo(() => completedRectificationCases(overviewScope), [overviewScope]);
+  const hitOrgs = useMemo(() => hitOwnerOrgIds(overviewScope), [overviewScope]);
 
   const domainCards = useMemo(
     () => overviewDomainCards(overviewScope, (d) => canDomain(user, d)),
@@ -120,10 +135,13 @@ export default function OverviewPage() {
   useEffect(() => {
     setCaseScope(null);
     setObjectScope(null);
-    setOwnerListOpen(false);
+    setUnitScope(null);
+    setHitList(null);
     setRiskId(null);
     setIndicatorId(null);
     setObjectId(null);
+    setScenarioId(null);
+    setProjectType("all");
   }, [filters.orgId, filters.includeChildren, filters.periodStart, filters.periodEnd, filters.asOf, user?.id]);
 
   const openOverlay = () => {
@@ -134,59 +152,48 @@ export default function OverviewPage() {
     requestAnimationFrame(() => window.scrollTo(0, y));
   };
 
+  const scoped = (ids?: Set<string>): OverviewScope => (ids ? { ...overviewScope, orgIds: ids } : overviewScope);
+
   const caseRows: RiskCase[] = (() => {
     if (!caseScope) return [];
-    if (caseScope.mode === "high-risk") return highRisk;
-    if (caseScope.mode === "high-risk-overdue") return overdueHighRisk;
+    if (caseScope.mode === "open-rectification") return openRectificationCases(scoped(caseScope.orgIds), caseScope.domain);
+    if (caseScope.mode === "overdue-rectification")
+      return overdueRectificationCases(scoped(caseScope.orgIds), caseScope.domain);
+    if (caseScope.mode === "completed-rectification") return completedRectificationCases(scoped(caseScope.orgIds));
     return caseScope.ids.map((id) => visibleRisks.find((r) => r.id === id)).filter((r): r is RiskCase => Boolean(r));
   })();
 
-  const objectRows = (() => {
-    if (!objectScope) return [];
-    if (objectScope.mode === "projects") return projectRows;
-    if (objectScope.mode === "related") return relatedObjects(orgIds, overviewScope.allowedObjectIds);
-    return objectScope.ids.map((id) => {
-      const obj = findObject(id);
-      return {
-        id,
-        name: obj?.name ?? id,
-        orgId: obj?.orgId ?? "",
-        kind: (obj?.type ?? "object") as
-          | "fixed_asset_project"
-          | "equity_project"
-          | "engineering_project"
-          | "asset"
-          | "object",
-      };
-    });
-  })();
+  const objectOrgIds = objectScope && "orgIds" in objectScope ? objectScope.orgIds : orgIds;
+  const rawObjectRows =
+    objectScope?.mode === "projects"
+      ? inScopeProjects(objectOrgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd)
+      : objectScope?.mode === "related"
+        ? relatedObjects(objectOrgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd)
+        : objectScope?.mode === "ids"
+          ? objectScope.ids.map((id) => {
+              const obj = findObject(id);
+              return {
+                id,
+                name: obj?.name ?? id,
+                orgId: obj?.orgId ?? "",
+                kind: (obj?.type ?? "object") as OverviewProjectRow["kind"] | "asset" | "object",
+                projectType: obj?.typeLabel ?? "",
+                status: "",
+              };
+            })
+          : [];
+  const objectRows =
+    objectScope?.mode === "projects" && projectType !== "all"
+      ? rawObjectRows.filter((r) => "kind" in r && r.kind === projectType)
+      : rawObjectRows;
 
   const selectUnit = (orgId: string) => {
     setFilters({ orgId, includeChildren: true });
   };
 
-  const openCases = (query: CaseQuery) => {
-    openOverlay();
-    setCaseScope(query);
-  };
-  const openObjects = (query: ObjectQuery) => {
-    openOverlay();
-    setObjectScope(query);
-  };
-
-  const openException = (slot: ExceptionSlot) => {
-    if (slot.count === null || slot.count === 0) return;
-    openOverlay();
-    if (slot.kind === "eng-high-risk") {
-      setCaseScope({ title: slot.label, mode: "ids", ids: slot.riskIds });
-      return;
-    }
-    if (slot.kind === "indicator" && slot.indicatorId) {
-      setIndicatorId(slot.indicatorId);
-      return;
-    }
-    setObjectScope({ title: slot.label, mode: "ids", ids: slot.objectIds });
-  };
+  const unitTableIds = unitScope?.hitOnly ? hitOrgs : unitRows.map((o) => o.id);
+  const hitScope = hitList ? scoped(hitList.orgIds) : overviewScope;
+  const hitRows = hitList ? validHitRecords(hitScope, hitList.domain) : [];
 
   return (
     <div className="space-y-4">
@@ -205,35 +212,43 @@ export default function OverviewPage() {
         <div className="reg-kpis">
           <KpiCard
             name="纳管单位数"
-            value={unitCount}
+            value={managedOrgCount(orgIds)}
             unit="家"
-            compare={includesHeadquarters(orgIds) ? "含总部" : "不含总部"}
+            compare={includesHeadquarters(orgIds) ? "含当前单位及授权范围内下属" : "当前组织范围"}
             icon={<IconOverview size={20} />}
             scopeLabel={scopeLabel}
+            onOpen={() => {
+              openOverlay();
+              setUnitScope({ title: "纳管单位", orgIds });
+            }}
             returnKey="kpi-units"
           />
           <KpiCard
-            name="在管项目数"
+            name="纳管项目数"
             value={projectRows.length}
             unit="个"
-            compare="固定资产投资、股权投资、工程去重"
+            compare="固定资产、股权投资、工程去重"
             icon={<IconLayers size={20} />}
             scopeLabel={scopeLabel}
-            onOpen={() => openObjects({ title: "在管项目", mode: "projects" })}
+            onOpen={() => {
+              openOverlay();
+              setProjectType("all");
+              setObjectScope({ title: "纳管项目", mode: "projects", orgIds });
+            }}
             returnKey="kpi-projects"
           />
           <KpiCard
-            name="涉及未关闭高风险事项的责任单位数"
-            value={ownerIds.length}
+            name="规则命中涉及单位数"
+            value={hitOrgs.length}
             unit="家"
-            compare="按实际责任单位去重"
+            compare="按对象实际归属单位去重"
             icon={<IconClipboard size={20} />}
             scopeLabel={scopeLabel}
             onOpen={() => {
               openOverlay();
-              setOwnerListOpen(true);
+              setUnitScope({ title: "规则命中涉及单位", orgIds, hitOnly: true });
             }}
-            returnKey="kpi-owners"
+            returnKey="kpi-hit-orgs"
           />
           <div
             className="text-left bg-surface border border-line rounded-[10px] px-5 py-[18px] min-h-[168px] h-full flex gap-3.5 shadow-[0_2px_10px_rgba(17,43,77,0.04)]"
@@ -246,48 +261,73 @@ export default function OverviewPage() {
               <IconAlert size={20} />
             </span>
             <span className="min-w-0 flex-1 flex flex-col h-full">
-              <span className="text-[13px] text-textsub leading-5">未关闭高风险事项数</span>
+              <span className="text-[13px] text-textsub leading-5">未关闭整改事项数</span>
               <button
                 type="button"
                 className="mt-2 flex h-10 items-end gap-1 text-left"
                 style={{ color: "var(--risk-red-fg)" }}
-                data-overlay-return="kpi-high-risk"
-                onClick={() => openCases({ title: "未关闭高风险事项", mode: "high-risk" })}
+                data-overlay-return="kpi-open-rect"
+                onClick={() => {
+                  openOverlay();
+                  setCaseScope({ title: "未关闭整改事项", mode: "open-rectification" });
+                }}
               >
-                <span className="num text-[32px] font-semibold leading-none">{highRisk.length}</span>
+                <span className="num text-[32px] font-semibold leading-none">{openRect.length}</span>
                 <span className="text-[14px] text-textsub mb-0.5">件</span>
               </button>
-              <button
-                type="button"
-                className="mt-auto pt-2 text-[13px] text-left hover:underline"
-                style={{ color: overdueHighRisk.length ? "var(--risk-red-fg)" : "var(--text-sub)" }}
-                data-overlay-return="kpi-overdue-high-risk"
-                onClick={() => openCases({ title: "逾期高风险事项", mode: "high-risk-overdue" })}
-              >
-                逾期高风险 {overdueHighRisk.length} 件
-              </button>
+              <span className="mt-auto pt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
+                <button
+                  type="button"
+                  className="text-left hover:underline"
+                  data-overlay-return="kpi-completed-rect"
+                  onClick={() => {
+                    openOverlay();
+                    setCaseScope({ title: "本期完成整改", mode: "completed-rectification" });
+                  }}
+                >
+                  本期完成整改 {completedRect.length} 件
+                </button>
+                <button
+                  type="button"
+                  className="text-left hover:underline"
+                  style={{ color: overdueRect.length ? "var(--risk-red-fg)" : "var(--text-sub)" }}
+                  data-overlay-return="kpi-overdue-rect"
+                  onClick={() => {
+                    openOverlay();
+                    setCaseScope({ title: "逾期整改", mode: "overdue-rectification" });
+                  }}
+                >
+                  逾期整改 {overdueRect.length} 件
+                </button>
+              </span>
             </span>
           </div>
         </div>
 
-        <Card
-          title="主体层级"
-          right={
-            <button
-              type="button"
-              className="text-[13px] text-brand hover:underline whitespace-nowrap"
-              onClick={() => openObjects({ title: "关联项目与资产", mode: "related" })}
-            >
-              查看关联项目/资产
-            </button>
-          }
-        >
+        <Card title="所属单位监管情况">
           <OrgPanorama
             selectedOrgId={authOrgs.has(filters.orgId) ? filters.orgId : [...authOrgs][0] ?? ROOT_ORG_ID}
             authorizedOrgIds={authOrgs}
             scope={overviewScope}
             onSelect={selectUnit}
             onReturnHq={() => selectUnit(ROOT_ORG_ID)}
+            onOpenProjects={(ids) => {
+              openOverlay();
+              setProjectType("all");
+              setObjectScope({ title: "纳管项目", mode: "projects", orgIds: ids });
+            }}
+            onOpenRules={(ids) => {
+              openOverlay();
+              setHitList({ title: "命中规则", orgIds: ids });
+            }}
+            onOpenRectification={(ids) => {
+              openOverlay();
+              setCaseScope({ title: "未关闭整改事项", mode: "open-rectification", orgIds: ids });
+            }}
+            onOpenRelated={(ids) => {
+              openOverlay();
+              setObjectScope({ title: "关联项目与资产", mode: "related", orgIds: ids });
+            }}
           />
         </Card>
       </section>
@@ -303,7 +343,26 @@ export default function OverviewPage() {
                 openOverlay();
                 setIndicatorId(id);
               }}
-              onOpenException={openException}
+              onOpenHits={() => {
+                openOverlay();
+                setHitList({ title: `${DOMAIN_META[card.domain].label}监测结果`, orgIds, domain: card.domain });
+              }}
+              onOpenRectification={() => {
+                openOverlay();
+                setCaseScope({
+                  title: `${DOMAIN_META[card.domain].label}未关闭整改`,
+                  mode: "open-rectification",
+                  domain: card.domain,
+                });
+              }}
+              onOpenOverdue={() => {
+                openOverlay();
+                setCaseScope({
+                  title: `${DOMAIN_META[card.domain].label}逾期整改`,
+                  mode: "overdue-rectification",
+                  domain: card.domain,
+                });
+              }}
             />
           ))}
         </div>
@@ -327,9 +386,15 @@ export default function OverviewPage() {
           compactEmpty
           columns={[
             { key: "title", title: "名称", render: (r) => r.title },
-            { key: "sev", title: "等级", width: "92px", nowrap: true, render: (r) => <SeverityTag severity={r.severity} /> },
             { key: "status", title: "状态", width: "100px", nowrap: true, render: (r) => statusLabel[r.status] },
-            { key: "org", title: "责任单位", width: "150px", nowrap: true, render: (r) => orgName(r.owner_org_id) },
+            { key: "org", title: "主责单位", width: "150px", nowrap: true, render: (r) => orgName(r.owner_org_id) },
+            {
+              key: "due",
+              title: "整改期限",
+              width: "120px",
+              nowrap: true,
+              render: (r) => r.rectification_plan?.due_date ?? r.current_task_due_date ?? "缺期限",
+            },
             {
               key: "domains",
               title: "涉及领域",
@@ -361,47 +426,69 @@ export default function OverviewPage() {
       </Modal>
 
       <Modal
-        open={ownerListOpen}
+        open={Boolean(unitScope)}
         onClose={() => {
-          setOwnerListOpen(false);
+          setUnitScope(null);
           restoreScroll();
         }}
-        title="高风险责任单位"
-        subtitle={`来源范围：${scopeLabel}｜共 ${ownerIds.length} 家，按实际责任单位去重`}
-        width={640}
+        title={unitScope?.title ?? "单位清单"}
+        subtitle={`来源范围：${scopeLabel}｜共 ${unitTableIds.length} 家`}
+        width={720}
       >
         <DataTable
-          rows={ownerIds.map((id) => ({ id }))}
+          rows={unitTableIds.map((id) => ({ id }))}
           rowKey={(r) => r.id}
-          empty="当前范围没有未关闭高风险事项的责任单位。"
+          empty="当前范围没有单位。"
           compactEmpty
           columns={[
-            { key: "name", title: "责任单位", render: (r) => orgName(r.id) },
+            { key: "name", title: "单位", render: (r) => orgName(r.id) },
+            {
+              key: "type",
+              title: "类型",
+              width: "110px",
+              nowrap: true,
+              render: (r) => {
+                const org = orgById(r.id);
+                return org ? orgUnitTypeLabel(org) : "单位";
+              },
+            },
             {
               key: "n",
-              title: "未关闭高风险",
-              width: "120px",
+              title: unitScope?.hitOnly ? "命中规则" : "纳管项目",
+              width: "100px",
               nowrap: true,
-              render: (r) => openHighRiskCases(visibleRisks, new Set([r.id])).length,
+              render: (r) =>
+                unitScope?.hitOnly
+                  ? hitRuleIds({ ...overviewScope, orgIds: new Set([r.id]) }).length
+                  : inScopeProjects(new Set([r.id]), overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd)
+                      .length,
             },
             {
               key: "act",
               title: "操作",
-              width: "88px",
+              width: "120px",
               align: "right",
               nowrap: true,
-              render: (r) => (
-                <button
-                  type="button"
-                  className="text-[13px] text-brand hover:underline"
-                  onClick={() => {
-                    setOwnerListOpen(false);
-                    selectUnit(r.id);
-                  }}
-                >
-                  查看该单位
-                </button>
-              ),
+              render: (r) =>
+                unitScope?.hitOnly ? (
+                  <button
+                    type="button"
+                    className="text-[13px] text-brand hover:underline"
+                    onClick={() => {
+                      setHitList({ title: `${orgName(r.id)}命中规则与对象`, orgIds: new Set([r.id]) });
+                    }}
+                  >
+                    查看命中
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-[13px] text-brand hover:underline"
+                    onClick={() => setObjectScope({ title: `${orgName(r.id)}关联对象`, mode: "related", orgIds: new Set([r.id]) })}
+                  >
+                    关联对象
+                  </button>
+                ),
             },
           ]}
         />
@@ -417,6 +504,25 @@ export default function OverviewPage() {
         subtitle={`来源范围：${scopeLabel}｜共 ${objectRows.length} 条；打开档案不改变组织范围`}
         width={800}
       >
+        {objectScope?.mode === "projects" && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {[
+              ["all", "全部"],
+              ["fixed_asset_project", "固定资产投资"],
+              ["equity_project", "股权投资"],
+              ["engineering_project", "工程项目"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={`text-[13px] rounded-full px-3 py-1 border ${projectType === id ? "border-brand text-brand" : "border-line text-textsub"}`}
+                onClick={() => setProjectType(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <DataTable
           rows={objectRows}
           rowKey={(r) => r.id}
@@ -473,6 +579,19 @@ export default function OverviewPage() {
         />
       </Modal>
 
+      <Modal
+        open={Boolean(hitList)}
+        onClose={() => {
+          setHitList(null);
+          restoreScroll();
+        }}
+        title={hitList?.title ?? "监测结果"}
+        subtitle={`来源范围：${scopeLabel}｜命中规则 ${hitRuleIds(hitScope, hitList?.domain).length} 条，不按运行次数累加`}
+        width={920}
+      >
+        <HitResultPanel hits={hitRows} onOpenObject={setObjectId} onOpenScenario={setScenarioId} />
+      </Modal>
+
       <IndicatorDrawer
         open={Boolean(indicatorId)}
         onClose={() => {
@@ -490,6 +609,85 @@ export default function OverviewPage() {
       />
       <ObjectDrawer objectId={objectId} onClose={() => setObjectId(null)} onOpenRisk={setRiskId} />
       <RiskCaseDrawer riskId={riskId} onClose={() => setRiskId(null)} sourceLabel="综合总览" />
+      <ScenarioDrawer scenarioId={scenarioId} onClose={() => setScenarioId(null)} onOpenRisk={setRiskId} onOpenObject={setObjectId} />
+    </div>
+  );
+}
+
+function HitResultPanel({
+  hits,
+  onOpenObject,
+  onOpenScenario,
+}: {
+  hits: HitRecord[];
+  onOpenObject: (id: string) => void;
+  onOpenScenario: (id: string) => void;
+}) {
+  const byType = hitObjectsByType(hits);
+  const rules = [...new Set(hits.map((h) => h.ruleId))];
+  const scenarios = [...new Set(hits.flatMap((h) => scenariosForRule(h.ruleId)))];
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-[14px] font-medium mb-2">命中规则</h3>
+        {rules.length === 0 ? (
+          <p className="text-[13px] text-textsub">当前范围没有有效规则命中。</p>
+        ) : (
+          <ul className="text-[13px] space-y-1">
+            {rules.map((id) => (
+              <li key={id}>{liveRuleLabel(id)}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {scenarios.length > 0 && (
+        <div>
+          <h3 className="text-[14px] font-medium mb-2">监管子场景</h3>
+          <div className="flex flex-wrap gap-2">
+            {scenarios.map((id) => (
+              <button key={id} type="button" className="text-[13px] text-brand hover:underline" onClick={() => onOpenScenario(id)}>
+                {scenarioName(id)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div>
+        <h3 className="text-[14px] font-medium mb-2">命中对象（按类型分列）</h3>
+        {byType.length === 0 ? (
+          <p className="text-[13px] text-textsub">没有可展示的命中对象。</p>
+        ) : (
+          byType.map((group) => (
+            <div key={group.type} className="mb-3">
+              <div className="text-[13px] text-textsub mb-1">
+                {objectTypeLabel[group.type] ?? group.type} {group.objects.length}
+              </div>
+              <DataTable
+                rows={group.objects}
+                rowKey={(r) => `${r.ruleId}-${r.objectId}`}
+                compactEmpty
+                columns={[
+                  { key: "name", title: "对象", render: (r) => findObject(r.objectId)?.name ?? r.objectId },
+                  { key: "org", title: "归属单位", width: "140px", nowrap: true, render: (r) => orgName(r.orgId) },
+                  { key: "rule", title: "规则", width: "160px", nowrap: true, render: (r) => r.ruleId },
+                  {
+                    key: "act",
+                    title: "操作",
+                    width: "88px",
+                    align: "right",
+                    nowrap: true,
+                    render: (r) => (
+                      <button type="button" className="text-[13px] text-brand hover:underline" onClick={() => onOpenObject(r.objectId)}>
+                        查看档案
+                      </button>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -497,15 +695,18 @@ export default function OverviewPage() {
 function DomainOverviewCard({
   card,
   onOpenIndicator,
-  onOpenException,
+  onOpenHits,
+  onOpenRectification,
+  onOpenOverdue,
 }: {
   card: DomainCardModel;
   onOpenIndicator: (id: string) => void;
-  onOpenException: (slot: ExceptionSlot) => void;
+  onOpenHits: () => void;
+  onOpenRectification: () => void;
+  onOpenOverdue: () => void;
 }) {
   const meta = DOMAIN_META[card.domain];
   const Icon = DOMAIN_ICONS[card.domain];
-  const hits = card.exceptions.filter((e) => e.count !== null && e.count > 0);
   return (
     <article className="reg-domain-card bg-surface border border-line rounded-[10px] shadow-[0_2px_10px_rgba(17,43,77,0.04)] p-5">
       <div className="flex items-center justify-between gap-2 min-h-8">
@@ -518,7 +719,7 @@ function DomainOverviewCard({
           </Link>
         </div>
         <Link href={meta.route} className="text-[13px] text-brand shrink-0 hover:underline whitespace-nowrap">
-          进入领域 →
+          进入领域
         </Link>
       </div>
       <div className="reg-domain-metrics">
@@ -562,21 +763,25 @@ function DomainOverviewCard({
         })}
       </div>
       <div className="reg-domain-exceptions">
-        {hits.map((slot) => (
+        <button type="button" className="text-[12px] rounded-full px-2 py-0.5 border border-line whitespace-nowrap" onClick={onOpenHits}>
+          命中规则 {card.hitRuleCount} 条
+        </button>
+        <button
+          type="button"
+          className="text-[12px] rounded-full px-2 py-0.5 border border-line whitespace-nowrap"
+          onClick={onOpenRectification}
+        >
+          未关闭整改 {card.openRectificationCount} 件
+        </button>
+        {card.overdueRectificationCount > 0 && (
           <button
-            key={slot.key}
             type="button"
             className="text-[12px] rounded-full px-2 py-0.5 border border-line whitespace-nowrap"
-            style={{ color: "var(--risk-amber-fg)" }}
-            onClick={() => onOpenException(slot)}
+            style={{ color: "var(--risk-red-fg)" }}
+            onClick={onOpenOverdue}
           >
-            {slot.label} {slot.count}
+            逾期整改 {card.overdueRectificationCount} 件
           </button>
-        ))}
-        {hits.length === 0 && card.emptyKind === "no_business" && <Tag tone="neutral">无业务</Tag>}
-        {hits.length === 0 && card.emptyKind === "unevaluated" && <Tag tone="neutral">未评估</Tag>}
-        {hits.length === 0 && card.emptyKind === "monitored_clear" && (
-          <span className="text-[12px] text-textsub">本次监测未发现异常</span>
         )}
       </div>
     </article>

@@ -1,0 +1,4633 @@
+{
+  "version": "1.6-overview-scale",
+  "data_nature": "synthetic_anonymous_except_public_scale_reference",
+  "source_notes": {
+    "public_disclosure": {
+      "source": "海油工程2026年半年度报告",
+      "url": "https://www.cnoocengineering.com/tzzgx/dqbg/202608/W020260818370473396753.pdf",
+      "points": [
+        "附注列示12个子公司主体，不等于全部管理单位，也不能直接假定全部为总部直属。",
+        "上半年实施规模以上项目64个，其中完工9个；不能据此认定期末在建项目为55个。"
+      ]
+    },
+    "survey_confirmed_orgs": [
+      "ORG-HQ",
+      "ORG-A",
+      "ORG-A1",
+      "ORG-OV",
+      "ORG-B",
+      "ORG-C"
+    ],
+    "synthetic_relationship": "除已有调研确认的总部—A/A1/境外分支/B/C关系外，其余单位隶属为匿名合成，不声称真实组织架构。",
+    "original_facts_retained": "R01–R09及FA-P001/003、EQ-P001/002、ENG-P001原始金额与事项事实保留，新增记录共同参与汇总。",
+    "departments_excluded_from_unit_count": [
+      "ORG-HQ-FIN",
+      "ORG-HQ-INV",
+      "ORG-A-PMO"
+    ],
+    "engineering_scale": {
+      "period_implemented": 64,
+      "completed_in_period": 9,
+      "note": "含原 ENG-P001；64为期间实施规模参照，期末在建不等于64-9。"
+    }
+  },
+  "organizations": [
+    {
+      "id": "ORG-HQ-FIN",
+      "name": "总部财务部",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "department",
+      "legal_entity_id": "LE-HQ",
+      "unit_category": "department",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-HQ-INV",
+      "name": "总部投资部",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "department",
+      "legal_entity_id": "LE-HQ",
+      "unit_category": "department",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-A-PMO",
+      "name": "单位A项目部",
+      "parent_id": "ORG-A",
+      "management_level": 3,
+      "node_type": "project_department",
+      "legal_entity_id": "LE-A",
+      "unit_category": "project_department",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-D",
+      "name": "下属二级单位D",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-D",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-D1",
+      "name": "单位D海工事业部",
+      "parent_id": "ORG-D",
+      "management_level": 3,
+      "node_type": "management_unit",
+      "legal_entity_id": "LE-D",
+      "unit_category": "business_unit",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-D2",
+      "name": "单位D制造基地",
+      "parent_id": "ORG-D",
+      "management_level": 3,
+      "node_type": "branch",
+      "legal_entity_id": "LE-D",
+      "unit_category": "branch",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-E",
+      "name": "下属二级单位E",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-E",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-E1",
+      "name": "单位E安装事业部",
+      "parent_id": "ORG-E",
+      "management_level": 3,
+      "node_type": "management_unit",
+      "legal_entity_id": "LE-E",
+      "unit_category": "business_unit",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-F",
+      "name": "下属二级单位F",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-F",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-G",
+      "name": "下属二级单位G",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-G",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-G1",
+      "name": "单位G青岛基地",
+      "parent_id": "ORG-G",
+      "management_level": 3,
+      "node_type": "branch",
+      "legal_entity_id": "LE-G",
+      "unit_category": "branch",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-G2",
+      "name": "单位G珠海基地",
+      "parent_id": "ORG-G",
+      "management_level": 3,
+      "node_type": "branch",
+      "legal_entity_id": "LE-G",
+      "unit_category": "branch",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-H",
+      "name": "下属二级单位H",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-H",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-I",
+      "name": "下属二级单位I",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-I",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-J",
+      "name": "下属二级单位J",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-J",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-J1",
+      "name": "单位J中东分支",
+      "parent_id": "ORG-J",
+      "management_level": 3,
+      "node_type": "branch",
+      "legal_entity_id": "LE-J",
+      "unit_category": "branch",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-J2",
+      "name": "单位J东南亚分支",
+      "parent_id": "ORG-J",
+      "management_level": 3,
+      "node_type": "branch",
+      "legal_entity_id": "LE-J",
+      "unit_category": "branch",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-J3",
+      "name": "单位J欧洲分支",
+      "parent_id": "ORG-J",
+      "management_level": 3,
+      "node_type": "branch",
+      "legal_entity_id": "LE-J",
+      "unit_category": "branch",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ORG-K",
+      "name": "下属二级单位K",
+      "parent_id": "ORG-HQ",
+      "management_level": 2,
+      "node_type": "legal_unit",
+      "legal_entity_id": "LE-K",
+      "unit_category": "company",
+      "data_source": "synthetic_anonymous"
+    }
+  ],
+  "legal_entities": [
+    {
+      "id": "LE-D",
+      "name": "下属二级单位D",
+      "country": "中国",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "LE-E",
+      "name": "下属二级单位E",
+      "country": "中国",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "LE-F",
+      "name": "下属二级单位F",
+      "country": "中国",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "LE-G",
+      "name": "下属二级单位G",
+      "country": "中国",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "LE-H",
+      "name": "下属二级单位H",
+      "country": "中国",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "LE-I",
+      "name": "下属二级单位I",
+      "country": "中国",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "LE-J",
+      "name": "下属二级单位J",
+      "country": "阿联酋",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "LE-K",
+      "name": "下属二级单位K",
+      "country": "中国",
+      "role": "managed_entity",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "JV003",
+      "name": "被投企业C",
+      "country": "中国",
+      "role": "investee",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "JV004",
+      "name": "被投企业D",
+      "country": "中国",
+      "role": "investee",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "JV005",
+      "name": "被投企业E",
+      "country": "阿联酋",
+      "role": "investee",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "JV006",
+      "name": "被投企业F",
+      "country": "中国",
+      "role": "investee",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "CUSTOMER-02",
+      "name": "境内客户B",
+      "country": "中国",
+      "role": "customer",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "CUSTOMER-03",
+      "name": "中东客户C",
+      "country": "阿联酋",
+      "role": "customer",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "CUSTOMER-04",
+      "name": "东南亚客户D",
+      "country": "印尼",
+      "role": "customer",
+      "data_source": "synthetic_anonymous"
+    }
+  ],
+  "fixed_asset_projects": [
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P004",
+      "name": "码头能力配套项目",
+      "owner_org_id": "ORG-D1",
+      "legal_entity_id": "LE-D",
+      "phase": "建设实施",
+      "project_type": "码头设施",
+      "status": "实施中",
+      "effective_approved_budget": 4200,
+      "ytd_plan": 1500,
+      "ytd_completed_investment": 1200,
+      "cumulative_completed_investment": 1200,
+      "annual_plan": 2000,
+      "cash_paid_ytd": 1100,
+      "primary_phase_id": "FA-V12-06",
+      "active_phase_ids": [
+        "FA-V12-06"
+      ]
+    },
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P005",
+      "name": "场地设施更新项目",
+      "owner_org_id": "ORG-E",
+      "legal_entity_id": "LE-E",
+      "phase": "建设实施",
+      "project_type": "技术改造",
+      "status": "实施中",
+      "effective_approved_budget": 1800,
+      "ytd_plan": 800,
+      "ytd_completed_investment": 800,
+      "cumulative_completed_investment": 800,
+      "annual_plan": 1000,
+      "cash_paid_ytd": 760,
+      "primary_phase_id": "FA-V12-06",
+      "active_phase_ids": [
+        "FA-V12-06"
+      ]
+    },
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P006",
+      "name": "试验设施建设项目",
+      "owner_org_id": "ORG-H",
+      "legal_entity_id": "LE-H",
+      "phase": "可研论证",
+      "project_type": "试验设施",
+      "status": "前期",
+      "effective_approved_budget": 2600,
+      "primary_phase_id": "FA-V12-02",
+      "active_phase_ids": [
+        "FA-V12-02"
+      ]
+    },
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P007",
+      "name": "岸电改造项目",
+      "owner_org_id": "ORG-D2",
+      "legal_entity_id": "LE-D",
+      "phase": "建设实施",
+      "project_type": "环保设施",
+      "status": "实施中",
+      "effective_approved_budget": 900,
+      "primary_phase_id": "FA-V12-06",
+      "active_phase_ids": [
+        "FA-V12-06"
+      ]
+    },
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P008",
+      "name": "仓储配套项目",
+      "owner_org_id": "ORG-F",
+      "legal_entity_id": "LE-F",
+      "phase": "建设实施",
+      "project_type": "仓储设施",
+      "status": "实施中",
+      "effective_approved_budget": 1100,
+      "primary_phase_id": "FA-V12-06",
+      "active_phase_ids": [
+        "FA-V12-06"
+      ]
+    },
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P009",
+      "name": "海外基地能力项目",
+      "owner_org_id": "ORG-J1",
+      "legal_entity_id": "LE-J",
+      "phase": "建设实施",
+      "project_type": "基地设施",
+      "status": "实施中",
+      "effective_approved_budget": 3500,
+      "primary_phase_id": "FA-V12-06",
+      "active_phase_ids": [
+        "FA-V12-06"
+      ]
+    },
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P010",
+      "name": "已投用专用装备项目",
+      "owner_org_id": "ORG-G1",
+      "legal_entity_id": "LE-G",
+      "phase": "运营及后评价",
+      "project_type": "大型装备",
+      "status": "已投用",
+      "effective_approved_budget": 2200,
+      "final_investment": 2100,
+      "capitalization_date": "2025-11-30",
+      "primary_phase_id": "FA-V12-08",
+      "active_phase_ids": [
+        "FA-V12-08"
+      ],
+      "asset_ids": [
+        "AS003"
+      ]
+    },
+    {
+      "currency": "CNY",
+      "amount_unit": "万元",
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "FA"
+      ],
+      "managed_start": "2025-01-01",
+      "managed_end": null,
+      "id": "FA-P011",
+      "name": "信息化能力项目",
+      "owner_org_id": "ORG-I",
+      "legal_entity_id": "LE-I",
+      "phase": "设计概算",
+      "project_type": "信息化",
+      "status": "前期",
+      "effective_approved_budget": 600,
+      "primary_phase_id": "FA-V12-04",
+      "active_phase_ids": [
+        "FA-V12-04"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "AS003",
+      "name": "专用装备C",
+      "owner_org_id": "ORG-G1",
+      "legal_entity_id": "LE-G",
+      "source_project_id": "FA-P010",
+      "asset_type": "专用装备",
+      "functional_class": "专用装备类别B",
+      "is_major": true,
+      "gross_value": 2100,
+      "accumulated_depreciation": 210,
+      "impairment_allowance": 0,
+      "net_book_value": 1890,
+      "status": "在用",
+      "planned_available_hours": 500,
+      "productive_hours": 410,
+      "utilization_threshold_pct": 50,
+      "utilization_history": [
+        {
+          "period": "2026-04",
+          "actual_pct": 80
+        },
+        {
+          "period": "2026-05",
+          "actual_pct": 82
+        },
+        {
+          "period": "2026-06",
+          "actual_pct": 84
+        }
+      ],
+      "low_utilization_confirmed": false,
+      "formally_idle": false,
+      "registration_required": false,
+      "monitoring_frequency": "quarterly",
+      "quarterly_utilization_history": [
+        {
+          "period": "2025-Q4",
+          "actual_pct": 78,
+          "data_nature": "simulated"
+        },
+        {
+          "period": "2026-Q1",
+          "actual_pct": 80,
+          "data_nature": "simulated"
+        },
+        {
+          "period": "2026-Q2",
+          "actual_pct": 82,
+          "data_nature": "simulated"
+        }
+      ],
+      "data_source": "synthetic_anonymous"
+    }
+  ],
+  "equity_projects": [
+    {
+      "accounting_method_demo": "成本法",
+      "accounting_income_includes_declared_dividends": true,
+      "major_risk_events": [],
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "EQ"
+      ],
+      "managed_start": "2024-06-01",
+      "managed_end": null,
+      "status": "投后治理",
+      "id": "EQ-P003",
+      "name": "产业链协同股权项目",
+      "owner_org_id": "ORG-D",
+      "legal_entity_id": "LE-D",
+      "investee_id": "JV003",
+      "phase": "投后治理",
+      "investment_type": "参股投资",
+      "holding_pct": 40,
+      "approved_total_investment": 3000,
+      "annual_investment_plan": 400,
+      "ytd_contribution": 400,
+      "cumulative_contribution": 1800,
+      "contribution_due_to_date": 1800,
+      "contribution_due_date": "2026-05-15",
+      "opening_book_balance": 1400,
+      "closing_book_balance_before_impairment": 1800,
+      "impairment_allowance": 0,
+      "accounting_investment_income_ytd": 90,
+      "dividend_due": 60,
+      "cash_dividend_received": 60,
+      "cash_return_target_ytd": 60,
+      "dividend_due_date": "2026-06-01",
+      "predicted_revenue_ytd": 800,
+      "actual_revenue_ytd": 820,
+      "industry": "海工服务",
+      "primary_phase_id": "EQ-V12-06",
+      "active_phase_ids": [
+        "EQ-V12-06",
+        "EQ-V12-07"
+      ]
+    },
+    {
+      "accounting_method_demo": "成本法",
+      "accounting_income_includes_declared_dividends": true,
+      "major_risk_events": [],
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "EQ"
+      ],
+      "managed_start": "2024-06-01",
+      "managed_end": null,
+      "status": "投后治理",
+      "id": "EQ-P004",
+      "name": "专业服务股权项目",
+      "owner_org_id": "ORG-F",
+      "legal_entity_id": "LE-F",
+      "investee_id": "JV004",
+      "phase": "投后治理",
+      "investment_type": "控股投资",
+      "holding_pct": 70,
+      "approved_total_investment": 1500,
+      "annual_investment_plan": 300,
+      "ytd_contribution": 200,
+      "cumulative_contribution": 900,
+      "contribution_due_to_date": 900,
+      "contribution_due_date": "2026-04-30",
+      "opening_book_balance": 700,
+      "closing_book_balance_before_impairment": 900,
+      "impairment_allowance": 0,
+      "accounting_investment_income_ytd": 40,
+      "dividend_due": 30,
+      "cash_dividend_received": 30,
+      "cash_return_target_ytd": 30,
+      "dividend_due_date": "2026-05-20",
+      "predicted_revenue_ytd": 500,
+      "actual_revenue_ytd": 510,
+      "industry": "专业技术服务",
+      "primary_phase_id": "EQ-V12-06",
+      "active_phase_ids": [
+        "EQ-V12-06"
+      ]
+    },
+    {
+      "accounting_method_demo": "成本法",
+      "accounting_income_includes_declared_dividends": true,
+      "major_risk_events": [],
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "EQ",
+        "INTL"
+      ],
+      "managed_start": "2024-06-01",
+      "managed_end": null,
+      "status": "投后治理",
+      "id": "EQ-P005",
+      "name": "境外合资股权项目",
+      "owner_org_id": "ORG-J",
+      "legal_entity_id": "LE-J",
+      "investee_id": "JV005",
+      "phase": "投后治理",
+      "investment_type": "参股投资",
+      "holding_pct": 45,
+      "approved_total_investment": 2800,
+      "annual_investment_plan": 500,
+      "ytd_contribution": 250,
+      "cumulative_contribution": 1600,
+      "contribution_due_to_date": 1600,
+      "contribution_due_date": "2026-06-10",
+      "opening_book_balance": 1350,
+      "closing_book_balance_before_impairment": 1600,
+      "impairment_allowance": 0,
+      "accounting_investment_income_ytd": 55,
+      "dividend_due": 40,
+      "cash_dividend_received": 40,
+      "cash_return_target_ytd": 40,
+      "dividend_due_date": "2026-06-05",
+      "predicted_revenue_ytd": 900,
+      "actual_revenue_ytd": 880,
+      "industry": "海工服务",
+      "primary_phase_id": "EQ-V12-06",
+      "active_phase_ids": [
+        "EQ-V12-05",
+        "EQ-V12-06"
+      ]
+    },
+    {
+      "accounting_method_demo": "成本法",
+      "accounting_income_includes_declared_dividends": true,
+      "major_risk_events": [],
+      "data_source": "synthetic_anonymous",
+      "domain_ids": [
+        "EQ"
+      ],
+      "managed_start": "2024-06-01",
+      "managed_end": null,
+      "status": "投后治理",
+      "id": "EQ-P006",
+      "name": "培育期股权项目",
+      "owner_org_id": "ORG-K",
+      "legal_entity_id": "LE-K",
+      "investee_id": "JV006",
+      "phase": "投后治理",
+      "investment_type": "参股投资",
+      "holding_pct": 30,
+      "approved_total_investment": 800,
+      "annual_investment_plan": 120,
+      "ytd_contribution": 80,
+      "cumulative_contribution": 400,
+      "contribution_due_to_date": 400,
+      "contribution_due_date": "2026-03-31",
+      "opening_book_balance": 320,
+      "closing_book_balance_before_impairment": 400,
+      "impairment_allowance": 0,
+      "accounting_investment_income_ytd": 12,
+      "dividend_due": 0,
+      "cash_dividend_received": 0,
+      "cash_return_target_ytd": 0,
+      "dividend_due_date": "2026-12-31",
+      "predicted_revenue_ytd": 200,
+      "actual_revenue_ytd": 190,
+      "industry": "专业技术服务",
+      "primary_phase_id": "EQ-V12-06",
+      "active_phase_ids": [
+        "EQ-V12-06"
+      ]
+    }
+  ],
+  "engineering_projects": [
+    {
+      "id": "ENG-P002",
+      "name": "导管架建造项目-02",
+      "owner_org_id": "ORG-OV",
+      "legal_entity_id": "LE-A",
+      "country": "马来西亚",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-01",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C002",
+      "contract_revenue_ex_vat": 3074,
+      "forecast_completion_cost": 2604,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2613,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 369,
+      "cash_received_ytd": 246,
+      "receivable_due": 92,
+      "receivable_not_yet_due": 154,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P003",
+      "name": "铺管工程项目-03",
+      "owner_org_id": "ORG-D1",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C003",
+      "contract_revenue_ex_vat": 3211,
+      "forecast_completion_cost": 2707,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2729,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 385,
+      "cash_received_ytd": 257,
+      "receivable_due": 96,
+      "receivable_not_yet_due": 161,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P004",
+      "name": "海上安装项目-04",
+      "owner_org_id": "ORG-D2",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C004",
+      "contract_revenue_ex_vat": 3348,
+      "forecast_completion_cost": 2809,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2846,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 402,
+      "cash_received_ytd": 268,
+      "receivable_due": 100,
+      "receivable_not_yet_due": 167,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P005",
+      "name": "陆上模块项目-05",
+      "owner_org_id": "ORG-E",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C005",
+      "contract_revenue_ex_vat": 3485,
+      "forecast_completion_cost": 2910,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2962,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 418,
+      "cash_received_ytd": 279,
+      "receivable_due": 105,
+      "receivable_not_yet_due": 174,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P006",
+      "name": "海底管线项目-06",
+      "owner_org_id": "ORG-E1",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C006",
+      "contract_revenue_ex_vat": 3622,
+      "forecast_completion_cost": 3010,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3079,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 435,
+      "cash_received_ytd": 290,
+      "receivable_due": 109,
+      "receivable_not_yet_due": 181,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P007",
+      "name": "码头工程项目-07",
+      "owner_org_id": "ORG-F",
+      "legal_entity_id": "LE-F",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C007",
+      "contract_revenue_ex_vat": 3759,
+      "forecast_completion_cost": 3214,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3195,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 451,
+      "cash_received_ytd": 301,
+      "receivable_due": 113,
+      "receivable_not_yet_due": 188,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P008",
+      "name": "维修升级项目-08",
+      "owner_org_id": "ORG-G",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C008",
+      "contract_revenue_ex_vat": 3896,
+      "forecast_completion_cost": 3315,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3312,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 468,
+      "cash_received_ytd": 312,
+      "receivable_due": 117,
+      "receivable_not_yet_due": 195,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P009",
+      "name": "导管架建造项目-09",
+      "owner_org_id": "ORG-G1",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C009",
+      "contract_revenue_ex_vat": 4033,
+      "forecast_completion_cost": 3416,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3428,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 484,
+      "cash_received_ytd": 323,
+      "receivable_due": 121,
+      "receivable_not_yet_due": 202,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P010",
+      "name": "铺管工程项目-10",
+      "owner_org_id": "ORG-G2",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C010",
+      "contract_revenue_ex_vat": 4170,
+      "forecast_completion_cost": 3515,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3545,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 500,
+      "cash_received_ytd": 334,
+      "receivable_due": 125,
+      "receivable_not_yet_due": 209,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P011",
+      "name": "海上安装项目-11",
+      "owner_org_id": "ORG-J",
+      "legal_entity_id": "LE-J",
+      "country": "阿联酋",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C011",
+      "contract_revenue_ex_vat": 4307,
+      "forecast_completion_cost": 3614,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3661,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 517,
+      "cash_received_ytd": 345,
+      "receivable_due": 129,
+      "receivable_not_yet_due": 215,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P012",
+      "name": "陆上模块项目-12",
+      "owner_org_id": "ORG-J1",
+      "legal_entity_id": "LE-J",
+      "country": "沙特",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C012",
+      "contract_revenue_ex_vat": 4444,
+      "forecast_completion_cost": 3955,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3777,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 533,
+      "cash_received_ytd": 356,
+      "receivable_due": 133,
+      "receivable_not_yet_due": 222,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P013",
+      "name": "海底管线项目-13",
+      "owner_org_id": "ORG-J2",
+      "legal_entity_id": "LE-J",
+      "country": "印尼",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-04",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C013",
+      "contract_revenue_ex_vat": 4581,
+      "forecast_completion_cost": 3807,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3894,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 550,
+      "cash_received_ytd": 366,
+      "receivable_due": 137,
+      "receivable_not_yet_due": 229,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P014",
+      "name": "码头工程项目-14",
+      "owner_org_id": "ORG-J3",
+      "legal_entity_id": "LE-J",
+      "country": "卡塔尔",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C014",
+      "contract_revenue_ex_vat": 4718,
+      "forecast_completion_cost": 4034,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4010,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 566,
+      "cash_received_ytd": 377,
+      "receivable_due": 142,
+      "receivable_not_yet_due": 236,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P015",
+      "name": "维修升级项目-15",
+      "owner_org_id": "ORG-B",
+      "legal_entity_id": "LE-B",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C015",
+      "contract_revenue_ex_vat": 4855,
+      "forecast_completion_cost": 4132,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4127,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 583,
+      "cash_received_ytd": 388,
+      "receivable_due": 146,
+      "receivable_not_yet_due": 243,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P016",
+      "name": "导管架建造项目-16",
+      "owner_org_id": "ORG-A",
+      "legal_entity_id": "LE-A",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C016",
+      "contract_revenue_ex_vat": 4992,
+      "forecast_completion_cost": 4228,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4243,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 599,
+      "cash_received_ytd": 399,
+      "receivable_due": 150,
+      "receivable_not_yet_due": 250,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P017",
+      "name": "铺管工程项目-17",
+      "owner_org_id": "ORG-OV",
+      "legal_entity_id": "LE-A",
+      "country": "马来西亚",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-01",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C017",
+      "contract_revenue_ex_vat": 5129,
+      "forecast_completion_cost": 4324,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4360,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 615,
+      "cash_received_ytd": 410,
+      "receivable_due": 154,
+      "receivable_not_yet_due": 256,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P018",
+      "name": "海上安装项目-18",
+      "owner_org_id": "ORG-D1",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C018",
+      "contract_revenue_ex_vat": 5266,
+      "forecast_completion_cost": 4418,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4476,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 632,
+      "cash_received_ytd": 421,
+      "receivable_due": 158,
+      "receivable_not_yet_due": 263,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P019",
+      "name": "陆上模块项目-19",
+      "owner_org_id": "ORG-D2",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C019",
+      "contract_revenue_ex_vat": 5403,
+      "forecast_completion_cost": 4512,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4593,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 648,
+      "cash_received_ytd": 432,
+      "receivable_due": 162,
+      "receivable_not_yet_due": 270,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P020",
+      "name": "海底管线项目-20",
+      "owner_org_id": "ORG-E",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C020",
+      "contract_revenue_ex_vat": 5540,
+      "forecast_completion_cost": 4931,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4709,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 665,
+      "cash_received_ytd": 443,
+      "receivable_due": 166,
+      "receivable_not_yet_due": 277,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P021",
+      "name": "码头工程项目-21",
+      "owner_org_id": "ORG-E1",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C021",
+      "contract_revenue_ex_vat": 5677,
+      "forecast_completion_cost": 5053,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4825,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 681,
+      "cash_received_ytd": 454,
+      "receivable_due": 170,
+      "receivable_not_yet_due": 284,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P022",
+      "name": "维修升级项目-22",
+      "owner_org_id": "ORG-F",
+      "legal_entity_id": "LE-F",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C022",
+      "contract_revenue_ex_vat": 5814,
+      "forecast_completion_cost": 4948,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4942,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 698,
+      "cash_received_ytd": 465,
+      "receivable_due": 174,
+      "receivable_not_yet_due": 291,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P023",
+      "name": "导管架建造项目-23",
+      "owner_org_id": "ORG-G",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C023",
+      "contract_revenue_ex_vat": 5951,
+      "forecast_completion_cost": 5040,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5058,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 714,
+      "cash_received_ytd": 476,
+      "receivable_due": 179,
+      "receivable_not_yet_due": 298,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P024",
+      "name": "铺管工程项目-24",
+      "owner_org_id": "ORG-G1",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C024",
+      "contract_revenue_ex_vat": 6088,
+      "forecast_completion_cost": 5132,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5175,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 731,
+      "cash_received_ytd": 487,
+      "receivable_due": 183,
+      "receivable_not_yet_due": 304,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P025",
+      "name": "海上安装项目-25",
+      "owner_org_id": "ORG-G2",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C025",
+      "contract_revenue_ex_vat": 6225,
+      "forecast_completion_cost": 5223,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5291,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 747,
+      "cash_received_ytd": 498,
+      "receivable_due": 187,
+      "receivable_not_yet_due": 311,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P026",
+      "name": "陆上模块项目-26",
+      "owner_org_id": "ORG-J",
+      "legal_entity_id": "LE-J",
+      "country": "阿联酋",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C026",
+      "contract_revenue_ex_vat": 6362,
+      "forecast_completion_cost": 5312,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5408,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 763,
+      "cash_received_ytd": 509,
+      "receivable_due": 191,
+      "receivable_not_yet_due": 318,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P027",
+      "name": "海底管线项目-27",
+      "owner_org_id": "ORG-J1",
+      "legal_entity_id": "LE-J",
+      "country": "沙特",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C027",
+      "contract_revenue_ex_vat": 6499,
+      "forecast_completion_cost": 5401,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5524,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 780,
+      "cash_received_ytd": 520,
+      "receivable_due": 195,
+      "receivable_not_yet_due": 325,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P028",
+      "name": "码头工程项目-28",
+      "owner_org_id": "ORG-J2",
+      "legal_entity_id": "LE-J",
+      "country": "印尼",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-04",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C028",
+      "contract_revenue_ex_vat": 6636,
+      "forecast_completion_cost": 5674,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5641,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 796,
+      "cash_received_ytd": 531,
+      "receivable_due": 199,
+      "receivable_not_yet_due": 332,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P029",
+      "name": "维修升级项目-29",
+      "owner_org_id": "ORG-J3",
+      "legal_entity_id": "LE-J",
+      "country": "卡塔尔",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "建造实施",
+      "status": "实施中",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "建造实施"
+      ],
+      "contract_id": "ENG-C029",
+      "contract_revenue_ex_vat": 6773,
+      "forecast_completion_cost": 5764,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5757,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 813,
+      "cash_received_ytd": 542,
+      "receivable_due": 203,
+      "receivable_not_yet_due": 339,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-05",
+      "active_phase_ids": [
+        "ENG-V12-05"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P030",
+      "name": "导管架建造项目-30",
+      "owner_org_id": "ORG-B",
+      "legal_entity_id": "LE-B",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C030",
+      "contract_revenue_ex_vat": 6910,
+      "forecast_completion_cost": 5853,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5874,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 829,
+      "cash_received_ytd": 553,
+      "receivable_due": 207,
+      "receivable_not_yet_due": 346,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P031",
+      "name": "铺管工程项目-31",
+      "owner_org_id": "ORG-A",
+      "legal_entity_id": "LE-A",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C031",
+      "contract_revenue_ex_vat": 2847,
+      "forecast_completion_cost": 2400,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2420,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 342,
+      "cash_received_ytd": 228,
+      "receivable_due": 85,
+      "receivable_not_yet_due": 142,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P032",
+      "name": "海上安装项目-32",
+      "owner_org_id": "ORG-OV",
+      "legal_entity_id": "LE-A",
+      "country": "马来西亚",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-01",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C032",
+      "contract_revenue_ex_vat": 2984,
+      "forecast_completion_cost": 2504,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2536,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 358,
+      "cash_received_ytd": 239,
+      "receivable_due": 90,
+      "receivable_not_yet_due": 149,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P033",
+      "name": "陆上模块项目-33",
+      "owner_org_id": "ORG-D1",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C033",
+      "contract_revenue_ex_vat": 3121,
+      "forecast_completion_cost": 2606,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2653,
+      "cost_forecast_complete": false,
+      "cash_paid_ytd": 375,
+      "cash_received_ytd": 250,
+      "receivable_due": 94,
+      "receivable_not_yet_due": 156,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P034",
+      "name": "海底管线项目-34",
+      "owner_org_id": "ORG-D2",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C034",
+      "contract_revenue_ex_vat": 3258,
+      "forecast_completion_cost": 2707,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2769,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 391,
+      "cash_received_ytd": 261,
+      "receivable_due": 98,
+      "receivable_not_yet_due": 163,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P035",
+      "name": "码头工程项目-35",
+      "owner_org_id": "ORG-E",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C035",
+      "contract_revenue_ex_vat": 3395,
+      "forecast_completion_cost": 2903,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2886,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 407,
+      "cash_received_ytd": 272,
+      "receivable_due": 102,
+      "receivable_not_yet_due": 170,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P036",
+      "name": "维修升级项目-36",
+      "owner_org_id": "ORG-E1",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C036",
+      "contract_revenue_ex_vat": 3532,
+      "forecast_completion_cost": 3006,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3002,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 424,
+      "cash_received_ytd": 283,
+      "receivable_due": 106,
+      "receivable_not_yet_due": 177,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P037",
+      "name": "导管架建造项目-37",
+      "owner_org_id": "ORG-F",
+      "legal_entity_id": "LE-F",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "设计采购",
+      "status": "设计采购",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "设计采购"
+      ],
+      "contract_id": "ENG-C037",
+      "contract_revenue_ex_vat": 3669,
+      "forecast_completion_cost": 3108,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3119,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 440,
+      "cash_received_ytd": 294,
+      "receivable_due": 110,
+      "receivable_not_yet_due": 183,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-03",
+      "active_phase_ids": [
+        "ENG-V12-03"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P038",
+      "name": "铺管工程项目-38",
+      "owner_org_id": "ORG-G",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "结算收款",
+      "status": "结算收尾",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "结算收款"
+      ],
+      "contract_id": "ENG-C038",
+      "contract_revenue_ex_vat": 3806,
+      "forecast_completion_cost": 3208,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3235,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 457,
+      "cash_received_ytd": 304,
+      "receivable_due": 114,
+      "receivable_not_yet_due": 190,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P039",
+      "name": "海上安装项目-39",
+      "owner_org_id": "ORG-G1",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "结算收款",
+      "status": "结算收尾",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "结算收款"
+      ],
+      "contract_id": "ENG-C039",
+      "contract_revenue_ex_vat": 3943,
+      "forecast_completion_cost": 3308,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3352,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 473,
+      "cash_received_ytd": 315,
+      "receivable_due": 118,
+      "receivable_not_yet_due": 197,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P040",
+      "name": "陆上模块项目-40",
+      "owner_org_id": "ORG-G2",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "结算收款",
+      "status": "结算收尾",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "结算收款"
+      ],
+      "contract_id": "ENG-C040",
+      "contract_revenue_ex_vat": 4080,
+      "forecast_completion_cost": 3407,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3468,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 490,
+      "cash_received_ytd": 326,
+      "receivable_due": 122,
+      "receivable_not_yet_due": 204,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P041",
+      "name": "海底管线项目-41",
+      "owner_org_id": "ORG-J",
+      "legal_entity_id": "LE-J",
+      "country": "阿联酋",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "结算收款",
+      "status": "结算收尾",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "结算收款"
+      ],
+      "contract_id": "ENG-C041",
+      "contract_revenue_ex_vat": 4217,
+      "forecast_completion_cost": 3504,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3584,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 506,
+      "cash_received_ytd": 337,
+      "receivable_due": 127,
+      "receivable_not_yet_due": 211,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P042",
+      "name": "码头工程项目-42",
+      "owner_org_id": "ORG-J1",
+      "legal_entity_id": "LE-J",
+      "country": "沙特",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "结算收款",
+      "status": "结算收尾",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "结算收款"
+      ],
+      "contract_id": "ENG-C042",
+      "contract_revenue_ex_vat": 4354,
+      "forecast_completion_cost": 3723,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3701,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 522,
+      "cash_received_ytd": 348,
+      "receivable_due": 131,
+      "receivable_not_yet_due": 218,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P043",
+      "name": "维修升级项目-43",
+      "owner_org_id": "ORG-J2",
+      "legal_entity_id": "LE-J",
+      "country": "印尼",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-04",
+      "phase": "结算收款",
+      "status": "结算收尾",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "结算收款"
+      ],
+      "contract_id": "ENG-C043",
+      "contract_revenue_ex_vat": 4491,
+      "forecast_completion_cost": 3822,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3817,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 539,
+      "cash_received_ytd": 359,
+      "receivable_due": 135,
+      "receivable_not_yet_due": 225,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P044",
+      "name": "导管架建造项目-44",
+      "owner_org_id": "ORG-J3",
+      "legal_entity_id": "LE-J",
+      "country": "卡塔尔",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "结算收款",
+      "status": "结算收尾",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "结算收款"
+      ],
+      "contract_id": "ENG-C044",
+      "contract_revenue_ex_vat": 4628,
+      "forecast_completion_cost": 3920,
+      "target_margin_pct": 15,
+      "approved_cost_target": 3934,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 555,
+      "cash_received_ytd": 370,
+      "receivable_due": 139,
+      "receivable_not_yet_due": 231,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P045",
+      "name": "铺管工程项目-45",
+      "owner_org_id": "ORG-B",
+      "legal_entity_id": "LE-B",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "开工准备",
+      "status": "开工准备",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "开工准备"
+      ],
+      "contract_id": "ENG-C045",
+      "contract_revenue_ex_vat": 4765,
+      "forecast_completion_cost": 4017,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4050,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 572,
+      "cash_received_ytd": 381,
+      "receivable_due": 143,
+      "receivable_not_yet_due": 238,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-02",
+      "active_phase_ids": [
+        "ENG-V12-02"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P046",
+      "name": "海上安装项目-46",
+      "owner_org_id": "ORG-A",
+      "legal_entity_id": "LE-A",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "开工准备",
+      "status": "开工准备",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "开工准备"
+      ],
+      "contract_id": "ENG-C046",
+      "contract_revenue_ex_vat": 4902,
+      "forecast_completion_cost": 4113,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4167,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 588,
+      "cash_received_ytd": 392,
+      "receivable_due": 147,
+      "receivable_not_yet_due": 245,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-02",
+      "active_phase_ids": [
+        "ENG-V12-02"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P047",
+      "name": "陆上模块项目-47",
+      "owner_org_id": "ORG-OV",
+      "legal_entity_id": "LE-A",
+      "country": "马来西亚",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-01",
+      "phase": "开工准备",
+      "status": "开工准备",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "开工准备"
+      ],
+      "contract_id": "ENG-C047",
+      "contract_revenue_ex_vat": 5039,
+      "forecast_completion_cost": 4208,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4283,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 605,
+      "cash_received_ytd": 403,
+      "receivable_due": 151,
+      "receivable_not_yet_due": 252,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-02",
+      "active_phase_ids": [
+        "ENG-V12-02"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P048",
+      "name": "海底管线项目-48",
+      "owner_org_id": "ORG-D1",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "开工准备",
+      "status": "开工准备",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "开工准备"
+      ],
+      "contract_id": "ENG-C048",
+      "contract_revenue_ex_vat": 5176,
+      "forecast_completion_cost": 4301,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4400,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 621,
+      "cash_received_ytd": 414,
+      "receivable_due": 155,
+      "receivable_not_yet_due": 259,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-02",
+      "active_phase_ids": [
+        "ENG-V12-02"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P049",
+      "name": "码头工程项目-49",
+      "owner_org_id": "ORG-D2",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "开工准备",
+      "status": "开工准备",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "开工准备"
+      ],
+      "contract_id": "ENG-C049",
+      "contract_revenue_ex_vat": 5313,
+      "forecast_completion_cost": 4543,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4516,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 638,
+      "cash_received_ytd": 425,
+      "receivable_due": 159,
+      "receivable_not_yet_due": 266,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-02",
+      "active_phase_ids": [
+        "ENG-V12-02"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P050",
+      "name": "维修升级项目-50",
+      "owner_org_id": "ORG-E",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "开工准备",
+      "status": "开工准备",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "开工准备"
+      ],
+      "contract_id": "ENG-C050",
+      "contract_revenue_ex_vat": 5450,
+      "forecast_completion_cost": 4638,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4633,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 654,
+      "cash_received_ytd": 436,
+      "receivable_due": 164,
+      "receivable_not_yet_due": 273,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-02",
+      "active_phase_ids": [
+        "ENG-V12-02"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P051",
+      "name": "导管架建造项目-51",
+      "owner_org_id": "ORG-E1",
+      "legal_entity_id": "LE-E",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "停工收尾",
+      "status": "待结算",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "停工收尾"
+      ],
+      "contract_id": "ENG-C051",
+      "contract_revenue_ex_vat": 5587,
+      "forecast_completion_cost": 4732,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4749,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 670,
+      "cash_received_ytd": 447,
+      "receivable_due": 168,
+      "receivable_not_yet_due": 279,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P052",
+      "name": "铺管工程项目-52",
+      "owner_org_id": "ORG-F",
+      "legal_entity_id": "LE-F",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "停工收尾",
+      "status": "待结算",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "停工收尾"
+      ],
+      "contract_id": "ENG-C052",
+      "contract_revenue_ex_vat": 5724,
+      "forecast_completion_cost": 4825,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4865,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 687,
+      "cash_received_ytd": 458,
+      "receivable_due": 172,
+      "receivable_not_yet_due": 286,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P053",
+      "name": "海上安装项目-53",
+      "owner_org_id": "ORG-G",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "停工收尾",
+      "status": "待结算",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "停工收尾"
+      ],
+      "contract_id": "ENG-C053",
+      "contract_revenue_ex_vat": 5861,
+      "forecast_completion_cost": 4917,
+      "target_margin_pct": 15,
+      "approved_cost_target": 4982,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 703,
+      "cash_received_ytd": 469,
+      "receivable_due": 176,
+      "receivable_not_yet_due": 293,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P054",
+      "name": "陆上模块项目-54",
+      "owner_org_id": "ORG-G1",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "停工收尾",
+      "status": "待结算",
+      "managed_start": "2026-01-15",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "停工收尾"
+      ],
+      "contract_id": "ENG-C054",
+      "contract_revenue_ex_vat": 5998,
+      "forecast_completion_cost": 5008,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5098,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 720,
+      "cash_received_ytd": 480,
+      "receivable_due": 180,
+      "receivable_not_yet_due": 300,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P055",
+      "name": "海底管线项目-55",
+      "owner_org_id": "ORG-G2",
+      "legal_entity_id": "LE-G",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "停工收尾",
+      "status": "待结算",
+      "managed_start": "2025-09-01",
+      "managed_end": null,
+      "completed_at": null,
+      "parallel_work": [
+        "停工收尾"
+      ],
+      "contract_id": "ENG-C055",
+      "contract_revenue_ex_vat": 6135,
+      "forecast_completion_cost": 5098,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5215,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 736,
+      "cash_received_ytd": 491,
+      "receivable_due": 184,
+      "receivable_not_yet_due": 307,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-08",
+      "active_phase_ids": [
+        "ENG-V12-08"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P056",
+      "name": "码头工程项目-56",
+      "owner_org_id": "ORG-J",
+      "legal_entity_id": "LE-J",
+      "country": "阿联酋",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-01-14",
+      "completed_at": "2026-01-14",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C056",
+      "contract_revenue_ex_vat": 6272,
+      "forecast_completion_cost": 5363,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5331,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 753,
+      "cash_received_ytd": 502,
+      "receivable_due": 188,
+      "receivable_not_yet_due": 314,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P057",
+      "name": "维修升级项目-57",
+      "owner_org_id": "ORG-J1",
+      "legal_entity_id": "LE-J",
+      "country": "沙特",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-02-17",
+      "completed_at": "2026-02-17",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C057",
+      "contract_revenue_ex_vat": 6409,
+      "forecast_completion_cost": 5454,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5448,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 769,
+      "cash_received_ytd": 513,
+      "receivable_due": 192,
+      "receivable_not_yet_due": 320,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P058",
+      "name": "导管架建造项目-58",
+      "owner_org_id": "ORG-J2",
+      "legal_entity_id": "LE-J",
+      "country": "印尼",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-04",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-03-20",
+      "completed_at": "2026-03-20",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C058",
+      "contract_revenue_ex_vat": 6546,
+      "forecast_completion_cost": 5544,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5564,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 786,
+      "cash_received_ytd": 524,
+      "receivable_due": 196,
+      "receivable_not_yet_due": 327,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P059",
+      "name": "铺管工程项目-59",
+      "owner_org_id": "ORG-J3",
+      "legal_entity_id": "LE-J",
+      "country": "卡塔尔",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-03",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-04-23",
+      "completed_at": "2026-04-23",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C059",
+      "contract_revenue_ex_vat": 6683,
+      "forecast_completion_cost": 5634,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5681,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 802,
+      "cash_received_ytd": 535,
+      "receivable_due": 200,
+      "receivable_not_yet_due": 334,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P060",
+      "name": "海上安装项目-60",
+      "owner_org_id": "ORG-B",
+      "legal_entity_id": "LE-B",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2025-09-01",
+      "managed_end": "2026-05-08",
+      "completed_at": "2026-05-08",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C060",
+      "contract_revenue_ex_vat": 6820,
+      "forecast_completion_cost": 5722,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5797,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 818,
+      "cash_received_ytd": 546,
+      "receivable_due": 205,
+      "receivable_not_yet_due": 341,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P061",
+      "name": "陆上模块项目-61",
+      "owner_org_id": "ORG-A",
+      "legal_entity_id": "LE-A",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-06-11",
+      "completed_at": "2026-06-11",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C061",
+      "contract_revenue_ex_vat": 6957,
+      "forecast_completion_cost": 5809,
+      "target_margin_pct": 15,
+      "approved_cost_target": 5913,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 835,
+      "cash_received_ytd": 557,
+      "receivable_due": 209,
+      "receivable_not_yet_due": 348,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P062",
+      "name": "海底管线项目-62",
+      "owner_org_id": "ORG-OV",
+      "legal_entity_id": "LE-A",
+      "country": "马来西亚",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-01",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-01-14",
+      "completed_at": "2026-01-14",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C062",
+      "contract_revenue_ex_vat": 2894,
+      "forecast_completion_cost": 2405,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2460,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 347,
+      "cash_received_ytd": 232,
+      "receivable_due": 87,
+      "receivable_not_yet_due": 145,
+      "route_ids": [
+        "ROUTE-R1"
+      ],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG",
+        "INTL"
+      ]
+    },
+    {
+      "id": "ENG-P063",
+      "name": "码头工程项目-63",
+      "owner_org_id": "ORG-D1",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-02-17",
+      "completed_at": "2026-02-17",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C063",
+      "contract_revenue_ex_vat": 3031,
+      "forecast_completion_cost": 2592,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2576,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 364,
+      "cash_received_ytd": 242,
+      "receivable_due": 91,
+      "receivable_not_yet_due": 152,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    },
+    {
+      "id": "ENG-P064",
+      "name": "维修升级项目-64",
+      "owner_org_id": "ORG-D2",
+      "legal_entity_id": "LE-D",
+      "country": "中国",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "scale_reference": "public_disclosure_reference",
+      "customer_id": "CUSTOMER-02",
+      "phase": "完工",
+      "status": "本期完工",
+      "managed_start": "2026-01-15",
+      "managed_end": "2026-03-20",
+      "completed_at": "2026-03-20",
+      "parallel_work": [
+        "完工"
+      ],
+      "contract_id": "ENG-C064",
+      "contract_revenue_ex_vat": 3168,
+      "forecast_completion_cost": 2696,
+      "target_margin_pct": 15,
+      "approved_cost_target": 2693,
+      "cost_forecast_complete": true,
+      "cash_paid_ytd": 380,
+      "cash_received_ytd": 253,
+      "receivable_due": 95,
+      "receivable_not_yet_due": 158,
+      "route_ids": [],
+      "primary_phase_id": "ENG-V12-07",
+      "active_phase_ids": [
+        "ENG-V12-07"
+      ],
+      "domain_ids": [
+        "ENG"
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "id": "ENG-C002",
+      "project_id": "ENG-P002",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3074,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C003",
+      "project_id": "ENG-P003",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3211,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C004",
+      "project_id": "ENG-P004",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3348,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C005",
+      "project_id": "ENG-P005",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3485,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C006",
+      "project_id": "ENG-P006",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3622,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C007",
+      "project_id": "ENG-P007",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3759,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C008",
+      "project_id": "ENG-P008",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3896,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C009",
+      "project_id": "ENG-P009",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4033,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C010",
+      "project_id": "ENG-P010",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4170,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C011",
+      "project_id": "ENG-P011",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4307,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C012",
+      "project_id": "ENG-P012",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4444,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C013",
+      "project_id": "ENG-P013",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4581,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C014",
+      "project_id": "ENG-P014",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4718,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C015",
+      "project_id": "ENG-P015",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4855,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C016",
+      "project_id": "ENG-P016",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4992,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C017",
+      "project_id": "ENG-P017",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5129,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C018",
+      "project_id": "ENG-P018",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5266,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C019",
+      "project_id": "ENG-P019",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5403,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C020",
+      "project_id": "ENG-P020",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5540,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C021",
+      "project_id": "ENG-P021",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5677,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C022",
+      "project_id": "ENG-P022",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5814,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C023",
+      "project_id": "ENG-P023",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5951,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C024",
+      "project_id": "ENG-P024",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6088,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C025",
+      "project_id": "ENG-P025",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6225,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C026",
+      "project_id": "ENG-P026",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6362,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C027",
+      "project_id": "ENG-P027",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6499,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C028",
+      "project_id": "ENG-P028",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6636,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C029",
+      "project_id": "ENG-P029",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6773,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C030",
+      "project_id": "ENG-P030",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6910,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C031",
+      "project_id": "ENG-P031",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 2847,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C032",
+      "project_id": "ENG-P032",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 2984,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C033",
+      "project_id": "ENG-P033",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3121,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C034",
+      "project_id": "ENG-P034",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3258,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C035",
+      "project_id": "ENG-P035",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3395,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C036",
+      "project_id": "ENG-P036",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3532,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C037",
+      "project_id": "ENG-P037",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3669,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C038",
+      "project_id": "ENG-P038",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3806,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C039",
+      "project_id": "ENG-P039",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3943,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C040",
+      "project_id": "ENG-P040",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4080,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C041",
+      "project_id": "ENG-P041",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4217,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C042",
+      "project_id": "ENG-P042",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4354,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C043",
+      "project_id": "ENG-P043",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4491,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C044",
+      "project_id": "ENG-P044",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4628,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C045",
+      "project_id": "ENG-P045",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4765,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C046",
+      "project_id": "ENG-P046",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 4902,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C047",
+      "project_id": "ENG-P047",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5039,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C048",
+      "project_id": "ENG-P048",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5176,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C049",
+      "project_id": "ENG-P049",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5313,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C050",
+      "project_id": "ENG-P050",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5450,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C051",
+      "project_id": "ENG-P051",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5587,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C052",
+      "project_id": "ENG-P052",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5724,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C053",
+      "project_id": "ENG-P053",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5861,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C054",
+      "project_id": "ENG-P054",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 5998,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C055",
+      "project_id": "ENG-P055",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6135,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C056",
+      "project_id": "ENG-P056",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6272,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C057",
+      "project_id": "ENG-P057",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6409,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C058",
+      "project_id": "ENG-P058",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6546,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C059",
+      "project_id": "ENG-P059",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6683,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C060",
+      "project_id": "ENG-P060",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6820,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C061",
+      "project_id": "ENG-P061",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 6957,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C062",
+      "project_id": "ENG-P062",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 2894,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C063",
+      "project_id": "ENG-P063",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3031,
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ENG-C064",
+      "project_id": "ENG-P064",
+      "kind": "施工承包",
+      "effective_amount_ex_vat": 3168,
+      "data_source": "synthetic_anonymous"
+    }
+  ],
+  "rule_evaluations": [
+    {
+      "id": "EVAL-FA-P004-EAC",
+      "rule_id": "FA-R20-01",
+      "subject_object_id": "FA-P004",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "hit",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {
+        "ytd_plan": 1500,
+        "ytd_completed_investment": 1200
+      },
+      "formula": "EAC数据尚未完整，建设进度与计划偏差待核查",
+      "risk_ids": [
+        "R10"
+      ],
+      "evidence_ids": [
+        "EVID-R10"
+      ],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "hit",
+      "hit_validity": "retained_pending_or_confirmed",
+      "generic_formula": "EAC数据尚未完整，建设进度与计划偏差待核查",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-FA-P005-EAC",
+      "rule_id": "FA-R20-01",
+      "subject_object_id": "FA-P005",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "clear",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {
+        "ytd_plan": 800,
+        "ytd_completed_investment": 800
+      },
+      "formula": "同期计划已完成，当前观察未命中超概规则",
+      "risk_ids": [],
+      "evidence_ids": [],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "clear",
+      "hit_validity": "no_hit",
+      "generic_formula": "同期计划已完成，当前观察未命中超概规则",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-ENG-P012-MGN",
+      "rule_id": "ENG-R01",
+      "subject_object_id": "ENG-P012",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "clear",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {},
+      "formula": "预计毛利率不低于关注线",
+      "risk_ids": [],
+      "evidence_ids": [],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "clear",
+      "hit_validity": "no_hit",
+      "generic_formula": "预计毛利率不低于关注线",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-ENG-P020-MGN",
+      "rule_id": "ENG-R01",
+      "subject_object_id": "ENG-P020",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "hit",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {},
+      "formula": "预计毛利率低于目标",
+      "risk_ids": [
+        "R11"
+      ],
+      "evidence_ids": [
+        "EVID-R11"
+      ],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "hit",
+      "hit_validity": "retained_pending_or_confirmed",
+      "generic_formula": "预计毛利率低于目标",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-ENG-P021-MGN",
+      "rule_id": "ENG-R01",
+      "subject_object_id": "ENG-P021",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "hit",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {},
+      "formula": "预计毛利率低于目标",
+      "risk_ids": [
+        "R12"
+      ],
+      "evidence_ids": [
+        "EVID-R12"
+      ],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "hit",
+      "hit_validity": "retained_pending_or_confirmed",
+      "generic_formula": "预计毛利率低于目标",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-ENG-P022-MGN",
+      "rule_id": "ENG-R01",
+      "subject_object_id": "ENG-P022",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "hit",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {},
+      "formula": "预计毛利率低于目标",
+      "risk_ids": [
+        "R13"
+      ],
+      "evidence_ids": [
+        "EVID-R13"
+      ],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "hit",
+      "hit_validity": "retained_pending_or_confirmed",
+      "generic_formula": "预计毛利率低于目标",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-ENG-P024-MGN",
+      "rule_id": "ENG-R01",
+      "subject_object_id": "ENG-P024",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "excluded",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {},
+      "formula": "初次命中后核查为口径误用，已排除",
+      "risk_ids": [
+        "R16"
+      ],
+      "evidence_ids": [
+        "EVID-R16"
+      ],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "excluded",
+      "hit_validity": "excluded_false_positive",
+      "generic_formula": "初次命中后核查为口径误用，已排除",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-EQ-P003-X01",
+      "rule_id": "EQ-X01-R01",
+      "subject_object_id": "EQ-P003",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "hit",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {},
+      "formula": "出资进度跟踪",
+      "risk_ids": [
+        "R17"
+      ],
+      "evidence_ids": [
+        "EVID-R17"
+      ],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "hit",
+      "hit_validity": "retained_pending_or_confirmed",
+      "generic_formula": "出资进度跟踪",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    },
+    {
+      "id": "EVAL-ENG-P030-CLR",
+      "rule_id": "ENG-R01",
+      "subject_object_id": "ENG-P030",
+      "evaluated_at": "2026-06-30",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "result": "clear",
+      "rule_version": "DEMO-RULES-V1.2",
+      "inputs": {},
+      "formula": "预计毛利率正常",
+      "risk_ids": [],
+      "evidence_ids": [],
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "effective_result": "clear",
+      "hit_validity": "no_hit",
+      "generic_formula": "预计毛利率正常",
+      "formula_role": "扩容样例观察记录",
+      "input_snapshot_note": "合成监测快照，不改写原始典型事项输入。",
+      "input_bindings": []
+    }
+  ],
+  "scenario_monitoring_coverage": [
+    {
+      "id": "MON-SCALE-ENG-P012",
+      "scenario_id": "ENG-S01",
+      "domain": "ENG",
+      "phase_id": "ENG-V12-05",
+      "subtopic_id": null,
+      "topic_id": null,
+      "monitoring_object_id": "ENG-P012",
+      "object_type": "engineering_project",
+      "subject_object_id": "ENG-P012",
+      "owner_org_id": "ORG-J1",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "snapshot_date": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "status": "evaluated_clear",
+      "required": true,
+      "rule_evaluation_ids": [
+        "EVAL-ENG-P012-MGN"
+      ],
+      "risk_ids": [],
+      "missing_data": [],
+      "note": "扩容样例监测记录；与原始典型事项共用去重口径。",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "rule_ids": [
+        "ENG-R01"
+      ],
+      "rule_coverage": "demo_defined_rules_only",
+      "stage_instance_id": null,
+      "scope_evidence_ids": [],
+      "scope_basis": "按对象标识关联，不按同名匹配。"
+    },
+    {
+      "id": "MON-SCALE-ENG-P020",
+      "scenario_id": "ENG-S01",
+      "domain": "ENG",
+      "phase_id": "ENG-V12-05",
+      "subtopic_id": null,
+      "topic_id": null,
+      "monitoring_object_id": "ENG-P020",
+      "object_type": "engineering_project",
+      "subject_object_id": "ENG-P020",
+      "owner_org_id": "ORG-E",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "snapshot_date": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "status": "evaluated_hit",
+      "required": true,
+      "rule_evaluation_ids": [
+        "EVAL-ENG-P020-MGN"
+      ],
+      "risk_ids": [
+        "R11"
+      ],
+      "missing_data": [],
+      "note": "扩容样例监测记录；与原始典型事项共用去重口径。",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "rule_ids": [
+        "ENG-R01"
+      ],
+      "rule_coverage": "demo_defined_rules_only",
+      "stage_instance_id": null,
+      "scope_evidence_ids": [],
+      "scope_basis": "按对象标识关联，不按同名匹配。"
+    },
+    {
+      "id": "MON-SCALE-ENG-P021",
+      "scenario_id": "ENG-S01",
+      "domain": "ENG",
+      "phase_id": "ENG-V12-05",
+      "subtopic_id": null,
+      "topic_id": null,
+      "monitoring_object_id": "ENG-P021",
+      "object_type": "engineering_project",
+      "subject_object_id": "ENG-P021",
+      "owner_org_id": "ORG-E1",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "snapshot_date": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "status": "evaluated_hit",
+      "required": true,
+      "rule_evaluation_ids": [
+        "EVAL-ENG-P021-MGN"
+      ],
+      "risk_ids": [
+        "R12"
+      ],
+      "missing_data": [],
+      "note": "扩容样例监测记录；与原始典型事项共用去重口径。",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "rule_ids": [
+        "ENG-R01"
+      ],
+      "rule_coverage": "demo_defined_rules_only",
+      "stage_instance_id": null,
+      "scope_evidence_ids": [],
+      "scope_basis": "按对象标识关联，不按同名匹配。"
+    },
+    {
+      "id": "MON-SCALE-ENG-P022",
+      "scenario_id": "ENG-S01",
+      "domain": "ENG",
+      "phase_id": "ENG-V12-05",
+      "subtopic_id": null,
+      "topic_id": null,
+      "monitoring_object_id": "ENG-P022",
+      "object_type": "engineering_project",
+      "subject_object_id": "ENG-P022",
+      "owner_org_id": "ORG-F",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "snapshot_date": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "status": "evaluated_hit",
+      "required": true,
+      "rule_evaluation_ids": [
+        "EVAL-ENG-P022-MGN"
+      ],
+      "risk_ids": [
+        "R13"
+      ],
+      "missing_data": [],
+      "note": "扩容样例监测记录；与原始典型事项共用去重口径。",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "rule_ids": [
+        "ENG-R01"
+      ],
+      "rule_coverage": "demo_defined_rules_only",
+      "stage_instance_id": null,
+      "scope_evidence_ids": [],
+      "scope_basis": "按对象标识关联，不按同名匹配。"
+    },
+    {
+      "id": "MON-SCALE-ENG-P024",
+      "scenario_id": "ENG-S01",
+      "domain": "ENG",
+      "phase_id": "ENG-V12-05",
+      "subtopic_id": null,
+      "topic_id": null,
+      "monitoring_object_id": "ENG-P024",
+      "object_type": "engineering_project",
+      "subject_object_id": "ENG-P024",
+      "owner_org_id": "ORG-G1",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "snapshot_date": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "status": "evaluated_hit",
+      "required": true,
+      "rule_evaluation_ids": [
+        "EVAL-ENG-P024-MGN"
+      ],
+      "risk_ids": [
+        "R16"
+      ],
+      "missing_data": [],
+      "note": "扩容样例监测记录；与原始典型事项共用去重口径。",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "rule_ids": [
+        "ENG-R01"
+      ],
+      "rule_coverage": "demo_defined_rules_only",
+      "stage_instance_id": null,
+      "scope_evidence_ids": [],
+      "scope_basis": "按对象标识关联，不按同名匹配。"
+    },
+    {
+      "id": "MON-SCALE-ENG-P030",
+      "scenario_id": "ENG-S01",
+      "domain": "ENG",
+      "phase_id": "ENG-V12-05",
+      "subtopic_id": null,
+      "topic_id": null,
+      "monitoring_object_id": "ENG-P030",
+      "object_type": "engineering_project",
+      "subject_object_id": "ENG-P030",
+      "owner_org_id": "ORG-B",
+      "period_start": "2026-01-01",
+      "period_end": "2026-06-30",
+      "snapshot_date": "2026-06-30",
+      "window_start": "2026-01-01",
+      "window_end": "2026-06-30",
+      "status": "evaluated_clear",
+      "required": true,
+      "rule_evaluation_ids": [
+        "EVAL-ENG-P030-CLR"
+      ],
+      "risk_ids": [],
+      "missing_data": [],
+      "note": "扩容样例监测记录；与原始典型事项共用去重口径。",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "rule_ids": [
+        "ENG-R01"
+      ],
+      "rule_coverage": "demo_defined_rules_only",
+      "stage_instance_id": null,
+      "scope_evidence_ids": [],
+      "scope_basis": "按对象标识关联，不按同名匹配。"
+    }
+  ],
+  "risk_cases": [
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R10"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R10",
+      "title": "码头能力配套项目投资进度待核查",
+      "primary_domain": "FA",
+      "domains": [
+        "FA"
+      ],
+      "primary_object_id": "FA-P004",
+      "owner_org_id": "ORG-D1",
+      "severity": "red",
+      "status": "pending_review",
+      "current_task_due_date": "2026-07-15",
+      "first_seen_at": "2026-06-18",
+      "rule_id": "FA-R20-01",
+      "scenario_ids": [
+        "FA-S20"
+      ],
+      "responsible_role": "固定资产投资监管人员",
+      "assignee_display_name": null,
+      "current_task_type": "investigation",
+      "finding_nature": "投资进度待核查",
+      "finding_note": "同期完成低于计划，需核对形象进度与入账时点，不能直接认定超概。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R11"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R11",
+      "title": "导管架建造项目毛利率偏差已闭环",
+      "primary_domain": "ENG",
+      "domains": [
+        "ENG"
+      ],
+      "primary_object_id": "ENG-P020",
+      "owner_org_id": "ORG-E",
+      "severity": "yellow",
+      "status": "closed",
+      "current_task_due_date": "2026-05-20",
+      "first_seen_at": "2026-03-12",
+      "rule_id": "ENG-R01",
+      "scenario_ids": [
+        "ENG-S01"
+      ],
+      "responsible_role": "工程项目监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "verification",
+      "close_reason": "rectified",
+      "closed_at": "2026-05-18",
+      "verified_closed_at": "2026-05-18",
+      "verification_result": "passed",
+      "rectification_plan": {
+        "measure": "复核成本预测并落实采购降本。",
+        "responsible_display_name": "工程项目负责人",
+        "due_date": "2026-05-15",
+        "progress_note": "复核通过，截至日仍为关闭。"
+      },
+      "finding_nature": "项目盈利偏差已整改",
+      "finding_note": "本期复核关闭，截至日仍为关闭，计入本期完成整改。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R12"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R12",
+      "title": "海上安装项目毛利率偏差逾期未关闭",
+      "primary_domain": "ENG",
+      "domains": [
+        "ENG",
+        "INTL"
+      ],
+      "primary_object_id": "ENG-P021",
+      "owner_org_id": "ORG-E1",
+      "severity": "red",
+      "status": "rectifying",
+      "current_task_due_date": "2026-06-10",
+      "first_seen_at": "2026-04-02",
+      "rule_id": "ENG-R01",
+      "scenario_ids": [
+        "ENG-S01"
+      ],
+      "responsible_role": "工程项目监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "rectification",
+      "rectification_plan": {
+        "measure": "核对成本与分包变更。",
+        "responsible_display_name": "工程项目负责人",
+        "due_date": "2026-06-10",
+        "progress_note": "已进入整改，超过期限尚未关闭。"
+      },
+      "finding_nature": "项目盈利偏差改善跟踪",
+      "finding_note": "已确认需要整改，超过整改期限且尚未关闭。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R13"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R13",
+      "title": "陆上模块项目整改待复核",
+      "primary_domain": "ENG",
+      "domains": [
+        "ENG"
+      ],
+      "primary_object_id": "ENG-P022",
+      "owner_org_id": "ORG-F",
+      "severity": "yellow",
+      "status": "pending_verification",
+      "current_task_due_date": "2026-07-05",
+      "first_seen_at": "2026-05-08",
+      "rule_id": "ENG-R01",
+      "scenario_ids": [
+        "ENG-S01"
+      ],
+      "responsible_role": "工程项目监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "verification",
+      "rectification_plan": {
+        "measure": "已提交整改结果，待复核。",
+        "responsible_display_name": "工程项目负责人",
+        "due_date": "2026-07-05",
+        "progress_note": "尚未复核关闭。"
+      },
+      "finding_nature": "整改待复核",
+      "finding_note": "已确认需要整改，尚未复核关闭。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R14"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R14",
+      "title": "场地设施更新项目资料核查中",
+      "primary_domain": "FA",
+      "domains": [
+        "FA"
+      ],
+      "primary_object_id": "FA-P005",
+      "owner_org_id": "ORG-E",
+      "severity": "yellow",
+      "status": "investigating",
+      "current_task_due_date": "2026-07-12",
+      "first_seen_at": "2026-06-22",
+      "rule_id": "FA-R20-01",
+      "scenario_ids": [
+        "FA-S20"
+      ],
+      "responsible_role": "固定资产投资监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "investigation",
+      "finding_nature": "资料核查中",
+      "finding_note": "尚未确认需要整改，不计入未关闭整改。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R15"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R15",
+      "title": "人工核查确认的分包结算整改",
+      "primary_domain": "ENG",
+      "domains": [
+        "ENG"
+      ],
+      "primary_object_id": "ENG-P023",
+      "owner_org_id": "ORG-G",
+      "severity": "yellow",
+      "status": "rectifying",
+      "current_task_due_date": "2026-07-20",
+      "first_seen_at": "2026-06-08",
+      "rule_id": "MANUAL-REVIEW",
+      "scenario_ids": [
+        "ENG-S01"
+      ],
+      "responsible_role": "工程项目监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "rectification",
+      "rectification_plan": {
+        "measure": "人工核查确认结算依据不完整后进入整改。",
+        "responsible_display_name": "工程项目负责人",
+        "due_date": "2026-07-20",
+        "progress_note": "无自动规则命中，人工确认后进入整改。"
+      },
+      "finding_nature": "人工核查确认问题",
+      "finding_note": "不虚构自动规则命中，整改按牵头责任单位归属。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R16"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R16",
+      "title": "毛利率口径误报已排除",
+      "primary_domain": "ENG",
+      "domains": [
+        "ENG"
+      ],
+      "primary_object_id": "ENG-P024",
+      "owner_org_id": "ORG-G1",
+      "severity": "yellow",
+      "status": "excluded",
+      "current_task_due_date": "2026-06-20",
+      "first_seen_at": "2026-05-01",
+      "rule_id": "ENG-R01",
+      "scenario_ids": [
+        "ENG-S01"
+      ],
+      "responsible_role": "工程项目监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "investigation",
+      "exclusion_reason": "预测口径误用，核查后排除，保留追溯记录。",
+      "finding_nature": "已排除误报",
+      "finding_note": "已排除误报不继续作为有效发现，记录仍可追溯。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R17"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R17",
+      "title": "产业链股权出资跟踪整改",
+      "primary_domain": "EQ",
+      "domains": [
+        "EQ"
+      ],
+      "primary_object_id": "EQ-P003",
+      "owner_org_id": "ORG-D",
+      "severity": "yellow",
+      "status": "rectifying",
+      "current_task_due_date": "2026-07-18",
+      "first_seen_at": "2026-05-20",
+      "rule_id": "EQ-X01-R01",
+      "scenario_ids": [
+        "EQ-X01"
+      ],
+      "responsible_role": "股权投资监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "rectification",
+      "rectification_plan": {
+        "measure": "核对出资凭证与协议节点。",
+        "responsible_display_name": "股权投资项目负责人",
+        "due_date": "2026-07-18",
+        "progress_note": "整改中，未逾期。"
+      },
+      "finding_nature": "出资跟踪整改",
+      "finding_note": "已确认需要整改，尚未关闭。"
+    },
+    {
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous",
+      "evidence_ids": [
+        "EVID-R18"
+      ],
+      "last_seen_at": "2026-06-30",
+      "id": "R18",
+      "title": "维修升级项目整改重开",
+      "primary_domain": "ENG",
+      "domains": [
+        "ENG"
+      ],
+      "primary_object_id": "ENG-P025",
+      "owner_org_id": "ORG-G2",
+      "severity": "yellow",
+      "status": "rectifying",
+      "current_task_due_date": "2026-07-22",
+      "first_seen_at": "2026-03-01",
+      "rule_id": "ENG-R01",
+      "scenario_ids": [
+        "ENG-S01"
+      ],
+      "responsible_role": "工程项目监管人员",
+      "assignee_display_name": "业务经办人员",
+      "current_task_type": "rectification",
+      "reopened_count": 1,
+      "closed_at": "2026-04-30",
+      "verified_closed_at": "2026-04-30",
+      "close_reason": null,
+      "rectification_plan": {
+        "measure": "复核关闭后因新证据重开。",
+        "responsible_display_name": "工程项目负责人",
+        "due_date": "2026-07-22",
+        "progress_note": "已重开，不计入本期完成整改。"
+      },
+      "finding_nature": "整改重开",
+      "finding_note": "期间曾复核关闭，截至日已重开，不计入当前完成数。"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "EVID-R10",
+      "title": "核查依据 码头能力配套项目投资进度待核查",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "同期完成低于计划，需核对形象进度与入账时点，不能直接认定超概。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R11",
+      "title": "核查依据 导管架建造项目毛利率偏差已闭环",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "本期复核关闭，截至日仍为关闭，计入本期完成整改。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R12",
+      "title": "核查依据 海上安装项目毛利率偏差逾期未关闭",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "已确认需要整改，超过整改期限且尚未关闭。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R13",
+      "title": "核查依据 陆上模块项目整改待复核",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "已确认需要整改，尚未复核关闭。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R14",
+      "title": "核查依据 场地设施更新项目资料核查中",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "尚未确认需要整改，不计入未关闭整改。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R15",
+      "title": "核查依据 人工核查确认的分包结算整改",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "不虚构自动规则命中，整改按牵头责任单位归属。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R16",
+      "title": "核查依据 毛利率口径误报已排除",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "已排除误报不继续作为有效发现，记录仍可追溯。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R17",
+      "title": "核查依据 产业链股权出资跟踪整改",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "已确认需要整改，尚未关闭。",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "EVID-R18",
+      "title": "核查依据 维修升级项目整改重开",
+      "data_nature": "simulated",
+      "source_type": "业务材料",
+      "recorded_at": "2026-06-30",
+      "body": "期间曾复核关闭，截至日已重开，不计入当前完成数。",
+      "data_source": "synthetic_anonymous"
+    }
+  ],
+  "risk_context_links": [
+    {
+      "risk_id": "R10",
+      "domain": "FA",
+      "primary_phase_id": "FA-V12-06",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "subtopic_id": null,
+      "phase_ids": [
+        "FA-V12-06"
+      ]
+    },
+    {
+      "risk_id": "R11",
+      "domain": "ENG",
+      "primary_phase_id": "ENG-V12-05",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "phase_ids": [
+        "ENG-V12-05"
+      ]
+    },
+    {
+      "risk_id": "R12",
+      "domain": "ENG",
+      "primary_phase_id": "ENG-V12-05",
+      "topic_id": null,
+      "associated_phase_ids": [
+        "ENG-V12-06"
+      ],
+      "phase_ids": [
+        "ENG-V12-05",
+        "ENG-V12-06"
+      ]
+    },
+    {
+      "risk_id": "R12",
+      "domain": "INTL",
+      "primary_phase_id": null,
+      "topic_id": "INT-T02",
+      "phase_ids": []
+    },
+    {
+      "risk_id": "R13",
+      "domain": "ENG",
+      "primary_phase_id": "ENG-V12-05",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "phase_ids": [
+        "ENG-V12-05"
+      ]
+    },
+    {
+      "risk_id": "R14",
+      "domain": "FA",
+      "primary_phase_id": "FA-V12-06",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "phase_ids": [
+        "FA-V12-06"
+      ]
+    },
+    {
+      "risk_id": "R15",
+      "domain": "ENG",
+      "primary_phase_id": "ENG-V12-08",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "phase_ids": [
+        "ENG-V12-08"
+      ]
+    },
+    {
+      "risk_id": "R16",
+      "domain": "ENG",
+      "primary_phase_id": "ENG-V12-05",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "phase_ids": [
+        "ENG-V12-05"
+      ]
+    },
+    {
+      "risk_id": "R17",
+      "domain": "EQ",
+      "primary_phase_id": "EQ-V12-05",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "phase_ids": [
+        "EQ-V12-05"
+      ]
+    },
+    {
+      "risk_id": "R18",
+      "domain": "ENG",
+      "primary_phase_id": "ENG-V12-07",
+      "topic_id": null,
+      "associated_phase_ids": [],
+      "phase_ids": [
+        "ENG-V12-07"
+      ]
+    }
+  ],
+  "case_actions": [
+    {
+      "id": "ACT-R11-1",
+      "risk_id": "R11",
+      "action": "pass_verification",
+      "date": "2026-05-18",
+      "actor": "总部复核人员B",
+      "from_status": "pending_verification",
+      "to_status": "closed",
+      "note": "复核通过关闭",
+      "effective_date": "2026-05-18",
+      "sequence": 1,
+      "recorded_at": "2026-05-18T02:00:00Z",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ACT-R18-1",
+      "risk_id": "R18",
+      "action": "pass_verification",
+      "date": "2026-04-30",
+      "actor": "总部复核人员B",
+      "from_status": "pending_verification",
+      "to_status": "closed",
+      "note": "曾复核关闭",
+      "effective_date": "2026-04-30",
+      "sequence": 1,
+      "recorded_at": "2026-04-30T02:00:00Z",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "ACT-R18-2",
+      "risk_id": "R18",
+      "action": "reopen",
+      "date": "2026-06-02",
+      "actor": "工程项目监管人员",
+      "from_status": "closed",
+      "to_status": "rectifying",
+      "note": "新证据重开",
+      "effective_date": "2026-06-02",
+      "sequence": 2,
+      "recorded_at": "2026-06-02T02:00:00Z",
+      "data_source": "synthetic_anonymous"
+    }
+  ],
+  "business_links": [
+    {
+      "id": "BL-FA-P004-ORG",
+      "from_id": "FA-P004",
+      "to_id": "ORG-D1",
+      "relation_type": "owned_by",
+      "domains": [
+        "FA"
+      ],
+      "as_of": "2026-06-30",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "BL-ENG-P021-FA",
+      "from_id": "ENG-P021",
+      "to_id": "FA-P009",
+      "relation_type": "related_capability",
+      "domains": [
+        "ENG",
+        "FA",
+        "INTL"
+      ],
+      "as_of": "2026-06-30",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous"
+    },
+    {
+      "id": "BL-EQ-P005-ENG",
+      "from_id": "EQ-P005",
+      "to_id": "ENG-P021",
+      "relation_type": "supports_project",
+      "domains": [
+        "EQ",
+        "ENG",
+        "INTL"
+      ],
+      "as_of": "2026-06-30",
+      "data_nature": "simulated",
+      "data_source": "synthetic_anonymous"
+    }
+  ]
+}
