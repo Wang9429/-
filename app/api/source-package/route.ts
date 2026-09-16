@@ -31,6 +31,11 @@ function tokenMatches(provided: string, expected: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
+  // 正式部署默认关闭。该接口仅供 Agent 导出源码包，访客页面不使用。
+  if (process.env.ENABLE_SOURCE_PACKAGE !== "1") {
+    return new NextResponse("Not found", { status: 404, headers: noStore() });
+  }
+
   const token = req.nextUrl.searchParams.get("token") ?? "";
   if (!existsSync(META_PATH)) {
     return new NextResponse("Not found", { status: 404, headers: noStore() });

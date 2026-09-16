@@ -111,3 +111,16 @@ npm start
 ## 技术栈
 
 Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部数据库与后端服务。
+
+## 中国大陆部署
+
+**当前未部署到中国大陆云，没有固定 HTTPS 交付地址。** Cursor 预览、本机 `127.0.0.1`、临时隧道和未经大陆网络验证的 Vercel 链接都不是本轮交付。
+
+独立运行包、国内云主机步骤、需要开通的资源和预计费用见 [`docs/中国大陆部署说明.md`](docs/中国大陆部署说明.md)。
+
+```bash
+npm ci
+npm run pack:cn          # 生成 dist/ 下源码包与 standalone 包
+npm run verify:cn        # 只验证部署包自包含，不能代替大陆公网验收
+```
+

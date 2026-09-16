@@ -1,0 +1,9 @@
+# 仅用于首次申请证书。验收交付必须改回 docker-compose.yml 的 HTTPS 配置。
+services:
+  nginx:
+    volumes:
+      - ./nginx-http-bootstrap.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - ./certbot-www:/var/www/certbot:ro
+    ports:
+      - "80:80"
