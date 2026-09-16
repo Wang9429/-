@@ -188,6 +188,12 @@ async function setInput(placeholderPart, value) {
   return ok;
 }
 
+async function setAsOf(value) {
+  await page.waitForSelector("#filter-asof");
+  await page.select("#filter-asof", value);
+  await new Promise((r) => setTimeout(r, 500));
+}
+
 async function clickTab(text) {
   const ok = await page.evaluate((t) => {
     const b = [...document.querySelectorAll('[role="tab"]')].find((n) => (n.textContent || "").includes(t));
@@ -410,32 +416,18 @@ try {
   stats.push(await snapshotStats("S032转入整改-产权"));
   await shot("three_s032_property");
 
-  await page.evaluate(() => {
-    const sel = document.getElementById("filter-asof");
-    if (!sel) return;
-    const proto = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, "value");
-    proto.set.call(sel, "2026-06-20");
-    sel.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-  await new Promise((r) => setTimeout(r, 500));
   await page.goto(`${BASE}/overview`, { waitUntil: "networkidle0" });
-  await new Promise((r) => setTimeout(r, 400));
+  await setAsOf("2026-06-20");
   stats.push(await snapshotStats("S032历史截至日-总览"));
   await shot("three_s032_overview_hist");
+  const ovHist = await bodyText();
+  log("历史截至日总览不把后来办理写入", /未关闭整改/.test(ovHist));
   await page.goto(`${BASE}/supervision-workbench`, { waitUntil: "networkidle0" });
+  await setAsOf("2026-06-20");
   stats.push(await snapshotStats("S032历史截至日-工作台"));
   await shot("three_s032_workbench_hist");
   const histWb = await bodyText();
   log("历史截至日说明保留", /按截至日还原|不改写历史/.test(histWb));
-
-  await page.evaluate(() => {
-    const sel = document.getElementById("filter-asof");
-    if (!sel) return;
-    const proto = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, "value");
-    proto.set.call(sel, "2026-06-30");
-    sel.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-  await new Promise((r) => setTimeout(r, 300));
 
   await goto(`${BASE}/settings?tab=rules`, false);
   await page.waitForSelector("input[placeholder*='搜索规则']");
@@ -484,10 +476,6 @@ try {
         target.dispatchEvent(new Event("input", { bubbles: true }));
       }
     });
-    await clickText("button", "保存草稿");
-    await new Promise((r) => setTimeout(r, 400));
-    await page.keyboard.press("Escape");
-    await new Promise((r) => setTimeout(r, 300));
     await clickText("button", "发布");
     await new Promise((r) => setTimeout(r, 600));
     const pub = await bodyText();
