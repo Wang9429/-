@@ -112,17 +112,25 @@ npm start
 
 Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部数据库与后端服务。
 
-## 中国大陆部署
+## 公网发布
 
-**当前未部署到中国大陆云，没有固定 HTTPS 交付地址。** Cursor 预览、本机 `127.0.0.1`、临时隧道和未经大陆网络验证的 Vercel 链接都不是本轮交付。
+当前固定 HTTPS 地址（GitHub Pages，提交 `7176942`）：
 
-独立运行包、国内云主机步骤、需要开通的资源和预计费用见 [`docs/中国大陆部署说明.md`](docs/中国大陆部署说明.md)。
+- 站点根路径：<https://wang9429.github.io/-/>
+- 综合总览：<https://wang9429.github.io/-/overview/>
+- 资金管理：<https://wang9429.github.io/-/funds/>
+- 产权管理：<https://wang9429.github.io/-/property-rights/>
+- 系统配置：<https://wang9429.github.io/-/settings/>
 
-```bash
-npm ci
-npm run pack:cn          # 生成 dist/ 下源码包与 standalone 包
-npm run verify:cn        # 只验证部署包自包含，不能代替大陆公网验收
-```
+推送 `main` 会跑 `.github/workflows/github-pages.yml`：静态导出后写入 `gh-pages` 分支。仓库子路径为 `/-/`（仓库名为 `-`）。页面、样式与脚本均带此前缀；刷新上述路径应直接打开。
 
-GitHub 推送 `main` 会触发 GitHub Actions，把静态站点发到 GitHub Pages（`https://wang9429.github.io/-/`）。Pages 构建使用 `output: export`；Vercel / Docker 仍用 `standalone`，业务页面不变。`/api/health` 与 `/api/source-package` 仅存在于 Node 运行时，静态 Pages 不含这两条接口（访客 Demo 不调用它们）。
+访客**不必**登录 GitHub / Cursor。关闭本机开发环境后，站点由 GitHub Pages 独立托管。
+
+`GITHUB_PAGES=1` 时使用 `output: 'export'`；Vercel / Docker 仍用 `standalone`，业务页面不变。`/api/health` 与 `/api/source-package` 只存在于 Node 运行时，静态 Pages 不含这两条接口（访客 Demo 不调用它们）。
+
+此前 GitHub 推送还会触发 Vercel Production（用户曾在大陆普通网络打开过）：<https://seven-ruddy-97.vercel.app>。本轮交付以 GitHub Pages 为准。
+
+**大陆访问待用户实测。** 本环境不在中国大陆用户网络，不能仅因换成 GitHub Pages 就宣称大陆已通。请用手机流量和办公网打开上面的 Pages 地址。
+
+独立运行包与国内云主机备用步骤见 [`docs/中国大陆部署说明.md`](docs/中国大陆部署说明.md)，本轮未使用。
 
