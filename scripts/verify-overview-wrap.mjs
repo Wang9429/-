@@ -200,6 +200,19 @@ try {
   shots.push(await shot("wrap_unit_a_descendants_list"));
   await closeOverlay();
 
+  const a1n = await page.evaluate(() => {
+    const card = [...document.querySelectorAll(".reg-org-node")].find((c) => (c.textContent || "").includes("下属三级单位A1"));
+    const btn = [...(card?.querySelectorAll("button") ?? [])].find((b) => (b.textContent || "").includes("纳管项目"));
+    const n = Number((btn?.textContent || "").replace(/\D/g, "") || 0);
+    btn?.click();
+    return n;
+  });
+  await new Promise((r) => setTimeout(r, 400));
+  const a1List = await topDialog();
+  log("末级A1卡片与清单一致", a1List.n === a1n && a1n > 0, `卡${a1n} 清单${a1List.n} 标题${a1List.title}`);
+  shots.push(await shot("wrap_unit_a1_list"));
+  await closeOverlay();
+
   await page.evaluate(() => {
     const btn = [...document.querySelectorAll("button")].find((b) => (b.textContent || "").includes("返回总部"));
     btn?.click();
@@ -222,19 +235,6 @@ try {
     `本级${selfOpened}/${selfList.n} 含下级${aCardN} 标题${selfList.title}`,
   );
   shots.push(await shot("wrap_unit_a_self_list"));
-  await closeOverlay();
-  await closeOverlay();
-
-  const a1n = await page.evaluate(() => {
-    const card = [...document.querySelectorAll(".reg-org-node")].find((c) => (c.textContent || "").includes("下属三级单位A1"));
-    const btn = [...(card?.querySelectorAll("button") ?? [])].find((b) => (b.textContent || "").includes("纳管项目"));
-    const n = Number((btn?.textContent || "").replace(/\D/g, "") || 0);
-    btn?.click();
-    return n;
-  });
-  await new Promise((r) => setTimeout(r, 400));
-  const a1List = await topDialog();
-  log("末级A1卡片与清单一致", a1List.n === a1n, `卡${a1n} 清单${a1List.n}`);
   await closeOverlay();
 
   const bn = await page.evaluate(() => {
