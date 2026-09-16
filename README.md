@@ -124,3 +124,5 @@ npm run pack:cn          # 生成 dist/ 下源码包与 standalone 包
 npm run verify:cn        # 只验证部署包自包含，不能代替大陆公网验收
 ```
 
+GitHub 推送 `main` 会触发 GitHub Actions，把静态站点发到 GitHub Pages（`https://wang9429.github.io/-/`）。Pages 构建使用 `output: export`；Vercel / Docker 仍用 `standalone`，业务页面不变。`/api/health` 与 `/api/source-package` 仅存在于 Node 运行时，静态 Pages 不含这两条接口（访客 Demo 不调用它们）。
+

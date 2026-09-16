@@ -73,6 +73,31 @@ export function findObject(id: string): ObjectRecord | undefined {
   return undefined;
 }
 
+export function allObjectIds(): string[] {
+  const ids = new Set<string>();
+  const add = (rows?: { id: string }[]) => {
+    for (const row of rows ?? []) ids.add(row.id);
+  };
+  add(seed.fixed_asset_projects);
+  add(seed.assets);
+  add(seed.equity_projects);
+  add(seed.engineering_projects);
+  add(seed.accounts);
+  add(seed.property_matters);
+  add(seed.cash_transactions);
+  add(seed.legal_entities);
+  add(seed.contracts);
+  add(seed.obligations);
+  add(FP_LOANS);
+  add(FP_GUARANTEES);
+  add(FP_LENDS);
+  add(FP_SPECIALS);
+  add(FP_SME);
+  add(FP_SEGMENTS);
+  add(FP_GOVERNANCE);
+  return [...ids];
+}
+
 function lookupFpObject(id: string): ObjectRecord | undefined {
   const loan = FP_LOANS.find((x) => x.id === id);
   if (loan) return { id, type: "contract", name: loan.name, orgId: loan.owner_org_id, typeLabel: "借款合同" };

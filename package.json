@@ -12,7 +12,8 @@
     "verify": "tsx scripts/verify-acceptance.ts",
     "sync:standalone": "bash scripts/sync-standalone.sh",
     "pack:cn": "bash scripts/pack-cn-release.sh",
-    "verify:cn": "node scripts/verify-cn-release.mjs"
+    "verify:cn": "node scripts/verify-cn-release.mjs",
+    "build:pages": "bash scripts/build-github-pages.sh"
   },
   "dependencies": {
     "next": "16.3.5",
