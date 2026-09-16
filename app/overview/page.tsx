@@ -261,12 +261,22 @@ export default function OverviewPage() {
               <IconAlert size={20} />
             </span>
             <span className="min-w-0 flex-1 flex flex-col h-full">
-              <span className="text-[13px] text-textsub leading-5">未关闭整改事项数</span>
+              <button
+                type="button"
+                className="text-[13px] text-textsub leading-5 text-left hover:text-brand"
+                data-overlay-return="kpi-open-rect"
+                onClick={() => {
+                  openOverlay();
+                  setCaseScope({ title: "未关闭整改事项", mode: "open-rectification" });
+                }}
+              >
+                未关闭整改事项数
+              </button>
               <button
                 type="button"
                 className="mt-2 flex h-10 items-end gap-1 text-left"
                 style={{ color: "var(--risk-red-fg)" }}
-                data-overlay-return="kpi-open-rect"
+                data-overlay-return="kpi-open-rect-num"
                 onClick={() => {
                   openOverlay();
                   setCaseScope({ title: "未关闭整改事项", mode: "open-rectification" });
