@@ -458,24 +458,11 @@ details > summary::-webkit-details-marker {
   text-decoration: underline;
 }
 
-.reg-org-l2 {
+.reg-org-children {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 12px;
   min-width: 0;
-}
-
-.reg-org-branch,
-.reg-org-l3 {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-.reg-org-l3 {
-  padding-left: 12px;
-  border-left: 2px solid var(--tint);
 }
 
 .reg-domain-metrics {
@@ -597,8 +584,7 @@ tr.reg-row-hl:hover > .reg-td-sticky {
 @media (max-width: 1199px) {
   .reg-kpis,
   .reg-kpis-domain,
-  .reg-domains,
-  .reg-org-l2 {
+  .reg-domains {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .reg-content {
@@ -612,8 +598,7 @@ tr.reg-row-hl:hover > .reg-td-sticky {
   }
   .reg-kpis,
   .reg-kpis-domain,
-  .reg-domains,
-  .reg-org-l2 {
+  .reg-domains {
     grid-template-columns: minmax(0, 1fr);
   }
 }

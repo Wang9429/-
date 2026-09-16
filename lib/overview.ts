@@ -119,14 +119,17 @@ function hasCompletedMonitoring(orgIds: Set<string>): boolean {
   return coverageRows.some((row) => orgIds.has(row.owner_org_id) && !isCoverageCandidate(row));
 }
 
+function coverageForOrgIds(orgIds: Set<string>, allowedObjectIds: string[] | null): OrgCoverageState {
+  if (!hasBusinessObjects(orgIds, allowedObjectIds)) return "no_business";
+  if (!hasCompletedMonitoring(orgIds)) return "unevaluated";
+  return "monitored";
+}
+
 export function orgCoverageState(
   orgId: string,
   allowedObjectIds: string[] | null,
 ): OrgCoverageState {
-  const scope = new Set(descendantOrgIds(orgId));
-  if (!hasBusinessObjects(scope, allowedObjectIds)) return "no_business";
-  if (!hasCompletedMonitoring(scope)) return "unevaluated";
-  return "monitored";
+  return coverageForOrgIds(new Set(descendantOrgIds(orgId)), allowedObjectIds);
 }
 
 export interface OrgNodeStats {
@@ -151,7 +154,24 @@ export function orgNodeStats(
     projectCount: inScopeProjectCount(nodeOrgs, scope.allowedObjectIds),
     openHighRiskCount: openHighRiskCases(scope.risks, nodeOrgs).length,
     overdueHighRiskCount: overdueHighRiskCases(scope.risks, nodeOrgs, scope.asOf).length,
-    coverage: orgCoverageState(orgId, scope.allowedObjectIds),
+    coverage: coverageForOrgIds(nodeOrgs, scope.allowedObjectIds),
+  };
+}
+
+/** 当前选中单位卡片：数字与顶部筛选范围一致。 */
+export function orgStatsInOrgSet(
+  orgId: string,
+  orgIds: Set<string>,
+  scope: OverviewScope,
+): OrgNodeStats {
+  const org = orgById(orgId);
+  return {
+    orgId,
+    name: org?.name ?? orgId,
+    projectCount: inScopeProjectCount(orgIds, scope.allowedObjectIds),
+    openHighRiskCount: openHighRiskCases(scope.risks, orgIds).length,
+    overdueHighRiskCount: overdueHighRiskCases(scope.risks, orgIds, scope.asOf).length,
+    coverage: coverageForOrgIds(orgIds, scope.allowedObjectIds),
   };
 }
 

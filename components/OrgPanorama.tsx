@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Tag } from "@/components/ui";
-import { orgLevelLabel, orgPath, ROOT_ORG_ID } from "@/lib/org";
+import { orgPath, ROOT_ORG_ID } from "@/lib/org";
 import {
   orgNodeStats,
+  orgStatsInOrgSet,
   panoramaRootId,
   visibleChildOrgs,
   type OrgNodeStats,
   type OverviewScope,
 } from "@/lib/overview";
-import type { Organization } from "@/lib/types";
 
 function coverageTag(stats: OrgNodeStats) {
   if (stats.overdueHighRiskCount > 0) return <Tag tone="red">逾期</Tag>;
@@ -23,12 +23,10 @@ function OrgNodeCard({
   stats,
   selected,
   onSelect,
-  expand,
 }: {
   stats: OrgNodeStats;
   selected: boolean;
   onSelect: () => void;
-  expand?: React.ReactNode;
 }) {
   return (
     <div className={`reg-org-node ${selected ? "is-selected" : ""}`}>
@@ -47,7 +45,6 @@ function OrgNodeCard({
         </span>
         <span className="reg-org-node-tags">{coverageTag(stats)}</span>
       </button>
-      {expand}
     </div>
   );
 }
@@ -66,32 +63,12 @@ export default function OrgPanorama({
   onReturnHq: () => void;
 }) {
   const rootId = panoramaRootId(authorizedOrgIds);
-  const path = orgPath(selectedOrgId);
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set([rootId]));
-
-  useEffect(() => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.add(rootId);
-      for (const o of orgPath(selectedOrgId)) {
-        if (o.id !== selectedOrgId) next.add(o.id);
-      }
-      return next;
-    });
-  }, [selectedOrgId, rootId]);
-
-  const l2 = useMemo(() => visibleChildOrgs(rootId, authorizedOrgIds), [rootId, authorizedOrgIds]);
-  const rootStats = orgNodeStats(rootId, scope);
-  const canReturnHq = authorizedOrgIds.has(ROOT_ORG_ID) && selectedOrgId !== ROOT_ORG_ID;
-
-  const toggle = (id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const focusId = authorizedOrgIds.has(selectedOrgId) ? selectedOrgId : rootId;
+  const path = orgPath(focusId);
+  const parent = path.length > 1 ? path[path.length - 2] : undefined;
+  const children = useMemo(() => visibleChildOrgs(focusId, authorizedOrgIds), [focusId, authorizedOrgIds]);
+  const currentStats = orgStatsInOrgSet(focusId, scope.orgIds, scope);
+  const canReturnHq = authorizedOrgIds.has(ROOT_ORG_ID) && focusId !== ROOT_ORG_ID;
 
   return (
     <div className="reg-org-panorama">
@@ -103,7 +80,7 @@ export default function OrgPanorama({
               {i > 0 && <span className="text-textsub px-1">/</span>}
               <button
                 type="button"
-                className={o.id === selectedOrgId ? "text-textmain font-medium" : "text-brand hover:underline"}
+                className={o.id === focusId ? "text-textmain font-medium" : "text-brand hover:underline"}
                 onClick={() => onSelect(o.id)}
               >
                 {o.name}
@@ -111,80 +88,28 @@ export default function OrgPanorama({
             </li>
           ))}
         </ol>
-        {canReturnHq && (
+        {parent && (
+          <button type="button" className="text-[13px] text-brand hover:underline shrink-0" onClick={() => onSelect(parent.id)}>
+            {parent.id === ROOT_ORG_ID ? "返回总部" : "返回上级"}
+          </button>
+        )}
+        {canReturnHq && parent && parent.id !== ROOT_ORG_ID && (
           <button type="button" className="text-[13px] text-brand hover:underline shrink-0" onClick={onReturnHq}>
             返回总部
           </button>
         )}
       </div>
 
-      <OrgNodeCard stats={rootStats} selected={selectedOrgId === rootId} onSelect={() => onSelect(rootId)} />
+      <OrgNodeCard stats={currentStats} selected onSelect={() => onSelect(focusId)} />
 
-      <div className="reg-org-l2">
-        {l2.map((unit) => (
-          <LevelBranch
-            key={unit.id}
-            unit={unit}
-            selectedOrgId={selectedOrgId}
-            authorizedOrgIds={authorizedOrgIds}
-            scope={scope}
-            expanded={expanded}
-            onSelect={onSelect}
-            onToggle={toggle}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LevelBranch({
-  unit,
-  selectedOrgId,
-  authorizedOrgIds,
-  scope,
-  expanded,
-  onSelect,
-  onToggle,
-}: {
-  unit: Organization;
-  selectedOrgId: string;
-  authorizedOrgIds: Set<string>;
-  scope: OverviewScope;
-  expanded: Set<string>;
-  onSelect: (id: string) => void;
-  onToggle: (id: string) => void;
-}) {
-  const children = visibleChildOrgs(unit.id, authorizedOrgIds);
-  const stats = orgNodeStats(unit.id, scope);
-  const open = expanded.has(unit.id);
-  return (
-    <div className="reg-org-branch">
-      <OrgNodeCard
-        stats={stats}
-        selected={selectedOrgId === unit.id}
-        onSelect={() => onSelect(unit.id)}
-        expand={
-          children.length > 0 ? (
-            <button
-              type="button"
-              className="reg-org-expand"
-              aria-expanded={open}
-              onClick={() => onToggle(unit.id)}
-            >
-              {open ? "收起下级" : `展开${orgLevelLabel(children[0])}`}
-            </button>
-          ) : null
-        }
-      />
-      {open && children.length > 0 && (
-        <div className="reg-org-l3">
-          {children.map((child) => (
+      {children.length > 0 && (
+        <div className="reg-org-children">
+          {children.map((unit) => (
             <OrgNodeCard
-              key={child.id}
-              stats={orgNodeStats(child.id, scope)}
-              selected={selectedOrgId === child.id}
-              onSelect={() => onSelect(child.id)}
+              key={unit.id}
+              stats={orgNodeStats(unit.id, scope)}
+              selected={false}
+              onSelect={() => onSelect(unit.id)}
             />
           ))}
         </div>
