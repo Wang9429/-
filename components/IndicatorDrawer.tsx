@@ -466,7 +466,7 @@ function IndicatorDrawerBody({
                   cols={4}
                   items={[
                     {
-                      label: "分子",
+                      label: indicator.id === "FA-I06" ? "分子（投资完成额）" : "分子",
                       value:
                         selectedMetric.numerator === null ? (
                           "—"

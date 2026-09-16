@@ -54,7 +54,7 @@ async function topDialog() {
     return {
       open: true,
       title: (d.querySelector("h3, h2")?.textContent || "").trim(),
-      text: d.innerText.replace(/\s+/g, " ").slice(0, 800),
+      text: d.innerText.replace(/\s+/g, " "),
     };
   });
 }
@@ -127,7 +127,10 @@ try {
   const drawer = await topDialog();
   log(
     "计算依据含完成额为分子关系",
-    drawer.text.includes("投资完成额是本指标分子") || drawer.text.includes("共用启用和首页展示开关"),
+    drawer.text.includes("分子（投资完成额）") ||
+      drawer.text.includes("投资完成额是本指标分子") ||
+      drawer.text.includes("投资完成额即本指标分子") ||
+      drawer.text.includes("共用启用和首页展示开关"),
     drawer.title,
   );
   shots.push(await shot("display_fa_i06_basis_20260630"));
