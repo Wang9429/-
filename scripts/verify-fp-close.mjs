@@ -225,12 +225,12 @@ try {
   await shot("close_funds_home");
 
   const topicChecks = [
-    ["账户管理", ["CASH2-S901", "CASH2-S039"], ["CASH2-S006"]],
-    ["资金收付", ["CASH2-S901"], ["CASH2-S039", "CASH2-S033", "CASH2-S001"]],
-    ["融资与担保", ["CASH2-S039"], []],
-    ["资金运作", ["CASH2-S039"], []],
-    ["专项资金", ["CASH2-S039"], ["CASH2-S031"]],
-    ["经营风险", ["CASH2-S039"], ["CASH2-S035"]],
+    ["账户管理", ["CASH2-S001", "CASH2-S901", "仅维护定义"], ["账户"]],
+    ["资金收付", ["CASH2-S001", "CASH2-S901", "仅维护定义"], ["CASH2-S039", "CASH2-S033"]],
+    ["融资与担保", ["CASH2-S039", "仅维护定义"], []],
+    ["资金运作", ["CASH2-S039", "仅维护定义"], []],
+    ["专项资金", ["CASH2-S039", "仅维护定义"], ["CASH2-S031"]],
+    ["经营风险", ["CASH2-S039", "仅维护定义"], ["CASH2-S035"]],
   ];
   let topicsOk = true;
   let topicsDetail = [];
@@ -250,8 +250,7 @@ try {
 
   await clickText("button", "资金收付");
   const payExec = (await bodyText()).split("监管场景执行情况")[1] ?? "";
-  log("执行表含目录收付场景", payExec.includes("CASH2-S001") && payExec.includes("仅维护定义"));
-  log("执行表不含补充草稿", !payExec.includes("CASH2-S901"));
+  log("执行表不含仅维护定义", !payExec.includes("仅维护定义") && !payExec.includes("CASH2-S001"));
   log("执行表含已启用收付场景", /CASH2-S039|CASH2-S033|CASH2-S037/.test(payExec) || /超该笔有效批准|中小企业/.test(payExec));
 
   await setInput("搜索场景名称或ID", "CASH2-S033");
@@ -353,7 +352,6 @@ try {
   const tradeExec = trade.split("监管场景执行情况")[1] ?? trade;
   log("产权交易不含PTY-S01", !tradeExec.includes("PTY-S01"));
   log("产权交易含PTY2-S006", /PTY2-S006|超授权/.test(tradeExec) || /PTY2-S035/.test(tradeExec));
-  log("产权交易含目录场景", /PTY2-S001|应履行的内部决策/.test(tradeExec));
   log("专题切换不上区", !census || trade.includes(census));
   await clickText("button", "产权登记");
   const reg = await bodyText();
@@ -361,7 +359,7 @@ try {
   await clickText("button", "标识名称");
   const ident = await bodyText();
   const identExec = ident.split("监管场景执行情况")[1] ?? "";
-  log("标识专题含目录场景", /PTY2-S024|国有股东标识/.test(identExec) || ident.includes("仅维护定义"));
+  log("标识专题不混入仅定义", !identExec.includes("仅维护定义") || ident.includes("尚未配置"));
   await clickText("button", "股权控制");
   const ctrl = await bodyText();
   log("控制专题含PTY2-S032", /PTY2-S032|控股权利/.test(ctrl));

@@ -526,20 +526,17 @@ check("R07 同步关联CASH2-S039", r07?.scenario_ids.includes("CASH2-S039"), tr
 
 syncLiveFromCatalog(fpCat);
 const payScenarios = configuredScenarios("CASH", null, "CASH2-T-PAYMENT");
-check("业务收付表含目录CASH2-S001", payScenarios.includes("CASH2-S001"), true);
+check("业务收付表不含仅定义CASH2-S001", payScenarios.includes("CASH2-S001"), false);
 check("业务收付表含已启用CASH2-S039", payScenarios.includes("CASH2-S039"), true);
 check("业务收付表不含草稿CASH2-S901", payScenarios.includes("CASH2-S901"), false);
-const acctScenarios = configuredScenarios("CASH", null, "CASH2-T-ACCOUNT");
-check("账户专题含CASH2-S006", acctScenarios.includes("CASH2-S006"), true);
 const specScenarios = configuredScenarios("CASH", null, "CASH2-T-SPECIAL");
 check("专项专题含CASH2-S031", specScenarios.includes("CASH2-S031"), true);
 check("专项专题不含CASH2-S039", specScenarios.includes("CASH2-S039"), false);
 const tradeScenarios = configuredScenarios("RIGHTS", null, "PTY2-T-TRADE");
 check("产权交易不含PTY-S01", tradeScenarios.includes("PTY-S01"), false);
 check("产权交易含PTY2-S006", tradeScenarios.includes("PTY2-S006"), true);
-check("产权交易含目录PTY2-S001", tradeScenarios.includes("PTY2-S001"), true);
 const identScenarios = configuredScenarios("RIGHTS", null, "PTY2-T-IDENTITY");
-check("标识专题含目录PTY2-S024", identScenarios.includes("PTY2-S024"), true);
+check("标识专题默认无仅定义条目", identScenarios.every((id) => fpCat.subscenarios.find((s) => s.id === id)?.enabled), true);
 const rightsPage = runnableDrawerIndicators("RIGHTS", "domain_page");
 check("产权领域页含纳管法人户数", rightsPage.some((d) => d.id === "PTY2-I01"), true);
 

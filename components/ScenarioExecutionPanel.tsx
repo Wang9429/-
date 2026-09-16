@@ -38,7 +38,6 @@ import { daysBetween, fmtDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
 import { liveSub } from "@/lib/live-config";
-import { isOfficialFpSub } from "@/lib/fp-topics";
 import type { DomainId, MonitoringRow, RiskCase } from "@/lib/types";
 
 /**
@@ -169,7 +168,7 @@ export default function ScenarioExecutionPanel({
           objectTypes: [...new Set(rows.map((r) => r.object_type))],
         };
       })
-      .filter((r) => r.monitoringActive || r.counts.openRiskIds.length > 0 || isOfficialFpSub(r.id))
+      .filter((r) => r.monitoringActive || r.counts.openRiskIds.length > 0)
       .sort((a, b) => {
         const g = a.groupName.localeCompare(b.groupName, "zh");
         if (g !== 0) return g;
