@@ -1,4 +1,5 @@
 import { FP_CONTROLS_PAY, FP_EVENTS, FP_GOVERNANCE, FP_REPORTS, FP_SEGMENTS, FP_SME, FP_SPECIALS } from "./fp-seed";
+import { cashS039ParamsForPublish, resolveCashS039ToleranceWan } from "./fp-tolerance";
 import { liveRule } from "./live-config";
 import { seed } from "./seed";
 import type { CatalogRule } from "./config-catalog";
@@ -65,22 +66,47 @@ export function trialCashS039(objectId: string, params?: Record<string, string |
     return { objectId, result: "not_applicable", formula: "非支付核查对象", inputs: { direction: tx.direction } };
   }
   const p = ruleParams("CASH2-R039", params);
-  const tol = Number(p.amount_tolerance_wan ?? 0) || 0;
+  const tolInfo = resolveCashS039ToleranceWan(p.amount_tolerance_wan);
+  const tol = tolInfo.applied;
+  const hasApprovalChange = false;
   const over = tx.amount_wan_cny - tx.approved_amount;
   const overCert = tx.certified_payable_amount !== undefined ? tx.amount_wan_cny - tx.certified_payable_amount : null;
-  if (over > tol) {
+  const clampNote = tolInfo.clamped
+    ? `输入容差${tolInfo.input}万元超出货币精度上限${tol}万元，已按上限执行`
+    : `货币精度容差${tol}万元`;
+  const changeNote = "无有效批准变更";
+  if (!hasApprovalChange && over > tol) {
     return {
       objectId,
       result: "hit",
-      formula: `实付${tx.amount_wan_cny} − 该笔有效批准${tx.approved_amount} = ${over}；容差${tol}；业务上限${tx.certified_payable_amount ?? "—"}`,
-      inputs: { actual: tx.amount_wan_cny, approved: tx.approved_amount, limit: tx.certified_payable_amount, over, overCert, amount_tolerance_wan: tol },
+      formula: `实付${tx.amount_wan_cny} − 该笔有效批准${tx.approved_amount} = ${over}；${clampNote}；${changeNote}；业务上限${tx.certified_payable_amount ?? "—"}`,
+      inputs: {
+        actual: tx.amount_wan_cny,
+        approved: tx.approved_amount,
+        limit: tx.certified_payable_amount,
+        over,
+        overCert,
+        amount_tolerance_wan: tol,
+        amount_tolerance_input: tolInfo.input,
+        amount_tolerance_clamped: tolInfo.clamped,
+        amount_tolerance_unit: tolInfo.unit,
+        approval_change: false,
+      },
     };
   }
   return {
     objectId,
     result: "clear",
-    formula: `实付${tx.amount_wan_cny} − 批准${tx.approved_amount} = ${over} ≤ 容差${tol}`,
-    inputs: { actual: tx.amount_wan_cny, approved: tx.approved_amount, amount_tolerance_wan: tol },
+    formula: `实付${tx.amount_wan_cny} − 批准${tx.approved_amount} = ${over} ≤ ${clampNote}；${changeNote}`,
+    inputs: {
+      actual: tx.amount_wan_cny,
+      approved: tx.approved_amount,
+      amount_tolerance_wan: tol,
+      amount_tolerance_input: tolInfo.input,
+      amount_tolerance_clamped: tolInfo.clamped,
+      amount_tolerance_unit: tolInfo.unit,
+      approval_change: hasApprovalChange,
+    },
   };
 }
 
@@ -262,7 +288,8 @@ export function trialRule(
 export function evaluationsForPublish(rule: CatalogRule, asOf: string): RuleEvaluation[] {
   const subId = rule.primary_subscenario_id;
   const objects = FP_TRIAL_OBJECTS[subId] ?? [];
-  const params = { ...(rule.published?.parameters ?? rule.draft_parameters) };
+  const raw = { ...(rule.published?.parameters ?? rule.draft_parameters) };
+  const params = subId === "CASH2-S039" ? cashS039ParamsForPublish(raw) : raw;
   const version = rule.published?.version ?? rule.version_id;
   const out: RuleEvaluation[] = [];
   for (const o of objects) {

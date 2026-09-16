@@ -22,6 +22,11 @@ import { seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import { INDEPENDENT_TRIAL_PROJECTS } from "@/lib/trial";
 import { evaluationsForPublish, FP_TRIAL_OBJECTS, trialRule } from "@/lib/fp-rules";
+import {
+  CASH_S039_TOLERANCE_MAX_WAN,
+  CASH_S039_TOLERANCE_MAX_YUAN,
+  cashS039ParamsForPublish,
+} from "@/lib/fp-tolerance";
 import { allRuleEvaluations } from "@/lib/evaluations";
 import { FIRST_BATCH_SUBS } from "@/lib/fp-topics";
 import { ActionCell, FormDrawer, SaveBar, denyTitle, fieldClass } from "./shared";
@@ -133,7 +138,10 @@ export default function RulesTab() {
       operator: user?.name ?? "监管人员",
       scope: "授权范围内适用对象",
       effective_date: filters.asOf,
-      parameters: { ...rule.draft_parameters },
+      parameters:
+        rule.primary_subscenario_id === "CASH2-S039"
+          ? cashS039ParamsForPublish(rule.draft_parameters)
+          : { ...rule.draft_parameters },
     };
     const published: CatalogRule = {
       ...rule,
@@ -354,12 +362,16 @@ export default function RulesTab() {
           </Field>
           {fpSubId === "CASH2-S039" ? (
             <Field
-              label="付款差额容差（万元）"
-              hint="草稿参数，试算与发布后新评估使用。历史评估保持原参数。"
+              label="货币精度容差（万元）"
+              hint={`单位万元。仅覆盖币种最小计量误差，上限 ${CASH_S039_TOLERANCE_MAX_WAN} 万元（${CASH_S039_TOLERANCE_MAX_YUAN} 元）。不能用业务差额当容差。试算与新发布评估使用；历史评估保持原参数。`}
+              error={errors.amount_tolerance_wan}
             >
               <input
-                className={fieldClass() + " w-28"}
+                className={fieldClass(errors.amount_tolerance_wan) + " w-28"}
                 type="number"
+                min={0}
+                max={CASH_S039_TOLERANCE_MAX_WAN}
+                step={0.0001}
                 disabled={readonly}
                 value={draft.draft_parameters.amount_tolerance_wan ?? 0}
                 onChange={(e) =>
@@ -368,6 +380,7 @@ export default function RulesTab() {
                     draft_parameters: {
                       ...draft.draft_parameters,
                       amount_tolerance_wan: e.target.value === "" ? 0 : Number(e.target.value),
+                      amount_tolerance_unit: "万元",
                     },
                   })
                 }

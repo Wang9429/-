@@ -1,5 +1,6 @@
 import { config, type ConfigUser, type DataScope } from "./config";
 import { buildFpCatalogSlice } from "./fp-catalog";
+import { CASH_S039_TOLERANCE_MAX_WAN, CASH_S039_TOLERANCE_MAX_YUAN } from "./fp-tolerance";
 import type { DomainId, RuleEvaluation } from "./types";
 import type { RuntimeCapability } from "./fp-topics";
 
@@ -516,6 +517,15 @@ export function validateRule(r: CatalogRule, subs: CatalogSubscenario[], all: Ca
   if (pct !== undefined) {
     if (typeof pct !== "number" || Number.isNaN(pct)) errors.deviation_gt_pct = "请填写数字阈值";
     else if (pct < 0 || pct > 100) errors.deviation_gt_pct = "偏差率阈值应在 0–100 之间";
+  }
+  if (r.primary_subscenario_id === "CASH2-S039") {
+    const raw = r.draft_parameters.amount_tolerance_wan;
+    const n = Number(raw ?? 0);
+    if (!Number.isFinite(n) || n < 0) {
+      errors.amount_tolerance_wan = "货币精度容差须为非负数字，单位万元";
+    } else if (n > CASH_S039_TOLERANCE_MAX_WAN) {
+      errors.amount_tolerance_wan = `货币精度容差上限 ${CASH_S039_TOLERANCE_MAX_WAN} 万元（${CASH_S039_TOLERANCE_MAX_YUAN} 元），不能把业务差额当容差`;
+    }
   }
   if (isNew && all.some((x) => x.id === r.id)) errors.id = "编号已存在";
   return errors;

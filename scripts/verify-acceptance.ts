@@ -12,10 +12,12 @@ import { computeFiveCounts, configuredScenarios, openCountForPhase } from "../li
 import { extractCatalog } from "../lib/config-catalog";
 import { FIRST_BATCH_SUBS } from "../lib/fp-topics";
 import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule } from "../lib/fp-rules";
+import { cashAccountStatementBridge, cashBridgeNote } from "../lib/finance";
+import { CASH_S039_TOLERANCE_MAX_WAN } from "../lib/fp-tolerance";
 import { syncLiveFromCatalog } from "../lib/live-config";
 import { FP_SME } from "../lib/fp-seed";
-import { isOpen, isOverdueRectification } from "../lib/risks";
-import type { DomainId } from "../lib/types";
+import { isOpen, isOverdueRectification, rectificationStageCensus, snapshotRisksAtAsOf, statusAtAsOf } from "../lib/risks";
+import type { CaseAction, DomainId } from "../lib/types";
 import { authorizedObjectIds, can, canCaseAction, intersectOrgScope, userById } from "../lib/config";
 import { inDateRange } from "../lib/period";
 import { INDEPENDENT_TRIAL_PROJECTS } from "../lib/trial";
@@ -361,6 +363,7 @@ const overviewScopeHq = {
   authorizedOrgIds: HQ,
   allowedObjectIds: null as string[] | null,
   risks: seed.risk_cases,
+  actions: seed.case_actions,
   asOf: AS_OF,
   periodStart: PERIOD_START,
   periodEnd: PERIOD_END,
@@ -428,6 +431,52 @@ check("未关闭整改不含已排除", openRect.every((r) => r.status !== "excl
 check("逾期整改是未关闭整改子集", overdueRectificationCases(overviewScopeHq).every((r) => openRect.some((x) => x.id === r.id)), true);
 check("本期完成整改仍为关闭", completedRectificationCases(overviewScopeHq).every((r) => r.status === "closed"), true);
 check("原R01–R09仍在种子中", ["R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "R09"].every((id) => seed.risk_cases.some((r) => r.id === id)), true);
+
+const hqSnaps = snapshotRisksAtAsOf(seed.risk_cases, AS_OF, seed.case_actions).filter((r) => HQ.has(r.owner_org_id));
+const stageHq = rectificationStageCensus(hqSnaps);
+check("总览未关闭整改等于整改中+待复核明细", openRect.map((r) => r.id).sort().join(","), stageHq.openRectification.join(","));
+check("种子待核查R-FP-032不计入未关闭整改", openRect.some((r) => r.id === "R-FP-032"), false);
+check("R01待核查不计入未关闭整改", openRect.some((r) => r.id === "R01"), false);
+const rightsOpen = openRectificationCases(overviewScopeHq, "RIGHTS");
+const rightsStage = rectificationStageCensus(
+  snapshotRisksAtAsOf(seed.risk_cases, AS_OF, seed.case_actions).filter((r) => HQ.has(r.owner_org_id) && r.domains.includes("RIGHTS")),
+);
+check("产权领域未关闭整改与明细一致", rightsOpen.map((r) => r.id).sort().join(","), rightsStage.openRectification.join(","));
+
+const s032Act: CaseAction = {
+  id: "ACT-TEST-S032",
+  risk_id: "R-FP-032",
+  action: "confirm_rectification",
+  date: "2026-06-30",
+  actor: "验收",
+  from_status: "pending_review",
+  to_status: "rectifying",
+  note: "专业核查结论关联整改",
+  effective_date: "2026-06-30",
+  sequence: 9001,
+  recorded_at: "2026-06-30T00:00:00Z",
+};
+const after032 = {
+  ...overviewScopeHq,
+  actions: [...seed.case_actions, s032Act],
+  risks: seed.risk_cases.map((r) => (r.id === "R-FP-032" ? { ...r, status: "rectifying" as const } : r)),
+};
+const openAfter032 = openRectificationCases(after032);
+check("S032转整改中后计入总览未关闭整改", openAfter032.some((r) => r.id === "R-FP-032"), true);
+check("S032转整改中后总览=原明细+1", openAfter032.length, openRect.length + 1);
+const rightsAfter = openRectificationCases(after032, "RIGHTS");
+check("S032转整改中后产权领域同步+1", rightsAfter.length, rightsOpen.length + 1);
+const hist032 = {
+  ...after032,
+  asOf: "2026-06-20",
+  ctx: { ...CTX, asOf: "2026-06-20" },
+};
+check("历史截至日不把后来办理写入S032", openRectificationCases(hist032).some((r) => r.id === "R-FP-032"), false);
+check("历史截至日S032仍为待核查", statusAtAsOf(after032.risks.find((r) => r.id === "R-FP-032")!, "2026-06-20", after032.actions), "pending_review");
+const wbHist = rectificationStageCensus(snapshotRisksAtAsOf(after032.risks, "2026-06-20", after032.actions).filter((r) => HQ.has(r.owner_org_id)));
+check("历史工作台待核查含S032", wbHist.pending.includes("R-FP-032"), true);
+check("历史工作台整改跟踪不含S032", wbHist.rectifying.includes("R-FP-032"), false);
+
 check("EQ-I11总览不因首页启用", overviewIndicatorEnabled(indicator("EQ-I11")), false);
 check("现金回报偏差随 EQ-I08 未启用", overviewIndicatorEnabled(indicator("EQ-CASH-DEVIATION")), false);
 check("现金回报偏差不在首页展示", overviewIndicatorOnHomepage(indicator("EQ-CASH-DEVIATION")), false);
@@ -549,7 +598,12 @@ check("内部账户不重复计余额", intAcc?.closing_balance_native, 0);
 const uniqueAcc = new Set(seed.accounts.map((a) => a.id));
 check("账户ID不重复", uniqueAcc.size, seed.accounts.length);
 check("容差0仍命中P-PAY001", trialCashS039("P-PAY001", { amount_tolerance_wan: 0 }).result, "hit");
-check("容差500试算未命中P-PAY001", trialCashS039("P-PAY001", { amount_tolerance_wan: 500 }).result, "clear");
+check("容差0.01仍命中P-PAY001", trialCashS039("P-PAY001", { amount_tolerance_wan: CASH_S039_TOLERANCE_MAX_WAN }).result, "hit");
+check("容差500仍命中P-PAY001", trialCashS039("P-PAY001", { amount_tolerance_wan: 500 }).result, "hit");
+const clamped500 = trialCashS039("P-PAY001", { amount_tolerance_wan: 500 });
+check("500万元容差被限制为货币精度", clamped500.inputs.amount_tolerance_wan, CASH_S039_TOLERANCE_MAX_WAN);
+check("500万元容差标记已钳制", clamped500.inputs.amount_tolerance_clamped, true);
+check("P-PAY001无有效批准变更", clamped500.inputs.approval_change, false);
 const sme01 = FP_SME.find((s) => s.id === "SME-01");
 check("SME到期按验收日起合同日", sme01?.due_date, "2026-05-20");
 check("SME起算不是发票日", sme01?.start_event, "验收合格");
@@ -565,7 +619,7 @@ if (rule039) {
       operator: "验收",
       scope: "样例",
       effective_date: "2026-06-30",
-      parameters: { amount_tolerance_wan: 500 },
+      parameters: { amount_tolerance_wan: CASH_S039_TOLERANCE_MAX_WAN, amount_tolerance_unit: "万元" },
     },
     version_id: "FP-R2-2",
   };
@@ -573,7 +627,20 @@ if (rule039) {
   check("发布追加新评估", neu.some((e) => e.id.includes("FP-R2-2") && e.subject_object_id === "P-PAY001"), true);
   check("新评估不占用历史ID", neu.every((e) => e.id !== "FP-EVAL-S039-OK"), true);
   check("历史评估仍在种子", Boolean(histEval), true);
+  const payEval = neu.find((e) => e.subject_object_id === "P-PAY001");
+  check("合理容差发布后P-PAY001仍命中", payEval?.result, "hit");
+  check("新评估采用货币精度容差", payEval?.inputs.amount_tolerance_wan, CASH_S039_TOLERANCE_MAX_WAN);
 }
+
+const bridge = cashAccountStatementBridge();
+check("监管账户合计7152", bridge.accountTotalWan, 7152);
+check("总部合并报表货币资金6800", bridge.statementWan, 6800);
+check("账户与报表差额352", bridge.gapWan, 352);
+check("专户520计入监管账户", bridge.lines.some((l) => l.id === "ACC-SPEC" && l.amount_wan === 520), true);
+check("差额依据不含虚构168万元在途", /168万元为在途|差额168/.test(cashBridgeNote()), false);
+check("差额标明待核实", bridge.lines.some((l) => l.id === "GAP-352" && l.status === "unverified"), true);
+const specLine = bridge.lines.find((l) => l.id === "ACC-SPEC");
+check("专户不因受限排除报表", specLine?.note.includes("受限不等于报表排除"), true);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

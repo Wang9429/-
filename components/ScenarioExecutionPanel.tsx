@@ -33,7 +33,7 @@ import {
 } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { objectName } from "@/lib/objects";
-import { isOverdueRectification, rectificationDueDate, statusLabel } from "@/lib/risks";
+import { isOverdueRectification, rectificationDueDate, snapshotRisksAtAsOf, statusLabel } from "@/lib/risks";
 import { daysBetween, fmtDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
@@ -102,7 +102,7 @@ export default function ScenarioExecutionPanel({
   onOpenObject?: (id: string) => void;
   onOpenScenario?: (id: string, source?: boolean) => void;
 }) {
-  const { filters, risks, canAct, catalog } = useDemoStore();
+  const { filters, risks, actions, canAct, catalog } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
   const [search, setSearch] = useState("");
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
@@ -124,13 +124,18 @@ export default function ScenarioExecutionPanel({
     [domain, orgIds, filters.periodStart, filters.periodEnd, filters.asOf, phaseId, topicId, subtopicId, allowedObjectIds],
   );
 
-  const summary = useMemo(() => computeFiveCounts(baseScope, risks), [baseScope, risks]);
+  const asOfRisks = useMemo(
+    () => snapshotRisksAtAsOf(risks, filters.asOf, actions),
+    [risks, filters.asOf, actions],
+  );
+
+  const summary = useMemo(() => computeFiveCounts(baseScope, asOfRisks), [baseScope, asOfRisks]);
 
   const scenarioRows: ScenarioRow[] = useMemo(() => {
     const ids = configuredScenarios(domain, phaseId ?? null, topicId ?? null);
     const extra = new Set(ids);
     summary.openRiskIds.forEach((rid) => {
-      const r = risks.find((x) => x.id === rid);
+      const r = asOfRisks.find((x) => x.id === rid);
       r?.scenario_ids.forEach((s) => {
         if (topicId) {
           const mapped = liveSub(s)?.topic_id;
@@ -143,14 +148,14 @@ export default function ScenarioExecutionPanel({
       .map((id) => {
         const scope = { ...baseScope, scenarioId: id };
         const rows = selectRows(scope);
-        const counts = computeFiveCounts(scope, risks);
+        const counts = computeFiveCounts(scope, asOfRisks);
         const st = scenarioRuntimeStatus(id, rows, {
           domain,
           orgScope: orgIds,
           allowedObjectIds,
         });
         const redOpen = counts.openRiskIds.filter(
-          (rid) => risks.find((r) => r.id === rid)?.severity === "red",
+          (rid) => asOfRisks.find((r) => r.id === rid)?.severity === "red",
         ).length;
         const parentId = liveSub(id)?.parent_id;
         const groupName = catalog.groups.find((g) => g.id === parentId)?.name ?? "";
@@ -185,7 +190,7 @@ export default function ScenarioExecutionPanel({
         const d = rank(a) - rank(b);
         return d !== 0 ? d : a.id.localeCompare(b.id);
       });
-  }, [domain, phaseId, topicId, baseScope, risks, summary.openRiskIds, orgIds, allowedObjectIds, catalog.groups]);
+  }, [domain, phaseId, topicId, baseScope, asOfRisks, summary.openRiskIds, orgIds, allowedObjectIds, catalog.groups]);
 
   const visibleScenarioRows = useMemo(
     () =>
@@ -219,13 +224,13 @@ export default function ScenarioExecutionPanel({
   const detailData = useMemo(() => {
     if (!detail) return null;
     const scope = detail.scenarioId ? { ...baseScope, scenarioId: detail.scenarioId } : baseScope;
-    const counts = detail.scenarioId ? computeFiveCounts(scope, risks) : summary;
+    const counts = detail.scenarioId ? computeFiveCounts(scope, asOfRisks) : summary;
     const rows = detail.scenarioId ? selectRows(scope) : summary.rows;
     return { counts, rows, scope };
-  }, [detail, baseScope, risks, summary]);
+  }, [detail, baseScope, asOfRisks, summary]);
 
   const riskList = (ids: string[]): RiskCase[] =>
-    ids.map((id) => risks.find((r) => r.id === id)).filter((r): r is RiskCase => Boolean(r));
+    ids.map((id) => asOfRisks.find((r) => r.id === id)).filter((r): r is RiskCase => Boolean(r));
 
   const scopeLine = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}｜截至 ${filters.asOf}｜${scopeTitle}`;
 

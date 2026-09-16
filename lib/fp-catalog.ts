@@ -151,7 +151,11 @@ function ruleIdOf(subId: string): string {
 function sampleParams(id: string): Record<string, string | number> {
   switch (id) {
     case "CASH2-S039":
-      return { amount_tolerance_wan: 0, sample_note: "样例参数，不宣称法定红线" };
+      return {
+        amount_tolerance_wan: 0,
+        amount_tolerance_unit: "万元",
+        sample_note: "货币精度容差，单位万元，上限0.01万元（100元），不宣称法定红线",
+      };
     case "CASH2-S037":
       return { amount_tolerance_wan: 0 };
     case "CASH2-S033":

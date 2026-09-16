@@ -399,6 +399,44 @@ try {
   await clickTab("整改跟踪");
   stats.push(await snapshotStats("S032转入整改-工作台"));
 
+  await page.goto(`${BASE}/overview`, { waitUntil: "networkidle0" });
+  stats.push(await snapshotStats("S032转入整改-总览"));
+  await shot("three_s032_overview");
+  const ov032 = await bodyText();
+  log("总览未关闭整改由明细展示", /未关闭整改/.test(ov032) && /由截至日明细计算/.test(ov032));
+
+  await page.goto(`${BASE}/property-rights`, { waitUntil: "networkidle0" });
+  await clickText("button", "股权控制");
+  stats.push(await snapshotStats("S032转入整改-产权"));
+  await shot("three_s032_property");
+
+  await page.evaluate(() => {
+    const sel = document.getElementById("filter-asof");
+    if (!sel) return;
+    const proto = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, "value");
+    proto.set.call(sel, "2026-06-20");
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await new Promise((r) => setTimeout(r, 500));
+  await page.goto(`${BASE}/overview`, { waitUntil: "networkidle0" });
+  await new Promise((r) => setTimeout(r, 400));
+  stats.push(await snapshotStats("S032历史截至日-总览"));
+  await shot("three_s032_overview_hist");
+  await page.goto(`${BASE}/supervision-workbench`, { waitUntil: "networkidle0" });
+  stats.push(await snapshotStats("S032历史截至日-工作台"));
+  await shot("three_s032_workbench_hist");
+  const histWb = await bodyText();
+  log("历史截至日说明保留", /按截至日还原|不改写历史/.test(histWb));
+
+  await page.evaluate(() => {
+    const sel = document.getElementById("filter-asof");
+    if (!sel) return;
+    const proto = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, "value");
+    proto.set.call(sel, "2026-06-30");
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await new Promise((r) => setTimeout(r, 300));
+
   await goto(`${BASE}/settings?tab=rules`, false);
   await page.waitForSelector("input[placeholder*='搜索规则']");
   await setInput("搜索规则", "CASH2-R039");
@@ -412,14 +450,42 @@ try {
       const target = inputs.find((i) => i.closest("div")?.innerText.includes("容差")) || inputs[0];
       if (target) {
         const proto = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
-        proto.set.call(target, "500");
+        proto.set.call(target, "0.01");
         target.dispatchEvent(new Event("input", { bubbles: true }));
       }
     });
     await clickText("button", "试算");
     const trial = await bodyText();
-    log("试算使用新容差", /未命中|容差500/.test(trial) || trial.includes("P-PAY001"));
+    log("试算使用货币精度容差仍命中", /命中/.test(trial) && /P-PAY001/.test(trial));
     await shot("close_rule_trial");
+    await page.keyboard.press("Escape");
+    await new Promise((r) => setTimeout(r, 300));
+    await page.evaluate(() => {
+      const inputs = [...document.querySelectorAll("input[type='number']")];
+      const target = inputs.find((i) => i.closest("div")?.innerText.includes("容差")) || inputs[0];
+      if (target) {
+        const proto = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
+        proto.set.call(target, "500");
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+    await clickText("button", "试算");
+    const trial500 = await bodyText();
+    log("不合理500万容差仍命中P-PAY001", /命中/.test(trial500) && /P-PAY001/.test(trial500));
+    await shot("three_rule_trial_500_clamped");
+    await page.keyboard.press("Escape");
+    await new Promise((r) => setTimeout(r, 300));
+    await page.evaluate(() => {
+      const inputs = [...document.querySelectorAll("input[type='number']")];
+      const target = inputs.find((i) => i.closest("div")?.innerText.includes("容差")) || inputs[0];
+      if (target) {
+        const proto = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
+        proto.set.call(target, "0.01");
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+    await clickText("button", "保存草稿");
+    await new Promise((r) => setTimeout(r, 400));
     await page.keyboard.press("Escape");
     await new Promise((r) => setTimeout(r, 300));
     await clickText("button", "发布");
@@ -465,6 +531,7 @@ try {
   const acc = await bodyText();
   log("专户520万元", /ACC-SPEC/.test(acc) && /520/.test(acc));
   log("账户余额口径", /7152|5,672|确认余额/.test(acc));
+  log("352万差额依据", /352/.test(acc) && /差异待核实/.test(acc) && !/168/.test(acc));
   await shot("close_account_spec");
 } catch (e) {
   log("脚本异常", false, String(e && e.message ? e.message : e));

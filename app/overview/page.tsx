@@ -320,6 +320,9 @@ export default function OverviewPage() {
                 <span className="num text-[32px] font-semibold leading-none">{openRect.length}</span>
                 <span className="text-[14px] text-textsub mb-0.5">件</span>
               </button>
+              <span className="text-[12px] text-textsub mt-1 leading-4">
+                由截至日明细计算，待核查不计；晚于截至日的办理不改写历史。
+              </span>
               <span className="mt-auto pt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
                 <button
                   type="button"

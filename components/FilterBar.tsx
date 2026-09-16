@@ -17,6 +17,7 @@ export const PERIOD_OPTIONS = [
 /** 已有办理记录可还原的截至日。默认 6 月末快照；5 月 15 日可还原 R11 关闭前状态，无独立财务快照。 */
 export const AS_OF_OPTIONS = [
   { value: SNAPSHOT_PERIOD.asOf, label: "2026-06-30", note: "期间快照" },
+  { value: "2026-06-20", label: "2026-06-20", note: "新事项办理前" },
   { value: "2026-05-15", label: "2026-05-15", note: "事项状态还原" },
 ];
 

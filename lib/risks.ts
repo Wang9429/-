@@ -87,17 +87,23 @@ export function isRectifiedClosedInPeriod(
 }
 
 /**
- * 按截至日还原事项状态：优先重放 effective_date ≤ 截至日的办理记录；
- * 事项尚未发生则返回 null。不能把今天的状态套到历史截至日。
+ * 按截至日还原事项状态：优先重放 effective_date ≤ 截至日的办理记录。
+ * 若办理均晚于截至日，保留最早记录的办理前状态，不能把后来的整改写回历史。
+ * 事项尚未发生则返回 null。
  */
 export function statusAtAsOf(r: RiskCase, asOf: string, actions: CaseAction[] = seed.case_actions): RiskStatus | null {
   if (r.first_seen_at > asOf) return null;
-  const relevant = actions
-    .filter((a) => a.risk_id === r.id && a.effective_date <= asOf)
+  const all = actions
+    .filter((a) => a.risk_id === r.id)
     .sort((a, b) => a.sequence - b.sequence || a.effective_date.localeCompare(b.effective_date));
+  const relevant = all.filter((a) => a.effective_date <= asOf);
   if (relevant.length) {
     const last = relevant[relevant.length - 1];
     return (last.to_status as RiskStatus | undefined) ?? r.status;
+  }
+  if (all.length) {
+    const first = all[0];
+    return (first.from_status as RiskStatus | undefined) ?? "pending_review";
   }
   if (r.verified_closed_at && r.verified_closed_at > asOf) {
     if (r.first_seen_at <= asOf) return "rectifying";
@@ -119,6 +125,53 @@ export function isOpenRectificationAt(r: RiskCase, asOf: string, actions: CaseAc
   const snapshot = riskAtAsOf(r, asOf, actions);
   if (!snapshot) return false;
   return isOpenRectificationStatus(snapshot.status);
+}
+
+/** 截至日仍存在的事项快照；晚于截至日才发生的事项不出现。 */
+export function snapshotRisksAtAsOf(
+  risks: RiskCase[],
+  asOf: string,
+  actions: CaseAction[] = seed.case_actions,
+): RiskCase[] {
+  const out: RiskCase[] = [];
+  for (const r of risks) {
+    const snap = riskAtAsOf(r, asOf, actions);
+    if (snap) out.push(snap);
+  }
+  return out;
+}
+
+export type RectificationStageCensus = {
+  pending: string[];
+  rectifying: string[];
+  pendingVerification: string[];
+  closedOrExcluded: string[];
+  openRectification: string[];
+};
+
+/** 待核查不计未关闭整改；整改中、待复核计入；关闭/排除移出。 */
+export function rectificationStageCensus(risks: RiskCase[]): RectificationStageCensus {
+  const pending: string[] = [];
+  const rectifying: string[] = [];
+  const pendingVerification: string[] = [];
+  const closedOrExcluded: string[] = [];
+  for (const r of risks) {
+    if (r.status === "pending_review" || r.status === "investigating") pending.push(r.id);
+    else if (r.status === "rectifying") rectifying.push(r.id);
+    else if (r.status === "pending_verification") pendingVerification.push(r.id);
+    else closedOrExcluded.push(r.id);
+  }
+  pending.sort();
+  rectifying.sort();
+  pendingVerification.sort();
+  closedOrExcluded.sort();
+  return {
+    pending,
+    rectifying,
+    pendingVerification,
+    closedOrExcluded,
+    openRectification: [...rectifying, ...pendingVerification].sort(),
+  };
 }
 
 /** 事项在某领域出现（按 risk_context_links 的实际关联，不按场景模板铺开）。 */

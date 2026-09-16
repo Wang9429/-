@@ -15,7 +15,7 @@ import { childOrgs, descendantOrgIds, isManagedUnit, orgName, orgPath, orgUnitTy
 import { computeIndicator, indicatorById, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
 import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, CASH_TOPICS } from "@/lib/fp-topics";
-import { reportAvailability, statementOf } from "@/lib/finance";
+import { reportAvailability, statementOf, cashAccountStatementBridge } from "@/lib/finance";
 import { fmtAmountSmart } from "@/lib/format";
 import { seed } from "@/lib/seed";
 import { inDateRange } from "@/lib/period";
@@ -386,6 +386,8 @@ function TopicScale({ topicId, orgIds }: { topicId: string; orgIds: Set<string> 
         `专户ACC-SPEC ${fmtAmountSmart(yuanToWan(specAcc.closing_balance_native * specAcc.fx_to_cny))} 万元全部受限｜${specAcc.balance_as_of}`,
       );
     }
+    const bridge = cashAccountStatementBridge();
+    chips.push(`与总部合并报表${fmtAmountSmart(bridge.statementWan)}差额 ${fmtAmountSmart(bridge.gapWan)} 万元（差异待核实）`);
   } else if (topicId === "CASH2-T-PAYMENT") {
     chips.push(
       `收款 ${inflows.length} 笔 / ${fmtAmountSmart(inflows.reduce((s, t) => s + t.amount_wan_cny, 0))} 万元`,
@@ -415,12 +417,50 @@ function TopicScale({ topicId, orgIds }: { topicId: string; orgIds: Set<string> 
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {chips.map((c) => (
-        <Tag key={c} tone="neutral">
-          {c}
-        </Tag>
-      ))}
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {chips.map((c) => (
+          <Tag key={c} tone="neutral">
+            {c}
+          </Tag>
+        ))}
+      </div>
+      {topicId === "CASH2-T-ACCOUNT" && <CashBridgeTable />}
+    </div>
+  );
+}
+
+function CashBridgeTable() {
+  const bridge = cashAccountStatementBridge();
+  return (
+    <div className="overflow-x-auto text-[12px]" data-testid="cash-bridge">
+      <table className="w-full min-w-[720px] border-collapse">
+        <caption className="text-left text-textsub pb-2">
+          账户与报表对照（万元）。加减按监管账户加、合并报表减。不能核证的标差异待核实，不编造调节项。
+        </caption>
+        <thead>
+          <tr className="text-textsub border-b border-line">
+            <th className="text-left font-medium py-1 pr-2">方向</th>
+            <th className="text-right font-medium py-1 pr-2">金额</th>
+            <th className="text-left font-medium py-1 pr-2">记录</th>
+            <th className="text-left font-medium py-1 pr-2">来源</th>
+            <th className="text-left font-medium py-1 pr-2">范围</th>
+            <th className="text-left font-medium py-1">核证</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...bridge.lines, ...bridge.contrasts].map((l) => (
+            <tr key={l.id} className="border-b border-line/70 align-top">
+              <td className="py-1 pr-2 whitespace-nowrap">{l.direction}</td>
+              <td className="py-1 pr-2 text-right num whitespace-nowrap">{fmtAmountSmart(l.amount_wan)}</td>
+              <td className="py-1 pr-2">{l.name}</td>
+              <td className="py-1 pr-2">{l.source}</td>
+              <td className="py-1 pr-2">{l.scope}</td>
+              <td className="py-1">{l.status === "verified" ? "已核" : "差异待核实"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

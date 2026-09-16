@@ -10,6 +10,7 @@ import {
   isMissingRectificationDeadline,
   isOverdueRectification,
   rectificationDueDate,
+  snapshotRisksAtAsOf,
   statusLabel,
   taskTypeLabel,
 } from "@/lib/risks";
@@ -34,7 +35,7 @@ const VIEWS = [
 ];
 
 export default function WorkbenchPage() {
-  const { risks, filters, user, urges, canAct } = useDemoStore();
+  const { risks, actions, filters, user, urges, canAct } = useDemoStore();
   const [view, setView] = useState("pending");
   const [domain, setDomain] = useState<DomainId | "all">("all");
   const [severity, setSeverity] = useState<"all" | "red" | "yellow">("all");
@@ -48,8 +49,11 @@ export default function WorkbenchPage() {
   );
 
   const base = useMemo(
-    () => risks.filter((r) => orgIds.has(r.owner_org_id) && riskVisible(user, r)),
-    [risks, orgIds, user],
+    () =>
+      snapshotRisksAtAsOf(risks, filters.asOf, actions).filter(
+        (r) => orgIds.has(r.owner_org_id) && riskVisible(user, r),
+      ),
+    [risks, actions, filters.asOf, orgIds, user],
   );
 
   const byView = useMemo(() => {
@@ -90,6 +94,9 @@ export default function WorkbenchPage() {
       <PageHeader title="监管工作台">
         <FilterBar />
       </PageHeader>
+      <p className="text-[12px] text-textsub">
+        事项状态按截至日还原。待核查不计未关闭整改；整改中、待复核计入。晚于截至日的办理不改写历史。
+      </p>
 
       <Tabs
         tabs={VIEWS.map((v) => ({ id: v.id, label: `${v.label}（${counts[v.id as keyof typeof counts]}）` }))}

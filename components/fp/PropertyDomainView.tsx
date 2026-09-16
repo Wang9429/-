@@ -18,12 +18,12 @@ import { censusCounts, openMatterCount, penetratePaths } from "@/lib/fp-census";
 import { ECONOMIC_BEHAVIORS, RIGHTS_TOPICS } from "@/lib/fp-topics";
 import { fmtPct } from "@/lib/format";
 import { openCountForPhase } from "@/lib/monitoring";
-import { riskMatches } from "@/lib/risks";
+import { riskMatches, snapshotRisksAtAsOf } from "@/lib/risks";
 import { indicatorById, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
 
 export default function PropertyDomainView() {
-  const { filters, risks, user, catalog } = useDemoStore();
+  const { filters, risks, actions, user, catalog } = useDemoStore();
   const [subjectId, setSubjectId] = useState(filters.orgId);
   const [subjectChildren, setSubjectChildren] = useState(filters.includeChildren);
   const [focusEntity, setFocusEntity] = useState<string | null>(null);
@@ -64,7 +64,9 @@ export default function PropertyDomainView() {
   const eb = ECONOMIC_BEHAVIORS.find((x) => x.id === behavior)!;
   const template = templateById(eb.templateId);
 
-  const domainRisks = risks.filter((r) => riskMatches(r, { domain: "RIGHTS", orgScope: pageOrgIds }));
+  const domainRisks = snapshotRisksAtAsOf(risks, filters.asOf, actions).filter((r) =>
+    riskMatches(r, { domain: "RIGHTS", orgScope: pageOrgIds }),
+  );
 
   const chevrons: ChevronItem[] = useMemo(() => {
     if (topicId !== "PTY2-T-TRADE" || !template) return [];

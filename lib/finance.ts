@@ -6,8 +6,9 @@ import {
   type FinancialStatement,
 } from "./fp-seed";
 import { orgById } from "./org";
+import { seed } from "./seed";
+import type { Account, ObjectType } from "./types";
 import type { IndicatorContext, LeafMetric } from "./metrics";
-import type { ObjectType } from "./types";
 
 export function statementsForPeriod(ctx: { periodStart: string; periodEnd: string; asOf: string }): FinancialStatement[] {
   return FP_STATEMENTS.filter(
@@ -139,8 +140,183 @@ export function financeLeaves(
   });
 }
 
+function accountWan(a: Account): number {
+  return (a.closing_balance_native * a.fx_to_cny) / 10000;
+}
+
+export type CashBridgeLine = {
+  id: string;
+  direction: "+" | "−" | "=";
+  amount_wan: number;
+  name: string;
+  source: string;
+  scope: string;
+  status: "verified" | "unverified";
+  note: string;
+};
+
+const HQ_CONS_CTX = { periodStart: "2026-01-01", periodEnd: "2026-06-30", asOf: "2026-06-30" };
+
+/** 监管账户期末与总部合并报表货币资金的逐项对照。不编造调节项，不能核证的标差异待核实。 */
+export function cashAccountStatementBridge(): {
+  asOf: string;
+  lines: CashBridgeLine[];
+  accountTotalWan: number;
+  statementWan: number;
+  gapWan: number;
+  contrasts: CashBridgeLine[];
+} {
+  const hq = statementOf("ORG-HQ", HQ_CONS_CTX, "consolidated");
+  const stmtA = statementOf("ORG-A", HQ_CONS_CTX, "standalone");
+  const stmtB = statementOf("ORG-B", HQ_CONS_CTX, "standalone");
+  const stmtC = statementOf("ORG-C", HQ_CONS_CTX, "standalone");
+  const statementWan = hq?.cash_on_bs ?? 0;
+  const ordered = ["ACC-A", "ACC-B", "ACC-USD", "ACC-SPEC", "ACC-INT"];
+  const byId = new Map(seed.accounts.map((a) => [a.id, a]));
+  const lines: CashBridgeLine[] = [];
+  for (const id of ordered) {
+    const a = byId.get(id);
+    if (!a) continue;
+    const wan = accountWan(a);
+    const org = orgById(a.owner_org_id);
+    if (id === "ACC-A") {
+      const match = stmtA?.cash_on_bs === wan;
+      lines.push({
+        id,
+        direction: "+",
+        amount_wan: wan,
+        name: a.name,
+        source: `账户 ${id} 期末余额 ${a.closing_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit}｜余额日 ${a.balance_as_of}`,
+        scope: `${org?.name ?? a.owner_org_id}／${a.legal_entity_id} 结算账户`,
+        status: match ? "verified" : "unverified",
+        note: match
+          ? `与单位A个别报表 FS-A-2026H1 货币资金 ${stmtA?.cash_on_bs} 万元一致`
+          : "与单位A个别报表未能核符，差异待核实",
+      });
+    } else if (id === "ACC-B") {
+      const match = stmtB?.cash_on_bs === wan;
+      lines.push({
+        id,
+        direction: "+",
+        amount_wan: wan,
+        name: a.name,
+        source: `账户 ${id} 期末余额 ${a.closing_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit}｜余额日 ${a.balance_as_of}`,
+        scope: `${org?.name ?? a.owner_org_id}／${a.legal_entity_id} 结算账户`,
+        status: match ? "verified" : "unverified",
+        note: match
+          ? `与单位B个别报表 FS-B-2026H1 货币资金 ${stmtB?.cash_on_bs} 万元一致`
+          : "与单位B个别报表未能核符，差异待核实",
+      });
+    } else if (id === "ACC-USD") {
+      lines.push({
+        id,
+        direction: "+",
+        amount_wan: wan,
+        name: a.name,
+        source: `账户 ${id} ${a.closing_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit} × 模拟汇率 ${a.fx_to_cny}｜余额日 ${a.balance_as_of}`,
+        scope: `${org?.name ?? a.owner_org_id}（无独立报表）／${a.legal_entity_id}`,
+        status: "unverified",
+        note: "境外账户。ORG-OV 无独立报表，不能证明已纳入或未纳入总部合并货币资金 6800 万元，差异待核实",
+      });
+    } else if (id === "ACC-SPEC") {
+      lines.push({
+        id,
+        direction: "+",
+        amount_wan: wan,
+        name: a.name,
+        source: `账户 ${id} 期末 ${wan} 万元全部受限｜${a.restriction_basis ?? "专项专户"}｜余额日 ${a.balance_as_of}`,
+        scope: `${org?.name ?? a.owner_org_id}／${a.legal_entity_id} 专项专户`,
+        status: "unverified",
+        note: "受限不等于报表排除，不能仅因专户受限将其剔出报表货币资金。账户记录存在；是否已包含在合并 6800 或单位A个别 5080 中，差异待核实",
+      });
+    } else {
+      lines.push({
+        id,
+        direction: "+",
+        amount_wan: wan,
+        name: a.name,
+        source: `账户 ${id} 期末 ${wan} 万元｜余额日 ${a.balance_as_of}`,
+        scope: `${org?.name ?? a.owner_org_id} 内部结算，不重复计银行余额`,
+        status: "verified",
+        note: "余额为 0，不构成与报表的差额",
+      });
+    }
+  }
+  const extra = seed.accounts.filter((a) => !ordered.includes(a.id));
+  for (const a of extra) {
+    lines.push({
+      id: a.id,
+      direction: "+",
+      amount_wan: accountWan(a),
+      name: a.name,
+      source: `账户 ${a.id} 期末记录`,
+      scope: `${orgById(a.owner_org_id)?.name ?? a.owner_org_id}`,
+      status: "unverified",
+      note: "未列入既有对照清单，差异待核实",
+    });
+  }
+  const accountTotalWan = lines.reduce((s, l) => s + l.amount_wan, 0);
+  const gapWan = accountTotalWan - statementWan;
+  const totalLine: CashBridgeLine = {
+    id: "REG-TOTAL",
+    direction: "=",
+    amount_wan: accountTotalWan,
+    name: "监管账户期末合计",
+    source: "CASH-I01 同截至日账户余额折人民币合计",
+    scope: "授权范围内银行及专户（内部账户余额 0 不重复计）",
+    status: "verified",
+    note: `受限合计 ${seed.accounts.reduce((s, a) => s + (a.restricted_balance_native * a.fx_to_cny) / 10000, 0)} 万元；可用 ${seed.accounts.reduce((s, a) => s + ((a.closing_balance_native - a.restricted_balance_native) * a.fx_to_cny) / 10000, 0)} 万元`,
+  };
+  const stmtLine: CashBridgeLine = {
+    id: hq?.id ?? "FS-HQ-CONS",
+    direction: "−",
+    amount_wan: statementWan,
+    name: "总部合并报表货币资金",
+    source: `${hq?.id ?? "FS-HQ-CONS-2026H1"} cash_on_bs，合成合并报表，金额单位万元`,
+    scope: "ORG-HQ 合并口径 2026-01-01～2026-06-30，截至 2026-06-30",
+    status: "verified",
+    note: "报表货币资金与监管账户不是同一口径，不能互相替代",
+  };
+  const gapLine: CashBridgeLine = {
+    id: "GAP-352",
+    direction: "=",
+    amount_wan: gapWan,
+    name: "账户合计减合并报表差额",
+    source: `${accountTotalWan} − ${statementWan}`,
+    scope: "同授权、同截至日对照",
+    status: "unverified",
+    note: "上列已核项不能算术还原该差额，未编造调节项凑平。整段差额标为差异待核实",
+  };
+  const contrasts: CashBridgeLine[] = [
+    {
+      id: "FS-C",
+      direction: "+",
+      amount_wan: stmtC?.cash_on_bs ?? 0,
+      name: "单位C个别报表货币资金",
+      source: "FS-C-2026H1 cash_on_bs",
+      scope: "ORG-C 个别报表，监管账户清单无对应账户",
+      status: "unverified",
+      note: "报表有数、账户清单缺户。是否已纳入合并 6800 万元，差异待核实",
+    },
+  ];
+  return {
+    asOf: "2026-06-30",
+    lines: [...lines, totalLine, stmtLine, gapLine],
+    accountTotalWan,
+    statementWan,
+    gapWan,
+    contrasts,
+  };
+}
+
 export function cashBridgeNote(): string {
-  return "总部合并报表货币资金6800万元；原银行账户监管口径6632万元，差额168万元为在途及未纳入专户视图的调节项。专项专户ACC-SPEC新增520万元（截至2026-06-30，专项〔2026〕12号，全部受限）计入监管账户后合计7152万元，受限834.4万元，可用仍为6317.6万元。内部结算账户ACC-INT余额为0，不重复计银行余额。报表货币资金与监管账户不是同一口径，不能互相替代。";
+  const b = cashAccountStatementBridge();
+  const items = b.lines
+    .filter((l) => l.id.startsWith("ACC-"))
+    .map((l) => `${l.direction}${l.amount_wan} ${l.id}（${l.note}）`)
+    .join("；");
+  const contrast = b.contrasts.map((l) => `${l.name}${l.amount_wan}万元：${l.note}`).join("；");
+  return `监管账户期末合计 ${b.accountTotalWan} 万元：${items}。总部合并报表 ${b.statementWan} 万元（${b.lines.find((l) => l.id.startsWith("FS-"))?.source ?? "FS-HQ-CONS-2026H1"}）。差额 ${b.gapWan} 万元为差异待核实，未编造调节项凑平，亦不以专户受限为由将其排除在报表货币资金之外。${contrast}`;
 }
 
 export function consecutiveLossPeriods(orgId: string, n = 3): { count: number; name: string; profits: number[] } | null {
