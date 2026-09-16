@@ -12,6 +12,7 @@ import { isScenarioMonitoringActive } from "@/lib/live-config";
 import { isOpen, statusLabel } from "@/lib/risks";
 import { useDemoStore } from "@/lib/store";
 import type { LifecycleInstance } from "@/lib/types";
+import { FP_CONTROLS, FP_GUARANTEES, FP_LENDS, FP_LOANS, FP_SME, FP_SPECIALS, FP_GOVERNANCE } from "@/lib/fp-seed";
 
 /**
  * P74 对象档案 + P79 横向业务关系 + P75 详细环节核查。
@@ -90,12 +91,14 @@ export default function ObjectDrawer({
   objectId,
   onClose,
   onOpenRisk,
+  onOpenObject,
   initialTab = "profile",
   variant = "drawer",
 }: {
   objectId: string | null;
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
+  onOpenObject?: (id: string) => void;
   initialTab?: string;
   variant?: "drawer" | "page";
 }) {
@@ -106,6 +109,7 @@ export default function ObjectDrawer({
       objectId={objectId}
       onClose={onClose}
       onOpenRisk={onOpenRisk}
+      onOpenObject={onOpenObject}
       initialTab={initialTab}
       variant={variant}
     />
@@ -116,12 +120,14 @@ function ObjectDrawerBody({
   objectId,
   onClose,
   onOpenRisk,
+  onOpenObject,
   initialTab,
   variant,
 }: {
   objectId: string;
   onClose: () => void;
   onOpenRisk?: (id: string) => void;
+  onOpenObject?: (id: string) => void;
   initialTab: string;
   variant: "drawer" | "page";
 }) {
@@ -196,6 +202,7 @@ function ObjectDrawerBody({
   const eng = seed.engineering_projects.find((p) => p.id === objectId);
   const account = seed.accounts.find((a) => a.id === objectId);
   const matter = seed.property_matters.find((m) => m.id === objectId);
+  const tx = seed.cash_transactions.find((t) => t.id === objectId);
 
   const titleNode = (
     <span className="flex items-center gap-2 flex-wrap">
@@ -385,6 +392,23 @@ function ObjectDrawerBody({
                 ]}
               />
             )}
+            {tx && (
+              <DescList
+                cols={4}
+                items={[
+                  { label: "方向", value: tx.direction === "outflow" ? "支出" : "收入" },
+                  { label: "业务日期", value: <span className="num">{tx.date}</span> },
+                  { label: "本次实付/实收", value: <span className="num">{fmtAmount(tx.amount_wan_cny)}</span> },
+                  { label: "该笔有效批准", value: <span className="num">{tx.approved_amount === undefined ? "—" : fmtAmount(tx.approved_amount)}</span> },
+                  { label: "合同可支付上限", value: <span className="num">{tx.certified_payable_amount === undefined ? "—" : fmtAmount(tx.certified_payable_amount)}</span> },
+                  { label: "付款账户", value: <span className="num">{tx.account_id}</span> },
+                  { label: "合同", value: <span className="num">{tx.contract_id ?? "—"}</span> },
+                  { label: "义务", value: <span className="num">{tx.obligation_id ?? "—"}</span> },
+                ]}
+              />
+            )}
+            <FpObjectFacts objectId={objectId} onOpenObject={onOpenObject} />
+            <FpCrossFacts objectId={objectId} onOpenObject={onOpenObject} />
           </>
         )}
 
@@ -403,9 +427,17 @@ function ObjectDrawerBody({
               pageSize={8}
               compactEmpty
               columns={[
-                { key: "from", title: "来源对象", minWidth: "120px", nowrap: true, render: (l) => <span className="num">{l.from_id}</span> },
+                { key: "from", title: "来源对象", minWidth: "120px", nowrap: true, render: (l) => (
+                  <button type="button" className="num text-brand hover:underline" onClick={() => onOpenObject?.(l.from_id)}>
+                    {l.from_id}
+                  </button>
+                ) },
                 { key: "rel", title: "业务关系", width: "160px", nowrap: true, render: (l) => <Tag tone="brand">{l.relation_type}</Tag> },
-                { key: "to", title: "关联对象", minWidth: "120px", nowrap: true, render: (l) => <span className="num">{l.to_id}</span> },
+                { key: "to", title: "关联对象", minWidth: "120px", nowrap: true, render: (l) => (
+                  <button type="button" className="num text-brand hover:underline" onClick={() => onOpenObject?.(l.to_id)}>
+                    {l.to_id}
+                  </button>
+                ) },
                 { key: "domains", title: "可进入的关联监管", render: (l) => l.domains.map((d) => DOMAIN_META[d].label).join("、") },
                 { key: "asof", title: "关系有效期", width: "110px", render: (l) => <span className="num text-[12px]">{l.as_of}</span> },
                 { key: "evid", title: "依据", render: (l) => <span className="text-[12px] text-textsub">{l.evidence_ids?.join("、") ?? "—"}</span> },
@@ -506,5 +538,141 @@ function ObjectDrawerBody({
     <Drawer open onClose={onClose} width="76vw" title={titleNode} subtitle={subtitleNode}>
       {archive}
     </Drawer>
+  );
+}
+
+function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObject?: (id: string) => void }) {
+  const loan = FP_LOANS.find((x) => x.id === objectId);
+  const guar = FP_GUARANTEES.find((x) => x.id === objectId);
+  const lend = FP_LENDS.find((x) => x.id === objectId);
+  const spec = FP_SPECIALS.find((x) => x.id === objectId);
+  const sme = FP_SME.find((x) => x.id === objectId);
+  const gov = FP_GOVERNANCE.find((x) => x.legal_entity_id === objectId || x.id === objectId);
+  const ctrl = FP_CONTROLS.find((x) => x.legal_entity_id === objectId);
+  const le = seed.legal_entities.find((e) => e.id === objectId);
+  const idBtn = (id: string) => (
+    <button type="button" className="num text-brand hover:underline" onClick={() => onOpenObject?.(id)}>
+      {id}
+    </button>
+  );
+  if (loan) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "方向", value: loan.direction === "internal_borrow" ? "内部借入" : "外部融资" },
+          { label: "未偿本金", value: <span className="num">{fmtAmount(loan.outstanding_wan)}</span> },
+          { label: "未使用授信", value: <span className="num">{fmtAmount(loan.unused_credit_wan)}</span> },
+          { label: "到期日", value: <span className="num">{loan.due_date}</span> },
+          { label: "主体", value: idBtn(loan.legal_entity_id) },
+        ]}
+      />
+    );
+  }
+  if (guar) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "类型", value: guar.kind === "performance_bond" ? "保函" : "借款担保" },
+          { label: "金额", value: <span className="num">{fmtAmount(guar.amount_wan)}</span> },
+          { label: "有效期", value: <span className="num">{guar.start_date}～{guar.end_date}</span> },
+          { label: "担保人", value: idBtn(guar.guarantor_id) },
+          { label: "被担保/受益", value: idBtn(guar.beneficiary_id) },
+          { label: "是否解除", value: guar.released ? "已解除" : "有效" },
+        ]}
+      />
+    );
+  }
+  if (lend) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "出借人", value: idBtn(lend.lender_id) },
+          { label: "借入人", value: idBtn(lend.borrower_id) },
+          { label: "未收回", value: <span className="num">{fmtAmount(lend.outstanding_wan - lend.recovered_wan)}</span> },
+          { label: "到期日", value: <span className="num">{lend.due_date}</span> },
+        ]}
+      />
+    );
+  }
+  if (spec) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "专户", value: idBtn(spec.designated_account_id) },
+          { label: "确认结余", value: <span className="num">{fmtAmount(spec.confirmed_balance_wan)}</span> },
+          { label: "批准用途", value: spec.purpose_catalog.join("、") },
+        ]}
+      />
+    );
+  }
+  if (sme) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "订立时中小企业", value: sme.sme_at_contract == null ? "缺数" : sme.sme_at_contract ? "是" : "否" },
+          { label: "到期日", value: <span className="num">{sme.due_date}</span> },
+          { label: "无争议未付", value: <span className="num">{fmtAmount(Math.max(0, sme.undisputed_wan - sme.paid_wan))}</span> },
+        ]}
+      />
+    );
+  }
+  if (le || gov || ctrl) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "法人", value: le?.name ?? objectId },
+          { label: "控制依据", value: ctrl?.control_basis || gov?.note || "—" },
+          { label: "口径", value: ctrl ? { body: "海工本体", controlled: "控股及实控", participating: "参股", unverified: "控制待核实", external: "外部" }[ctrl.class] : "—" },
+          { label: "全资", value: ctrl?.wholly_owned ? "是" : ctrl ? "否" : "—" },
+          ...(gov
+            ? [
+                { label: "章程董事会席位", value: String(gov.charter_board_seats) },
+                { label: "实际委派到任", value: String(gov.appointed_seats) },
+              ]
+            : []),
+        ]}
+      />
+    );
+  }
+  return null;
+}
+
+function FpCrossFacts({ objectId, onOpenObject }: { objectId: string; onOpenObject?: (id: string) => void }) {
+  const links = seed.business_links.filter((l) => l.from_id === objectId || l.to_id === objectId);
+  const cash = links.filter((l) => l.domains.includes("CASH"));
+  const rights = links.filter((l) => l.domains.includes("RIGHTS"));
+  if (cash.length + rights.length === 0) return null;
+  const btn = (id: string) => (
+    <button key={id} type="button" className="num text-brand hover:underline mr-2" onClick={() => onOpenObject?.(id)}>
+      {id}
+    </button>
+  );
+  return (
+    <div className="space-y-2">
+      {cash.length > 0 && (
+        <Notice tone="brand" title="关联资金">
+          {cash.map((l) => (
+            <span key={l.id} className="mr-3">
+              {l.relation_type} {btn(l.from_id === objectId ? l.to_id : l.from_id)}
+            </span>
+          ))}
+        </Notice>
+      )}
+      {rights.length > 0 && (
+        <Notice tone="brand" title="关联产权">
+          {rights.map((l) => (
+            <span key={l.id} className="mr-3">
+              {l.relation_type} {btn(l.from_id === objectId ? l.to_id : l.from_id)}
+            </span>
+          ))}
+        </Notice>
+      )}
+    </div>
   );
 }

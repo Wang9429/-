@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo, useState, useCallback, useLayoutEffect } from "react";
+import React, { useMemo, useState, useCallback, useLayoutEffect, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { usePathname } from "next/navigation";
 import { Button, Tag, useOverlay, useOverlayCount } from "@/components/ui";
 import { config, intersectOrgScope, objectAllowed, riskVisible } from "@/lib/config";
 import { liveAi } from "@/lib/live-config";
@@ -10,6 +11,29 @@ import { useDemoStore } from "@/lib/store";
 import { INDICATORS, computeIndicator } from "@/lib/metrics";
 import { seed } from "@/lib/seed";
 import { fmtAmount } from "@/lib/format";
+import { orgName } from "@/lib/org";
+import type { DomainId } from "@/lib/types";
+
+function domainFromPath(pathname: string): DomainId | "OVERVIEW" | null {
+  if (pathname.startsWith("/funds")) return "CASH";
+  if (pathname.startsWith("/property-rights")) return "RIGHTS";
+  if (pathname.startsWith("/fixed-asset-investment")) return "FA";
+  if (pathname.startsWith("/equity-investment")) return "EQ";
+  if (pathname.startsWith("/international-business")) return "INTL";
+  if (pathname.startsWith("/engineering-projects")) return "ENG";
+  if (pathname.startsWith("/overview")) return "OVERVIEW";
+  return null;
+}
+
+const DOMAIN_TASKS: Record<string, string[]> = {
+  CASH: ["CASH-EXPLAIN-PL", "CASH-PAY-EVIDENCE", "CASH-DEBT-LIQ", "CASH-SME-CLUE", "explain_hit"],
+  RIGHTS: ["PTY-EQUITY-CHANGE", "PTY-SOURCE-DIFF", "PTY-TRADE-DOCS", "PTY-GOVERNANCE"],
+  FA: ["explain_metric", "compare_materials"],
+  EQ: ["explain_metric"],
+  INTL: ["suggest_check"],
+  ENG: ["suggest_check"],
+  OVERVIEW: ["explain_metric", "explain_hit", "compare_materials", "suggest_check"],
+};
 
 const AiUiContext = React.createContext<{
   open: boolean;
@@ -55,6 +79,8 @@ export function AiToolbarButton() {
 export default function AiPanel() {
   const { filters, risks, user, canAct, catalog } = useDemoStore();
   const { open, setOpen } = useAiUi();
+  const pathname = usePathname();
+  const pageDomain = domainFromPath(pathname ?? "");
   const [task, setTask] = useState<string>("explain_metric");
   const [scopeNote, setScopeNote] = useState(false);
   const close = useCallback(() => setOpen(false), [setOpen]);
@@ -78,9 +104,22 @@ export default function AiPanel() {
   );
 
   const ai = liveAi();
-  const enabledTasks = (catalog.ai.tasks.length ? catalog.ai.tasks : config.ai.tasks.map((t) => ({ ...t, enabled: true }))).filter(
-    (t) => t.enabled !== false && ai.tasks.has(t.id),
+  const enabledTasks = useMemo(
+    () =>
+      (catalog.ai.tasks.length ? catalog.ai.tasks : config.ai.tasks.map((t) => ({ ...t, enabled: true }))).filter(
+        (t) => t.enabled !== false && ai.tasks.has(t.id),
+      ),
+    [catalog.ai.tasks, ai.tasks],
   );
+  const visibleTasks = useMemo(() => {
+    const allow = pageDomain ? DOMAIN_TASKS[pageDomain] : null;
+    const scoped = allow ? enabledTasks.filter((t) => allow.includes(t.id)) : enabledTasks;
+    return scoped.length ? scoped : enabledTasks;
+  }, [enabledTasks, pageDomain]);
+
+  useEffect(() => {
+    if (!visibleTasks.some((t) => t.id === task) && visibleTasks[0]) setTask(visibleTasks[0].id);
+  }, [pageDomain]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const content = useMemo(() => {
     if (!ai.enabled) {
@@ -89,7 +128,7 @@ export default function AiPanel() {
         sections: [{ h: "说明", p: "请在系统配置 · AI分析设置中开启后再使用。" }],
       };
     }
-    if (!enabledTasks.some((t) => t.id === task)) {
+    if (!visibleTasks.some((t) => t.id === task)) {
       return {
         title: "当前任务未纳入可用范围",
         sections: [{ h: "说明", p: "请在系统配置 · AI分析设置中启用对应任务，或选择其他已开放任务。" }],
@@ -124,7 +163,121 @@ export default function AiPanel() {
       return Boolean(r && orgIds.has(r.owner_org_id) && riskVisible(user, r));
     };
 
+    if (task === "CASH-EXPLAIN-PL") {
+      const def = INDICATORS.find((i) => i.id === "CASH2-I02");
+      const m = def ? computeIndicator(def, orgIds, { ...filters, risks }) : null;
+      return {
+        title: "资金经营变化解释",
+        sections: [
+          {
+            h: "分析结论摘要",
+            p: `当前主体 ${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}，期间 ${filters.periodStart}～${filters.periodEnd}。营业利润 ${m?.value == null ? "—" : fmtAmount(m.value)} 万元。总部仅本级不等于总部整体。`,
+          },
+          { h: "关键事实与依据", p: "取合成财务报表；上级有合并报表时用合并口径，不把下级金额直接加总冒称合并。" },
+          { h: "待核查问题", p: "利润变化不能直接等同现金缺口或资金违规。" },
+          { h: "建议采取的动作", p: "在资金管理打开主体经营指标抽屉，再进入对应专题核对账户与收付。" },
+        ],
+      };
+    }
+    if (task === "CASH-PAY-EVIDENCE") {
+      if (!objectInScope("P-PAY001") && !objectInScope("P-FA001")) {
+        return { title: "超出当前授权范围", sections: [{ h: "说明", p: "当前范围没有可核对的付款对象。" }] };
+      }
+      const hit = objectInScope("P-PAY001");
+      return {
+        title: "付款依据核对",
+        sections: [
+          {
+            h: "分析结论摘要",
+            p: hit
+              ? "P-PAY001 实付 1200 万元，该笔有效批准 800 万元，业务可支付上限 2000 万元。差额 400 万元形成核查线索，未超过业务上限。"
+              : "当前可见付款未超过该笔有效批准。",
+          },
+          { h: "关键事实与依据", p: "规则比较实付与该笔有效批准，不以合同总额或授信占用替代。正常付款同样可打开明细。" },
+          { h: "待核查问题", p: "是否存在可覆盖差额的当时有效批准版本？" },
+          { h: "建议采取的动作", p: hit ? "打开 P-PAY001 与 R07，按核查→整改→独立复核办理。" : "打开付款对象核对批准版本。" },
+        ],
+      };
+    }
+    if (task === "CASH-DEBT-LIQ") {
+      return {
+        title: "债务期限与流动性分析",
+        sections: [
+          { h: "分析结论摘要", p: `范围 ${orgName(filters.orgId)}。未使用授信不计入借款本金；内部借入与外部融资分列。` },
+          { h: "关键事实与依据", p: "融资与担保专题列示未偿本金、担保和保函责任。可用资金来自账户余额扣受限。" },
+          { h: "待核查问题", p: "未来30日现金缺口本轮未启用，不显示空卡。" },
+          { h: "建议采取的动作", p: "打开融资对象与账户档案核到期安排，不在本平台发起融资审批。" },
+        ],
+      };
+    }
+    if (task === "CASH-SME-CLUE") {
+      return {
+        title: "账款拖欠线索梳理",
+        sections: [
+          { h: "分析结论摘要", p: "中小企业账款按合同订立时规模及约定起算，不按发票日统一加 60 日。" },
+          { h: "关键事实与依据", p: "SME-01 订立时为中小企业且到期未清偿；SME-02 缺订立时规模，显示未评估。" },
+          { h: "待核查问题", p: "无争议金额、起算事件与合同期限是否完整。" },
+          { h: "建议采取的动作", p: "打开资金收付专题中的账款义务，核对合同与支付。" },
+        ],
+      };
+    }
+    if (task === "PTY-EQUITY-CHANGE") {
+      return {
+        title: "股权变动梳理",
+        sections: [
+          { h: "分析结论摘要", p: `当前组织 ${orgName(filters.orgId)}。同一法人多父持股只计一户；直接股比、穿透权益与控制依据分列。` },
+          { h: "关键事实与依据", p: "PTY-M007 拟转让 15 个百分点超过授权 10 个百分点。无偿划转无价款，不生成价款逾期。" },
+          { h: "待核查问题", p: "变动是否完成登记、评估报告是否仍在有效使用期限。" },
+          { h: "建议采取的动作", p: "打开法人档案与产权事项，按经济行为切换流程节点。" },
+        ],
+      };
+    }
+    if (task === "PTY-SOURCE-DIFF") {
+      if (!objectInScope("JV001") && !riskInScope("R08")) {
+        return { title: "超出当前授权范围", sections: [{ h: "说明", p: "产权来源差异样例不在当前授权范围。" }] };
+      }
+      return {
+        title: "产权来源差异核查",
+        sections: [
+          { h: "分析结论摘要", p: "批准 60% / 登记 60% / 台账 55% 为来源差异，不直接计登记违规。" },
+          { h: "关键事实与依据", p: "PTY-M001 对 PTY2-S028 为不适用（有依据）。应登记未办另有 PTY-M009 命中。" },
+          { h: "待核查问题", p: "差异是否已由权属文件解释，还是构成应办未办。" },
+          { h: "建议采取的动作", p: "打开 JV001 与 PTY-M001，对照登记专题状态。" },
+        ],
+      };
+    }
+    if (task === "PTY-TRADE-DOCS") {
+      return {
+        title: "交易过程材料比对",
+        sections: [
+          { h: "分析结论摘要", p: "PTY-M008 评估报告使用日晚于有效期；PTY-M002 转让价款收款 R-PTY-XFER 可回查资金。" },
+          { h: "关键事实与依据", p: "上市股份使用独立模板，不套非上市挂牌。无偿划转节点不适用公开竞价。" },
+          { h: "待核查问题", p: "报告版本、挂牌公告与签约文本是否同一标的。" },
+          { h: "建议采取的动作", p: "从产权事项打开关系页进入资金收款，关闭浮层后回到原节点。" },
+        ],
+      };
+    }
+    if (task === "PTY-GOVERNANCE") {
+      if (!objectInScope("LE-CTRL") && !riskInScope("R-FP-032")) {
+        return { title: "超出当前授权范围", sections: [{ h: "说明", p: "治理权利样例不在当前授权范围。" }] };
+      }
+      return {
+        title: "治理权利履职辅助核查",
+        sections: [
+          { h: "分析结论摘要", p: "不能仅凭股比认定已控权。LE-CTRL 章程约定委派 3 名董事，实际到任 2 名。" },
+          { h: "关键事实与依据", p: "PTY2-S032 为专业核查：已有材料，结论需人工记录，不自动刷成命中或正常。" },
+          { h: "待核查问题", p: "缺席董事是否已改派、表决是否达到章程多数。" },
+          { h: "建议采取的动作", p: "打开 R-FP-032 记录专业核查结论，需要时关联整改。" },
+        ],
+      };
+    }
     if (task === "explain_metric") {
+      if (pageDomain === "CASH" || pageDomain === "RIGHTS") {
+        return {
+          title: "请选择当前领域任务",
+          sections: [{ h: "说明", p: "资金与产权分析绑定当前主体和业务对象，不使用固定资产投资项目预置。" }],
+        };
+      }
       if (!objectInScope("FA-P001")) {
         return {
           title: "超出当前授权范围",
@@ -210,7 +363,7 @@ export default function AiPanel() {
         { h: "建议采取的动作", p: "在国际化业务中调整冲击假设，并回到工程领域核对基础预测未被覆盖。" },
       ],
     };
-  }, [task, filters, risks, canAct, user, orgIds, ai.enabled, catalog]);
+  }, [task, filters, risks, canAct, user, orgIds, ai.enabled, catalog, pageDomain, visibleTasks]);
 
   const fabButton = (
     <button
@@ -270,7 +423,7 @@ export default function AiPanel() {
             </div>
           )}
           <div className="px-5 py-3 flex flex-wrap gap-1.5 border-b border-line">
-            {enabledTasks.map((t) => (
+            {visibleTasks.map((t) => (
               <button
                 type="button"
                 key={t.id}

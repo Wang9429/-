@@ -38,6 +38,7 @@ export const DATA_SCOPE_MODE_LABEL: Record<string, string> = {
 export const DISPLAY_POSITION_LABEL: Record<string, string> = {
   homepage: "首页",
   metric_library: "指标目录",
+  domain_page: "领域页",
 };
 
 /** 领域编码（配置表短码） */
@@ -50,8 +51,17 @@ export const DOMAIN_CODE_LABEL: Record<string, string> = {
   ENG: "工程",
 };
 
+/** 规则/子场景运行能力（与执行方式分开） */
+export const RUNTIME_CAPABILITY_LABEL: Record<string, string> = {
+  structured_executable: "可结构化执行",
+  assisted_review: "规则辅助人工",
+  professional_review: "专业核查",
+  definition_only: "仅维护定义",
+};
+
 export const configStatusLabel = (v?: string | null) => pick(CONFIG_STATUS_LABEL, v);
 export const executionModeLabel = (v?: string | null) => pick(EXECUTION_MODE_LABEL, v);
+export const runtimeCapabilityLabel = (v?: string | null) => pick(RUNTIME_CAPABILITY_LABEL, v, "仅维护定义");
 export const dataScopeModeLabel = (v?: string | null) => pick(DATA_SCOPE_MODE_LABEL, v);
 export const displayPositionLabel = (v?: string | null) => pick(DISPLAY_POSITION_LABEL, v);
 export const domainCodeLabel = (v?: string | null) => pick(DOMAIN_CODE_LABEL, v);

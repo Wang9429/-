@@ -125,7 +125,7 @@ export default function ScenarioExecutionPanel({
   const summary = useMemo(() => computeFiveCounts(baseScope, risks), [baseScope, risks]);
 
   const scenarioRows: ScenarioRow[] = useMemo(() => {
-    const ids = configuredScenarios(domain, phaseId ?? null);
+    const ids = configuredScenarios(domain, phaseId ?? null, topicId ?? null);
     const extra = new Set(ids);
     // 历史遗留事项所属场景即使本期没有评估行也要出现
     summary.openRiskIds.forEach((rid) => {
@@ -172,7 +172,7 @@ export default function ScenarioExecutionPanel({
         const d = rank(a) - rank(b);
         return d !== 0 ? d : a.id.localeCompare(b.id);
       });
-  }, [domain, phaseId, baseScope, risks, summary.openRiskIds, orgIds, allowedObjectIds]);
+  }, [domain, phaseId, topicId, baseScope, risks, summary.openRiskIds, orgIds, allowedObjectIds]);
 
   const visibleScenarioRows = useMemo(
     () =>

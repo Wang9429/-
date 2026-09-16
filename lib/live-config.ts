@@ -192,6 +192,14 @@ export function catalogIndicatorOnHomepage(id: string): boolean {
   return meta.enabled && meta.display_position === "homepage";
 }
 
+/** 领域页可展示的指标：首页或领域页位置，且已启用。停用不留空卡。 */
+export function catalogIndicatorOnDomainPage(id: string): boolean {
+  const meta = current.indicators.get(id);
+  if (!meta) return true;
+  if (!meta.enabled || meta.status === "disabled" || meta.status === "retired") return false;
+  return meta.display_position === "homepage" || meta.display_position === "domain_page";
+}
+
 /** 停用或仅目录（无首页展示）的指标不能作为业务抽屉运行入口。 */
 export function catalogIndicatorRunnableOnEntry(id: string): boolean {
   return catalogIndicatorVisible(id) && catalogIndicatorOnHomepage(id);

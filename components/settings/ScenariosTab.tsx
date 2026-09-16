@@ -16,12 +16,13 @@ import {
   type FieldErrors,
 } from "@/lib/config-catalog";
 import { groupDisableImpact, subDisableImpact } from "@/lib/config-impact";
-import { configStatusLabel, domainCodeLabel, executionModeLabel } from "@/lib/labels";
+import { configStatusLabel, domainCodeLabel, executionModeLabel, runtimeCapabilityLabel } from "@/lib/labels";
 import { authorizedObjectIds, intersectOrgScope } from "@/lib/config";
 import { scenarioRuntimeStatus } from "@/lib/monitoring";
 import { phaseName, templatesByDomain } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import type { DomainId } from "@/lib/types";
+import { CASH_TOPICS, RIGHTS_TOPICS, type RuntimeCapability } from "@/lib/fp-topics";
 import { ActionCell, FormDrawer, SaveBar, denyTitle, fieldClass } from "./shared";
 
 type Target =
@@ -47,6 +48,7 @@ export default function ScenariosTab() {
   const canRead = canAct("config.scenarios.read") || canAct("config.scenarios.edit");
   const canEdit = canAct("config.scenarios.edit");
   const [gid, setGid] = useState(catalog.groups[0]?.id ?? "");
+  const [domainFilter, setDomainFilter] = useState<string>("all");
   const [target, setTarget] = useState<Target>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [flash, setFlash] = useState<string | null>(null);
@@ -133,11 +135,39 @@ export default function ScenariosTab() {
     setFlash(row.enabled ? `已停用「${row.name}」。后续监测停止；未关闭事项仍可查看并办理。` : `已启用「${row.name}」。`);
   };
 
+  const groupList = useMemo(
+    () => (domainFilter === "all" ? catalog.groups : catalog.groups.filter((g) => g.domain === domainFilter)),
+    [catalog.groups, domainFilter],
+  );
+
   const readonly = target?.mode === "view" || !canEdit;
 
   return (
     <div className="space-y-3">
       {flash && <p className="text-[13px] text-textsub">{flash}</p>}
+      <div className="flex flex-wrap gap-1">
+        <button
+          type="button"
+          className={`h-8 px-3 rounded-[6px] border text-[12px] ${domainFilter === "all" ? "border-brand bg-tint text-brand" : "border-line"}`}
+          onClick={() => setDomainFilter("all")}
+        >
+          全部领域
+        </button>
+        {DOMAIN_OPTIONS.map((d) => (
+          <button
+            key={d.id}
+            type="button"
+            className={`h-8 px-3 rounded-[6px] border text-[12px] ${domainFilter === d.id ? "border-brand bg-tint text-brand" : "border-line"}`}
+            onClick={() => {
+              setDomainFilter(d.id);
+              const first = catalog.groups.find((g) => g.domain === d.id);
+              if (first) setGid(first.id);
+            }}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
       <div className="reg-settings-pair">
         <Card
           title={`一级监管场景（${catalog.groups.length}）`}
@@ -156,7 +186,7 @@ export default function ScenariosTab() {
         >
           <DataTable
             dense
-            rows={catalog.groups}
+            rows={groupList}
             rowKey={(r) => r.id}
             onRowClick={(r) => setGid(r.id)}
             highlight={(r) => r.id === gid}
@@ -238,6 +268,20 @@ export default function ScenariosTab() {
               { key: "id", title: "编号", width: "88px", nowrap: true, render: (r) => <span className="num text-[12px]">{r.id}</span> },
               { key: "name", title: "名称", minWidth: "180px", render: (r) => r.name },
               { key: "mode", title: "执行方式", width: "110px", nowrap: true, render: (r) => executionModeLabel(r.execution_mode) },
+              {
+                key: "run",
+                title: "运行能力",
+                width: "110px",
+                nowrap: true,
+                render: (r) => runtimeCapabilityLabel(r.runtime_capability),
+              },
+              {
+                key: "topic",
+                title: "专题",
+                width: "96px",
+                nowrap: true,
+                render: (r) => CASH_TOPICS.find((t) => t.id === r.topic_id)?.short ?? RIGHTS_TOPICS.find((t) => t.id === r.topic_id)?.short ?? "—",
+              },
               {
                 key: "app",
                 title: "适用",
@@ -458,6 +502,42 @@ export default function ScenariosTab() {
           {target.value.primary_phase_id && (
             <p className="text-[12px] text-textsub">阶段：{phaseName(target.value.primary_phase_id)}</p>
           )}
+          {(target.value.domain === "CASH" || target.value.domain === "RIGHTS") && (
+            <Field label="专题">
+              <select
+                className={fieldClass()}
+                value={target.value.topic_id ?? ""}
+                disabled={readonly}
+                onChange={(e) => setTarget({ ...target, value: { ...target.value, topic_id: e.target.value } })}
+              >
+                <option value="">未指定</option>
+                {(target.value.domain === "CASH" ? CASH_TOPICS : RIGHTS_TOPICS).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          <Field label="运行能力">
+            <select
+              className={fieldClass()}
+              value={target.value.runtime_capability ?? "definition_only"}
+              disabled={readonly}
+              onChange={(e) =>
+                setTarget({
+                  ...target,
+                  value: { ...target.value, runtime_capability: e.target.value as RuntimeCapability },
+                })
+              }
+            >
+              <option value="structured_executable">可结构化执行</option>
+              <option value="assisted_review">规则辅助人工</option>
+              <option value="professional_review">专业核查</option>
+              <option value="definition_only">仅维护定义</option>
+            </select>
+          </Field>
+          {target.value.rule_text && <p className="text-[12px] text-textsub">规则要点：{target.value.rule_text}</p>}
           <p className="text-[12px] text-textsub">编号 {target.value.id} · 监管子场景为最小监管场景单位</p>
         </FormDrawer>
       )}

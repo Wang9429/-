@@ -13,6 +13,9 @@ import { isOpen, isOverdueRectification } from "../lib/risks";
 import type { DomainId } from "../lib/types";
 import { authorizedObjectIds, can, canCaseAction, intersectOrgScope, userById } from "../lib/config";
 import { inDateRange } from "../lib/period";
+import { extractCatalog } from "../lib/config-catalog";
+import { FIRST_BATCH_SUBS } from "../lib/fp-topics";
+import { trialCashS039, trialPtyS028, trialRule } from "../lib/fp-rules";
 import { INDEPENDENT_TRIAL_PROJECTS } from "../lib/trial";
 import {
   applicableMonitorExecutions,
@@ -487,6 +490,37 @@ for (const d of domains) {
   const list = runnableDrawerIndicators(d);
   check(`${d}运行入口均属本领域且可计算`, list.every((x) => x.domain === d && typeof x.leaves === "function"), true);
 }
+
+console.log("\n[FP-20260916-R2 资金与产权]");
+const fpCat = extractCatalog();
+const cash2 = fpCat.subscenarios.filter((s) => /^CASH2-S\d{3}$/.test(s.id) && !s.id.startsWith("CASH2-S9"));
+const pty2 = fpCat.subscenarios.filter((s) => /^PTY2-S\d{3}$/.test(s.id));
+check("资金正式子场景40条", cash2.length, 40);
+check("产权正式子场景40条", pty2.length, 40);
+check("80条ID唯一", new Set([...cash2, ...pty2].map((s) => s.id)).size, 80);
+const drafts = fpCat.subscenarios.filter((s) => s.id === "CASH2-S901" || s.id === "CASH2-S902");
+check("个人名义补充场景为草稿且未启用", drafts.length === 2 && drafts.every((s) => !s.enabled && s.status === "draft"), true);
+for (const id of FIRST_BATCH_SUBS) {
+  const sub = fpCat.subscenarios.find((s) => s.id === id);
+  check(`${id} 已发布启用`, Boolean(sub?.enabled && sub.status === "published"), true);
+}
+const payFp = seed.cash_transactions.find((t) => t.id === "P-PAY001");
+check("P-PAY001 实付1200", payFp?.amount_wan_cny, 1200);
+check("P-PAY001 批准800", payFp?.approved_amount, 800);
+check("P-PAY001 上限2000", payFp?.certified_payable_amount, 2000);
+check("CASH2-S039 命中P-PAY001", trialCashS039("P-PAY001").result, "hit");
+check("CASH2-S039 正常付款可评估", trialCashS039("P-FA001").result === "clear" || trialCashS039("P-FA001").result === "not_applicable" || trialCashS039("P-FA001").result === "hit", true);
+check("PTY-M001 来源差异不适用未登记", trialPtyS028("PTY-M001").result, "not_applicable");
+check("PTY-M009 应登记未办命中", trialPtyS028("PTY-M009").result, "hit");
+check("PTY2-S032 专业核查不自动刷绿", trialRule("PTY2-S032", "LE-CTRL").result, "data_insufficient");
+const i10 = fpCat.indicators.find((i) => i.id === "CASH2-I10");
+check("CASH2-I10 未启用", Boolean(i10 && i10.enabled === false), true);
+const cashPage = runnableDrawerIndicators("CASH", "domain_page");
+check("领域页不含未启用CASH2-I10", cashPage.some((d) => d.id === "CASH2-I10"), false);
+check("领域页含营业收入", cashPage.some((d) => d.id === "CASH2-I01"), true);
+const r07 = seed.risk_cases.find((r) => r.id === "R07");
+check("R07 仍关联CASH-S01", r07?.scenario_ids.includes("CASH-S01"), true);
+check("R07 同步关联CASH2-S039", r07?.scenario_ids.includes("CASH2-S039"), true);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

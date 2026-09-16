@@ -1,5 +1,6 @@
 import { objectTypeLabel, seed } from "./seed";
 import type { ObjectType } from "./types";
+import { FP_GOVERNANCE, FP_GUARANTEES, FP_LENDS, FP_LOANS, FP_SEGMENTS, FP_SME, FP_SPECIALS } from "./fp-seed";
 
 /**
  * 对象查找的唯一入口。同一对象在任何页面只有一个档案，
@@ -61,10 +62,32 @@ export function findObject(id: string): ObjectRecord | undefined {
   if (ob) {
     const proj =
       seed.engineering_projects.find((p) => p.id === ob.project_id) ??
-      seed.equity_projects.find((p) => p.id === ob.project_id);
+      seed.equity_projects.find((p) => p.id === ob.project_id) ??
+      seed.fixed_asset_projects.find((p) => p.id === ob.project_id);
     return { id, type: "obligation", name: `${ob.kind} ${ob.id}`, orgId: proj?.owner_org_id ?? "ORG-HQ", typeLabel: objectTypeLabel.obligation };
   }
 
+  const extra = lookupFpObject(id);
+  if (extra) return extra;
+
+  return undefined;
+}
+
+function lookupFpObject(id: string): ObjectRecord | undefined {
+  const loan = FP_LOANS.find((x) => x.id === id);
+  if (loan) return { id, type: "contract", name: loan.name, orgId: loan.owner_org_id, typeLabel: "借款合同" };
+  const g = FP_GUARANTEES.find((x) => x.id === id);
+  if (g) return { id, type: "contract", name: g.name, orgId: g.owner_org_id, typeLabel: g.kind === "performance_bond" ? "保函" : "担保" };
+  const lend = FP_LENDS.find((x) => x.id === id);
+  if (lend) return { id, type: "contract", name: lend.name, orgId: lend.owner_org_id, typeLabel: "出借合同" };
+  const spec = FP_SPECIALS.find((x) => x.id === id);
+  if (spec) return { id, type: "contract", name: spec.name, orgId: spec.owner_org_id, typeLabel: "专项资金" };
+  const sme = FP_SME.find((x) => x.id === id);
+  if (sme) return { id, type: "obligation", name: sme.name, orgId: sme.owner_org_id, typeLabel: objectTypeLabel.obligation };
+  const seg = FP_SEGMENTS.find((x) => x.id === id);
+  if (seg) return { id, type: "legal_entity", name: `${seg.name}（${seg.period_start}～${seg.period_end}）`, orgId: seg.org_id, typeLabel: "核心业务" };
+  const gov = FP_GOVERNANCE.find((x) => x.id === id);
+  if (gov) return { id, type: "legal_entity", name: `治理权利 ${gov.legal_entity_id}`, orgId: gov.owner_org_id, typeLabel: objectTypeLabel.legal_entity };
   return undefined;
 }
 

@@ -3,6 +3,7 @@ import { isOpen, riskMatches } from "./risks";
 import type { DomainId, ObjectType, RiskCase } from "./types";
 import { INDICATOR_CALIBER, periodFact } from "./period";
 import { publishedWatchRule } from "./live-config";
+import { consecutiveLossPeriods, financeLeaves, smeOverdueWan } from "./finance";
 
 /**
  * 指标一律从基础业务记录计算；expected_results 只用于验收核对，
@@ -73,6 +74,10 @@ export interface IndicatorDef {
   evaluate?: (value: number | null) => MetricStatus;
   digits?: number;
   catalogIndicatorId?: string;
+  /** 比率默认×100；流动比率为 1 */
+  ratioScale?: number;
+  /** 存在合并报表叶子时，父级取值用合并口径，不把下级报表相加 */
+  preferConsolidated?: boolean;
   leaves: (ctx: IndicatorContext) => LeafMetric[];
 }
 
@@ -131,19 +136,25 @@ export function aggregate(
     };
   }
 
+  const rollupLeaves =
+    def.preferConsolidated && usable.some((l) => l.extras.some((e) => e.value === "合并报表"))
+      ? usable.filter((l) => l.extras.some((e) => e.value === "合并报表"))
+      : usable;
+
   let value: number | null;
   let numerator: number | null = null;
   let denominator: number | null = null;
 
   if (def.kind === "count") {
-    value = usable.reduce((a, l) => a + (l.countWeight ?? 1), 0);
+    value = rollupLeaves.reduce((a, l) => a + (l.countWeight ?? 1), 0);
   } else if (def.kind === "amount") {
-    numerator = sum(usable.map((l) => l.numerator));
+    numerator = sum(rollupLeaves.map((l) => l.numerator));
     value = numerator;
   } else {
-    numerator = sum(usable.map((l) => l.numerator));
-    denominator = sum(usable.map((l) => l.denominator));
-    value = denominator && denominator !== 0 ? (numerator! / denominator) * 100 : null;
+    numerator = sum(rollupLeaves.map((l) => l.numerator));
+    denominator = sum(rollupLeaves.map((l) => l.denominator));
+    const scale = def.ratioScale ?? 100;
+    value = denominator && denominator !== 0 ? (numerator! / denominator) * scale : null;
   }
 
   const status = def.evaluate ? def.evaluate(value) : value === null ? "unknown" : "normal";
@@ -1045,9 +1056,187 @@ export const INDICATORS: IndicatorDef[] = [
             },
           ],
           riskIds: risksFor(t.id, ctx),
-          dataComplete: true,
-        })),
+        dataComplete: true,
+      })),
   },
+  {
+    id: "CASH2-I01",
+    name: "营业收入",
+    domain: "CASH",
+    unit: "万元",
+    kind: "amount",
+    leafObjectType: "legal_entity",
+    formula: "所选报告口径营业收入",
+    caliber: "期间发生额。上级有合并报表时用合并口径，下级对比用自身报表，不把下级百分比或金额直接加总冒称合并。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("revenue", ctx),
+  },
+  {
+    id: "CASH2-I02",
+    name: "营业利润",
+    domain: "CASH",
+    unit: "万元",
+    kind: "amount",
+    leafObjectType: "legal_entity",
+    formula: "报表营业利润",
+    caliber: "期间发生额；不替换为现金净流入。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("operating_profit", ctx),
+  },
+  {
+    id: "CASH2-I03",
+    name: "营业利润率",
+    domain: "CASH",
+    unit: "%",
+    kind: "ratio",
+    leafObjectType: "legal_entity",
+    formula: "营业利润÷营业收入×100%",
+    caliber: "收入≤0时不适用。父子比率不平均，按合计分子分母重算。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("operating_profit", ctx, { asRatioNumerator: "operating_profit", asRatioDenominator: "revenue" }),
+  },
+  {
+    id: "CASH2-I04",
+    name: "资产总额",
+    domain: "CASH",
+    unit: "万元",
+    kind: "amount",
+    leafObjectType: "legal_entity",
+    formula: "截至日报表资产总额",
+    caliber: "时点余额，不累加各月余额。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("total_assets", ctx),
+  },
+  {
+    id: "CASH2-I05",
+    name: "负债总额",
+    domain: "CASH",
+    unit: "万元",
+    kind: "amount",
+    leafObjectType: "legal_entity",
+    formula: "截至日报表负债总额",
+    caliber: "与资产同主体、同报表口径。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("total_liabilities", ctx),
+  },
+  {
+    id: "CASH2-I06",
+    name: "资产负债率",
+    domain: "CASH",
+    unit: "%",
+    kind: "ratio",
+    leafObjectType: "legal_entity",
+    formula: "负债总额÷资产总额×100%",
+    caliber: "资产≤0时不显示普通百分比。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("total_liabilities", ctx, { asRatioNumerator: "total_liabilities", asRatioDenominator: "total_assets" }),
+  },
+  {
+    id: "CASH2-I07",
+    name: "带息债务余额",
+    domain: "CASH",
+    unit: "万元",
+    kind: "amount",
+    leafObjectType: "legal_entity",
+    formula: "借款、债券等未偿本金余额",
+    caliber: "不得等同负债总额；未使用授信不计借款。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("interest_bearing_debt", ctx),
+  },
+  {
+    id: "CASH2-I08",
+    name: "流动比率",
+    domain: "CASH",
+    unit: "倍",
+    kind: "ratio",
+    leafObjectType: "legal_entity",
+    formula: "流动资产÷流动负债",
+    caliber: "流动负债为0时不适用，不显示无穷大。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    ratioScale: 1,
+    leaves: (ctx) => financeLeaves("current_assets", ctx, { asRatioNumerator: "current_assets", asRatioDenominator: "current_liabilities" }),
+  },
+  {
+    id: "CASH2-I09",
+    name: "经营活动现金流量净额",
+    domain: "CASH",
+    unit: "万元",
+    kind: "amount",
+    leafObjectType: "legal_entity",
+    formula: "现金流量表对应净额",
+    caliber: "期间发生额；不以全部银行收付简单相减替代。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => financeLeaves("operating_cf", ctx),
+  },
+  {
+    id: "CASH2-I11",
+    name: "核心业务连续亏损期数",
+    domain: "CASH",
+    unit: "期",
+    kind: "count",
+    leafObjectType: "legal_entity",
+    formula: "同一业务口径连续已关账期间利润<0的期数",
+    caliber: "缺一期则不宣称连续。不以现金净流出代替亏损。",
+    sourceNote: "合成分部利润（模拟）",
+    evaluate: (v) => (v === null ? "unknown" : (v as number) >= 3 ? "attention" : "normal"),
+    leaves: (ctx) =>
+      ["ORG-A", "ORG-B", "ORG-C"].map((orgId) => {
+        const hit = consecutiveLossPeriods(orgId, 3);
+        void ctx;
+        return {
+          objectId: orgId,
+          objectType: "legal_entity" as ObjectType,
+          name: seed.organizations.find((o) => o.id === orgId)?.name ?? orgId,
+          orgId,
+          numerator: hit ? hit.count : 0,
+          denominator: null,
+          countWeight: hit ? hit.count : 0,
+          extras: hit
+            ? [
+                { label: "核心业务", value: hit.name },
+                { label: "连续期利润", value: hit.profits.map((p) => `${p}万元`).join("、") },
+              ]
+            : [{ label: "连续亏损", value: "未达条件" }],
+          riskIds: risksFor(orgId, ctx),
+          dataComplete: true,
+        };
+      }),
+  },
+  {
+    id: "CASH2-I12",
+    name: "逾期未付中小企业账款金额",
+    domain: "CASH",
+    unit: "万元",
+    kind: "amount",
+    leafObjectType: "obligation",
+    formula: "已到期无争议未清偿义务合计",
+    caliber: "到期日按合同及适用规则，不按发票日期统一加60日。",
+    sourceNote: "合同付款义务（模拟）",
+    leaves: (ctx) => {
+      void ctx;
+      return ["ORG-A", "ORG-B", "ORG-C"].map((orgId) => ({
+        objectId: `SME-${orgId}`,
+        objectType: "obligation" as ObjectType,
+        name: `${orgId}中小企业账款`,
+        orgId,
+        numerator: smeOverdueWan(new Set([orgId]), ctx.asOf),
+        denominator: null,
+        extras: [{ label: "口径", value: "无争议到期未付" }],
+        riskIds: risksFor(orgId, ctx),
+        dataComplete: true,
+      }));
+    },
+  },
+
   {
     id: "CASH-OPEN",
     name: "未关闭监管事项",

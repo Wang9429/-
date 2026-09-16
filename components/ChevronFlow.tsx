@@ -15,6 +15,8 @@ export interface ChevronItem {
   severity: "red" | "yellow" | null;
   /** 业务状态说明，用于悬停提示；与监管状态分开 */
   businessNote?: string;
+  /** 当前停留在该环节的原业务数，与未关闭事项分列 */
+  stayCount?: number;
 }
 
 const ARROW = 13;
@@ -64,7 +66,7 @@ export default function ChevronFlow({
                 : item.severity === "red"
                   ? "var(--risk-red-fg)"
                   : "var(--risk-amber-fg)";
-            const chevronWidth = Math.max(156, item.name.length * 14 + 48);
+            const chevronWidth = Math.max(item.stayCount !== undefined ? 188 : 156, item.name.length * 14 + 64);
             return (
               <button
                 key={item.id}
@@ -73,9 +75,9 @@ export default function ChevronFlow({
                 aria-selected={selected}
                 onClick={() => onChange(item.id)}
                 title={`${item.name}｜未关闭事项 ${item.openCount} 件${
-                  item.businessNote ? `｜业务状态：${item.businessNote}` : ""
-                }｜统计范围：当前组织及期间内与本环节实际关联的事项去重`}
-                className="relative h-[62px] shrink-0 transition-[filter] duration-150 hover:brightness-[0.99]"
+                  item.stayCount !== undefined ? `｜当前停留 ${item.stayCount}` : ""
+                }${item.businessNote ? `｜业务状态：${item.businessNote}` : ""}｜统计范围：当前组织及期间内与本环节实际关联的事项去重`}
+                className="relative h-[68px] shrink-0 transition-[filter] duration-150 hover:brightness-[0.99]"
                 style={{
                   width: chevronWidth,
                   marginLeft: i === 0 ? 0 : -ARROW + 3,
@@ -108,6 +110,12 @@ export default function ChevronFlow({
                       {item.openCount}
                     </span>
                     <span className="text-textsub"> 件</span>
+                    {item.stayCount !== undefined && (
+                      <>
+                        <span className="text-textsub">｜停留 </span>
+                        <span className="num">{item.stayCount}</span>
+                      </>
+                    )}
                     {item.openCount > 0 && (
                       <span style={{ color: countTone }} aria-hidden>
                         {" "}

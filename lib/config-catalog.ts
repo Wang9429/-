@@ -1,5 +1,7 @@
 import { config, type ConfigUser, type DataScope } from "./config";
+import { buildFpCatalogSlice } from "./fp-catalog";
 import type { DomainId } from "./types";
+import type { RuntimeCapability } from "./fp-topics";
 
 const SEED_AS_OF = "2026-06-30";
 
@@ -49,6 +51,12 @@ export interface CatalogSubscenario {
   applicability: "pending" | "confirmed";
   required_fields: string[];
   object_types: string[];
+  topic_id?: string;
+  runtime_capability?: RuntimeCapability;
+  description?: string;
+  rule_text?: string;
+  applicability_note?: string;
+  associated_phase_ids?: string[];
 }
 
 export interface RuleVersion {
@@ -71,6 +79,8 @@ export interface CatalogRule {
   draft_parameters: ParamMap;
   published: RuleVersion | null;
   versions: RuleVersion[];
+  runtime_capability?: RuntimeCapability;
+  domain?: string;
 }
 
 export interface CatalogIndicator {
@@ -182,6 +192,30 @@ export const DEFAULT_DATA_SOURCES: CatalogDataSource[] = [
     connection_state: "事件日期真实，行情模拟",
     notes: "",
   },
+  {
+    id: "SRC-FS",
+    content: "财务报表及核心业务分部利润",
+    source: "经财务确认的报表/管理报表",
+    fallback: "本轮使用合成报告样例，集中标注数据性质，不冒用公开公司实际报表",
+    connection_state: "拟来源，未接入；Demo 为合成报告",
+    notes: "资产＝负债＋权益；货币资金与账户余额差异有桥接说明",
+  },
+  {
+    id: "SRC-TREASURY",
+    content: "账户、收付、融资担保、专项资金",
+    source: "财务云/资金台账/银行回单拟来源",
+    fallback: "规范导入；不能声称真实银企直联已实现",
+    connection_state: "拟来源，未接入",
+    notes: "",
+  },
+  {
+    id: "SRC-PTY-GOV",
+    content: "产权登记、审计评估、治理履职",
+    source: "产权系统/章程决议/股东名册/董事委派",
+    fallback: "报送资料与法人、期间和有效时点匹配",
+    connection_state: "拟来源，未接入",
+    notes: "批准60%/登记60%/台账55%保留为来源差异，不直接计登记违规",
+  },
 ];
 
 function compactParams(raw: unknown): ParamMap {
@@ -196,6 +230,10 @@ function compactParams(raw: unknown): ParamMap {
 export type RuleRuntimeKind = "executable" | "manual_review" | "definition_only";
 
 export function ruleRuntimeKind(r: CatalogRule, sub?: CatalogSubscenario | null): RuleRuntimeKind {
+  const cap = r.runtime_capability ?? sub?.runtime_capability;
+  if (cap === "structured_executable") return "executable";
+  if (cap === "assisted_review" || cap === "professional_review") return "manual_review";
+  if (cap === "definition_only") return "definition_only";
   if (sub?.execution_mode === "professional_review_support") return "manual_review";
   if (r.id === config.rule_editor.new_rule_example.id) return "executable";
   if (typeof r.draft_parameters.deviation_gt_pct === "number" || typeof r.published?.parameters.deviation_gt_pct === "number") {
@@ -206,8 +244,8 @@ export function ruleRuntimeKind(r: CatalogRule, sub?: CatalogSubscenario | null)
 
 export const RULE_RUNTIME_LABEL: Record<RuleRuntimeKind, string> = {
   executable: "可执行",
-  manual_review: "专业核查",
-  definition_only: "尚未具备运行条件",
+  manual_review: "人工核查",
+  definition_only: "仅维护定义",
 };
 
 function exampleRule(): CatalogRule {
@@ -290,15 +328,29 @@ export function extractCatalog(): CatalogPersist {
     tasks: config.ai.tasks.map((t) => ({ id: t.id, name: t.name, enabled: true })),
     allowed_domains: DOMAIN_OPTIONS.map((d) => d.id),
   };
+  const fp = buildFpCatalogSlice();
+  const stamped = stampLegacyTopics(mergeById(subscenarios, fp.subscenarios));
   return {
     schema: 1,
-    groups,
-    subscenarios,
-    rules,
-    indicators,
-    ai,
+    groups: mergeById(groups, fp.groups),
+    subscenarios: stamped,
+    rules: mergeById(rules, fp.rules),
+    indicators: mergeById(indicators, fp.indicators),
+    ai: {
+      ...ai,
+      tasks: mergeById(ai.tasks, fp.ai.tasks),
+      allowed_domains: fp.ai.allowed_domains,
+    },
     dataSources: DEFAULT_DATA_SOURCES.map((d) => ({ ...d })),
   };
+}
+
+function stampLegacyTopics(subs: CatalogSubscenario[]): CatalogSubscenario[] {
+  return subs.map((s) => {
+    if (s.id === "CASH-S01") return { ...s, topic_id: s.topic_id ?? "CASH2-T-PAYMENT" };
+    if (s.id === "PTY-S01") return { ...s, topic_id: s.topic_id ?? "PTY2-T-REG" };
+    return s;
+  });
 }
 
 function mergeById<T extends { id: string }>(base: T[], extra?: T[] | null): T[] {
@@ -319,12 +371,14 @@ export function hydrateCatalog(raw: unknown): CatalogPersist {
   return {
     schema: 1,
     groups: mergeById(base.groups, r.groups),
-    subscenarios: mergeById(base.subscenarios, r.subscenarios).map((s) => ({
-      ...s,
-      applicability: s.applicability === "pending" || s.applicability === "confirmed" ? s.applicability : "pending",
-      required_fields: Array.isArray(s.required_fields) ? s.required_fields : [],
-      object_types: Array.isArray(s.object_types) ? s.object_types : [],
-    })),
+    subscenarios: stampLegacyTopics(
+      mergeById(base.subscenarios, r.subscenarios).map((s) => ({
+        ...s,
+        applicability: s.applicability === "pending" || s.applicability === "confirmed" ? s.applicability : "pending",
+        required_fields: Array.isArray(s.required_fields) ? s.required_fields : [],
+        object_types: Array.isArray(s.object_types) ? s.object_types : [],
+      })),
+    ),
     rules: mergeById(base.rules, r.rules).map((rule) => ({
       ...rule,
       draft_parameters: { ...(rule.draft_parameters ?? {}) },
@@ -519,6 +573,8 @@ export function blankSub(id: string, parent: CatalogGroup | undefined): CatalogS
     applicability: "pending",
     required_fields: [],
     object_types: [],
+    topic_id: parent?.domain === "CASH" ? "CASH2-T-PAYMENT" : parent?.domain === "RIGHTS" ? "PTY2-T-TRADE" : undefined,
+    runtime_capability: "definition_only",
   };
 }
 

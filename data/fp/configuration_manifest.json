@@ -1,0 +1,300 @@
+{
+  "package_version": "FP-20260916-R2",
+  "artifact_type": "incremental_requirements_catalog_not_application_seed",
+  "scope": {
+    "modify_routes": [
+      "/funds",
+      "/property-rights"
+    ],
+    "synchronize": [
+      "系统配置",
+      "场景规则库",
+      "两领域指标及对象档案"
+    ],
+    "overview": "布局、文案、指标选用及交互保持；正常业务与配置联动保留"
+  },
+  "counts": {
+    "primary_scenarios": 21,
+    "suggested_subscenarios": 80,
+    "funds": 40,
+    "property_rights": 40,
+    "additional_disabled_drafts_excluded": 2
+  },
+  "defaults_for_new_definitions": {
+    "status": "draft",
+    "enabled": false,
+    "runtime_capability": "definition_only",
+    "note": "执行器与核查流程完成且样本通过后，为选定展示路径发布有效版本。迁移保留已有配置及用户修改。"
+  },
+  "execution_modes": [
+    "专业核查",
+    "自动监测",
+    "规则辅助人工"
+  ],
+  "runtime_capabilities": [
+    "structured_executable",
+    "assisted_review",
+    "professional_review",
+    "definition_only"
+  ],
+  "domain_catalogs": {
+    "funds": {
+      "file": "funds_scenarios.json",
+      "topics": [
+        "账户管理",
+        "资金收付",
+        "融资与担保",
+        "资金运作",
+        "专项资金",
+        "经营风险"
+      ],
+      "primary_scenarios": [
+        {
+          "id": "CASH2-P01",
+          "name": "违反决策和审批程序筹集和使用资金"
+        },
+        {
+          "id": "CASH2-P02",
+          "name": "超越权限筹集和使用资金"
+        },
+        {
+          "id": "CASH2-P03",
+          "name": "设立“小金库”"
+        },
+        {
+          "id": "CASH2-P04",
+          "name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等"
+        },
+        {
+          "id": "CASH2-P05",
+          "name": "虚列支出套取资金"
+        },
+        {
+          "id": "CASH2-P06",
+          "name": "违反规定自定薪酬，超发、滥发职工薪酬福利"
+        },
+        {
+          "id": "CASH2-P07",
+          "name": "因财务内控缺失或未按照财务内控制度执行，发生资金挪用、侵占、盗取、欺诈等"
+        },
+        {
+          "id": "CASH2-P08",
+          "name": "违规出借资金"
+        },
+        {
+          "id": "CASH2-P09",
+          "name": "未按规定对有关专项资金实行专户管理和使用"
+        },
+        {
+          "id": "CASH2-P10",
+          "name": "中小企业账款拖欠"
+        },
+        {
+          "id": "CASH2-P11",
+          "name": "核心业务持续亏损"
+        }
+      ]
+    },
+    "property-rights": {
+      "file": "property_scenarios.json",
+      "topics": [
+        "产权交易流转",
+        "产权登记",
+        "标识与名称资质",
+        "股权与控制权"
+      ],
+      "transaction_stage_template": [
+        "方案及权限核验",
+        "决策审批",
+        "审计评估",
+        "交易实施",
+        "签约结算与交割",
+        "登记变更及归档"
+      ],
+      "template_scope": "节点与前置关系按经济行为配置，不是统一法定先后顺序",
+      "primary_scenarios": [
+        {
+          "id": "PTY2-P01",
+          "name": "未按规定履行决策和审批程序转让、划转国有产权"
+        },
+        {
+          "id": "PTY2-P02",
+          "name": "超越授权范围转让、划转国有产权"
+        },
+        {
+          "id": "PTY2-P03",
+          "name": "财务审计和资产评估违反相关规定"
+        },
+        {
+          "id": "PTY2-P04",
+          "name": "隐匿应当纳入审计、评估范围的资产，组织提供和披露虚假信息，授意、指使中介机构出具虚假财务审计、资产评估鉴证结果及法律意见书等"
+        },
+        {
+          "id": "PTY2-P05",
+          "name": "未按相关规定执行回避制度"
+        },
+        {
+          "id": "PTY2-P06",
+          "name": "违反相关规定和公开公平交易原则，低价转让企业产权、上市公司股权和资产等"
+        },
+        {
+          "id": "PTY2-P07",
+          "name": "违反规定进行国有资产交易流转"
+        },
+        {
+          "id": "PTY2-P08",
+          "name": "未按规定履行国有股东标识管理程序，违规管理国有企业名称、企业名称中的字号，违规使用企业许可证件、资质证明文件"
+        },
+        {
+          "id": "PTY2-P09",
+          "name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）"
+        },
+        {
+          "id": "PTY2-P10",
+          "name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等"
+        }
+      ]
+    }
+  },
+  "additional_context_mappings": [
+    {
+      "scenario_id": "CASH2-S001",
+      "associated_topics": [
+        "融资与担保",
+        "资金运作",
+        "专项资金"
+      ],
+      "condition": "按该笔资金业务类型选择，不复制造成重复事项"
+    },
+    {
+      "scenario_id": "CASH2-S011",
+      "associated_topics": [
+        "资金收付"
+      ],
+      "condition": "查看关联捐赠付款"
+    },
+    {
+      "scenario_id": "CASH2-S014",
+      "associated_topics": [
+        "融资与担保"
+      ],
+      "condition": "借入方向；借出主专题仍为资金运作"
+    },
+    {
+      "scenario_id": "PTY2-S014",
+      "associated_stages": [
+        "审计评估",
+        "交易实施"
+      ],
+      "condition": "人员实际参与且该环节适用回避要求"
+    },
+    {
+      "scenario_id": "PTY2-S015",
+      "associated_stages": [
+        "交易实施"
+      ],
+      "condition": "该中介服务活动适用回避要求"
+    },
+    {
+      "scenario_id": "PTY2-S027",
+      "associated_stages": [
+        "登记变更及归档"
+      ],
+      "condition": "适用的占有登记义务"
+    },
+    {
+      "scenario_id": "PTY2-S028",
+      "associated_stages": [
+        "登记变更及归档"
+      ],
+      "condition": "交易后已触发的变动登记义务"
+    },
+    {
+      "scenario_id": "PTY2-S039",
+      "associated_stages": [
+        "登记变更及归档"
+      ],
+      "condition": "适用的注销登记义务"
+    }
+  ],
+  "required_initial_paths": {
+    "funds": [
+      "CASH2-S039",
+      "CASH2-S037",
+      "CASH2-S024",
+      "CASH2-S033",
+      "CASH2-S031",
+      "CASH2-S035"
+    ],
+    "property-rights": [
+      "PTY2-S006",
+      "PTY2-S035",
+      "PTY2-S028",
+      "PTY2-S032"
+    ],
+    "legacy_path": "现有产权来源一致性核查保留；旧ID由工程查实后映射，不新造重复场景/事项"
+  },
+  "legacy_preservation": [
+    {
+      "reference": "CASH-R01/R07",
+      "map_to_semantics": "CASH2-S039",
+      "facts": {
+        "actual_paid": 1200,
+        "approved": 800,
+        "business_limit": 2000,
+        "unit": "万元"
+      },
+      "operation": "保留原评估、规则版本、主case_id与办理记录，兼容关联新目录"
+    },
+    {
+      "reference": "原产权来源一致性核查",
+      "facts": {
+        "approved_equity": "60%",
+        "registered_equity": "60%",
+        "ledger_equity": "55%"
+      },
+      "operation": "保留原核对结论；不得仅凭台账差异认定未登记"
+    }
+  ],
+  "acceptance": [
+    "FP-AC01",
+    "FP-AC02",
+    "FP-AC03",
+    "FP-AC04",
+    "FP-AC05",
+    "FP-AC06",
+    "FP-AC07",
+    "FP-AC08",
+    "FP-AC09",
+    "FP-AC10",
+    "FP-AC11",
+    "FP-AC12",
+    "FP-AC13",
+    "FP-AC14",
+    "FP-AC15",
+    "FP-AC16",
+    "FP-AC17",
+    "FP-AC18"
+  ],
+  "conflict_resolution": "页面与计算口径以01主业需为准；配置迁移以04为准；参考文档中的设计推导不得覆盖主业需。",
+  "supervision_pattern": [
+    "主体画像",
+    "业务事实",
+    "规则与证据",
+    "核查整改"
+  ],
+  "selection_behavior": {
+    "funds_org_selection": "在授权与全局范围内改变本页上下区",
+    "indicator_drill": "仅改变抽屉分析节点，不改背景",
+    "property_org_selection": "改变法人范围四卡、图谱和下区",
+    "property_entity_focus": "聚焦法人档案和下区相关事项，不改组织范围四卡",
+    "topic_stage_selection": "仅筛下区",
+    "cross_domain_link": "携带合法主体/对象/时间及返回状态，不修改全局范围或扩大权限"
+  },
+  "required_cross_domain_paths": [
+    "产权交易价款到资金收付",
+    "担保对象到股权及控制依据",
+    "出借对象到关联关系"
+  ],
+  "reading_copy": "00_完整优化业需_资金产权穿透式监管_R2.md"
+}

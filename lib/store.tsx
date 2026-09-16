@@ -306,6 +306,16 @@ function readStorage() {
         if (!parsed.userId) parsed.userId = initialUserId;
         if (!parsed.role) parsed.role = "ROLE-HQ-SUPERVISE";
         if (!parsed.adoptedMaterials) parsed.adoptedMaterials = [];
+        const known = new Set(parsed.risks.map((r) => r.id));
+        for (const r of seed.risk_cases) {
+          if (!known.has(r.id)) parsed.risks.push(JSON.parse(JSON.stringify(r)) as RiskCase);
+        }
+        const r07 = parsed.risks.find((r) => r.id === "R07");
+        if (r07 && !r07.scenario_ids.includes("CASH2-S039")) r07.scenario_ids = [...r07.scenario_ids, "CASH2-S039"];
+        const knownAct = new Set(parsed.actions.map((a) => a.id));
+        for (const a of seed.case_actions) {
+          if (!knownAct.has(a.id)) parsed.actions.push(JSON.parse(JSON.stringify(a)) as CaseAction);
+        }
         update({ state: parsed, dirty: true });
       }
     }

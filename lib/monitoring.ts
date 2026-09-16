@@ -1,5 +1,5 @@
 import { coverageById } from "./config";
-import { coverageRows, seed } from "./seed";
+import { coverageRows, phaseName, seed } from "./seed";
 import { getLiveConfig, liveSub } from "./live-config";
 import {
   isOpen,
@@ -8,6 +8,7 @@ import {
   riskMatches,
 } from "./risks";
 import type { DomainId, MonitoringRow, RiskCase } from "./types";
+import { canonicalRightsStage } from "./fp-topics";
 
 export interface ScopeFilter {
   domain: DomainId;
@@ -250,15 +251,16 @@ export function scenariosInScope(f: ScopeFilter): string[] {
 }
 
 /** 领域内已配置场景。停用后仍保留已有覆盖与事项入口；仅未启用且无历史的新增项不进入业务清单。 */
-export function configuredScenarios(domain: DomainId, phaseId?: string | null): string[] {
+export function configuredScenarios(domain: DomainId, phaseId?: string | null, topicId?: string | null): string[] {
   const live = getLiveConfig();
   const set = new Set<string>();
   for (const row of coverageRows) {
     if (row.domain !== domain) continue;
     if (phaseId && row.phase_id !== phaseId) continue;
+    if (topicId && row.topic_id && row.topic_id !== topicId) continue;
     set.add(row.scenario_id);
   }
-  if (!phaseId) {
+  if (!phaseId && !topicId) {
     for (const s of seed.supplemental_scenarios) {
       if (s.domain === domain) set.add(s.id);
     }
@@ -267,6 +269,16 @@ export function configuredScenarios(domain: DomainId, phaseId?: string | null): 
     if (extra.domain !== domain) continue;
     if (phaseId && extra.primary_phase_id && extra.primary_phase_id !== phaseId) continue;
     if (extra.enabled || set.has(extra.id)) set.add(extra.id);
+  }
+  for (const s of live.subs.values()) {
+    if (s.domain !== domain) continue;
+    if (topicId && s.topic_id !== topicId) continue;
+    if (phaseId) {
+      const subStage = canonicalRightsStage(s.primary_phase_id) ?? s.primary_phase_id;
+      const selectedStage = canonicalRightsStage(phaseName(phaseId)) ?? canonicalRightsStage(phaseId) ?? phaseId;
+      if (s.primary_phase_id && subStage !== selectedStage && s.primary_phase_id !== phaseId) continue;
+    }
+    set.add(s.id);
   }
   return [...set].sort();
 }
@@ -310,7 +322,8 @@ export interface ScenarioRuntimeStatus {
     | "partial"
     | "manual"
     | "not_due"
-    | "not_applicable";
+    | "not_applicable"
+    | "definition_only";
   label: string;
   tone: "red" | "amber" | "green" | "neutral";
   missingFields: string[];
@@ -332,6 +345,10 @@ export function scenarioRuntimeStatus(
   const sub = liveSub(scenarioId);
   const pendingByCatalog = sub?.applicability === "pending";
   const pendingByCoverage = scenarioHasPendingApplicability(scenarioId);
+
+  if ((sub?.runtime_capability === "definition_only" || sub?.enabled === false) && rows.length === 0) {
+    return { code: "definition_only", label: "仅维护定义", tone: "neutral", missingFields: [] };
+  }
 
   if (pendingByCatalog) {
     return { code: "pending_applicability", label: "待确认适用性", tone: "neutral", missingFields: [] };

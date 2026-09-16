@@ -21,7 +21,42 @@ import { statusLabel } from "@/lib/risks";
 import { seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import { INDEPENDENT_TRIAL_PROJECTS } from "@/lib/trial";
+import { trialRule } from "@/lib/fp-rules";
+import { FIRST_BATCH_SUBS } from "@/lib/fp-topics";
 import { ActionCell, FormDrawer, SaveBar, denyTitle, fieldClass } from "./shared";
+
+const FP_TRIAL_OBJECTS: Record<string, { id: string; name: string }[]> = {
+  "CASH2-S039": [
+    { id: "P-PAY001", name: "付款 P-PAY001" },
+    { id: "P-FA001", name: "付款 P-FA001" },
+  ],
+  "CASH2-S037": [
+    { id: "P-FP-AUTH", name: "付款 P-FP-AUTH" },
+    { id: "P-PAY001", name: "付款 P-PAY001" },
+  ],
+  "CASH2-S024": [
+    { id: "P-FP-ACCCHG", name: "付款 P-FP-ACCCHG" },
+    { id: "P-FP-ACCCHG-OK", name: "付款 P-FP-ACCCHG-OK" },
+  ],
+  "CASH2-S033": [
+    { id: "SME-01", name: "账款 SME-01" },
+    { id: "SME-02", name: "账款 SME-02" },
+  ],
+  "CASH2-S031": [
+    { id: "P-FP-SPEC", name: "专项支出 P-FP-SPEC" },
+    { id: "P-FP-SPEC-OK", name: "专项支出 P-FP-SPEC-OK" },
+  ],
+  "CASH2-S035": [{ id: "SEG-A-EPCI-2026Q2", name: "海洋工程总承包" }],
+  "PTY2-S006": [
+    { id: "PTY-M007", name: "事项 PTY-M007" },
+    { id: "PTY-M002", name: "事项 PTY-M002" },
+  ],
+  "PTY2-S035": [
+    { id: "PTY-M008", name: "事项 PTY-M008" },
+    { id: "PTY-M002", name: "事项 PTY-M002" },
+  ],
+  "PTY2-S032": [{ id: "LE-CTRL", name: "法人 LE-CTRL" }],
+};
 
 type Mode = "view" | "edit" | "create" | null;
 
@@ -39,8 +74,16 @@ export default function RulesTab() {
   const [trialOpen, setTrialOpen] = useState(false);
 
   const pct = Number(draft?.draft_parameters.deviation_gt_pct ?? 10);
+  const fpSubId = draft?.primary_subscenario_id ?? "";
+  const isFpTrial = Boolean(draft && (FIRST_BATCH_SUBS as readonly string[]).includes(fpSubId));
   const trials = useMemo(() => {
     if (!draft) return [];
+    if (isFpTrial) {
+      return (FP_TRIAL_OBJECTS[fpSubId] ?? []).map((o) => {
+        const t = trialRule(draft.id, o.id);
+        return { id: o.id, name: o.name, pct: null as number | null, result: t.result, formula: t.formula, hit: t.result === "hit" };
+      });
+    }
     const source = canBusiness
       ? seed.fixed_asset_projects
           .filter((p) => p.eac != null && objectAllowed(user, p.owner_org_id, p.id))
@@ -54,8 +97,13 @@ export default function RulesTab() {
           name: p.name,
           pct: ((p.eac - p.effective_approved_budget) / p.effective_approved_budget) * 100,
         }));
-    return source.map((p) => ({ ...p, hit: p.pct > pct }));
-  }, [draft, canBusiness, user, pct]);
+    return source.map((p) => ({
+      ...p,
+      result: (p.pct > pct ? "hit" : "clear") as "hit" | "clear",
+      formula: `偏差率 ${p.pct.toFixed(2)}%`,
+      hit: p.pct > pct,
+    }));
+  }, [draft, canBusiness, user, pct, isFpTrial, fpSubId]);
 
   if (!canRead) return <Notice tone="amber">当前身份不能打开监测规则。</Notice>;
 
@@ -264,7 +312,7 @@ export default function RulesTab() {
                 disabled={!canEdit}
                 extra={
                   <>
-                    {runtimeOf(draft) === "executable" ? (
+                    {runtimeOf(draft) === "executable" || isFpTrial ? (
                       <Button disabled={!canEdit} onClick={() => setTrialOpen(true)}>
                         试算
                       </Button>
@@ -361,12 +409,26 @@ export default function RulesTab() {
           rows={trials}
           rowKey={(r) => r.id}
           columns={[
-            { key: "name", title: "项目", render: (r) => r.name },
-            { key: "pct", title: "偏差率", align: "right", render: (r) => <span className="num">{fmtPct(r.pct)}</span> },
+            { key: "name", title: isFpTrial ? "对象" : "项目", render: (r) => r.name },
+            {
+              key: "pct",
+              title: isFpTrial ? "试算说明" : "偏差率",
+              align: isFpTrial ? "left" : "right",
+              render: (r) => (isFpTrial ? <span className="text-[12px] text-textsub">{r.formula}</span> : <span className="num">{fmtPct(r.pct ?? 0)}</span>),
+            },
             {
               key: "hit",
               title: "试算结果",
-              render: (r) => (r.hit ? <Tag tone="red">命中</Tag> : <Tag tone="green">未命中</Tag>),
+              render: (r) =>
+                r.result === "hit" ? (
+                  <Tag tone="red">命中</Tag>
+                ) : r.result === "clear" ? (
+                  <Tag tone="green">未命中</Tag>
+                ) : r.result === "not_applicable" ? (
+                  <Tag tone="neutral">不适用</Tag>
+                ) : (
+                  <Tag tone="amber">缺数</Tag>
+                ),
             },
           ]}
         />

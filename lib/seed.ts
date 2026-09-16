@@ -10,6 +10,25 @@ import type {
   Organization,
 } from "./types";
 import { liveScenarioName } from "./scenario-names-live";
+import {
+  FP_ACCOUNTS,
+  FP_ACTIONS,
+  FP_BUSINESS_LINKS,
+  FP_CONTRACTS,
+  FP_COVERAGE,
+  FP_EVALS,
+  FP_EVIDENCE,
+  FP_LEGAL_ENTITIES,
+  FP_LINKS,
+  FP_MATTERS,
+  FP_OBLIGATIONS,
+  FP_RISKS,
+  FP_SNAPSHOTS,
+  FP_STAGES,
+  FP_TEMPLATES,
+  FP_TX,
+} from "./fp-seed";
+import { CASH_TOPICS, RIGHTS_TOPICS } from "./fp-topics";
 
 /**
  * 全平台唯一的种子读取入口。页面与计算模块都从这里取数，
@@ -60,26 +79,50 @@ const mergedOrgs: Organization[] = concatUnique(base.organizations, extra.organi
 export const seed = {
   ...base,
   organizations: mergedOrgs,
-  legal_entities: concatUnique(base.legal_entities, extra.legal_entities, (x) => x.id),
+  legal_entities: concatUnique(base.legal_entities, [...(extra.legal_entities ?? []), ...FP_LEGAL_ENTITIES], (x) => x.id),
   fixed_asset_projects: concatUnique(base.fixed_asset_projects, extra.fixed_asset_projects, (x) => x.id),
   assets: concatUnique(base.assets, extra.assets, (x) => x.id),
   equity_projects: concatUnique(base.equity_projects, extra.equity_projects, (x) => x.id),
   engineering_projects: concatUnique(base.engineering_projects, extra.engineering_projects, (x) => x.id),
-  contracts: concatUnique(base.contracts, extra.contracts, (x) => x.id),
-  rule_evaluations: concatUnique(base.rule_evaluations, extra.rule_evaluations, (x) => x.id),
+  contracts: concatUnique(concatUnique(base.contracts, extra.contracts, (x) => x.id), FP_CONTRACTS, (x) => x.id),
+  obligations: concatUnique(base.obligations ?? [], FP_OBLIGATIONS, (x) => x.id),
+  cash_transactions: concatUnique(base.cash_transactions, FP_TX, (x) => x.id),
+  accounts: concatUnique(base.accounts, FP_ACCOUNTS, (x) => x.id),
+  ownership_snapshots: concatUnique(base.ownership_snapshots, FP_SNAPSHOTS, (x) => x.id),
+  property_matters: concatUnique(base.property_matters, FP_MATTERS, (x) => x.id),
+  lifecycle_templates: concatUnique(base.lifecycle_templates, FP_TEMPLATES, (x) => x.id),
+  lifecycle_instances: concatUnique(base.lifecycle_instances, FP_STAGES, (x) => x.id),
+  rule_evaluations: concatUnique(concatUnique(base.rule_evaluations, extra.rule_evaluations, (x) => x.id), FP_EVALS, (x) => x.id),
   scenario_monitoring_coverage: concatUnique(
-    base.scenario_monitoring_coverage,
-    extra.scenario_monitoring_coverage,
+    concatUnique(base.scenario_monitoring_coverage, extra.scenario_monitoring_coverage, (x) => x.id),
+    FP_COVERAGE,
     (x) => x.id,
   ),
-  risk_cases: concatUnique(base.risk_cases, extra.risk_cases, (x) => x.id),
-  evidence: concatUnique(base.evidence, extra.evidence, (x) => x.id),
+  risk_cases: concatUnique(concatUnique(base.risk_cases, extra.risk_cases, (x) => x.id), FP_RISKS, (x) => x.id).map((r) => {
+    if (r.id === "R07" && !r.scenario_ids.includes("CASH2-S039")) {
+      return { ...r, scenario_ids: [...r.scenario_ids, "CASH2-S039"] };
+    }
+    return r;
+  }),
+  evidence: concatUnique(concatUnique(base.evidence, extra.evidence, (x) => x.id), FP_EVIDENCE, (x) => x.id),
   risk_context_links: [
     ...(base.risk_context_links ?? []),
     ...((extra.risk_context_links ?? []) as DemoSeed["risk_context_links"]),
+    ...FP_LINKS,
   ],
-  case_actions: concatUnique(base.case_actions, extra.case_actions, (x) => x.id),
-  business_links: concatUnique(base.business_links, extra.business_links, (x) => x.id),
+  case_actions: concatUnique(concatUnique(base.case_actions, extra.case_actions, (x) => x.id), FP_ACTIONS, (x) => x.id),
+  business_links: concatUnique(concatUnique(base.business_links, extra.business_links, (x) => x.id), FP_BUSINESS_LINKS, (x) => x.id),
+  domain_topics: [
+    { domain: "CASH" as DomainId, topics: CASH_TOPICS.map((t) => ({ id: t.id, name: t.name })) },
+    { domain: "RIGHTS" as DomainId, topics: RIGHTS_TOPICS.map((t) => ({ id: t.id, name: t.name })) },
+    ...(base.domain_topics ?? []).filter((d) => d.domain !== "CASH" && d.domain !== "RIGHTS"),
+  ],
+  expected_results: {
+    ...base.expected_results,
+    cash_balance_wan_cny: 7152,
+    cash_restricted_wan_cny: 834.4,
+    cash_available_wan_cny: 6317.6,
+  },
 } as DemoSeed;
 
 export const scaleSourceNotes = extra.source_notes ?? {};

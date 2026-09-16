@@ -3,7 +3,7 @@
  * 取数必须是授权范围 ∩ 当前组织筛选，禁止按名称猜测指标。
  */
 
-import { catalogIndicatorOnHomepage, catalogIndicatorVisible } from "./live-config";
+import { catalogIndicatorOnDomainPage, catalogIndicatorOnHomepage, catalogIndicatorVisible } from "./live-config";
 import { childOrgs, descendantOrgIds, orgPath } from "./org";
 import { INDICATORS, type IndicatorDef, type LeafMetric, type MetricStatus } from "./metrics";
 import type { DomainId, Organization } from "./types";
@@ -11,22 +11,24 @@ import type { DomainId, Organization } from "./types";
 export type DrawerSelection = { kind: "org"; id: string } | { kind: "leaf"; id: string };
 
 /** 已启用、该入口配置为首页展示、且具备计算器的运行指标。按指标 ID 与领域标识过滤。 */
-export function isRunnableDrawerIndicator(def: IndicatorDef): boolean {
+export function isRunnableDrawerIndicator(def: IndicatorDef, entry: "homepage" | "domain_page" = "homepage"): boolean {
   const catalogId = def.catalogIndicatorId ?? def.id;
   if (typeof def.leaves !== "function") return false;
-  return catalogIndicatorVisible(catalogId) && catalogIndicatorOnHomepage(catalogId);
+  if (!catalogIndicatorVisible(catalogId)) return false;
+  return entry === "domain_page" ? catalogIndicatorOnDomainPage(catalogId) : catalogIndicatorOnHomepage(catalogId);
 }
 
-export function runnableDrawerIndicators(domain: DomainId): IndicatorDef[] {
-  return INDICATORS.filter((d) => d.domain === domain && isRunnableDrawerIndicator(d));
+export function runnableDrawerIndicators(domain: DomainId, entry: "homepage" | "domain_page" = "homepage"): IndicatorDef[] {
+  return INDICATORS.filter((d) => d.domain === domain && isRunnableDrawerIndicator(d, entry));
 }
 
 export function switchableDrawerIndicators(
   domain: DomainId,
   options: IndicatorDef[],
+  entry: "homepage" | "domain_page" = "homepage",
 ): IndicatorDef[] {
-  const allowed = new Set(runnableDrawerIndicators(domain).map((d) => d.id));
-  return options.filter((d) => d.domain === domain && allowed.has(d.id) && isRunnableDrawerIndicator(d));
+  const allowed = new Set(runnableDrawerIndicators(domain, entry).map((d) => d.id));
+  return options.filter((d) => d.domain === domain && allowed.has(d.id) && isRunnableDrawerIndicator(d, entry));
 }
 
 export function isIndicatorAbnormalStatus(status: MetricStatus): boolean {

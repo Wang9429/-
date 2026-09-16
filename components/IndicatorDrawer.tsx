@@ -42,6 +42,7 @@ export function formatMetricParts(
   if (m.value === null) return { value: "—", unit: "" };
   if (def.kind === "count") return { value: fmtInt(m.value), unit: def.unit };
   if (def.kind === "amount") return { value: fmtAmountSmart(m.value), unit: def.unit };
+  if (def.unit === "倍") return { value: m.value.toFixed(2), unit: "倍" };
   if (def.kind === "signed_ratio") {
     const signed = fmtSignedPct(m.value);
     return { value: signed.replace(/%$/, ""), unit: "%" };
@@ -89,6 +90,8 @@ export interface IndicatorDrawerProps {
   includeChildren?: boolean;
   /** 总览入口不提供切换；领域页仅在可运行指标之间切换。 */
   allowIndicatorSwitch?: boolean;
+  /** 资金/产权领域页可切换 domain_page 指标，总览仍仅 homepage。 */
+  drawerEntry?: "homepage" | "domain_page";
 }
 
 /** 每次打开或换口径时以 key 重挂载，穿透定位回到当前范围的顶层节点。 */
@@ -114,6 +117,7 @@ function IndicatorDrawerBody({
   onOpenRisk,
   includeChildren = true,
   allowIndicatorSwitch = false,
+  drawerEntry = "homepage",
 }: IndicatorDrawerProps) {
   const { filters, risks, user } = useDemoStore();
   const [selection, setSelection] = useState<DrawerSelection>({ kind: "org", id: initialOrgId });
@@ -164,8 +168,8 @@ function IndicatorDrawerBody({
   const switchable = useMemo(() => {
     if (!allowIndicatorSwitch || !indicator) return [];
     if (!canDomain(user, indicator.domain)) return [];
-    return switchableDrawerIndicators(indicator.domain, indicatorOptions);
-  }, [allowIndicatorSwitch, indicator, indicatorOptions, user]);
+    return switchableDrawerIndicators(indicator.domain, indicatorOptions, drawerEntry);
+  }, [allowIndicatorSwitch, indicator, indicatorOptions, user, drawerEntry]);
 
   const emptyMetric = (): NodeMetric => ({
     value: null,
