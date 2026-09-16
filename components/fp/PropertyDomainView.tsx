@@ -19,8 +19,11 @@ import { ECONOMIC_BEHAVIORS, RIGHTS_TOPICS } from "@/lib/fp-topics";
 import { fmtPct } from "@/lib/format";
 import { openCountForPhase } from "@/lib/monitoring";
 import { riskMatches, snapshotRisksAtAsOf } from "@/lib/risks";
-import { indicatorById, type IndicatorDef } from "@/lib/metrics";
+import { indicatorById, computeIndicator, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
+import { catalogIndicatorMeta } from "@/lib/live-config";
+import { computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "@/lib/fp-trend";
+import { CompactSparkline } from "@/components/fp/MetricTrend";
 
 export default function PropertyDomainView() {
   const { filters, risks, actions, user, catalog } = useDemoStore();
@@ -59,6 +62,16 @@ export default function PropertyDomainView() {
   }, [subjectId, subjectChildren, globalOrgIds]);
 
   const allowedObjectIds = useMemo(() => authorizedObjectIds(user), [user]);
+  const ctx = useMemo(
+    () => ({
+      periodStart: filters.periodStart,
+      periodEnd: filters.periodEnd,
+      asOf: filters.asOf,
+      risks,
+      allowedObjectIds,
+    }),
+    [filters.periodStart, filters.periodEnd, filters.asOf, risks, allowedObjectIds],
+  );
   const census = useMemo(() => censusCounts(pageOrgIds, filters.asOf), [pageOrgIds, filters.asOf]);
   const matters = useMemo(() => openMatterCount(pageOrgIds), [pageOrgIds]);
   const eb = ECONOMIC_BEHAVIORS.find((x) => x.id === behavior)!;
@@ -119,6 +132,22 @@ export default function PropertyDomainView() {
 
   const pctLabel = (v: number | null) => (v === null ? "不适用" : fmtPct(v));
 
+  const censusSpark = (def: IndicatorDef | undefined) => {
+    if (!def) return null;
+    const meta = catalogIndicatorMeta(def.id);
+    const spec = trendSpecOf(def.id, {
+      applicability: meta?.trend_applicability === "never" ? "never" : undefined,
+      homeVisible: meta?.trend_home_visible,
+      detailVisible: meta?.trend_detail_visible,
+      frequency: meta?.trend_frequency,
+    });
+    if (!spec?.homeVisible) return null;
+    const raw = computeTrendPoints(def, pageOrgIds, ctx, spec, computeIndicator);
+    const points = eligibleTrendPoints(raw, spec.minPoints);
+    if (!points) return null;
+    return <CompactSparkline def={def} points={points} spec={spec} />;
+  };
+
   return (
     <div className="space-y-4">
       <PageHeader title="产权管理">
@@ -164,10 +193,18 @@ export default function PropertyDomainView() {
       <Card title="法人及股权全景">
         {canDomain(user, "RIGHTS") ? (
           <div className="reg-kpis-domain">
-            <KpiCard name="纳管法人户数" value={String(census.N)} unit="户" compare={census.check ? `B+C+P+U=${census.B}+${census.C}+${census.P}+${census.U}` : "构成待核"} onOpen={() => openCensusIndicator("PTY2-I01", "N")} returnKey="N" />
-            <KpiCard name="控股及实际控制企业" value={String(census.C)} unit="户" compare={pctLabel(census.cPct)} dataState={`全资${census.whollyInC}／非全资${census.nonWhollyInC}`} onOpen={() => openCensusIndicator("PTY2-I02", "C")} returnKey="C" />
-            <KpiCard name="参股企业" value={String(census.P)} unit="户" compare={pctLabel(census.pPct)} onOpen={() => openCensusIndicator("PTY2-I03", "P")} returnKey="P" />
-            <KpiCard name="在办产权事项" value={String(matters.count)} unit="项" compare="按事项ID去重" onOpen={() => openCensusIndicator("PTY2-I04", "T")} returnKey="T" />
+            {censusKpiDefs.some((d) => d.id === "PTY2-I01") && (
+              <KpiCard name="纳管法人户数" value={String(census.N)} unit="户" compare={census.check ? `B+C+P+U=${census.B}+${census.C}+${census.P}+${census.U}` : "构成待核"} extra={censusSpark(indicatorById("PTY2-I01"))} onOpen={() => openCensusIndicator("PTY2-I01", "N")} returnKey="N" />
+            )}
+            {censusKpiDefs.some((d) => d.id === "PTY2-I02") && (
+              <KpiCard name="控股及实际控制企业" value={String(census.C)} unit="户" compare={pctLabel(census.cPct)} dataState={`全资${census.whollyInC}／非全资${census.nonWhollyInC}`} extra={censusSpark(indicatorById("PTY2-I02"))} onOpen={() => openCensusIndicator("PTY2-I02", "C")} returnKey="C" />
+            )}
+            {censusKpiDefs.some((d) => d.id === "PTY2-I03") && (
+              <KpiCard name="参股企业" value={String(census.P)} unit="户" compare={pctLabel(census.pPct)} extra={censusSpark(indicatorById("PTY2-I03"))} onOpen={() => openCensusIndicator("PTY2-I03", "P")} returnKey="P" />
+            )}
+            {censusKpiDefs.some((d) => d.id === "PTY2-I04") && (
+              <KpiCard name="在办产权事项" value={String(matters.count)} unit="项" compare="按事项ID去重" extra={censusSpark(indicatorById("PTY2-I04"))} onOpen={() => openCensusIndicator("PTY2-I04", "T")} returnKey="T" />
+            )}
           </div>
         ) : (
           <p className="text-[13px] text-textsub">当前身份不能查看产权经营数据。</p>

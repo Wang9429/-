@@ -1,4 +1,5 @@
-import { FP_CONTROLS_PAY, FP_EVENTS, FP_GOVERNANCE, FP_REPORTS, FP_SEGMENTS, FP_SME, FP_SPECIALS } from "./fp-seed";
+import { FP_CONTROLS_PAY, FP_EVENTS, FP_GOVERNANCE, FP_REPORTS, FP_SEGMENTS, FP_SME, FP_SPECIALS, FP_GUARANTEES, FP_LENDS } from "./fp-seed";
+import { FP_ACCOUNT_OPENINGS, FP_NAME_LICENSES } from "./fp-history-seed";
 import { cashS039ParamsForPublish, resolveCashS039ToleranceWan } from "./fp-tolerance";
 import { liveRule } from "./live-config";
 import { seed } from "./seed";
@@ -35,6 +36,20 @@ export const FP_TRIAL_OBJECTS: Record<string, { id: string; name: string }[]> = 
     { id: "P-FP-SPEC-OK", name: "专项支出 P-FP-SPEC-OK" },
   ],
   "CASH2-S035": [{ id: "SEG-A-EPCI-2026Q2", name: "海洋工程总承包" }],
+  "CASH2-S040": [
+    { id: "ACC-B", name: "账户 ACC-B" },
+    { id: "ACC-A", name: "账户 ACC-A" },
+    { id: "ACC-USD", name: "账户 ACC-USD" },
+  ],
+  "CASH2-S012": [
+    { id: "GUAR-01", name: "担保 GUAR-01" },
+    { id: "GUAR-OK", name: "担保 GUAR-OK" },
+  ],
+  "CASH2-S029": [
+    { id: "LEND-01", name: "出借 LEND-01" },
+    { id: "LEND-OK", name: "出借 LEND-OK" },
+    { id: "LEND-INT-01", name: "出借 LEND-INT-01" },
+  ],
   "PTY2-S006": [
     { id: "PTY-M007", name: "事项 PTY-M007" },
     { id: "PTY-M002", name: "事项 PTY-M002" },
@@ -45,6 +60,10 @@ export const FP_TRIAL_OBJECTS: Record<string, { id: string; name: string }[]> = 
   ],
   "PTY2-S028": [{ id: "PTY-M009", name: "事项 PTY-M009" }],
   "PTY2-S032": [{ id: "LE-CTRL", name: "法人 LE-CTRL" }],
+  "PTY2-S025": [
+    { id: "PTY-M011", name: "事项 PTY-M011" },
+    { id: "PTY-M012", name: "事项 PTY-M012" },
+  ],
 };
 
 function ruleParams(
@@ -237,6 +256,126 @@ export function trialPtyS028(objectId: string): RuleTrialResult {
   return { objectId, result: "clear", formula: "已申报或未到期", inputs: { due: ev.filing_due, filed: ev.filed_on } };
 }
 
+export function trialCashS040(objectId: string): RuleTrialResult {
+  const rec = FP_ACCOUNT_OPENINGS.find((x) => x.account_id === objectId);
+  if (!rec) return { objectId, result: "not_applicable", formula: "无该账户开立记录", inputs: {} };
+  if (!rec.approval_required) {
+    return { objectId, result: "not_applicable", formula: "制度不要求事前审批", inputs: { opened_on: rec.opened_on } };
+  }
+  if (!rec.evidence_complete) {
+    return {
+      objectId,
+      result: "data_insufficient",
+      formula: rec.search_note,
+      inputs: { opened_on: rec.opened_on, evidence_complete: false },
+      missing: ["开户日有效制度", "完整审批检索结果"],
+    };
+  }
+  if (!rec.approval_on || rec.approval_on > rec.opened_on) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `需事前审批且检索完整；开户${rec.opened_on}，有效批准${rec.approval_on ?? "缺失"}`,
+      inputs: { opened_on: rec.opened_on, approval_on: rec.approval_on },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `批准${rec.approval_on}早于开户${rec.opened_on}`,
+    inputs: { opened_on: rec.opened_on, approval_on: rec.approval_on },
+  };
+}
+
+export function trialCashS012(objectId: string): RuleTrialResult {
+  const g = FP_GUARANTEES.find((x) => x.id === objectId);
+  if (!g || g.released) return { objectId, result: "not_applicable", formula: "非有效担保占用对象", inputs: {} };
+  const same = FP_GUARANTEES.filter(
+    (x) => x.guarantor_id === g.guarantor_id && x.beneficiary_id === g.beneficiary_id && !x.released,
+  );
+  const occupancy = same.reduce((s, x) => s + x.amount_wan, 0);
+  const limit = g.approved_limit_wan;
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return {
+      objectId,
+      result: "data_insufficient",
+      formula: "额度口径不清，未评估；不混比名义金额与净责任额",
+      inputs: { occupancy, limit },
+      missing: ["有效批准额度"],
+    };
+  }
+  if (occupancy > limit) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `被担保对象${g.beneficiary_id}有效占用${occupancy} > 批准额度${limit}（${g.occupancy_basis}）`,
+      inputs: { occupancy, limit, beneficiary: g.beneficiary_id },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `有效占用${occupancy} ≤ 批准额度${limit}`,
+    inputs: { occupancy, limit, beneficiary: g.beneficiary_id },
+  };
+}
+
+export function trialCashS029(objectId: string): RuleTrialResult {
+  const l = FP_LENDS.find((x) => x.id === objectId);
+  if (!l) return { objectId, result: "not_applicable", formula: "非出借合同", inputs: {} };
+  const overdue = l.due_date <= "2026-06-30" ? Math.max(0, l.outstanding_wan - l.recovered_wan) : 0;
+  if (l.due_date > "2026-06-30") {
+    return {
+      objectId,
+      result: "clear",
+      formula: `未到期（${l.due_date}），不计入逾期应收`,
+      inputs: { due: l.due_date, outstanding: l.outstanding_wan, recovered: l.recovered_wan },
+    };
+  }
+  if (overdue > 0) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `到期${l.due_date}未收回本金${overdue}万元（本金${l.outstanding_wan}−回收${l.recovered_wan}）`,
+      inputs: { due: l.due_date, outstanding: l.outstanding_wan, recovered: l.recovered_wan, overdue, borrower: l.borrower_id },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `到期义务已收回（回收${l.recovered_wan}）`,
+    inputs: { due: l.due_date, recovered: l.recovered_wan, borrower: l.borrower_id },
+  };
+}
+
+export function trialPtyS025(objectId: string): RuleTrialResult {
+  const rec = FP_NAME_LICENSES.find((x) => x.matter_id === objectId);
+  if (!rec) return { objectId, result: "not_applicable", formula: "无名称字号授权对象", inputs: {} };
+  if (!rec.auth_file || !rec.auth_until) {
+    return {
+      objectId,
+      result: "data_insufficient",
+      formula: "缺授权文件或期限，未评估",
+      inputs: { entity: rec.entity_id },
+      missing: ["授权文件", "使用期限"],
+    };
+  }
+  if (rec.exit_event_on && rec.exit_event_on > rec.auth_until) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `授权至${rec.auth_until}，退出/解约${rec.exit_event_on}后仍使用字号「${rec.trade_name}」`,
+      inputs: { auth_until: rec.auth_until, exit_on: rec.exit_event_on, trade_name: rec.trade_name },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `授权${rec.auth_file}有效至${rec.auth_until}，使用主体一致`,
+    inputs: { auth_until: rec.auth_until, entity: rec.entity_id },
+  };
+}
+
 export function trialPtyS032(objectId: string): RuleTrialResult {
   if (objectId !== "LE-CTRL" && objectId !== "PTY-M010" && objectId !== "GOV-CTRL") {
     return { objectId, result: "not_applicable", formula: "非该治理对象", inputs: {} };
@@ -271,6 +410,12 @@ export function trialRule(
       return trialCashS031(objectId);
     case "CASH2-S035":
       return trialCashS035(objectId);
+    case "CASH2-S040":
+      return trialCashS040(objectId);
+    case "CASH2-S012":
+      return trialCashS012(objectId);
+    case "CASH2-S029":
+      return trialCashS029(objectId);
     case "PTY2-S006":
       return trialPtyS006(objectId);
     case "PTY2-S035":
@@ -279,6 +424,8 @@ export function trialRule(
       return trialPtyS028(objectId);
     case "PTY2-S032":
       return trialPtyS032(objectId);
+    case "PTY2-S025":
+      return trialPtyS025(objectId);
     default:
       return { objectId, result: "data_insufficient", formula: "仅维护定义，无执行器", inputs: {}, missing: ["执行器"] };
   }

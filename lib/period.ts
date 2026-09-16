@@ -1,11 +1,12 @@
 import { AS_OF, DEFAULT_PERIOD } from "./seed";
+import { ACCOUNT_HISTORY_AS_OF } from "./fp-history-seed";
 
 /**
  * 期间与截至日口径。快照事实绑定 2026 上半年 / 截至 2026-06-30；
  * 缺期间事实时返回未覆盖，不把缺数据当 0。
  */
 
-export type FactCaliber = "period_snapshot" | "ytd" | "balance" | "dated" | "reported";
+export type FactCaliber = "period_snapshot" | "ytd" | "balance" | "dated" | "reported" | "account_as_of";
 
 export const SNAPSHOT_PERIOD = {
   start: DEFAULT_PERIOD.start,
@@ -31,6 +32,12 @@ export function periodFact(
       ok: true,
       label: `合成报表期间 ${ctx.periodStart}～${ctx.periodEnd}，截至 ${ctx.asOf}；无对应关账报告则显示缺数`,
     };
+  }
+  if (caliber === "account_as_of") {
+    if (ctx.asOf === SNAPSHOT_PERIOD.asOf || ACCOUNT_HISTORY_AS_OF.has(ctx.asOf)) {
+      return { ok: true, label: `账户余额（截至 ${ctx.asOf}）` };
+    }
+    return { ok: false, label: `账户余额（截至 ${ctx.asOf}）`, reason: "该截至日数据未覆盖" };
   }
   if (caliber === "balance") {
     if (ctx.asOf !== SNAPSHOT_PERIOD.asOf) {
@@ -76,9 +83,9 @@ export const INDICATOR_CALIBER: Record<string, FactCaliber> = {
   "ENG-REVENUE": "balance",
   "ENG-I01": "balance",
   "ENG-I06": "balance",
-  "CASH-I01": "balance",
-  "CASH-I02": "balance",
-  "CASH-I07": "balance",
+  "CASH-I01": "account_as_of",
+  "CASH-I02": "account_as_of",
+  "CASH-I07": "account_as_of",
   "CASH-I04": "balance",
   "CASH-I06": "dated",
   "CASH2-I01": "reported",

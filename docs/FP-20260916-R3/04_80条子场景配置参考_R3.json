@@ -1,0 +1,3764 @@
+{
+  "package_version": "FP-20260916-R3",
+  "artifact_type": "incremental_requirements_catalog_not_application_seed",
+  "source_catalog": "FP-20260916-R2 confirmed 40 funds + 40 property definitions",
+  "count": 80,
+  "rules": {
+    "stable_ids": "preserve_original_ids_and_histories",
+    "routing": "main_topic_id + main_topic_condition + original applicability; conditional_routes require explicit conditions",
+    "stage": "only property_transactions has main_stage; registration can conditionally link registration_archive",
+    "execution": "mode is recommended business execution mode, not confirmed implementation capability",
+    "migration": "do not blindly replace seed or activate all definitions; adopt actual current code enums with explicit mappings",
+    "main_topic_is_catalog_owner": "不是把全部对象都送到主专题；兼用途和跨环节允许关联同一实例，统计去重",
+    "legacy_fields": "legacy_topic/legacy_stage只作来源追溯，不再参与页面匹配",
+    "condition_implementation": "自然语言适用条件应适配成已确认字段上的明确判断；不得eval任意规则字符串。"
+  },
+  "primary_scenarios": [
+    {
+      "id": "CASH2-P01",
+      "name": "违反决策和审批程序筹集和使用资金"
+    },
+    {
+      "id": "CASH2-P02",
+      "name": "超越权限筹集和使用资金"
+    },
+    {
+      "id": "CASH2-P03",
+      "name": "设立“小金库”"
+    },
+    {
+      "id": "CASH2-P04",
+      "name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等"
+    },
+    {
+      "id": "CASH2-P05",
+      "name": "虚列支出套取资金"
+    },
+    {
+      "id": "CASH2-P06",
+      "name": "违反规定自定薪酬，超发、滥发职工薪酬福利"
+    },
+    {
+      "id": "CASH2-P07",
+      "name": "因财务内控缺失或未按照财务内控制度执行，发生资金挪用、侵占、盗取、欺诈等"
+    },
+    {
+      "id": "CASH2-P08",
+      "name": "违规出借资金"
+    },
+    {
+      "id": "CASH2-P09",
+      "name": "未按规定对有关专项资金实行专户管理和使用"
+    },
+    {
+      "id": "CASH2-P10",
+      "name": "中小企业账款拖欠"
+    },
+    {
+      "id": "CASH2-P11",
+      "name": "核心业务持续亏损"
+    },
+    {
+      "id": "PTY2-P01",
+      "name": "未按规定履行决策和审批程序转让、划转国有产权"
+    },
+    {
+      "id": "PTY2-P02",
+      "name": "超越授权范围转让、划转国有产权"
+    },
+    {
+      "id": "PTY2-P03",
+      "name": "财务审计和资产评估违反相关规定"
+    },
+    {
+      "id": "PTY2-P04",
+      "name": "隐匿应当纳入审计、评估范围的资产，组织提供和披露虚假信息，授意、指使中介机构出具虚假财务审计、资产评估鉴证结果及法律意见书等"
+    },
+    {
+      "id": "PTY2-P05",
+      "name": "未按相关规定执行回避制度"
+    },
+    {
+      "id": "PTY2-P06",
+      "name": "违反相关规定和公开公平交易原则，低价转让企业产权、上市公司股权和资产等"
+    },
+    {
+      "id": "PTY2-P07",
+      "name": "违反规定进行国有资产交易流转"
+    },
+    {
+      "id": "PTY2-P08",
+      "name": "未按规定履行国有股东标识管理程序，违规管理国有企业名称、企业名称中的字号，违规使用企业许可证件、资质证明文件"
+    },
+    {
+      "id": "PTY2-P09",
+      "name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）"
+    },
+    {
+      "id": "PTY2-P10",
+      "name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等"
+    }
+  ],
+  "funds_topics": [
+    {
+      "id": "funds_accounts",
+      "name": "账户管理",
+      "main_scenario_count": 2
+    },
+    {
+      "id": "funds_payments",
+      "name": "资金收付",
+      "main_scenario_count": 21
+    },
+    {
+      "id": "funds_financing",
+      "name": "融资与担保",
+      "main_scenario_count": 7
+    },
+    {
+      "id": "funds_operations",
+      "name": "资金运作",
+      "main_scenario_count": 5
+    },
+    {
+      "id": "funds_special",
+      "name": "专项资金",
+      "main_scenario_count": 3
+    },
+    {
+      "id": "funds_performance",
+      "name": "经营风险",
+      "main_scenario_count": 2
+    }
+  ],
+  "scenarios": [
+    {
+      "applicability": "适用：需集体决策的资金事项；无数据：决策台账未接入、规则未确认或事项关联键缺失时显示“未评估”并列必要缺失项，不能推断未决策；0命中：仅代表已验证覆盖范围未发现该缺口。",
+      "description": "核查达到现行制度集体决策条件的资金事项，执行前是否具有有效集体决策记录。",
+      "fields": "财务云拟验证：事项编号、主体、类型、金额、币种、执行时间；拟补充OA/决策台账：决策事项编号、会议时间、结果、有效期；拟补充制度参数：需集体决策的事项范围、金额口径、豁免条件。",
+      "id": "CASH2-S001",
+      "mode": "规则辅助人工",
+      "name": "重大资金事项未关联前置集体决策",
+      "primary_id": "CASH2-P01",
+      "primary_name": "违反决策和审批程序筹集和使用资金",
+      "rule": "先按业务发生日有效制度筛选应集体决策事项；实际已执行，且经关联校验无执行前有效决策记录时生成线索。已匹配记录但决策晚于执行的，转S003。专门业务准入缺口优先记S008—S016，同证据不重复生成事件。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "收付款或其他归属资金收付的资金事项，且相应集体决策/事前审批要求适用；融资、资金运作及专门专项安排按conditional_routes进入对应专题，不能因为主专题为资金收付而混入收付款执行表。",
+      "conditional_routes": [
+        {
+          "topic_id": "funds_financing",
+          "topic_name": "融资与担保",
+          "condition": "已核实业务类型属于借入融资、集资发行或担保，且本子场景的集体决策或事前审批要求适用；同一专门准入缺口优先适用对应专门子场景。",
+          "match_fields": {
+            "business_class": [
+              "borrowing_finance",
+              "fundraising_or_issuance",
+              "guarantee"
+            ],
+            "procedure_requirement_confirmed": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        },
+        {
+          "topic_id": "funds_operations",
+          "topic_name": "资金运作",
+          "condition": "已核实业务类型属于委托理财、借出或适用的内部资金运作，且本子场景程序要求适用；正常归集和制度合法例外先排除。",
+          "match_fields": {
+            "business_class": [
+              "entrusted_investment",
+              "lending",
+              "internal_fund_operation"
+            ],
+            "procedure_requirement_confirmed": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        },
+        {
+          "topic_id": "funds_special",
+          "topic_name": "专项资金",
+          "condition": "该项决策或审批直接针对专项资金安排、用途调整等事项，专项来源及适用程序已确认；普通付款附带专项标签不足以自动匹配。",
+          "match_fields": {
+            "business_class": [
+              "special_fund_arrangement",
+              "special_fund_use_change"
+            ],
+            "procedure_requirement_confirmed": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        }
+      ],
+      "applicable_object_types": [
+        "funding_matter"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "funding_matter",
+          "name": "资金事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：制度要求逐笔或按额度审批的支付；无数据：审批同步未完成、授权扣款规则缺失时显示“未评估”并列必要缺失项；0命中：需同时展示已比对支付笔数和审批覆盖率，不代表所有付款均合规。",
+      "description": "核查已支付业务是否缺少制度要求的有效付款审批。",
+      "fields": "财务云拟验证：支付指令号、业务类型、支付金额、支付状态、执行时间、审批单号及状态；拟补充OA：审批记录、撤销记录；拟补充制度参数：需审批的支付范围及合法例外。",
+      "id": "CASH2-S002",
+      "mode": "自动监测",
+      "name": "资金支付缺少有效审批",
+      "primary_id": "CASH2-P01",
+      "primary_name": "违反决策和审批程序筹集和使用资金",
+      "rule": "在审批数据完整且业务关联通过的前提下，已成功支付的指令在执行前无有效审批，并且监测时仍无已完成审批，则触发；有事后审批的只记S003。法定或合同约定自动扣款按已批准授权规则单独判断。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_instruction"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_instruction",
+          "name": "付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：必须事前完成审批的资金事项；无数据：任一时间戳或合法应急凭证状态不明则显示“未评估”并列必要缺失项；0命中：仅说明已核验事项未发现时间倒置。",
+      "description": "核查所需审批完成时间晚于资金实际执行时间的情形。",
+      "fields": "财务云拟验证：事项编号、执行时间、成功回执；拟补充OA：适用审批节点、最终有效完成时间、紧急授权记录；拟补充制度参数：合法应急程序、时间口径。",
+      "id": "CASH2-S003",
+      "mode": "自动监测",
+      "name": "资金事项先执行后完成审批",
+      "primary_id": "CASH2-P01",
+      "primary_name": "违反决策和审批程序筹集和使用资金",
+      "rule": "事项已执行且所需有效审批最终完成时间大于执行时间，且不满足经确认的应急先行条件时触发；比较统一时区、业务发生时间，排除接口入库时间错位。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "收付款或其他归属资金收付的资金事项，且相应集体决策/事前审批要求适用；融资、资金运作及专门专项安排按conditional_routes进入对应专题，不能因为主专题为资金收付而混入收付款执行表。",
+      "conditional_routes": [
+        {
+          "topic_id": "funds_financing",
+          "topic_name": "融资与担保",
+          "condition": "已核实业务类型属于借入融资、集资发行或担保，且本子场景的集体决策或事前审批要求适用；同一专门准入缺口优先适用对应专门子场景。",
+          "match_fields": {
+            "business_class": [
+              "borrowing_finance",
+              "fundraising_or_issuance",
+              "guarantee"
+            ],
+            "procedure_requirement_confirmed": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        },
+        {
+          "topic_id": "funds_operations",
+          "topic_name": "资金运作",
+          "condition": "已核实业务类型属于委托理财、借出或适用的内部资金运作，且本子场景程序要求适用；正常归集和制度合法例外先排除。",
+          "match_fields": {
+            "business_class": [
+              "entrusted_investment",
+              "lending",
+              "internal_fund_operation"
+            ],
+            "procedure_requirement_confirmed": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        },
+        {
+          "topic_id": "funds_special",
+          "topic_name": "专项资金",
+          "condition": "该项决策或审批直接针对专项资金安排、用途调整等事项，专项来源及适用程序已确认；普通付款附带专项标签不足以自动匹配。",
+          "match_fields": {
+            "business_class": [
+              "special_fund_arrangement",
+              "special_fund_use_change"
+            ],
+            "procedure_requirement_confirmed": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        }
+      ],
+      "applicable_object_types": [
+        "funding_matter"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "funding_matter",
+          "name": "资金事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：实施金额分级授权的融资事项；无数据：授权矩阵或适用版本不完整则显示“未评估”，无法判定；0命中：只覆盖具备完整授权证据的事项，不代表融资准入已合规。",
+      "description": "核查融资批准人在事项发生时是否具有相应金额权限。",
+      "fields": "财务云拟验证：融资事项编号、批准人、融资金额、币种、批准时间；拟补充授权矩阵：主体、岗位、业务类型、金额上限、生效失效日期、转授权记录；拟补充折算参数。",
+      "id": "CASH2-S004",
+      "mode": "自动监测",
+      "name": "融资金额超过批准人有效权限",
+      "primary_id": "CASH2-P02",
+      "primary_name": "超越权限筹集和使用资金",
+      "rule": "有审批记录的融资事项，按权限规定的金额口径及汇率折算后超过批准人当日有效授权上限，且无有效上级批准或合法转授权时触发。金额边界取现行授权配置，不写死。",
+      "main_topic_id": "funds_financing",
+      "main_topic_name": "融资与担保",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "financing_matter"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "融资与担保",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "financing_matter",
+          "name": "融资事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：以法人或组织范围授予付款权的事项；无数据：人员身份或授权范围缺失则显示“未评估”并列必要缺失项；0命中：仅代表已验证范围内未发现跨主体越权。",
+      "description": "核查付款批准人是否获准对该付款主体行使审批权。",
+      "fields": "财务云拟验证：付款主体、支付指令号、批准人、批准时间；拟补充身份与授权系统：人员唯一标识、授权法人范围、代理授权及有效期。",
+      "id": "CASH2-S005",
+      "mode": "自动监测",
+      "name": "资金付款批准人超出授权主体范围",
+      "primary_id": "CASH2-P02",
+      "primary_name": "超越权限筹集和使用资金",
+      "rule": "付款业务有审批记录，但付款法人不在批准人当日有效授权主体集合内，且无覆盖该主体的合法代理授权时触发。仅人员跨部门、同名或集团统一审批不直接触发。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_instruction"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_instruction",
+          "name": "付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：银行清单可获得且列入核查范围的账户；无数据：缺少银行侧独立完整账户清单时不能宣称已筛查账外账户；0命中：仅说明两份已覆盖清单一致，不能据此否定“小金库”。",
+      "description": "发现可能游离于统一资金管理之外的账户，为账外资金核查提供账户线索。",
+      "fields": "财务云拟验证：账户台账、主体、账号、账户性质、开户销户日期；拟补充银行确认/银行函证资料：主体完整账户清单、查询基准日；拟补充管理范围和登记时限参数。",
+      "id": "CASH2-S006",
+      "mode": "规则辅助人工",
+      "name": "银行确认账户未纳入企业账户台账",
+      "primary_id": "CASH2-P03",
+      "primary_name": "设立“小金库”",
+      "rule": "将同一主体、同一基准日的银行确认存续账户与账户台账比对，账号存在于银行清单但未登记，且超过制度允许登记时限时提示；核验联营项目、受限账户、销户在途及管理边界。",
+      "main_topic_id": "funds_accounts",
+      "main_topic_name": "账户管理",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "bank_account"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "账户管理",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "bank_account",
+          "name": "银行账户"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：能够同时取得真实银行流水、业务证据和会计凭证的收入；无数据：财务云不承担会计核算，缺少核算资料时本规则不可执行；0命中：只说明抽取范围未发现账外留存线索，不认定不存在“小金库”。",
+      "description": "核查应纳入法定账簿的企业收入是否存在账外留存线索。",
+      "fields": "财务云拟验证：银行入账流水、收款主体、金额、对手方、业务摘要；拟补充会计核算系统/总账：收款凭证、会计期间、入账金额；拟补充业务台账：收入归属、退款及过渡款说明。",
+      "id": "CASH2-S007",
+      "mode": "专业核查",
+      "name": "企业收入到账后未按规定入账线索",
+      "primary_id": "CASH2-P03",
+      "primary_name": "设立“小金库”",
+      "rule": "先由业务材料确认款项属于企业收入并应入账，再将银行入账与会计凭证逐笔或按可解释汇总关系核对；超过批准的关账/对账时点仍无入账依据，且排除退款、代收、过渡款及时点差异后，立专业核查线索。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "receipt_record"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "receipt_record",
+          "name": "收入到账记录"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：主体确有集资活动或发现相关线索；无数据：集资业务清单、适用法律意见或款项性质不明时交法务核查；0命中：当前范围经确认没有该业务对象时显示“无业务”，不以0命中证明没有非法集资。",
+      "description": "核查被识别为集资的活动是否缺少启动前所需合规审查。",
+      "fields": "拟补充融资/法务台账：集资方案、筹资对象范围、宣传材料、收益承诺、适用制度、法律意见及审查日期；财务云拟验证：相关收款、对手方、事项编号。",
+      "id": "CASH2-S008",
+      "mode": "专业核查",
+      "name": "集资事项未完成适用合规审查",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "经业务归类确认属于需专项合规审查的集资活动，首笔资金实际募集前无适用规则要求的有效审查结论时生成待核查事项；不以多名个人汇入、普通员工垫款或往来款单一特征直接判定非法集资。",
+      "main_topic_id": "funds_financing",
+      "main_topic_name": "融资与担保",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "fundraising_matter"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "融资与担保",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "fundraising_matter",
+          "name": "集资事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：实际发行股票的主体及事项，普通工程项目公司可不适用；无数据：证券事务资料未提供则显示“未评估”（待接入）；0命中：有完整发行清单且应履行程序均有依据时为0，无发行须显示“无业务”。",
+      "description": "核查股票发行实施前是否取得该发行方式所要求的外部核准或注册依据。",
+      "fields": "拟补充证券事务台账/发行公告：发行主体、发行方式、实施日期、核准或注册机关、文号、有效期、法律意见；财务云拟验证：募集收款关联号。",
+      "id": "CASH2-S009",
+      "mode": "规则辅助人工",
+      "name": "股票发行缺少适用核准或注册依据",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "仅对法律意见确认需核准或注册的股票发行，实施时无匹配有效外部依据时提示；发行方式对应的规则、生效日期和依据类型参数化，不将无需该程序的事项误判。",
+      "main_topic_id": "funds_financing",
+      "main_topic_name": "融资与担保",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "equity_issuance"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "融资与担保",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "equity_issuance",
+          "name": "股票发行事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：发行债券或相关债务融资工具的主体；无数据：品种或发行文件缺失时不能自动定性；0命中：仅说明纳入清单的发行程序未发现缺口，无发行显示“无业务”。",
+      "description": "核查债券发行品种对应的核准、注册等法定准入程序是否完成。",
+      "fields": "拟补充债务融资台账/发行文件：发行主体、债券品种、市场、实施日期、适用准入类型、有效文件及期限；财务云拟验证：募集款及融资编号。",
+      "id": "CASH2-S010",
+      "mode": "规则辅助人工",
+      "name": "债券发行缺少适用核准或注册依据",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "根据债券品种、发行市场和实施时点匹配准入规则；需取得外部准入依据的事项，在发行实施时找不到有效匹配文件则提示。分品种判断，不把所有债务融资均视为同一种审批。",
+      "main_topic_id": "funds_financing",
+      "main_topic_name": "融资与担保",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "bond_issuance"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "融资与担保",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "bond_issuance",
+          "name": "债券发行事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：已识别的捐赠业务；无数据：捐赠分类或事项审批数据不全时显示“未评估”并列必要缺失项；0命中：只代表覆盖的捐赠事项有对应审批，不代表受赠真实性已经核实。",
+      "description": "核查已实施捐赠是否具备对应的有效捐赠事项批准依据。",
+      "fields": "财务云拟验证：捐赠支付编号、主体、金额、币种、受赠方、支付时间；拟补充OA/公益台账：捐赠事项号、批准额度、受赠方、有效期、合法应急授权。",
+      "id": "CASH2-S011",
+      "mode": "自动监测",
+      "name": "捐赠付款缺少有效捐赠审批",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "付款已成功且经业务标识确认属于捐赠，但支付日前无覆盖该受赠事项的有效捐赠批准记录时触发；日常付款审批不能替代制度要求的捐赠事项审批。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "已确认属于捐赠的实际付款；本次页面主归属调整为资金收付，原topic字段保留来源追溯，不再参与页面路由。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "donation_payment"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金运作",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "donation_payment",
+          "name": "捐赠付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：承担担保责任的主体及明确额度事项；无数据：解除状态、额度占用口径或批准额度不清则显示“未评估”并列必要缺失项；0命中：仅代表已覆盖担保未超额度，不覆盖隐性担保或合同效力认定。",
+      "description": "核查同一担保对象的实际担保责任金额是否超过有效批准额度。",
+      "fields": "财务云/担保台账拟验证：担保主体、对象、合同、责任金额、币种、生效解除日期；拟补充决策台账：批准额度、对象、期限、额度占用方式和汇率规则。",
+      "id": "CASH2-S012",
+      "mode": "自动监测",
+      "name": "担保实施超出已批准担保额度",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "按批准口径计算某对象在时点t的有效担保额度占用，超过该时点有效批准额度时触发；保函、保证、抵押担保按制度配置纳入范围，不能把合同名义金额与净责任额混比。",
+      "main_topic_id": "funds_financing",
+      "main_topic_name": "融资与担保",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "guarantee_contract"
+      ],
+      "representative_path": {
+        "path_id": "FP3-FUNDS-FINANCING",
+        "suggested_mode": "自动监测",
+        "implementation_status": "补齐代表性路径，是否已有执行能力须在当前工程核实",
+        "entry": "融资与担保 → 担保实施超出已批准担保额度",
+        "objects_and_evidence": "合成的担保合同、批准额度、额度占用方式、生效解除日期、被担保主体；同时备有批准内正常样本。样例性质在数据说明集中披露。",
+        "execution": "按批准口径计算同一被担保对象在截至日有效占用，比较有效额度；额度口径不清时未评估，不混比名义金额与净责任额。",
+        "handling": "担保事项 → 批准及占用构成 → 被担保企业法人档案、股权及治理依据 → 核查整改；按授权查看财务信息。",
+        "release_gate": "额度计算器、对象档案、正常/命中/缺资料样本及核查路径通过后启用；不宣称公司真实存在违规担保。"
+      },
+      "domain_id": "funds",
+      "legacy_topic": "融资与担保",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "guarantee_contract",
+          "name": "担保合同及额度占用"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：实际开展委托理财的主体；无数据：产品说明书或批准投资范围缺失时显示“未评估”并列必要缺失项；0命中：仅说明已归类产品符合范围，收益亏损本身不等于违规。",
+      "description": "核查购买的委托理财产品是否属于已批准的产品类别与准入范围。",
+      "fields": "财务云/理财台账拟验证：产品编号、发行机构、产品类别、风险等级、购买主体、金额、日期；拟补充批准方案：准入产品类别、管理人范围、风险上限、生效期；拟补充产品说明书。",
+      "id": "CASH2-S013",
+      "mode": "规则辅助人工",
+      "name": "委托理财产品超出批准投资范围",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "以购买日有效方案为准，产品类别经说明书核实后不属于批准范围即提示；产品字段无法准确映射或名称相近时只转人工，不据名称直接认定违规理财。",
+      "main_topic_id": "funds_operations",
+      "main_topic_name": "资金运作",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "investment_product"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金运作",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "investment_product",
+          "name": "委托理财产品及购买事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：制度纳管的拆借，正常资金池归集按本企业规则排除或另配；无数据：借贷性质、审批规则或合法例外无法确认则显示“未评估”并列必要缺失项；0命中：仅代表拆借审批材料未发现缺口，不表示出借合规及可回收。",
+      "description": "核查拆借合同签署或放款前是否履行适用的拆借事项审批。",
+      "fields": "财务云/拆借台账拟验证：拆借事项号、双方主体、借入借出方向、合同生效日、实际划款日；拟补充OA：专项批准文件、有效期、事项关联；拟补充资金池豁免规则。",
+      "id": "CASH2-S014",
+      "mode": "自动监测",
+      "name": "资金拆借缺少专项事项审批",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "业务确认为资金拆借，且已达到制度规定的审批前置执行节点，但无该节点之前的有效拆借专项批准记录时触发；仅查程序缺口，借出对象、用途及收回分别由S027—S029检查。 借入方向按业务上下文关联“融资与担保”专题，借出及内部资金运作在主专题“资金运作”展示，复用同一规则与评估记录。",
+      "main_topic_id": "funds_operations",
+      "main_topic_name": "资金运作",
+      "main_topic_condition": "当前被监管主体在拆借关系中为借出方，或已确认属于适用的内部资金运作；正常资金池归集按原合法例外处理。借入方向进入融资与担保。",
+      "conditional_routes": [
+        {
+          "topic_id": "funds_financing",
+          "topic_name": "融资与担保",
+          "condition": "被监管主体在该笔拆借中为借入方，且该合同签署/提款或入账节点适用拆借专项审批；复用同一拆借对象及评估记录。",
+          "match_fields": {
+            "fund_direction": "borrowing",
+            "special_approval_required": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        }
+      ],
+      "applicable_object_types": [
+        "intercompany_loan"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金运作",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "intercompany_loan",
+          "name": "资金拆借事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：实际开立信用证的主体；无数据：信用证类型、业务文件或规则未提供则显示“未评估”并列必要缺失项；0命中：仅说明已覆盖事项材料齐备，材料齐备不证明交易真实。",
+      "description": "核查信用证项下是否提供适用产品规则要求的贸易或其他合法业务背景文件。",
+      "fields": "财务云/信用证台账拟验证：信用证号、类型、开证金额、币种、申请人、受益人、开证时间；拟补充贸易/法务材料：关联合同、背景文件、产品适用规则、例外依据。",
+      "id": "CASH2-S015",
+      "mode": "规则辅助人工",
+      "name": "信用证开立缺少适用业务背景依据",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "按信用证类型及开立日规则确定所需背景文件；已开立且缺少相应文件时提示，需核查背景真实性；备用信用证等按其适用规则判定，不一律要求货物贸易发票。",
+      "main_topic_id": "funds_financing",
+      "main_topic_name": "融资与担保",
+      "main_topic_condition": "已确认属于融资用途或担保性质信用证；按信用证品种、产品规则及实际用途匹配所需背景，不以名称直接归类。",
+      "conditional_routes": [
+        {
+          "topic_id": "funds_payments",
+          "topic_name": "资金收付",
+          "condition": "信用证经业务归类确认用于贸易结算；适用的开立背景核验在资金收付展示。兼具融资及结算用途时复用同一对象、评估及事项。",
+          "match_fields": {
+            "instrument": "letter_of_credit",
+            "confirmed_purpose": "trade_settlement"
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        }
+      ],
+      "applicable_object_types": [
+        "letter_of_credit"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "融资与担保",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "letter_of_credit",
+          "name": "信用证事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：办理相关银行票据业务的主体；无数据：票据台账与基础业务资料未联通则显示“未评估”并列必要缺失项；0命中：仅说明抽取事项有背景材料，不代表票据全部合法有效。",
+      "description": "核查需真实交易或债权债务关系支持的票据业务是否缺少对应依据。",
+      "fields": "财务云/票据台账拟验证：票据号、业务类型、出票/承兑/贴现日期、金额、出票人与收款人；拟补充合同及结算资料：交易或债权债务依据、可分配金额；拟补充票据类型适用规则。",
+      "id": "CASH2-S016",
+      "mode": "规则辅助人工",
+      "name": "银行票据办理缺少适用真实交易依据",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "rule": "对规则明确需要业务背景支持的票据办理，按票据号核查关联合同及结算证据；无法提供适用依据时生成线索，贸易发票存在只构成核查材料，不直接证明交易真实。",
+      "main_topic_id": "funds_financing",
+      "main_topic_name": "融资与担保",
+      "main_topic_condition": "银行票据业务经确认涉及融资用途，如适用的贴现等；所需真实交易背景由票据类型、办理行为及适用规则确定。",
+      "conditional_routes": [
+        {
+          "topic_id": "funds_payments",
+          "topic_name": "资金收付",
+          "condition": "票据经确认用于收付款结算，并且该票据办理行为适用业务背景核验；不把所有票据流转一概要求相同交易材料。",
+          "match_fields": {
+            "instrument": "bank_bill",
+            "confirmed_purpose": "settlement",
+            "background_requirement_confirmed": true
+          },
+          "route_role": "alternate_topic",
+          "reuse_evaluation": true,
+          "reuse_case": true,
+          "deduplication": "复用同一子场景、对象及评估版本记录；同一问题沿用原事项。专题仅改变展示，不额外执行或生成整改。"
+        }
+      ],
+      "applicable_object_types": [
+        "bank_bill"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "融资与担保",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "bank_bill",
+          "name": "银行票据事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：可获取凭据唯一标识和分摊记录的费用付款；无数据：仅有财务云付款流水而无费用原始凭据时不可运行；0命中：仅说明已覆盖凭据未发现重复超付，不认定支出真实。",
+      "description": "识别同一费用凭据被重复报支并形成超额付款的套取资金线索。",
+      "fields": "财务云拟验证：支付单号、金额、状态、冲退记录；拟补充报销/核算系统：电子发票或凭证唯一标识、费用单号、分摊金额、已核销金额、原始凭据。",
+      "id": "CASH2-S017",
+      "mode": "规则辅助人工",
+      "name": "同一费用凭据重复形成有效支付",
+      "primary_id": "CASH2-P05",
+      "primary_name": "虚列支出套取资金",
+      "rule": "同一凭据在不同费用单重复使用且累计有效报支支付金额超过该凭据可报金额及授权分摊上限时提示；排除分期、合法分摊、预付款冲销、红冲退款，不能仅因发票重复关联即判定重复报销。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "expense_payment"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "expense_payment",
+          "name": "费用支付事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：已经形成可确定结算金额的费用事项；无数据：结算资料、有效变更或付款归集不全时显示“未评估”并列必要缺失项；0命中：仅说明覆盖事项未超已核实金额，不能认定不存在虚列费用。",
+      "description": "识别同一费用事项实际付款超出有效结算依据的虚增支出线索。",
+      "fields": "财务云拟验证：付款、退款、事项关联号；拟补充业务/核算资料：最终结算单、有效变更、代扣款、可支付净额、合法预付款安排。",
+      "id": "CASH2-S018",
+      "mode": "规则辅助人工",
+      "name": "费用付款超过已核实结算金额",
+      "primary_id": "CASH2-P05",
+      "primary_name": "虚列支出套取资金",
+      "rule": "以有效结算口径重算可支付金额；累计成功付款减已退款超过可支付净额且无有效变更、预付安排或其他合法依据时提示。金额容差按币种最小单位和企业规则配置。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "expense_payment"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "expense_payment",
+          "name": "费用支付事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：具有可识别服务交付要求的已付款事项；无数据：合同及履约证据未提供则显示“未评估”并列必要缺失项，不能直接归为虚假交易；0命中：仅说明覆盖材料未发现缺口，不替代真实性核查。",
+      "description": "识别已达到约定履约验证节点却无法提供服务交付证据的虚列支出线索。",
+      "fields": "财务云拟验证：服务费用支付、合同号、日期；拟补充采购/项目系统：合同条款、服务成果、验收记录、交付节点、履约责任人；拟补充合法预付及补证期限。",
+      "id": "CASH2-S019",
+      "mode": "专业核查",
+      "name": "已付款服务费用缺少履约证据",
+      "primary_id": "CASH2-P05",
+      "primary_name": "虚列支出套取资金",
+      "rule": "合同约定的应验收或应交付节点及经批准补证期限均已届满，费用已支付，但无法提供应有成果/验收材料时生成核查线索；抽查成果真实性、人员访谈等由专业人员执行。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "service_payment"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "service_payment",
+          "name": "服务费用支付事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：制度明确需报批的薪酬标准调整；无数据：缺少薪酬方案版本和审批记录时不可判断；0命中：仅说明已比对变更未发现批准缺口，不作违规或人员责任认定。",
+      "description": "识别工资标准或薪酬方案调整后缺少对应批准依据的自定薪酬线索。",
+      "fields": "拟补充人力/薪酬系统：薪酬方案版本、调整项目、适用人员范围、生效时间；拟补充审批材料：薪酬方案批准文号、权限和生效期；财务云仅拟用作支付佐证。",
+      "id": "CASH2-S020",
+      "mode": "规则辅助人工",
+      "name": "薪酬标准调整缺少有效批准",
+      "primary_id": "CASH2-P06",
+      "primary_name": "违反规定自定薪酬，超发、滥发职工薪酬福利",
+      "rule": "已执行的薪酬标准版本与上一有效批准版本存在应报批变更，且执行日前无有效新批准依据时提示；不将正常绩效浮动、依法调整或授权内变动自动判为自定薪酬。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "salary_standard"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "salary_standard",
+          "name": "薪酬标准版本"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：实行工资总额管理且年度数据可比的主体；无数据：薪酬、核算或核定口径缺失则显示“未评估”并列必要缺失项；0命中：只表示该口径未超核定上限，不证明所有个人薪酬和福利均合规。",
+      "description": "识别同一年度、主体和人员范围的工资总额超过有效预算/核定上限的超发线索。",
+      "fields": "拟补充工资总额管理/人力/核算资料：核定总额、批准调整额、实际工资总额、年度、主体、人员范围、口径说明；财务云拟验证薪资发放批次仅作佐证。",
+      "id": "CASH2-S021",
+      "mode": "规则辅助人工",
+      "name": "同口径工资总额超过有效核定上限",
+      "primary_id": "CASH2-P06",
+      "primary_name": "违反规定自定薪酬，超发、滥发职工薪酬福利",
+      "rule": "按经批准的工资总额统计口径计算年度实际值，与同口径有效上限及批准调整比较；实际值超过上限及制度允许差异时提示。工资总额不是银行薪资付款简单求和，跨年支付和核算差异须调节。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "annual_payroll"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "annual_payroll",
+          "name": "年度工资总额记录"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：存在受相应制度约束的职工福利项目；无数据：福利明细或制度目录不全时不能据支付摘要定性；0命中：仅说明已识别项目具备依据，不直接作超发滥发结论。",
+      "description": "识别实际福利项目无法对应现行制度允许项目的滥发福利线索。",
+      "fields": "拟补充人力/工会/福利台账：福利项目、适用人员、支付或实物发放记录、资金承担主体；拟补充现行制度：允许项目目录、批准例外及有效期；财务云拟验证相关支付。",
+      "id": "CASH2-S022",
+      "mode": "规则辅助人工",
+      "name": "职工福利支付项目无制度依据",
+      "primary_id": "CASH2-P06",
+      "primary_name": "违反规定自定薪酬，超发、滥发职工薪酬福利",
+      "rule": "确认属于职工福利的实际发放项目，按发放日有效制度映射后不在允许目录，且无有效专项批准依据时提示；工资、法定社保、报销及工会自主经费按各自制度划界。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "employee_benefit"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "employee_benefit",
+          "name": "福利发放事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：制度要求职责分离的付款；无数据：仅有账号而无身份映射或操作日志时显示“未评估”并列必要缺失项；0命中：仅说明覆盖流程未发现该职责冲突，不证明不存在侵占或欺诈。",
+      "description": "核查必须分离的付款制单、复核职责是否由同一人员实际完成。",
+      "fields": "财务云拟验证：指令号、制单人、复核人、操作时间、操作日志；拟补充IAM：实名人员唯一标识、服务账号归属；拟补充职责分离矩阵和合法例外。",
+      "id": "CASH2-S023",
+      "mode": "自动监测",
+      "name": "付款制单与复核由同一身份完成",
+      "primary_id": "CASH2-P07",
+      "primary_name": "因财务内控缺失或未按照财务内控制度执行，发生资金挪用、侵占、盗取、欺诈等",
+      "rule": "需双人控制的付款流程中，制单与复核账户映射到同一实名人员，且无有效例外安排时触发；同名人员不按姓名直接合并，机器人/系统账号需识别其实际控制与审批职责。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_instruction"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_instruction",
+          "name": "付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：真实发生收款账户变更的付款；无数据：无变更日志或核验记录不可判为已核验；0命中：只表示变更控制未发现缺口，不代表收款人不存在冒用风险。",
+      "description": "核查供应商等收款账户变更后首次付款前是否完成规定的独立核验。",
+      "fields": "财务云拟验证：收款人主数据、账户变更记录、付款日期；拟补充主数据/OA：变更申请、独立核验人、核验完成时间、核验结果；拟补充制度要求。",
+      "id": "CASH2-S024",
+      "mode": "自动监测",
+      "name": "收款账户变更未经独立核验即付款",
+      "primary_id": "CASH2-P07",
+      "primary_name": "因财务内控缺失或未按照财务内控制度执行，发生资金挪用、侵占、盗取、欺诈等",
+      "rule": "制度要求账户变更独立核验的，变更后首次成功付款早于有效核验完成时间，或核验结果不通过仍支付时触发；独立性按职责规则验证。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_instruction"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_instruction",
+          "name": "付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：能够关联审批封存版本与银行回执的付款；无数据：银行执行账号不可见或封存版本缺失则显示“未评估”并列必要缺失项；0命中：仅代表覆盖指令未发现账户被改换的线索，不认定已排除欺诈。",
+      "description": "核查银行实际执行的收款账户是否与最终有效批准的收款账户一致。",
+      "fields": "财务云拟验证：审批封存版本、支付指令号、批准收款账号、执行账号、银行成功回执、有效变更记录；拟补充账号标准化与虚拟户映射规则。",
+      "id": "CASH2-S025",
+      "mode": "自动监测",
+      "name": "支付执行账户偏离批准收款账户",
+      "primary_id": "CASH2-P07",
+      "primary_name": "因财务内控缺失或未按照财务内控制度执行，发生资金挪用、侵占、盗取、欺诈等",
+      "rule": "同一成功支付指令的银行执行收款账户与执行前最终有效批准账户不一致，且不存在经授权批准的变更或可核实虚拟户映射时触发。比较实际执行证据，不能只比较两个中间系统字段。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_instruction"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_instruction",
+          "name": "付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：确有受留痕制度约束的人工干预事件；无数据：没有独立事件清单或日志链路未接入时显示“未评估”（缺少监测数据）；0命中：仅代表覆盖干预事件留痕可追溯，资金损失及责任仍须调查。",
+      "description": "核查制度要求留痕的付款人工干预是否缺少可追溯操作日志。",
+      "fields": "财务云拟验证：人工干预事件类型、事件号、指令号、操作日志索引、日志保留状态；拟补充IT审计：权限提升/人工放行记录、留痕规则、系统迁移与归档资料。",
+      "id": "CASH2-S026",
+      "mode": "规则辅助人工",
+      "name": "人工干预付款日志未留存",
+      "primary_id": "CASH2-P07",
+      "primary_name": "因财务内控缺失或未按照财务内控制度执行，发生资金挪用、侵占、盗取、欺诈等",
+      "rule": "已由独立事件台账确认发生人工放行、改写或重发等需留痕操作，且超过正常日志同步时限仍无规定日志时提示；仅监测到日志条数为0不足以认定人为删除。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "manual_payment_operation"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "manual_payment_operation",
+          "name": "人工干预付款操作"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：企业真实对外或内部借出资金；无数据：资金性质、对象关系或禁止规则缺失时显示“未评估”并列必要缺失项；0命中：仅代表已覆盖借款对象未命中禁止范围，审批程序单独由S014判断。",
+      "description": "核查实际借出资金的借款对象是否命中现行制度明确禁止的范围。",
+      "fields": "财务云/借出台账拟验证：借款人统一标识、出借主体、合同、放款日期、金额；拟补充主数据与制度：控制关系、对象属性、禁止对象规则、经批准例外。",
+      "id": "CASH2-S027",
+      "mode": "规则辅助人工",
+      "name": "资金借给制度禁止的对象",
+      "primary_id": "CASH2-P08",
+      "primary_name": "违规出借资金",
+      "rule": "款项经核实属于借出资金，按放款日的对象属性和有效禁止规则匹配；命中明文禁止范围且不具合法例外时生成线索。普通经营预付款、保证金及资金池归集须先定性区分。",
+      "main_topic_id": "funds_operations",
+      "main_topic_name": "资金运作",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "loan_contract"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金运作",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "loan_contract",
+          "name": "出借合同及收回记录"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：具有明确用途约束且可取得合法用途证据的借出资金；无数据：缺少后续去向则显示“未评估”（缺少穿透资料），转人工补证；0命中：仅说明已核实用途未偏离，不代表未覆盖资金的用途合规。",
+      "description": "核查借款资金后续实际用途是否偏离合同或有效批准用途。",
+      "fields": "财务云/借出台账拟验证：放款流水、合同号、批准用途；拟补充借款人资金使用报告、合法取得的后续流水、发票及用途证明、用途变更批准。",
+      "id": "CASH2-S028",
+      "mode": "专业核查",
+      "name": "出借资金被用于批准范围之外",
+      "primary_id": "CASH2-P08",
+      "primary_name": "违规出借资金",
+      "rule": "以可核实后续资金去向对应合同允许用途；已取得证据表明实际用途落入禁止用途或超出批准范围，且无有效用途变更时形成核查线索。无法取得借款人流水时不推测穿透结果。",
+      "main_topic_id": "funds_operations",
+      "main_topic_name": "资金运作",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "loan_contract"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金运作",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "loan_contract",
+          "name": "出借合同及收回记录"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：实际存在应到期本金的借出事项；无数据：有效还款计划、回收归集或展期状态缺失时显示“未评估”并列必要缺失项；0命中：只表示覆盖合同无到期未回本金，逾期线索不能直接认定违法出借或损失。",
+      "description": "核查合同到期的借出本金是否未按约收回。",
+      "fields": "财务云/借出台账拟验证：借出合同号、分期本金应还额、到期日、实际收回额及日期；拟补充有效展期、抵销、债务重组协议；拟补充币种和金额容差。",
+      "id": "CASH2-S029",
+      "mode": "自动监测",
+      "name": "出借资金到期未回收",
+      "primary_id": "CASH2-P08",
+      "primary_name": "违规出借资金",
+      "rule": "监测日超过有效合同的本金到期日，累计应收本金减已合法收回/抵销本金大于币种容差时触发；展期须合法有效且完成审批，逾期期间和余额分别记录。",
+      "main_topic_id": "funds_operations",
+      "main_topic_name": "资金运作",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "loan_contract"
+      ],
+      "representative_path": {
+        "path_id": "FP3-FUNDS-OPERATIONS",
+        "suggested_mode": "自动监测",
+        "implementation_status": "补齐代表性路径，是否已有执行能力须在当前工程核实",
+        "entry": "资金运作 → 出借资金到期未回收",
+        "objects_and_evidence": "合成出借合同、合法有效的到期/展期信息、本金应收、有效回收及抵销记录、借款方主体；另有未到期或已收回的正常对象。",
+        "execution": "从有效合同及回收明细计算逾期本金；不把本公司借入融资的到期应付债务当成出借应收；精度依据缺失不引入无依据的统一金额容差。",
+        "handling": "出借合同 → 借款方主体及授权内关联关系 → 到期义务与回收流水 → 核查整改；同一对象跨领域沿用ID。",
+        "release_gate": "合同—义务—流水关联及正常/命中/展期样本通过后启用；不声称合成出借业务为实际公司事实。"
+      },
+      "domain_id": "funds",
+      "legacy_topic": "资金运作",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "loan_contract",
+          "name": "出借合同及收回记录"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：确有专户要求的专项资金；无数据：专项来源依据或指定账户未确认则显示“未评估”并列必要缺失项；0命中：仅代表已覆盖专项到账账户符合要求，无需专户的专项显示不适用。",
+      "description": "核查明确要求专户管理的专项资金是否实际进入有效指定账户。",
+      "fields": "财务云拟验证：收款流水、收款账户、资金标识；拟补充专项台账：专项资金编号、来源文件、专户要求、指定账号及有效期、允许归集例外。",
+      "id": "CASH2-S030",
+      "mode": "自动监测",
+      "name": "应设专户专项资金进入非指定账户",
+      "primary_id": "CASH2-P09",
+      "primary_name": "未按规定对有关专项资金实行专户管理和使用",
+      "rule": "仅对来源文件或适用制度明确要求专户的专项，实际收款账号不在当时有效指定账号集合，且不符合依法允许的归集安排时触发；不把所有带项目号资金均视为必须专户。",
+      "main_topic_id": "funds_special",
+      "main_topic_name": "专项资金",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "special_fund_receipt"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "专项资金",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "special_fund_receipt",
+          "name": "专项资金收款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：具有明确用途限制的专项资金；无数据：专项标识、用途依据或凭证缺失时显示“未评估”并列必要缺失项；0命中：只代表已核查用途无偏离，不证明全部专项支出真实。",
+      "description": "核查专项资金支出项目是否符合专项批复明确允许的使用范围。",
+      "fields": "财务云拟验证：专项关联支付、金额、用途编码、收款方；拟补充专项项目/核算资料：批复、允许支出目录、预算科目、业务凭证、有效用途调整。",
+      "id": "CASH2-S031",
+      "mode": "规则辅助人工",
+      "name": "专项资金支出用途超出批准范围",
+      "primary_id": "CASH2-P09",
+      "primary_name": "未按规定对有关专项资金实行专户管理和使用",
+      "rule": "将已支付专项资金用途与支付日有效允许目录逐项映射；业务证据确认超出允许范围且无有效调整批准时提示。摘要关键词只可辅助筛选，不能直接认定挪用。",
+      "main_topic_id": "funds_special",
+      "main_topic_name": "专项资金",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "special_fund_payment"
+      ],
+      "representative_path": {
+        "path_id": "FP3-FUNDS-SPECIAL",
+        "suggested_mode": "规则辅助人工",
+        "implementation_status": "沿用现有代表性路径，需核对当前工程实际能力",
+        "entry": "专项资金 → 专项资金支出用途超出批准范围",
+        "objects_and_evidence": "沿用ACC-SPEC及来源文件、允许用途目录、支付记录和采购/合同用途证据；保留受限520万元及账户合计7152/834.4/6317.6万元事实。",
+        "execution": "支出用途与支付时有效允许目录比对并复核业务证据；摘要关键词命中不直接定性挪用，专户受限不等于排除在报表货币资金外。",
+        "handling": "专项 → 账户及支出 → 来源文件/用途证据 → 人工核查结论 → 整改；352万元差异仍待核实。",
+        "release_gate": "沿用已核验路径，确认专题过滤、证据与历史事项可办理，避免增加重复事项。"
+      },
+      "domain_id": "funds",
+      "legacy_topic": "专项资金",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "special_fund_payment",
+          "name": "专项资金支出事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：有明确结余清退义务且已达到清退节点的专项；无数据：仅有银行余额而无结算确认不能算应退余额；0命中：仅代表覆盖专项未出现应退未退，无退款义务的显示不适用。",
+      "description": "核查明确要求结余退回的专项在退款期限届满后是否仍留存应退余额。",
+      "fields": "财务云拟验证：专项收支、结余账户、退回流水；拟补充专项管理资料：结项确认、经确认应退金额、退款期限、允许结转/继续使用批准。",
+      "id": "CASH2-S032",
+      "mode": "自动监测",
+      "name": "专项结余超过规定期限未退回",
+      "primary_id": "CASH2-P09",
+      "primary_name": "未按规定对有关专项资金实行专户管理和使用",
+      "rule": "来源规则要求结余退回，结项已确认，监测日超过有效退款期限且经确认应退金额减有效退回额大于币种容差时触发；允许结转的依法排除。",
+      "main_topic_id": "funds_special",
+      "main_topic_name": "专项资金",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "special_fund_balance"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "专项资金",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "special_fund_balance",
+          "name": "专项资金结余及退回义务"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：适用条例的货物、工程、服务采购且对方在合同订立时为中小企业；无数据：规模类型、履约起算日、有效账款金额任一缺失则显示“未评估”并列必要缺失项；0命中：仅说明具备完整证据的账款未逾期，不能以缺账款台账显示0拖欠。",
+      "description": "核查向中小企业采购形成的无争议到期款项是否尚未支付。",
+      "fields": "拟补充采购/合同/核算资料：合同订立时双方企业规模、货物工程服务类型、交付/验收/结算确认日期、合同付款约定、争议金额、应付分期；财务云拟验证：有效支付/退款；拟补充规则版本和付款起算依据。",
+      "id": "CASH2-S033",
+      "mode": "规则辅助人工",
+      "name": "中小企业无争议到期账款未付",
+      "primary_id": "CASH2-P10",
+      "primary_name": "中小企业账款拖欠",
+      "rule": "确认支付方与收款方落入适用范围，按有效合同及适用法律确定每期到期日；监测日已过到期日且无争议应付额减有效已付额为正时提示。大型企业按适用规则及合理合同约定确定期限，不能把60日硬设为所有合同上限；部分争议不得自动挂起无争议部分。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "sme_payable_obligation"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "sme_payable_obligation",
+          "name": "中小企业合同付款义务"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：大型企业向中小企业采购的适用合同；无数据：合同正文、主体规模或适用时点缺失则不可判断；0命中：只说明已审合同未发现该条款，并不表示账款已经按期支付。",
+      "description": "核查大型企业采购中是否设置以第三方回款作为支付中小企业款项条件的条款。",
+      "fields": "拟补充合同/法务资料：合同及补充协议全文、签订日期、双方合同订立时规模类型、付款条件结构化结果、适用法律意见；财务云拟验证：实际支付及暂停支付理由，仅作佐证。",
+      "id": "CASH2-S034",
+      "mode": "规则辅助人工",
+      "name": "中小企业账款被绑定第三方回款条件",
+      "primary_id": "CASH2-P10",
+      "primary_name": "中小企业账款拖欠",
+      "rule": "在适用规则覆盖的合同中识别明确将收到第三方款项或第三方付款进度作为自身付款条件的条款，人工复核后形成条款风险线索；历史合同、新旧法衔接及特殊规定按法务确认，不能仅因关键词命中自动认定。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "sme_contract"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "sme_contract",
+          "name": "中小企业业务合同"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：能取得核心业务分部经营成果且口径可比的主体；无数据：只有财务云收付款或公司整体利润、缺少核心业务损益时显示“未评估”（缺少经营数据）；0命中：仅表示覆盖业务未达连续亏损条件，亏损本身不直接认定违规。",
+      "description": "识别按经确认一致口径计量的核心业务在连续期间经营亏损的经营风险线索。",
+      "fields": "拟补充财报/管理报表/经营分析台账：核心业务清单、分部或业务经营利润、会计期间、分摊口径、口径变更、审定状态；财务云仅可提供辅助现金流，不提供经营利润。",
+      "id": "CASH2-S035",
+      "mode": "规则辅助人工",
+      "name": "核心业务连续期间经营亏损",
+      "primary_id": "CASH2-P11",
+      "primary_name": "核心业务持续亏损",
+      "rule": "由企业确认核心业务范围、经营利润口径、期间粒度及连续期数N；同一业务在连续N个完整可比期间经营利润均小于0时提示。N为审定参数；缺期、口径重大变化时先重述或暂停判断，不用现金净流出代替亏损。",
+      "main_topic_id": "funds_performance",
+      "main_topic_name": "经营风险",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "core_business_period"
+      ],
+      "representative_path": {
+        "path_id": "FP3-FUNDS-PERFORMANCE",
+        "suggested_mode": "规则辅助人工",
+        "implementation_status": "沿用现有代表性路径，需核对当前工程实际能力",
+        "entry": "经营风险 → 核心业务连续期间经营亏损",
+        "objects_and_evidence": "已确认核心业务范围、经营利润口径、连续期数参数、完整可比期间利润记录，以及已批准减亏任务（有则关联）。",
+        "execution": "同一业务连续N个完整可比期间经营利润小于0；缺期或口径变化先暂停判断，不能用经营现金净流出替代亏损。",
+        "handling": "亏损业务 → 各期利润及来源 → 核查结论 → 责任单位及减亏任务；有有效目标和到期节点时关联S036。",
+        "release_gate": "保留既有样例与办理，核对趋势、连续期间与任务证据，不设臆造统一减亏比例。"
+      },
+      "domain_id": "funds",
+      "legacy_topic": "经营风险",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "core_business_period",
+          "name": "核心业务分部及期间经营记录"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "applicability": "适用：已批准减亏计划且到达考核节点的持续亏损业务；无数据：无正式目标或同期经营数据时显示“未评估”并列必要缺失项；未到期：存在对象但考核节点尚未到达时显示“待评估”，原因注明未到评估期，不纳入0命中；0命中：仅说明已到考核节点且完成评估的覆盖目标已达成，未达标也不自动认定违规或责任。",
+      "description": "核查已识别持续亏损业务是否按正式减亏方案完成到期目标。",
+      "fields": "拟补充经营分析/整改台账：持续亏损业务标识、正式减亏方案、目标经营利润、考核时点、责任单位、有效目标调整；拟补充财报或审定管理报表：同口径实际经营利润。",
+      "id": "CASH2-S036",
+      "mode": "规则辅助人工",
+      "name": "持续亏损业务到期未完成减亏目标",
+      "primary_id": "CASH2-P11",
+      "primary_name": "核心业务持续亏损",
+      "rule": "业务已满足经确认的持续亏损条件，正式方案考核节点已到且同口径实际经营利润低于有效目标值时提示；目标、期间及容差取批准方案，不虚构统一减亏比例。",
+      "main_topic_id": "funds_performance",
+      "main_topic_name": "经营风险",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "loss_reduction_task"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "经营风险",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "loss_reduction_task",
+          "name": "减亏任务及考核节点"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "CASH2-S037",
+      "primary_id": "CASH2-P02",
+      "primary_name": "超越权限筹集和使用资金",
+      "name": "付款批准人超出金额授权权限",
+      "description": "核查付款批准金额是否超过批准人在该业务、该主体及该时点的有效金额权限。",
+      "mode": "自动监测",
+      "fields": "财务云拟验证：付款事项号、有效批准金额、币种、批准人、批准时间；拟补充授权矩阵：付款主体、业务类型、金额上限、授权有效期、上级批准及合法转授权；拟补充金额合并和汇率口径。",
+      "rule": "已有付款审批的事项，按制度规定口径计算的批准金额超过批准人当日有效金额权限，且无足额有效上级批准或合法转授权时触发。仅核查付款审批权限，与S004融资权限区分；实付超过本笔批准金额由S039判断，不以企业业务额度上限代替批准人权限。",
+      "applicability": "适用：实行金额分级授权的付款事项；无数据：有效授权版本、批准金额或批准人身份缺失时无法判定；0命中：仅说明已覆盖付款批准金额未超过有效人员权限，不代表实付未偏离批准金额。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_instruction"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_instruction",
+          "name": "付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "CASH2-S038",
+      "primary_id": "CASH2-P02",
+      "primary_name": "超越权限筹集和使用资金",
+      "name": "拆分同一业务规避付款权限线索",
+      "description": "识别应依制度合并审批的同一实质业务被拆成多笔，以较低权限完成付款审批的线索。",
+      "mode": "规则辅助人工",
+      "fields": "财务云拟验证：付款事项号、申请及批准金额、批准人、时间、合同/结算/业务关联号；拟补充采购或项目资料：同一业务实质证据、合法分期计划；拟补充制度：合并审批范围、时间窗口、合并金额口径、有效授权矩阵及例外。",
+      "rule": "先根据合同、同一结算义务、履约证据等确认属于制度要求合并审批的同一实质业务，再按有效合并规则归集；分笔金额各落在较低权限内、合并金额已超过该权限，且未取得所需更高权限批准时生成规避审批待核查线索。仅同收款人、日期接近或金额相似不得触发；依法依约分期且不要求合并的排除。",
+      "applicability": "适用：存在明确审批合并规则且可核实业务实质的付款；无数据：业务关联证据、合并规则或合法分期依据不全时显示“未评估”并列必要缺失项，不能认定拆分规避；0命中：仅说明已核实业务组未发现规避权限线索，不代表无关联数据的付款已排除风险。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_obligation"
+      ],
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_obligation",
+          "name": "同一业务结算义务"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "CASH2-S039",
+      "primary_id": "CASH2-P02",
+      "primary_name": "超越权限筹集和使用资金",
+      "name": "实付超过该笔有效批准金额",
+      "description": "核查付款执行是否超出该笔付款事项在执行时有效批准的金额上限。",
+      "mode": "自动监测",
+      "fields": "财务云拟验证：付款事项号、审批封存版本、有效批准金额、成功支付金额、币种、银行回执、执行时间、关联分笔指令；拟补充有效追加批准、额度占用口径及金额容差。",
+      "rule": "按同一付款事项关联成功执行金额，并与各执行时点该笔有效批准金额比较；实际执行金额超过当时有效批准上限及币种容差时触发，未事前生效的追加批准不追溯消除原超付事件。该笔批准金额与业务权限上限分别判断：现有CASH-R01/R07实付1200、批准800、业务上限2000的事实保持不变，本规则识别超批准400，不能因未达2000而判为无异常。",
+      "applicability": "适用：可关联有效批准金额与银行实际执行结果的付款事项；无数据：审批封存版本、实付金额或分笔关联不完整时显示“未评估”并列必要缺失项；0命中：仅说明已覆盖事项实际执行未超该笔有效批准上限，不替代批准人权限及结算金额核查。",
+      "main_topic_id": "funds_payments",
+      "main_topic_name": "资金收付",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "payment_instruction"
+      ],
+      "representative_path": {
+        "path_id": "FP3-FUNDS-PAYMENTS",
+        "suggested_mode": "自动监测",
+        "implementation_status": "沿用现有代表性路径，需核对当前工程实际能力",
+        "entry": "资金收付 → 实付超过该笔有效批准金额",
+        "objects_and_evidence": "沿用P-PAY001及原事项；实付1200、有效批准800、业务上限2000万元；另保留正常付款可查看核验依据。",
+        "execution": "当前缺少可确认的精度依据，容差固定0；实付较批准超出400万元，不能用2000万元业务权限上限抵消；非法容差拒绝保存/发布，不静默钳制。",
+        "handling": "规则评估 → 实付/批准及银行执行依据 → 原事项核查整改 → 独立复核；不复制原R07问题。",
+        "release_gate": "保留历史版本及事实，核对新发布版本适用日期与后续评估，历史记录不覆盖。"
+      },
+      "domain_id": "funds",
+      "legacy_topic": "资金收付",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "payment_instruction",
+          "name": "付款事项"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "CASH2-S040",
+      "primary_id": "CASH2-P01",
+      "primary_name": "违反决策和审批程序筹集和使用资金",
+      "name": "企业账户开立缺少适用审批",
+      "description": "核查企业新开银行账户在开户时是否具有适用制度要求的有效开户审批。",
+      "mode": "规则辅助人工",
+      "fields": "财务云拟验证：企业账户台账、账户号、开户主体、账户性质、开户日期；拟补充银行开户资料/确认清单：实际开户日期、账户完整范围；拟补充OA：开户审批、批准日期、有效期及账户用途；拟补充适用开户审批制度、合法例外及来源完整性记录。",
+      "rule": "独立银行资料确认已开户，开户日有效制度要求事前审批，在确认银行账户清单、适用审批来源及历史记录完整后，仍无覆盖该开户事项的开户日前有效批准记录时生成线索；有审批但金额或主体权限问题交对应权限规则核查。仅账户台账未填审批号或接口未同步，不得判为未审批。",
+      "applicability": "适用：发生企业银行账户开立且制度要求审批的事项；无数据：银行开户事实、审批来源完整性或适用制度未确认时显示“未评估”并列必要缺失项，不判缺批；0命中：仅说明已完整核验的开户事项未发现审批缺口，无新增开户显示“无业务”。",
+      "main_topic_id": "funds_accounts",
+      "main_topic_name": "账户管理",
+      "main_topic_condition": "适用业务已确认，且满足本子场景原有适用条件；场景启用后按当前授权、组织、期间、截至日及对象范围展示。",
+      "conditional_routes": [],
+      "applicable_object_types": [
+        "bank_account"
+      ],
+      "representative_path": {
+        "path_id": "FP3-FUNDS-ACCOUNTS",
+        "suggested_mode": "规则辅助人工",
+        "implementation_status": "补齐代表性路径，是否已有执行能力须在当前工程核实",
+        "entry": "账户管理 → 企业账户开立缺少适用审批",
+        "objects_and_evidence": "同一主体的独立银行开户证明、账户台账、开户日有效制度、完整审批检索结果；保留一笔有有效批准的正常账户与一笔证据完整的待核查样本。",
+        "execution": "核实需事前审批及资料完整后比较有效批准时间与开户时间；仅台账审批号为空不得判定未审批。",
+        "handling": "线索 → 账户档案与审批证据 → 认领核查 → 记录结论；确认需整改后关联原事项办理。",
+        "release_gate": "规则辅助核查路径及正常/命中/缺资料样本通过后，才按权限启用发布；未完成时保留草稿。"
+      },
+      "domain_id": "funds",
+      "legacy_topic": "账户管理",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "applicable_object_type_labels": [
+        {
+          "id": "bank_account",
+          "name": "银行账户"
+        }
+      ],
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S001",
+      "primary_id": "PTY2-P01",
+      "primary_name": "未按规定履行决策和审批程序转让、划转国有产权",
+      "name": "应履行的内部决策缺失",
+      "description": "核查产权转让、划转事项是否完成章程和决策清单要求的内部决策。",
+      "mode": "自动监测",
+      "fields": [
+        "业务编号",
+        "业务路由",
+        "决策事项清单版本",
+        "章程版本",
+        "应决策机构",
+        "决议编号",
+        "决议生效时间",
+        "实施节点时间"
+      ],
+      "rule": "适用决策清单已确认，事项已到达不得越过的实施节点，仍无有效决议；仅附件未上传时输出资料待补。",
+      "applicability": "非上市产权转让、上市股份处置、无偿划转；具体决策主体随事项及制度版本配置。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "决策审批",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "decision_approval",
+      "main_stage_name": "决策审批",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "decision"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S002",
+      "primary_id": "PTY2-P01",
+      "primary_name": "未按规定履行决策和审批程序转让、划转国有产权",
+      "name": "应取得的外部或上级审批缺失",
+      "description": "核查应由国资监管机构、国家出资企业或其他有权主体批准的事项是否取得批准。",
+      "mode": "自动监测",
+      "fields": [
+        "业务编号",
+        "应审批事项清单",
+        "有权审批主体",
+        "批准文号",
+        "批准范围",
+        "批准生效时间",
+        "正式实施时间"
+      ],
+      "rule": "规则路由判定必须审批且尚无有效批准即进入禁止越过的实施节点；依法允许的预披露及其批准提示单独处理。",
+      "applicability": "各类转让、划转中依法或依授权需上级批准的事项；不把所有业务均配置为国资监管机构审批。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "决策审批",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "decision_approval",
+      "main_stage_name": "决策审批",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "decision"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S003",
+      "primary_id": "PTY2-P01",
+      "primary_name": "未按规定履行决策和审批程序转让、划转国有产权",
+      "name": "决策审批迟于规定实施节点",
+      "description": "识别已经补齐文件但存在先实施后履行程序的时间倒置。",
+      "mode": "自动监测",
+      "fields": [
+        "业务编号",
+        "路由规则版本",
+        "决议生效时间",
+        "批准生效时间",
+        "合同生效时间",
+        "正式披露时间",
+        "交割时间",
+        "节点允许条件"
+      ],
+      "rule": "有效决策或批准文件实际存在，但其生效时间晚于该路由规定的实施边界；仅对明确禁止先行的节点比较。",
+      "applicability": "需前置决策或批准的转让、划转；依法可先行的信息预披露不得一律视为违规。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "决策审批",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "decision_approval",
+      "main_stage_name": "决策审批",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "decision"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S004",
+      "primary_id": "PTY2-P01",
+      "primary_name": "未按规定履行决策和审批程序转让、划转国有产权",
+      "name": "重大方案变更未重新履行程序",
+      "description": "检查实施方案发生需要重新决策或审批的实质变更后，是否依规更新程序。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "原批准方案",
+        "最终实施方案",
+        "方案变更清单",
+        "重大变更认定口径",
+        "变更决议",
+        "变更批复",
+        "实施时间"
+      ],
+      "rule": "方案比对出现按适用制度应重新履程的实质变更，且实施前无相应补充决策或批准；一般文字变更不触发。",
+      "applicability": "存在方案变更的产权转让、上市股份处置和划转；重大变更口径按路由配置。",
+      "verification_method": "资料核验",
+      "legacy_stage": "决策审批",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "decision_approval",
+      "main_stage_name": "决策审批",
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "transaction_execution",
+          "stage_name": "交易实施",
+          "condition": "交易实施方案发生已确认须重新决策审批的重大变更；仅显示与该变更关联的核查实例，未发生变更不纳入。",
+          "required_match_keys": [
+            "transaction_id",
+            "plan_change_id",
+            "reapproval_required"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        },
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "settlement_handover",
+          "stage_name": "签约结算与交割",
+          "condition": "签约或交割前发生已确认须重新决策审批的重大方案变更，且该变更属于当前交易。",
+          "required_match_keys": [
+            "transaction_id",
+            "plan_change_id",
+            "reapproval_required"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "decision"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S005",
+      "primary_id": "PTY2-P02",
+      "primary_name": "超越授权范围转让、划转国有产权",
+      "name": "经办主体超出授权事项范围",
+      "description": "判断实际作出决定或办理交易的主体是否获授该类产权事项权限。",
+      "mode": "自动监测",
+      "fields": [
+        "授权文件编号",
+        "授权主体",
+        "被授权主体",
+        "授权事项类别",
+        "有效期",
+        "转授权条件",
+        "实际办理主体",
+        "业务类别"
+      ],
+      "rule": "在业务发生日匹配有效授权文件后，实际主体所办理事项不在授权范围内；授权文件缺失先待核验，不能等同越权。",
+      "applicability": "依授权办理的产权转让、划转；区分法定权限、集团授权及转授权。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "方案及权限核验",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "scope_permission",
+      "main_stage_name": "方案及权限核验",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "authorization"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S006",
+      "primary_id": "PTY2-P02",
+      "primary_name": "超越授权范围转让、划转国有产权",
+      "name": "交易规模超过授权权限边界",
+      "description": "识别交易金额、持股变动或控制权影响超过既有授权边界的事项。",
+      "mode": "自动监测",
+      "fields": [
+        "授权额度",
+        "额度计算口径",
+        "授权持股变动范围",
+        "控制权保留条件",
+        "同一事项归集键",
+        "本次及累计交易量",
+        "上收审批文件"
+      ],
+      "rule": "按有效授权的计算口径核算后超出适用边界，且无更高层级有效授权或审批；不预设全行业统一金额或比例。",
+      "applicability": "授权文件设有金额、数量、比例或控制权条件的转让、划转；仅在规则要求时累计归集。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "方案及权限核验",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "scope_permission",
+      "main_stage_name": "方案及权限核验",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "authorization"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S007",
+      "primary_id": "PTY2-P03",
+      "primary_name": "财务审计和资产评估违反相关规定",
+      "name": "适用审计要求未得到满足",
+      "description": "按业务路由核对审计报告或依法允许的替代材料，防止机械要求每项业务专项审计。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "审计适用结论",
+        "审计适用依据",
+        "股权性质",
+        "专项审计可行性说明",
+        "专项审计报告",
+        "最近一期年度审计报告",
+        "清产核资批复"
+      ],
+      "rule": "已确认应审计，且既无合格审计材料也无该路由允许的有效替代材料；适用性不明先补充判断，不直接认定缺失。",
+      "applicability": "非上市产权转让、有关划转等按规则适用；参股权转让专项审计不宜实施等替代情形分别配置。",
+      "verification_method": "资料核验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S008",
+      "primary_id": "PTY2-P03",
+      "primary_name": "财务审计和资产评估违反相关规定",
+      "name": "适用资产评估要求未得到满足",
+      "description": "核对依法应评估事项，识别未评估或不符合条件却引用不评估、可估值依据。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "评估适用结论",
+        "业务类别",
+        "转受让方企业性质",
+        "评估或估值报告",
+        "不评估或可估值依据",
+        "审批或同意文件",
+        "定价依据"
+      ],
+      "rule": "已确认应评估且无有效评估，或主张不评估但与适用条件不符；合法不适用、允许审计净资产定价、允许估值等分支独立留痕；估值不可任意替代应评估事项。",
+      "applicability": "按具体产权、上市股份、资产及划转规则适用；央企及其子企业结合2024年8号文，无偿划转和特定内部重组不得统一强制评估。",
+      "verification_method": "资料核验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S009",
+      "primary_id": "PTY2-P03",
+      "primary_name": "财务审计和资产评估违反相关规定",
+      "name": "应办理的评估核准备案缺失",
+      "description": "检查依法需要核准或备案的评估结果是否在使用前办妥。",
+      "mode": "自动监测",
+      "fields": [
+        "评估项目编号",
+        "评估核准备案适用结论",
+        "核准备案机关",
+        "核准批复",
+        "备案表",
+        "办理时间",
+        "使用时间"
+      ],
+      "rule": "已确认应核准或备案、评估结果已用于规定用途且未有有效办理凭证；依法不需办理的项目标记不适用。",
+      "applicability": "需核准或备案的评估项目；核准、备案两类路径分别配置。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S010",
+      "primary_id": "PTY2-P03",
+      "primary_name": "财务审计和资产评估违反相关规定",
+      "name": "审计评估报告覆盖对象不匹配",
+      "description": "核查报告覆盖的企业、资产、权益范围及用途是否与本次交易对象和经济行为一致。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "报告编号",
+        "报告覆盖对象",
+        "报告覆盖权益范围",
+        "报告用途",
+        "实际交易对象",
+        "实际交易权益范围",
+        "本次经济行为",
+        "对象匹配说明"
+      ],
+      "rule": "报告覆盖对象或权益范围与实际交易不对应，且缺乏可解释的范围调整依据，形成对象适配核查；报告用途仅作为同一适配控制的辅助条件。",
+      "applicability": "已采用审计、评估或依法可用估值成果的事项；核对同一主体、同一权益及同一经济行为口径。",
+      "verification_method": "资料核验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S011",
+      "primary_id": "PTY2-P04",
+      "primary_name": "隐匿应当纳入审计、评估范围的资产，组织提供和披露虚假信息，授意、指使中介机构出具虚假财务审计、资产评估鉴证结果及法律意见书等",
+      "name": "应纳入审计评估的资产疑似漏列",
+      "description": "将资产台账、权属资料与审计评估清单核对，发现应纳入范围却未列示的资产线索。",
+      "mode": "专业核查",
+      "fields": [
+        "资产唯一标识",
+        "资产账簿",
+        "权属证据",
+        "盘点记录",
+        "审计评估范围",
+        "评估清单",
+        "合法排除依据",
+        "范围调整记录"
+      ],
+      "rule": "经范围适用性确认，实有资产未进入应覆盖清单且无合理排除依据；差异先核实范围与时点，不直接认定隐匿。",
+      "applicability": "需审计或评估的项目；先排除时点差异、重复编号和合法剥离资产。",
+      "verification_method": "抽样核验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "asset",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S012",
+      "primary_id": "PTY2-P04",
+      "primary_name": "隐匿应当纳入审计、评估范围的资产，组织提供和披露虚假信息，授意、指使中介机构出具虚假财务审计、资产评估鉴证结果及法律意见书等",
+      "name": "提供披露信息与底层证据矛盾",
+      "description": "检查向决策机构、中介或市场提供的信息是否与可验证原始资料发生实质矛盾。",
+      "mode": "专业核查",
+      "fields": [
+        "披露资料版本",
+        "原始合同",
+        "财务凭证",
+        "权属凭证",
+        "重大诉讼记录",
+        "差异金额或事项",
+        "信息提供人",
+        "复核记录"
+      ],
+      "rule": "同一口径同一时点的披露信息与可靠底层证据存在实质差异且未解释，形成疑似虚假信息线索。",
+      "applicability": "产权事项的财务、资产、债务、权属与法律信息披露；事实错误、主观故意及责任由人工核定。",
+      "verification_method": "抽样核验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "decision_approval",
+          "stage_name": "决策审批",
+          "condition": "矛盾信息作为本次决策报送材料使用，存在该决策记录与资料版本的直接关联。",
+          "required_match_keys": [
+            "transaction_id",
+            "decision_id",
+            "disclosure_version_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        },
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "transaction_execution",
+          "stage_name": "交易实施",
+          "condition": "矛盾信息已用于当前挂牌、公开征集或交易披露，与原始证据在同口径同一时点比较。",
+          "required_match_keys": [
+            "transaction_id",
+            "disclosure_id",
+            "disclosure_version_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization",
+            "ipo_state_equity"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization",
+        "ipo_state_equity"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "disclosure",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S013",
+      "primary_id": "PTY2-P04",
+      "primary_name": "隐匿应当纳入审计、评估范围的资产，组织提供和披露虚假信息，授意、指使中介机构出具虚假财务审计、资产评估鉴证结果及法律意见书等",
+      "name": "干预中介出具虚假结论线索",
+      "description": "关联中介报告版本、底稿与已合法取得的指令证据，识别授意出具失实结论的线索。",
+      "mode": "专业核查",
+      "fields": [
+        "中介机构",
+        "报告版本",
+        "工作底稿",
+        "报告修改说明",
+        "合法取得的指令材料",
+        "经办人员",
+        "利益关系资料"
+      ],
+      "rule": "报告关键结论无证据支撑且存在指向人为指令干预的独立材料时转人工调查；单凭报告修改或关联关系不定性。",
+      "applicability": "审计、评估鉴证、法律意见等中介工作；系统仅编排证据，不自动推断主观授意。",
+      "verification_method": "人工研判",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "decision_approval",
+          "stage_name": "决策审批",
+          "condition": "有合法取得的独立干预证据，且疑似失实的中介报告或法律意见用于当前决策；保持专业核查。",
+          "required_match_keys": [
+            "transaction_id",
+            "report_id",
+            "decision_id",
+            "interference_evidence_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        },
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "transaction_execution",
+          "stage_name": "交易实施",
+          "condition": "疑似失实的中介报告或法律意见用于当前交易实施，有报告及独立干预证据关联；保持专业核查。",
+          "required_match_keys": [
+            "transaction_id",
+            "report_id",
+            "implementation_record_id",
+            "interference_evidence_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "intermediary",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S014",
+      "primary_id": "PTY2-P05",
+      "primary_name": "未按相关规定执行回避制度",
+      "name": "应回避的决策人员参与表决",
+      "description": "比对适用回避规则、已核实利害关系与决策表决记录。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "回避规则版本",
+        "决策人员",
+        "已核实关联关系",
+        "回避申报",
+        "会议签到",
+        "表决票",
+        "会议记录"
+      ],
+      "rule": "适用规则明确要求某人员回避，已核实其存在应回避关系，且其实际参与被禁止的审议或表决环节。",
+      "applicability": "对产权事项负有回避义务的决策人员；关系未核实仅为待核验。",
+      "verification_method": "资料核验",
+      "legacy_stage": "决策审批",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "decision_approval",
+      "main_stage_name": "决策审批",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "decision",
+        "recusal_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S015",
+      "primary_id": "PTY2-P05",
+      "primary_name": "未按相关规定执行回避制度",
+      "name": "应回避的中介人员继续承办",
+      "description": "检查中介机构或执业人员在触发独立性、回避限制时是否仍继续承担受限工作。",
+      "mode": "专业核查",
+      "fields": [
+        "中介机构及执业人员",
+        "适用回避条款",
+        "独立性声明",
+        "已核实利益关系",
+        "选聘合同",
+        "实际签字或执业记录",
+        "更换记录"
+      ],
+      "rule": "按适用专业规则确认存在必须回避情形，实际承办或签字仍持续且未有效更换，生成核验事项。",
+      "applicability": "审计、评估、鉴证等具有明确回避要求的中介工作；不把任何历史合作均视为回避冲突。",
+      "verification_method": "抽样核验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "transaction_execution",
+          "stage_name": "交易实施",
+          "condition": "中介在交易阶段实际承担受适用回避规则限制的工作，已确认回避义务及继续承办事实。不得因参加交易即推定应回避。",
+          "required_match_keys": [
+            "transaction_id",
+            "intermediary_assignment_id",
+            "recusal_requirement_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "intermediary",
+        "recusal_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S016",
+      "primary_id": "PTY2-P06",
+      "primary_name": "违反相关规定和公开公平交易原则，低价转让企业产权、上市公司股权和资产等",
+      "name": "非上市产权或资产定价依据偏离",
+      "description": "按交易类别选取评估结果、合法审计净资产或其他有效基准，检查转让底价及成交价格。",
+      "mode": "自动监测",
+      "fields": [
+        "业务路由",
+        "适用定价条款",
+        "合法定价基准",
+        "首次底价",
+        "历次降价",
+        "成交价格",
+        "特别批准文件",
+        "规则版本"
+      ],
+      "rule": "按该路由应使用的基准和定价约束计算后，实际底价或成交价违反适用要求且无有效依据；价格显著偏离但规则未明确的转人工。",
+      "applicability": "非上市产权和资产交易；二者规则分开配置，不统一套用评估值、折价比例或固定阈值。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "交易实施",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "transaction_execution",
+      "main_stage_name": "交易实施",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S017",
+      "primary_id": "PTY2-P06",
+      "primary_name": "违反相关规定和公开公平交易原则，低价转让企业产权、上市公司股权和资产等",
+      "name": "上市股份转让价格基准不符",
+      "description": "根据证券交易系统、公开征集、非公开协议等方式选用相应定价规则。",
+      "mode": "自动监测",
+      "fields": [
+        "上市股份处置方式",
+        "股份类别",
+        "定价基准日",
+        "适用市场价格序列",
+        "每股净资产口径",
+        "实际转让价格",
+        "规则版本",
+        "合法例外依据"
+      ],
+      "rule": "已确认具体上市股份转让路由，实际价格不符合该路由的有效价格约束且无合法例外依据。",
+      "applicability": "上市公司国有股份转让；IPO发行定价、公开征集、协议转让及交易系统减持不得套用同一价格公式。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "交易实施",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "transaction_execution",
+      "main_stage_name": "交易实施",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "listed_share_transfer"
+      ],
+      "applicable_object_types": [
+        "transaction"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S018",
+      "primary_id": "PTY2-P06",
+      "primary_name": "违反相关规定和公开公平交易原则，低价转让企业产权、上市公司股权和资产等",
+      "name": "应公开交易事项绕开公开程序",
+      "description": "识别应通过规定公开路径交易，却在没有有效例外依据时直接成交的事项。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "交易方式",
+        "公开交易适用结论",
+        "交易场所",
+        "挂牌或公开征集记录",
+        "例外适用条款",
+        "非公开批准文件",
+        "成交记录"
+      ],
+      "rule": "公开交易义务明确，事项已成交但未走适用公开程序，且无法匹配有效非公开协议或其他法定例外。",
+      "applicability": "按路由需公开交易的非上市产权、上市股份及资产事项；有权批准的非公开交易不自动命中。",
+      "verification_method": "资料核验",
+      "legacy_stage": "交易实施",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "transaction_execution",
+      "main_stage_name": "交易实施",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "asset_transfer"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "disclosure"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S019",
+      "primary_id": "PTY2-P06",
+      "primary_name": "违反相关规定和公开公平交易原则，低价转让企业产权、上市公司股权和资产等",
+      "name": "交易条件设置不合理排斥竞争",
+      "description": "核查受让资格和交易条件是否存在无合理业务理由的指向性、排他性设置。",
+      "mode": "专业核查",
+      "fields": [
+        "挂牌或征集条件",
+        "条件拟定依据",
+        "意向方清单",
+        "资格审查记录",
+        "排除理由",
+        "条件变更记录",
+        "独立评审意见"
+      ],
+      "rule": "资格条件与标的业务、履约能力或法定要求缺乏合理关联并实际限制竞争时转复核；只有一名意向方不构成自动触发结论。",
+      "applicability": "公开挂牌、公开征集及竞价事项；保障国家安全等依法可设置的必要条件须单独核验。",
+      "verification_method": "人工研判",
+      "legacy_stage": "交易实施",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "transaction_execution",
+      "main_stage_name": "交易实施",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "asset_transfer"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "disclosure"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S020",
+      "primary_id": "PTY2-P07",
+      "primary_name": "违反规定进行国有资产交易流转",
+      "name": "无偿划转主体资格或条件不符",
+      "description": "核对划出方、划入方及内部重组安排是否满足所引用无偿划转政策的主体和业务条件。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "划转方式",
+        "划出划入主体性质",
+        "各层股权关系",
+        "内部重组方案",
+        "适用政策条款",
+        "批准文件",
+        "全体股东同意情况"
+      ],
+      "rule": "选择无偿划转路由，但经穿透核实不满足所引用条款的主体或交易条件；不能仅以国资参股认定具备资格。",
+      "applicability": "非上市产权无偿划转及符合专门政策的内部重组划转；上市股份无偿划转转入上市专门路由。",
+      "verification_method": "资料核验",
+      "legacy_stage": "方案及权限核验",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "scope_permission",
+      "main_stage_name": "方案及权限核验",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "gratuitous_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "legal_entity",
+        "shareholding"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S021",
+      "primary_id": "PTY2-P07",
+      "primary_name": "违反规定进行国有资产交易流转",
+      "name": "资产交易错误套用产权交易路径",
+      "description": "核对处置对象与适用资产管理制度，识别将设备、房产等资产处置错误归为股权转让或绕过适用资产交易路径。",
+      "mode": "自动监测",
+      "fields": [
+        "处置标的类型",
+        "资产类别",
+        "持有主体",
+        "账面价值",
+        "交易金额",
+        "资产交易制度版本",
+        "重大资产标准",
+        "实际办理路径"
+      ],
+      "rule": "标的明确属于资产交易，实际路径与该资产类别和适用标准应走路径不一致，且无有效特别规定。",
+      "applicability": "设备、房产、无形资产等资产处置；重大金额标准、交易方式和公开要求依制度及资产类别配置。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "方案及权限核验",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "scope_permission",
+      "main_stage_name": "方案及权限核验",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "asset_transfer"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "asset"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S022",
+      "primary_id": "PTY2-P07",
+      "primary_name": "违反规定进行国有资产交易流转",
+      "name": "上市股份事项错误选择办理路由",
+      "description": "检查上市股份转让及IPO相关国有股权事项是否进入对应专门程序。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "上市状态",
+        "交易或发行事项类别",
+        "股份变动方式",
+        "控制权影响",
+        "应办理程序",
+        "实际办理记录",
+        "国有股东身份结论",
+        "规则版本"
+      ],
+      "rule": "事项已明确属于某上市股份或IPO专门程序，实际却使用非上市产权或其他不匹配路由，产生应办程序差异。",
+      "applicability": "上市股份交易、无偿划转和IPO相关国有股权管理事项；IPO不是普通存量股权转让，标识管理另挂日常专题。",
+      "verification_method": "资料核验",
+      "legacy_stage": "方案及权限核验",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "scope_permission",
+      "main_stage_name": "方案及权限核验",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "listed_share_transfer",
+        "listed_share_gratuitous_transfer",
+        "ipo_state_equity"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "securities_account"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S023",
+      "primary_id": "PTY2-P07",
+      "primary_name": "违反规定进行国有资产交易流转",
+      "name": "产权转让付款安排不合规",
+      "description": "核对产权转让合同设定的付款方案是否符合适用价款支付制度。",
+      "mode": "自动监测",
+      "fields": [
+        "转让合同",
+        "支付方式",
+        "约定首付款比例",
+        "约定付款期限",
+        "分期适用条件",
+        "约定担保及利息安排",
+        "付款安排规则版本",
+        "合法特殊安排"
+      ],
+      "rule": "适用付款安排规则已确定，合同设定的付款方案违反该规则且无有效例外；比例、期限、分期保障要求按业务路由读取，实际到期未收另由S037核查。",
+      "applicability": "存在价款的产权转让合同；上市股份、资产交易使用各自适用参数；无偿划转不适用。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "签约结算与交割",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "settlement_handover",
+      "main_stage_name": "签约结算与交割",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "asset_transfer"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "contract",
+        "payment_obligation"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S024",
+      "primary_id": "PTY2-P08",
+      "primary_name": "未按规定履行国有股东标识管理程序，违规管理国有企业名称、企业名称中的字号，违规使用企业许可证件、资质证明文件",
+      "name": "国有股东标识应办程序缺失",
+      "description": "对符合国有股东认定规则的相关账户和股份事项，核查标识申请、变更等应办程序。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "国有股东认定结论",
+        "企业组织形式",
+        "拟上市或上市状态",
+        "证券账户",
+        "标识办理材料",
+        "标识变更事件",
+        "办理要求",
+        "回执"
+      ],
+      "rule": "先按适用规定认定应办理标识，相关事件已触发但应办程序未完成；国资背景或间接持股本身不等于必须办理。",
+      "applicability": "涉及上市或拟上市的国有股东标识事项；有限合伙等特殊组织形式先匹配专门规则。",
+      "verification_method": "资料核验",
+      "legacy_stage": "日常专题·标识与名称资质",
+      "main_topic_id": "property_identity",
+      "main_topic_name": "标识与名称资质",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "scope_permission",
+          "stage_name": "方案及权限核验",
+          "condition": "上市或拟上市事项的具体办理路由把国有股东标识确认为前置条件，存在证券账户及应办义务关联。",
+          "required_match_keys": [
+            "transaction_id",
+            "securities_account_id",
+            "mark_obligation_id"
+          ],
+          "applicable_behavior_types": [
+            "listed_share_transfer",
+            "listed_share_gratuitous_transfer",
+            "ipo_state_equity"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "state_shareholder_mark",
+        "listed_share_transfer",
+        "listed_share_gratuitous_transfer",
+        "ipo_state_equity"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "securities_account"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S025",
+      "primary_id": "PTY2-P08",
+      "primary_name": "未按规定履行国有股东标识管理程序，违规管理国有企业名称、企业名称中的字号，违规使用企业许可证件、资质证明文件",
+      "name": "企业名称字号使用授权异常",
+      "description": "核查企业名称、字号使用的授权范围及股权退出、合作终止后的规范管理。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "企业登记名称",
+        "使用字号",
+        "字号权利及管理主体",
+        "授权文件",
+        "使用主体",
+        "使用期限",
+        "退出或解约事件",
+        "处置要求"
+      ],
+      "rule": "名称字号使用与有效授权或适用管理要求不符，且排除合法名称登记、商标许可等情况后形成核查线索。",
+      "applicability": "所属企业及获授权使用集团名称字号的主体；同名、近似名仅用于发现线索。",
+      "verification_method": "资料核验",
+      "legacy_stage": "日常专题·标识与名称资质",
+      "main_topic_id": "property_identity",
+      "main_topic_name": "标识与名称资质",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "registration_archive",
+          "stage_name": "登记变更及归档",
+          "condition": "产权退出或合作终止对同一法人触发明确的名称字号变更、停止使用或重新授权义务；按义务自身期限核查。",
+          "required_match_keys": [
+            "transaction_id",
+            "legal_entity_id",
+            "name_obligation_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "name_authorization",
+        "property_change"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "name_authorization_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S026",
+      "primary_id": "PTY2-P08",
+      "primary_name": "未按规定履行国有股东标识管理程序，违规管理国有企业名称、企业名称中的字号，违规使用企业许可证件、资质证明文件",
+      "name": "许可证件资质被超范围使用",
+      "description": "核查有效许可证件、资质的实际使用主体和业务是否超出获准范围。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "证件类型及编号",
+        "持证主体",
+        "许可主体与业务范围",
+        "实际承揽主体",
+        "实际业务类别",
+        "使用记录",
+        "适用行业规则",
+        "合法安排依据"
+      ],
+      "rule": "使用时点证件有效，但实际使用主体或业务不在该证件依法允许的范围内，且无适用合法安排；集团关联关系不自动赋予通用资格。",
+      "applicability": "有效许可证件、资质证明的日常使用；行业范围限制单独配置，不凭超范围线索直接认定挂靠。",
+      "verification_method": "资料核验",
+      "legacy_stage": "日常专题·标识与名称资质",
+      "main_topic_id": "property_identity",
+      "main_topic_name": "标识与名称资质",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "qualification_use"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "qualification"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S027",
+      "primary_id": "PTY2-P09",
+      "primary_name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）",
+      "name": "新增产权关系未办理占有登记",
+      "description": "核对纳入登记范围的新设、收购等新增产权关系是否按规定申请占有产权登记。",
+      "mode": "自动监测",
+      "fields": [
+        "登记适用范围",
+        "企业组织形式",
+        "新设收购事件",
+        "事件完成日",
+        "登记类别",
+        "申报日期",
+        "受理及登记状态",
+        "适用时限"
+      ],
+      "rule": "已确认应纳入登记，新增事件达到办理时点且超适用期限仍未申报或完成规定动作；审批中与未申报分开展示。",
+      "applicability": "国家出资企业及按规定应登记的所属、投资企业；境内外、特殊组织形式及例外先核定。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "日常专题·产权登记",
+      "main_topic_id": "property_registration",
+      "main_topic_name": "产权登记",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "registration_archive",
+          "stage_name": "登记变更及归档",
+          "condition": "本笔交易形成新增产权关系，登记适用性和占有登记义务已经确认；不得把所有转让一律归为新增。",
+          "required_match_keys": [
+            "transaction_id",
+            "legal_entity_id",
+            "registration_obligation_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "new_equity_holding"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "registration_obligation",
+        "registration_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S028",
+      "primary_id": "PTY2-P09",
+      "primary_name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）",
+      "name": "产权变动登记逾期未办理",
+      "description": "对资本、股东、名称等应登记变动事件核对产权变动登记办理状态。",
+      "mode": "自动监测",
+      "fields": [
+        "产权变动事件类型",
+        "变动完成日",
+        "登记前后信息",
+        "变动登记适用范围",
+        "申报日期及状态",
+        "受理回执",
+        "完成记录",
+        "适用时限"
+      ],
+      "rule": "已确认事件应办理产权变动登记，按适用规则达到应办时点后仍逾期未履行规定动作；申报及时但受理处理中不直接视为未申报。",
+      "applicability": "应办理产权登记企业的变动事项；不是全部工商变更均须产权变动登记，工商登记与产权登记分别核验。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "日常专题·产权登记",
+      "main_topic_id": "property_registration",
+      "main_topic_name": "产权登记",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "registration_archive",
+          "stage_name": "登记变更及归档",
+          "condition": "本笔交易触发该法人应办产权变动登记义务，具备交易、变动事件、登记义务关联。",
+          "required_match_keys": [
+            "transaction_id",
+            "legal_entity_id",
+            "registration_obligation_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "property_change"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "registration_obligation",
+        "registration_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S029",
+      "primary_id": "PTY2-P09",
+      "primary_name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）",
+      "name": "产权登记证表真实性待核实",
+      "description": "将产权登记证表原件、电子核验结果与同一有效时点的正式登记记录比对，核查真实性差异。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "证表编号",
+        "发证记录",
+        "证表有效版本",
+        "登记记录有效时点",
+        "原件核验",
+        "电子验证结果",
+        "差异字段",
+        "版本更新依据"
+      ],
+      "rule": "排除数据时点和版本差异后，所使用证表与正式有效记录仍有实质差异，转真实性核验；扫描件缺失或旧台账差异不直接认定伪造篡改。",
+      "applicability": "国有资产产权登记证表的真实性核查；故意伪造篡改及责任须进一步调查认定。",
+      "verification_method": "资料核验",
+      "legacy_stage": "日常专题·产权登记",
+      "main_topic_id": "property_registration",
+      "main_topic_name": "产权登记",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "registration_document_use"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "registration_document",
+        "registration_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S030",
+      "primary_id": "PTY2-P10",
+      "primary_name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等",
+      "name": "涉嫌违规代持股权线索",
+      "description": "对名义股东、实际出资、收益归属与协议安排进行证据交叉核验。",
+      "mode": "专业核查",
+      "fields": [
+        "登记股东",
+        "实缴出资来源",
+        "收益最终去向",
+        "代持或委托协议",
+        "表决权安排",
+        "审批及披露文件",
+        "合法性依据",
+        "人工结论"
+      ],
+      "rule": "登记与资金、收益存在差异且出现协议或独立证据支持代持安排时进入调查；确认是否违规须继续核查法规、授权和真实事实。",
+      "applicability": "股权持有全周期；图谱关联、第三方付款或同地址不得单独定性为违规代持。",
+      "verification_method": "人工研判",
+      "legacy_stage": "日常专题·股权与控制权",
+      "main_topic_id": "property_control",
+      "main_topic_name": "股权与控制权",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "scope_permission",
+          "stage_name": "方案及权限核验",
+          "condition": "已有代持核查线索与本笔交易的名义出资人或实际权益主体直接关联；关联查看既有核查，不自动认定代持。",
+          "required_match_keys": [
+            "transaction_id",
+            "legal_entity_id",
+            "governance_review_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "related_evidence_only",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "equity_governance"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "shareholding",
+        "governance_evidence"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S031",
+      "primary_id": "PTY2-P10",
+      "primary_name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等",
+      "name": "涉嫌虚假控股声明线索",
+      "description": "核对对外宣称或内部报送的控股身份是否具备真实股权、协议和治理依据。",
+      "mode": "专业核查",
+      "fields": [
+        "控股声明或报送记录",
+        "登记股权",
+        "章程",
+        "表决权协议",
+        "董事任免权",
+        "关键经营决策记录",
+        "合并依据",
+        "证据来源"
+      ],
+      "rule": "已作出的控股声明与经核实的权利安排出现重大矛盾，形成真实性核查；少数股权不自动否定协议控制，多数股权不自动证明实控。",
+      "applicability": "对外宣传、产权报送、治理管理等涉及控股身份陈述的场景。",
+      "verification_method": "人工研判",
+      "legacy_stage": "日常专题·股权与控制权",
+      "main_topic_id": "property_control",
+      "main_topic_name": "股权与控制权",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "scope_permission",
+          "stage_name": "方案及权限核验",
+          "condition": "本笔交易的主体资格或控制权认定引用了存在待核实差异的控股声明。",
+          "required_match_keys": [
+            "transaction_id",
+            "legal_entity_id",
+            "control_assertion_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "related_evidence_only",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "equity_governance"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "shareholding",
+        "governance_evidence"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S032",
+      "primary_id": "PTY2-P10",
+      "primary_name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等",
+      "name": "控股权利未有效行使风险",
+      "description": "对拥有治理权利的企业检查其是否能按章程及协议正常行使任免、表决、财务监督等权利。",
+      "mode": "专业核查",
+      "fields": [
+        "权利依据",
+        "实际表决权",
+        "应派及实派董事",
+        "重大事项表决记录",
+        "财务监督权",
+        "印章与账户管理",
+        "权利受阻证据",
+        "整改记录"
+      ],
+      "rule": "章程或协议已确认的关键治理权利长期未落实或受到实质阻碍，形成治理风险线索；不以持股比例与董事席位的简单差值认定控股不控权。",
+      "applicability": "控股及存在控制安排的投资企业；尊重少数股东法定权利，不能要求母公司当然直接掌握全部印章账户。",
+      "verification_method": "人工研判",
+      "legacy_stage": "日常专题·股权与控制权",
+      "main_topic_id": "property_control",
+      "main_topic_name": "股权与控制权",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "equity_governance"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "shareholding",
+        "governance_evidence"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S033",
+      "primary_id": "PTY2-P10",
+      "primary_name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等",
+      "name": "涉嫌虚假合资安排线索",
+      "description": "核查合资双方是否真实出资、实际承担股东风险，并按合法约定参与治理和分享收益。",
+      "mode": "专业核查",
+      "fields": [
+        "合资协议",
+        "章程",
+        "实缴资金路径",
+        "风险收益安排",
+        "股东履职记录",
+        "抽逃或回流证据",
+        "退出安排",
+        "商业合理性说明"
+      ],
+      "rule": "合资名义与真实出资、风险承担等证据持续矛盾，且缺乏合理合同或业务解释时转调查；尚未实缴但未到期等情况不自动触发定性。",
+      "applicability": "合资企业设立及存续期间；固定收益或回购条款须结合具体规则和事实核验。",
+      "verification_method": "人工研判",
+      "legacy_stage": "日常专题·股权与控制权",
+      "main_topic_id": "property_control",
+      "main_topic_name": "股权与控制权",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "joint_venture_governance"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "shareholding",
+        "governance_evidence"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S034",
+      "primary_id": "PTY2-P10",
+      "primary_name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等",
+      "name": "涉嫌挂靠经营线索",
+      "description": "交叉核查实际经营组织、合同履行、人员资金及名称资质使用，识别借国企名义独立经营的线索。",
+      "mode": "专业核查",
+      "fields": [
+        "名义经营主体",
+        "实际履约组织",
+        "名称资质使用",
+        "项目人员及社保",
+        "经营账户资金",
+        "合同发票",
+        "合作合同",
+        "管理费及控制证据"
+      ],
+      "rule": "多类独立证据同时指向名义主体与真实经营承担主体持续分离，且合法分包、代理、联合体等解释不足时转调查。",
+      "applicability": "企业及项目经营关系；同地址、共享人员、管理费或图谱连线均不能单独认定挂靠。",
+      "verification_method": "人工研判",
+      "legacy_stage": "日常专题·股权与控制权",
+      "main_topic_id": "property_control",
+      "main_topic_name": "股权与控制权",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "business_relationship_review"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "business_relationship",
+        "qualification"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S035",
+      "primary_id": "PTY2-P03",
+      "primary_name": "财务审计和资产评估违反相关规定",
+      "name": "报告超过适用有效使用期限",
+      "description": "按报告类别与交易路由核对报告在实际使用时点是否仍处于明确规定的有效使用期限。",
+      "mode": "自动监测",
+      "fields": [
+        "报告编号",
+        "报告类别",
+        "报告基准日",
+        "实际使用时点",
+        "适用有效期规则",
+        "规则版本",
+        "合法延期或更新依据",
+        "重新出具报告编号"
+      ],
+      "rule": "报告类别对应的适用有效期已经确认，实际使用时点超过该期限，且无适用的合法延期或更新依据；未规定统一期限的类型不得套用其他报告期限。",
+      "applicability": "适用规则明确有效使用期限的评估等报告；审计报告不统一套用资产评估报告有效期。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "decision_approval",
+          "stage_name": "决策审批",
+          "condition": "当前报告被用于具体决策且该报告类别存在已确认的有效使用期；按该实际使用时间核验，不统一要求所有审计报告一年有效。",
+          "required_match_keys": [
+            "transaction_id",
+            "report_id",
+            "report_usage_id",
+            "validity_rule_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        },
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "transaction_execution",
+          "stage_name": "交易实施",
+          "condition": "报告用于本次底价确定、披露或交易实施，按本次实际使用时间及适用有效期核验。",
+          "required_match_keys": [
+            "transaction_id",
+            "report_id",
+            "report_usage_id",
+            "validity_rule_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        },
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "settlement_handover",
+          "stage_name": "签约结算与交割",
+          "condition": "该经济行为规则明确要求在签约或交割的使用节点仍有效，且有对应报告使用记录；不存在该要求则不追加检查。",
+          "required_match_keys": [
+            "transaction_id",
+            "report_id",
+            "report_usage_id",
+            "validity_rule_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S036",
+      "primary_id": "PTY2-P03",
+      "primary_name": "财务审计和资产评估违反相关规定",
+      "name": "报告关键取数依据待核实",
+      "description": "抽查审计评估等报告的关键数据与支持材料，识别取数缺乏充分依据的专业核查问题。",
+      "mode": "专业核查",
+      "fields": [
+        "报告编号",
+        "关键取数项目",
+        "原始数据来源",
+        "工作底稿",
+        "取数过程",
+        "样本选择依据",
+        "复核差异",
+        "中介解释及补证"
+      ],
+      "rule": "抽样发现影响报告结论的关键数据无法由可靠原始材料和底稿支持，且经补证仍未解释，转专业复核；不据此自动推断报告虚假或人为授意。",
+      "applicability": "已使用审计、评估或依法可用估值报告的事项；记录样本范围，监督抽样不替代企业法定审计评估义务。",
+      "verification_method": "抽样核验",
+      "legacy_stage": "审计评估",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "audit_valuation",
+      "main_stage_name": "审计评估",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "gratuitous_transfer",
+        "listed_share_gratuitous_transfer",
+        "asset_transfer",
+        "internal_reorganization"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "report"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S037",
+      "primary_id": "PTY2-P07",
+      "primary_name": "违反规定进行国有资产交易流转",
+      "name": "到期转让价款尚未足额收取",
+      "description": "对已生效转让合同核对应收价款与已到账资金，识别到期仍未足额收取的履约问题。",
+      "mode": "自动监测",
+      "fields": [
+        "转让合同编号",
+        "生效付款计划",
+        "应收金额",
+        "付款到期日",
+        "到账金额及日期",
+        "款项匹配键",
+        "依法生效的延期或变更安排",
+        "核查时点"
+      ],
+      "rule": "核查时点已超过当前有效付款计划的到期日，扣除经核实已到账款及合法调整后仍有应收未收余额；付款计划缺失先待核验。",
+      "applicability": "产生应收价款的产权、上市股份及资产转让；无价款划转不适用，已依法有效延期的按新到期日校验。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "签约结算与交割",
+      "main_topic_id": "property_transactions",
+      "main_topic_name": "产权交易",
+      "main_stage_id": "settlement_handover",
+      "main_stage_name": "签约结算与交割",
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "unlisted_equity_transfer",
+        "listed_share_transfer",
+        "asset_transfer"
+      ],
+      "applicable_object_types": [
+        "transaction",
+        "contract",
+        "payment_obligation",
+        "receipt"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S038",
+      "primary_id": "PTY2-P08",
+      "primary_name": "未按规定履行国有股东标识管理程序，违规管理国有企业名称、企业名称中的字号，违规使用企业许可证件、资质证明文件",
+      "name": "失效许可证件资质仍被使用",
+      "description": "核对许可证件、资质失效后是否仍用于承揽或开展需有效许可的经营活动。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "证件类型及编号",
+        "持证主体",
+        "有效截止日",
+        "证件状态及生效时间",
+        "实际使用记录及时间",
+        "续期或替代证件",
+        "行业过渡安排",
+        "官方状态验证"
+      ],
+      "rule": "实际使用时点该项必需证件状态为无效，且无续期替代证件或适用的合法过渡安排，生成核查任务；状态信息缺失仅列待补。",
+      "applicability": "经营活动依法要求持续持有有效许可证件或资质的情形；各类有效期、吊销撤销及过渡规则分别配置。",
+      "verification_method": "资料核验",
+      "legacy_stage": "日常专题·标识与名称资质",
+      "main_topic_id": "property_identity",
+      "main_topic_name": "标识与名称资质",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "qualification_use"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "qualification"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S039",
+      "primary_id": "PTY2-P09",
+      "primary_name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）",
+      "name": "产权注销登记逾期未办理",
+      "description": "对已经触发产权注销登记义务的企业或产权关系核对注销办理状态。",
+      "mode": "自动监测",
+      "fields": [
+        "注销义务触发事件",
+        "触发事件完成日",
+        "注销登记适用结论",
+        "应办时点",
+        "注销申报日期",
+        "受理状态",
+        "注销登记结果",
+        "适用期限及依据"
+      ],
+      "rule": "注销义务及起算事件已经确认，超过适用办理期限仍未履行规定动作；受理等待、清算尚未达到触发条件等状态分别处理。",
+      "applicability": "按规定须办理产权注销登记的情形；不得把工商注销、清算启动与产权注销义务的起算时点简单等同。",
+      "verification_method": "全量规则校验",
+      "legacy_stage": "日常专题·产权登记",
+      "main_topic_id": "property_registration",
+      "main_topic_name": "产权登记",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [
+        {
+          "topic_id": "property_transactions",
+          "topic_name": "产权交易",
+          "stage_id": "registration_archive",
+          "stage_name": "登记变更及归档",
+          "condition": "本笔交易确实触发产权注销登记义务，起算事件、适用时限及义务均已确认；不能直接把清算启动视为注销到期。",
+          "required_match_keys": [
+            "transaction_id",
+            "legal_entity_id",
+            "registration_obligation_id"
+          ],
+          "applicable_behavior_types": [
+            "unlisted_equity_transfer",
+            "listed_share_transfer",
+            "gratuitous_transfer",
+            "listed_share_gratuitous_transfer",
+            "asset_transfer",
+            "internal_reorganization"
+          ],
+          "action": "include_same_scenario_and_matching_instances",
+          "deduplicate_by": [
+            "scenario_id",
+            "business_object_id",
+            "evaluation_id",
+            "case_id"
+          ]
+        }
+      ],
+      "applicable_behavior_types": [
+        "property_deregistration"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "registration_obligation",
+        "registration_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    },
+    {
+      "id": "PTY2-S040",
+      "primary_id": "PTY2-P09",
+      "primary_name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）",
+      "name": "产权登记证表违规转借线索",
+      "description": "核查产权登记证表是否交由无权主体使用，并违反适用的证表保管使用要求。",
+      "mode": "规则辅助人工",
+      "fields": [
+        "证表编号",
+        "合法持有及使用主体",
+        "实际借用主体",
+        "借用或交付记录",
+        "实际使用证明",
+        "适用保管使用规则",
+        "授权依据",
+        "核验结论"
+      ],
+      "rule": "有证据表明证表已转交他人使用，且该转借行为违反明确适用的管理要求；依法交由代理人办理手续且资料使用合规的不得误报。",
+      "applicability": "国有资产产权登记证表的日常保管和流转使用；不得仅凭复印件流转或代办关系直接定性。",
+      "verification_method": "资料核验",
+      "legacy_stage": "日常专题·产权登记",
+      "main_topic_id": "property_registration",
+      "main_topic_name": "产权登记",
+      "main_stage_id": null,
+      "main_stage_name": null,
+      "conditional_routes": [],
+      "applicable_behavior_types": [
+        "registration_document_use"
+      ],
+      "applicable_object_types": [
+        "legal_entity",
+        "registration_document",
+        "registration_record"
+      ],
+      "mapping_note": "主题与环节映射用于筛选；执行仍以原适用性、字段及规则为准。缺少适用判断或必要数据不等于命中，也不等于已评估正常。",
+      "domain_id": "property-rights",
+      "main_topic_condition": "同时满足原applicability、适用经济行为和对象条件；仅有目录主归属不代表所有对象适用。",
+      "mapping_status": "requirements_reference",
+      "enabled_migration_policy": "preserve_existing; new_definition_disabled_until_runtime_or_review_ready",
+      "object_grain_policy": "在应用中确认一个应评估对象粒度；适用对象类型可能包括关联材料，不将同一业务的交易、报告、决议多重累加为监测对象。"
+    }
+  ]
+}

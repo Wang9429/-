@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Drawer, Tag, DataTable, Notice, Button, LinkButton, DescList, Modal } from "@/components/ui";
-import { aggregate, indicatorLeaves, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
+import { aggregate, computeIndicator, indicatorLeaves, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
 import { descendantOrgIds, orgLevelLabel, orgById, orgName } from "@/lib/org";
 import { fmtAmount, fmtAmountSmart, fmtInt, fmtPctNumber, fmtSignedPct } from "@/lib/format";
 import { objectTypeLabel, seed } from "@/lib/seed";
@@ -19,9 +19,14 @@ import {
   resolveDrawerSelection,
   scopedIndicatorLeaves,
   switchableDrawerIndicators,
+  nearestApplicableOrgId,
+  orgApplicableForIndicator,
   type DrawerSelection,
 } from "@/lib/indicator-scope";
 import { formatComparableChange, formatYoyShort, priorYearPeriod } from "@/lib/fp-compare";
+import { catalogIndicatorMeta } from "@/lib/live-config";
+import { categoryIdOf, computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "@/lib/fp-trend";
+import { DetailTrend } from "@/components/fp/MetricTrend";
 
 function statusTag(m: NodeMetric) {
   switch (m.status) {
@@ -124,6 +129,7 @@ function IndicatorDrawerBody({
 }: IndicatorDrawerProps) {
   const { filters, risks, user } = useDemoStore();
   const [selection, setSelection] = useState<DrawerSelection>({ kind: "org", id: initialOrgId });
+  const [anchorOrgId, setAnchorOrgId] = useState(initialOrgId);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(descendantOrgIds(initialOrgId)));
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
   const [traceLeafId, setTraceLeafId] = useState<string | null>(null);
@@ -188,7 +194,9 @@ function IndicatorDrawerBody({
   const switchable = useMemo(() => {
     if (!allowIndicatorSwitch || !indicator) return [];
     if (!canDomain(user, indicator.domain)) return [];
-    return switchableDrawerIndicators(indicator.domain, indicatorOptions, drawerEntry);
+    const meta = catalogIndicatorMeta(indicator.id);
+    const category = (meta?.category_id as string | undefined) ?? categoryIdOf(indicator.id, null);
+    return switchableDrawerIndicators(indicator.domain, indicatorOptions, drawerEntry, category);
   }, [allowIndicatorSwitch, indicator, indicatorOptions, user, drawerEntry]);
 
   const emptyMetric = (): NodeMetric => ({
@@ -219,12 +227,17 @@ function IndicatorDrawerBody({
 
   useEffect(() => {
     setSelection((prev) => {
-      const next = resolveDrawerSelection(prev, initialOrgId, dataOrgIds, applicableLeafIds);
-      if (next.kind === prev.kind && next.id === prev.id) return prev;
-      return next;
+      if (prev.kind === "leaf" && applicableLeafIds.has(prev.id)) return prev;
+      const fromOrg = prev.kind === "org" ? prev.id : anchorOrgId;
+      const indicatorId = indicator?.id ?? "";
+      const target = nearestApplicableOrgId(fromOrg, initialOrgId, dataOrgIds, indicatorId);
+      if (prev.kind === "org" && prev.id === target && (!indicatorId || orgApplicableForIndicator(prev.id, indicatorId))) {
+        return prev;
+      }
+      return { kind: "org", id: target };
     });
     setTraceLeafId((id) => (id && applicableLeafIds.has(id) ? id : null));
-  }, [indicator?.id, initialOrgId, dataOrgIds, applicableLeafIds]);
+  }, [indicator?.id, initialOrgId, dataOrgIds, applicableLeafIds, anchorOrgId]);
 
   const resolved = resolveDrawerSelection(selection, initialOrgId, dataOrgIds, applicableLeafIds);
   const selectedLeaf =
@@ -237,6 +250,24 @@ function IndicatorDrawerBody({
     return leafMetricOf(selectedLeaf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [indicator, resolved.kind, resolved.id, selectedLeaf, scopedLeaves, dataOrgIds, initialOrgId, includeChildren]);
+
+  const trendBundle = useMemo(() => {
+    if (!indicator) return { spec: null, points: null as ReturnType<typeof eligibleTrendPoints> };
+    const meta = catalogIndicatorMeta(indicator.id);
+    const spec = trendSpecOf(indicator.id, {
+      applicability: meta?.trend_applicability === "never" ? "never" : undefined,
+      homeVisible: meta?.trend_home_visible,
+      detailVisible: meta?.trend_detail_visible,
+      frequency: meta?.trend_frequency,
+    });
+    if (!spec || spec.detailVisible === false) return { spec: null, points: null };
+    const orgId = resolved.kind === "org" ? resolved.id : (selectedLeaf?.orgId ?? initialOrgId);
+    const rollup = metricRollupOrgIds(orgId, initialOrgId, includeChildren, dataOrgIds);
+    const ids = rollup.size ? rollup : new Set([orgId]);
+    const raw = computeTrendPoints(indicator, ids, ctx, spec, computeIndicator);
+    return { spec, points: eligibleTrendPoints(raw, spec.minPoints) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indicator, resolved.kind, resolved.id, selectedLeaf, ctx, dataOrgIds, initialOrgId, includeChildren]);
 
   const abnormalLeafIds = useMemo(() => {
     if (!indicator) return new Set<string>();
@@ -340,7 +371,10 @@ function IndicatorDrawerBody({
             selected ? "bg-tint" : "hover:bg-[#eef3fb]"
           }`}
           style={{ paddingLeft: 6 + depth * 14, minHeight: 44, paddingTop: 6, paddingBottom: 6 }}
-          onClick={() => setSelection({ kind: "org", id: orgId })}
+          onClick={() => {
+            setAnchorOrgId(orgId);
+            setSelection({ kind: "org", id: orgId });
+          }}
           role="treeitem"
           aria-selected={selected}
           tabIndex={0}
@@ -349,6 +383,7 @@ function IndicatorDrawerBody({
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
+              setAnchorOrgId(orgId);
               setSelection({ kind: "org", id: orgId });
             }
           }}
@@ -411,7 +446,10 @@ function IndicatorDrawerBody({
                     sel ? "bg-tint" : "hover:bg-[#eef3fb]"
                   }`}
                   style={{ paddingLeft: 6 + (depth + 1) * 14 + 16, minHeight: 32 }}
-                  onClick={() => setSelection({ kind: "leaf", id: leaf.objectId })}
+                  onClick={() => {
+                    setAnchorOrgId(leaf.orgId);
+                    setSelection({ kind: "leaf", id: leaf.objectId });
+                  }}
                   role="treeitem"
                   aria-selected={sel}
                   tabIndex={0}
@@ -420,6 +458,7 @@ function IndicatorDrawerBody({
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
+                      setAnchorOrgId(leaf.orgId);
                       setSelection({ kind: "leaf", id: leaf.objectId });
                     }
                   }}
@@ -528,7 +567,7 @@ function IndicatorDrawerBody({
           <div className="px-6 py-4 space-y-4">
             {switchable.length > 1 && (
               <div className="flex items-center gap-2 flex-wrap" data-indicator-switcher>
-                <span className="text-[12px] text-textsub">切换指标（仅本领域已启用入口，保留适用组织节点）：</span>
+                <span className="text-[12px] text-textsub">切换指标（仅同领域同分类已启用入口，保留期间与截至日）：</span>
                 {switchable.map((opt) => (
                   <button
                     key={opt.id}
@@ -633,6 +672,10 @@ function IndicatorDrawerBody({
               )}
             </div>
 
+            {trendBundle.spec && trendBundle.points ? (
+              <DetailTrend def={indicator} points={trendBundle.points} spec={trendBundle.spec} />
+            ) : null}
+
             {resolved.kind === "org" && childRows.length > 0 && (
               <div className="border border-line rounded-[8px] overflow-hidden bg-surface">
                 <div className="px-4 py-2.5 border-b border-line text-[14px] font-medium">
@@ -642,9 +685,16 @@ function IndicatorDrawerBody({
                   dense
                   rows={childRows}
                   rowKey={(r) => r.id}
-                  onRowClick={(r) =>
-                    setSelection(r.isOrg ? { kind: "org", id: r.id } : { kind: "leaf", id: r.id })
-                  }
+                  onRowClick={(r) => {
+                    if (r.isOrg) {
+                      setAnchorOrgId(r.id);
+                      setSelection({ kind: "org", id: r.id });
+                    } else {
+                      const leaf = scopedLeaves.find((l) => l.objectId === r.id);
+                      if (leaf) setAnchorOrgId(leaf.orgId);
+                      setSelection({ kind: "leaf", id: r.id });
+                    }
+                  }}
                   columns={[
                     { key: "name", title: "名称", render: (r) => <span className="text-brand">{r.name}</span> },
                     { key: "type", title: "类型", width: "120px", render: (r) => <span className="text-textsub text-[13px]">{r.type}</span> },

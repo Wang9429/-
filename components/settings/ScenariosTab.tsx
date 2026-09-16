@@ -508,9 +508,9 @@ export default function ScenariosTab() {
               }
             />
           </Field>
-          <Field label="主归属阶段">
+          <Field label="主归属阶段" error={errors.primary_phase_id}>
             <select
-              className={fieldClass()}
+              className={fieldClass(errors.primary_phase_id)}
               value={target.value.primary_phase_id}
               disabled={readonly}
               onChange={(e) => setTarget({ ...target, value: { ...target.value, primary_phase_id: e.target.value } })}
@@ -527,9 +527,9 @@ export default function ScenariosTab() {
             <p className="text-[12px] text-textsub">阶段：{phaseName(target.value.primary_phase_id)}</p>
           )}
           {(target.value.domain === "CASH" || target.value.domain === "RIGHTS") && (
-            <Field label="专题">
+            <Field label="专题" error={errors.topic_id}>
               <select
-                className={fieldClass()}
+                className={fieldClass(errors.topic_id)}
                 value={target.value.topic_id ?? ""}
                 disabled={readonly}
                 onChange={(e) => setTarget({ ...target, value: { ...target.value, topic_id: e.target.value } })}
@@ -541,6 +541,28 @@ export default function ScenariosTab() {
                   </option>
                 ))}
               </select>
+            </Field>
+          )}
+          {(target.value.domain === "CASH" || target.value.domain === "RIGHTS") && (
+            <Field label="有条件关联专题">
+              <input
+                className={fieldClass()}
+                value={(target.value.conditional_routes ?? []).join("、")}
+                disabled={readonly}
+                placeholder="仅匹配适用对象，不复制事项。例：CASH2-T-FINANCE"
+                onChange={(e) =>
+                  setTarget({
+                    ...target,
+                    value: {
+                      ...target.value,
+                      conditional_routes: e.target.value
+                        .split(/[、,，\s]+/)
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    },
+                  })
+                }
+              />
             </Field>
           )}
           <Field label="运行能力">

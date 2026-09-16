@@ -201,3 +201,22 @@ definition_version_archive保留原观察版本，当前配置不能覆盖历史
 - JSON 是需求目录，合并进 CatalogPersist，不覆盖 CASH-S01/PTY-S01、R07 1200/800/2000 与产权 60/60/55。CASH2-S901/S902 为待确认草稿，不计入 80、不自动启用。
 - 资金/产权 AI 绑定当前主体与领域任务，不得仍显示 FA-P001。不新增真实支付、融资或交易审批。
 - 验收 FP-AC01—FP-AC18 须生产构建实点，不能只用路由 200 或计算脚本代替。映射与未实现项见 `docs/资金产权专项改版/迁移与验收.md`。
+
+## 资金与产权增量（FP-20260916-R3）
+
+R3 替代 R2 中冲突的页面、入口、趋势与产权导航要求；无冲突口径、证据与办理记录保留。配置 JSON 只作参考，不覆盖应用 seed，不批量启用尚无执行/核查能力的场景。
+
+- 资金首页三类各最多 4 张主卡，取消完整各单位对比表（比较放进抽屉）；适用卡显示紧凑小趋势，详情同源完整趋势。缺数据不补零，ROE 不年化、不把半年利润拆成月度收益率。
+- 抽屉切换仅限同领域、同分类、已启用、入口允许、可计算且有权限。从营业收入进入不得出现资产负债或流动性指标。末级不适用回到合法范围内最近适用组织。
+- 资金六专题完整映射 40 条；每专题有已启用代表路径。S011 捐赠付款归资金收付。产权先四专题，仅产权交易出现经济行为与肩形流程。
+- 详见 `docs/FP-20260916-R3/`。
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

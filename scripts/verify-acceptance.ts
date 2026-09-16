@@ -9,9 +9,8 @@ import { seed, AS_OF } from "../lib/seed";
 import { INDICATORS, computeIndicator, indicatorLeaves, type IndicatorDef, type NodeMetric } from "../lib/metrics";
 import { orgScope, ROOT_ORG_ID, isManagedUnit } from "../lib/org";
 import { computeFiveCounts, configuredScenarios, openCountForPhase } from "../lib/monitoring";
-import { extractCatalog } from "../lib/config-catalog";
-import { FIRST_BATCH_SUBS } from "../lib/fp-topics";
-import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule } from "../lib/fp-rules";
+import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule, trialCashS012, trialCashS029, trialCashS040, trialPtyS025 } from "../lib/fp-rules";
+import { extractCatalog, validateSub } from "../lib/config-catalog";
 import { cashAccountStatementBridge, cashBridgeNote } from "../lib/finance";
 import { CASH_S039_TOLERANCE_MAX_WAN } from "../lib/fp-tolerance";
 import { syncLiveFromCatalog } from "../lib/live-config";
@@ -44,13 +43,16 @@ import {
   isIndicatorAbnormalStatus,
   isRunnableDrawerIndicator,
   metricRollupOrgIds,
+  nearestApplicableOrgId,
+  orgApplicableForIndicator,
   relatedMatterIds,
   resolveDrawerSelection,
   runnableDrawerIndicators,
   scopedIndicatorLeaves,
   switchableDrawerIndicators,
 } from "../lib/indicator-scope";
-import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS } from "../lib/fp-topics";
+import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, FIRST_BATCH_SUBS, MAIN_TOPIC_OVERRIDE } from "../lib/fp-topics";
+import { CATEGORY_LABEL, computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "../lib/fp-trend";
 
 const PERIOD_START = "2026-01-01";
 const PERIOD_END = AS_OF;
@@ -664,6 +666,76 @@ check("差额依据不含虚构168万元在途", /168万元为在途|差额168/.
 check("差额标明待核实", bridge.lines.some((l) => l.id === "GAP-352" && l.status === "unverified"), true);
 const specLine = bridge.lines.find((l) => l.id === "ACC-SPEC");
 check("专户不因受限排除报表", specLine?.note.includes("受限不等于报表排除"), true);
+
+console.log("\n[FP-20260916-R3 趋势、同分类切换与专题覆盖]");
+const s011 = fpCat.subscenarios.find((s) => s.id === "CASH2-S011");
+check("S011 主专题为资金收付", s011?.topic_id, "CASH2-T-PAYMENT");
+check("S011 覆盖写入与覆盖一致", MAIN_TOPIC_OVERRIDE["CASH2-S011"], "CASH2-T-PAYMENT");
+const profitSwitch = switchableDrawerIndicators("CASH", cashPage, "domain_page", "profitability");
+check("盈利能力切换不含资产负债率", profitSwitch.some((d) => d.id === "CASH2-I06"), false);
+check("盈利能力切换不含可用资金", profitSwitch.some((d) => d.id === "CASH-I01"), false);
+check("盈利能力切换含营业收入", profitSwitch.some((d) => d.id === "CASH2-I01"), true);
+check("盈利能力切换含净资产收益率", profitSwitch.some((d) => d.id === "CASH2-I13"), true);
+const liqSwitch = switchableDrawerIndicators("CASH", cashPage, "domain_page", "liquidity");
+check("流动性切换不含营业收入", liqSwitch.some((d) => d.id === "CASH2-I01"), false);
+check("流动性切换含账户资金余额", liqSwitch.some((d) => d.id === "CASH-I01"), true);
+const nearestA1 = nearestApplicableOrgId("ORG-A1", "ORG-HQ", HQ, "CASH2-I01");
+check("无独立报表节点切报表指标回到适用上级", nearestA1 === "ORG-A" || nearestA1 === "ORG-HQ", true);
+check("ORG-A1 对营业收入不适用", orgApplicableForIndicator("ORG-A1", "CASH2-I01"), false);
+check("ORG-A 对营业收入适用", orgApplicableForIndicator("ORG-A", "CASH2-I01"), true);
+check("S040 ACC-B 命中", trialCashS040("ACC-B").result, "hit");
+check("S040 ACC-A 正常", trialCashS040("ACC-A").result, "clear");
+check("S040 ACC-USD 缺资料", trialCashS040("ACC-USD").result, "data_insufficient");
+check("S012 GUAR-01 超额度命中", trialCashS012("GUAR-01").result, "hit");
+check("S012 GUAR-OK 未超额度", trialCashS012("GUAR-OK").result, "clear");
+check("S029 LEND-01 到期未收命中", trialCashS029("LEND-01").result, "hit");
+check("S029 LEND-OK 已收回", trialCashS029("LEND-OK").result, "clear");
+check("S025 PTY-M011 授权期满后使用命中", trialPtyS025("PTY-M011").result, "hit");
+check("S025 PTY-M012 授权有效", trialPtyS025("PTY-M012").result, "clear");
+const acctTopic = configuredScenarios("CASH", null, "CASH2-T-ACCOUNT");
+const finTopic = configuredScenarios("CASH", null, "CASH2-T-FINANCE");
+const opTopic = configuredScenarios("CASH", null, "CASH2-T-OPERATION");
+check("账户专题含S040", acctTopic.includes("CASH2-S040"), true);
+check("融资专题含S012", finTopic.includes("CASH2-S012"), true);
+check("运作专题含S029", opTopic.includes("CASH2-S029"), true);
+check("标识专题含S025", identScenarios.includes("PTY2-S025"), true);
+const i01 = indicator("CASH2-I01");
+const spec01 = trendSpecOf(i01.id);
+const pts01 = spec01 ? computeTrendPoints(i01, HQ, CTX, spec01, computeIndicator) : [];
+const eligible01 = spec01 ? eligibleTrendPoints(pts01, spec01.minPoints) : null;
+check("营业收入月度趋势至少两点", Boolean(eligible01 && eligible01.filter((p) => p.value !== null).length >= 2), true);
+check("营业收入趋势不补未来点", pts01.every((p) => p.asOf <= AS_OF), true);
+const i13def = indicator("CASH2-I13");
+const spec13 = trendSpecOf(i13def.id);
+check("ROE 趋势频率为季度", spec13?.frequency, "quarter");
+const pts13 = spec13 ? computeTrendPoints(i13def, HQ, CTX, spec13, computeIndicator) : [];
+check("ROE 不用月度伪造点", pts13.every((p) => /季度/.test(p.label)), true);
+const usableRoe = pts13.filter((p) => p.value !== null);
+check("ROE 有独立季度点", usableRoe.length >= 2, true);
+const i01cat = fpCat.indicators.find((i) => i.id === "CASH2-I01");
+check("营业收入分类为盈利能力", i01cat?.category_id, "profitability");
+check("分类标签", CATEGORY_LABEL.profitability, "盈利能力");
+const illegalTrade = validateSub(
+  { ...fpCat.subscenarios.find((s) => s.id === "PTY2-S025")!, topic_id: "PTY2-T-IDENTITY", primary_phase_id: "PTY2-ST-TRADE" },
+  fpCat.groups,
+  fpCat.subscenarios,
+  false,
+);
+check("标识专题拒绝交易实施主环节", Boolean(illegalTrade.primary_phase_id), true);
+const cashPhase = validateSub(
+  { ...fpCat.subscenarios.find((s) => s.id === "CASH2-S039")!, primary_phase_id: "PTY2-ST-TRADE" },
+  fpCat.groups,
+  fpCat.subscenarios,
+  false,
+);
+check("资金场景拒绝产权环节", Boolean(cashPhase.primary_phase_id), true);
+const asOfMay = { ...CTX, asOf: "2026-05-15", periodEnd: "2026-06-30" };
+const ptsMay = spec01 ? computeTrendPoints(i01, HQ, asOfMay, spec01, computeIndicator) : [];
+check("截至5月15日趋势不含5月末以后点", ptsMay.every((p) => p.asOf <= "2026-05-15"), true);
+const pty1 = indicator("PTY2-I01");
+const specPty = trendSpecOf(pty1.id);
+const ptsPty = specPty ? computeTrendPoints(pty1, HQ, CTX, specPty, computeIndicator) : [];
+check("产权户数有历史快照趋势", Boolean(eligibleTrendPoints(ptsPty, specPty?.minPoints ?? 2)), true);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

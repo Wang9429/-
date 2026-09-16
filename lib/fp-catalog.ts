@@ -15,11 +15,12 @@ import type {
 } from "./config-catalog";
 import {
   CASH2_FINANCE_HOMEPAGE_IDS,
+  CASH_CONDITIONAL_ROUTES,
   EXEC_MODE_FROM_ZH,
   FIRST_BATCH_RUNTIME,
   FIRST_BATCH_SUBS,
   STAGE_LABEL_TO_ID,
-  topicIdForLabel,
+  resolvedTopicId,
   type RuntimeCapability,
 } from "./fp-topics";
 import type { DomainId } from "./types";
@@ -73,7 +74,7 @@ function runtimeOf(id: string): RuntimeCapability {
 }
 
 function subFromRow(row: FpScenarioRow, domain: DomainId): CatalogSubscenario {
-  const topicId = topicIdForLabel(row.topic ?? row.stage, domain);
+  const topicId = resolvedTopicId(row.id, row.topic ?? row.stage, domain);
   const first = FIRST.has(row.id);
   const runtime = runtimeOf(row.id);
   const mode = EXEC_MODE_FROM_ZH[row.mode ?? ""] ?? "rule_ai_human";
@@ -95,6 +96,9 @@ function subFromRow(row: FpScenarioRow, domain: DomainId): CatalogSubscenario {
     rule_text: row.rule,
     applicability_note: row.applicability,
     associated_phase_ids: row.stage && STAGE_LABEL_TO_ID[row.stage] ? [STAGE_LABEL_TO_ID[row.stage]] : [],
+    conditional_routes: CASH_CONDITIONAL_ROUTES[row.id] ?? [],
+    legacy_topic: row.topic,
+    legacy_stage: row.stage,
   };
 }
 
@@ -168,6 +172,12 @@ function sampleParams(id: string): Record<string, string | number> {
       return { report_valid_months: 12 };
     case "PTY2-S028":
       return { filing_days: 30 };
+    case "CASH2-S012":
+      return { occupancy_basis: "有效责任金额", sample_note: "不混比名义金额与净责任额" };
+    case "CASH2-S029":
+      return { sample_note: "到期未收回按合同本金与有效回收计算，不引入无依据容差" };
+    case "CASH2-S040":
+      return { sample_note: "仅台账审批号为空不得判定未审批" };
     default:
       return { sample_note: "样例参数，待业务确认" };
   }
@@ -432,6 +442,28 @@ const FP_AI_TASKS: CatalogAiTask[] = [
   { id: "PTY-GOVERNANCE", name: "治理权利履职辅助核查", enabled: true },
 ];
 
+function withMetricConfig(list: CatalogIndicator[]): CatalogIndicator[] {
+  const extra: Record<string, Partial<CatalogIndicator>> = {
+    "CASH2-I01": { category_id: "profitability", time_type: "flow", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH2-I02": { category_id: "profitability", time_type: "flow", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH2-I03": { category_id: "profitability", time_type: "period_ratio", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH2-I13": { category_id: "profitability", time_type: "period_ratio", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "quarter" },
+    "CASH2-I04": { category_id: "balance_sheet", time_type: "stock", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH2-I06": { category_id: "balance_sheet", time_type: "period_ratio", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH2-I07": { category_id: "balance_sheet", time_type: "stock", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH2-I08": { category_id: "balance_sheet", time_type: "period_ratio", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH-I01": { category_id: "liquidity", time_type: "stock", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH-I02": { category_id: "liquidity", time_type: "stock", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH-I07": { category_id: "liquidity", time_type: "period_ratio", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "CASH2-I09": { category_id: "liquidity", time_type: "flow", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "PTY2-I01": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "PTY2-I02": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "PTY2-I03": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "PTY2-I04": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+  };
+  return list.map((i) => ({ ...i, ...extra[i.id] }));
+}
+
 export function buildFpCatalogSlice(): Pick<
   CatalogPersist,
   "groups" | "subscenarios" | "rules" | "indicators" | "ai"
@@ -449,7 +481,7 @@ export function buildFpCatalogSlice(): Pick<
     groups,
     subscenarios: subs,
     rules,
-    indicators: [...FINANCE_INDICATORS, ...RIGHTS_INDICATORS],
+    indicators: withMetricConfig([...FINANCE_INDICATORS, ...RIGHTS_INDICATORS]),
     ai: {
       enabled: true,
       mode_display: "预置分析（未接真实模型）",

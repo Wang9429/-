@@ -11,12 +11,15 @@ import ScenarioExecutionPanel from "@/components/ScenarioExecutionPanel";
 import { Card, KpiCard, Tag } from "@/components/ui";
 import { useDemoStore } from "@/lib/store";
 import { authorizedObjectIds, canDomain, intersectOrgScope } from "@/lib/config";
-import { childOrgs, descendantOrgIds, isManagedUnit, orgName, orgPath, orgUnitTypeLabel } from "@/lib/org";
+import { descendantOrgIds, orgName, orgPath } from "@/lib/org";
 import { computeIndicator, indicatorById, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
-import { CASH2_BS_IDS, CASH2_FINANCE_HOMEPAGE_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, CASH_TOPICS } from "@/lib/fp-topics";
+import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, CASH_TOPICS } from "@/lib/fp-topics";
 import { reportAvailability, statementOf, cashAccountStatementBridge } from "@/lib/finance";
-import { formatComparableChange, formatTrendLine, formatYoyShort, priorYearPeriod, sameCaliberTrendPeriods } from "@/lib/fp-compare";
+import { formatComparableChange, priorYearPeriod } from "@/lib/fp-compare";
+import { catalogIndicatorMeta } from "@/lib/live-config";
+import { computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "@/lib/fp-trend";
+import { CompactSparkline, valueTimeLabel } from "@/components/fp/MetricTrend";
 import { fmtAmountSmart } from "@/lib/format";
 import { seed } from "@/lib/seed";
 import { inDateRange } from "@/lib/period";
@@ -25,7 +28,7 @@ import { yuanToWan } from "@/lib/format";
 
 const TAB_IDS: { id: "profit" | "bs" | "liq"; label: string; ids: readonly string[] }[] = [
   { id: "profit", label: "盈利能力", ids: CASH2_PROFIT_IDS },
-  { id: "bs", label: "资产负债", ids: CASH2_BS_IDS },
+  { id: "bs", label: "资产负债状况", ids: CASH2_BS_IDS },
   { id: "liq", label: "资金流动性", ids: CASH2_LIQ_IDS },
 ];
 
@@ -33,7 +36,6 @@ export default function FundsDomainView() {
   const { filters, risks, user, catalog } = useDemoStore();
   const [subjectId, setSubjectId] = useState(filters.orgId);
   const [subjectChildren, setSubjectChildren] = useState(filters.includeChildren);
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set([filters.orgId]));
   const [finTab, setFinTab] = useState<"profit" | "bs" | "liq">("profit");
   const [topicId, setTopicId] = useState<string>("CASH2-T-ACCOUNT");
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
@@ -51,7 +53,6 @@ export default function FundsDomainView() {
   useEffect(() => {
     setSubjectId(filters.orgId);
     setSubjectChildren(filters.includeChildren);
-    setExpanded(new Set([filters.orgId]));
     setIndicatorId(null);
     setRiskId(null);
     setObjectId(null);
@@ -87,24 +88,11 @@ export default function FundsDomainView() {
       .filter((d): d is IndicatorDef => Boolean(d && isRunnableDrawerIndicator(d, "domain_page")));
   }, [kpiIds, user, catalog]);
 
-  const switchableDefs = useMemo(() => {
-    if (!canDomain(user, "CASH")) return [];
-    return (CASH2_FINANCE_HOMEPAGE_IDS as readonly string[])
-      .map((id) => indicatorById(id))
-      .filter((d): d is IndicatorDef => Boolean(d && isRunnableDrawerIndicator(d, "domain_page")));
-  }, [user, catalog]);
+  const switchableDefs = kpiDefs;
 
   const path = orgPath(subjectId).filter((o) => globalOrgIds.has(o.id) || o.id === filters.orgId);
   const gate = path.findIndex((o) => o.id === filters.orgId);
   const visiblePath = gate >= 0 ? path.slice(gate) : path;
-
-  const compareRows = useMemo(() => {
-    const kids = childOrgs(subjectId).filter((c) => {
-      if (!isManagedUnit(c) && c.node_type !== "headquarters") return false;
-      return globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id));
-    });
-    return kids;
-  }, [subjectId, globalOrgIds]);
 
   const openIndicator = (id: string, orgId = subjectId) => {
     setIndicatorOrg(orgId);
@@ -120,24 +108,23 @@ export default function FundsDomainView() {
     () => ({ ...ctx, periodStart: prior.periodStart, periodEnd: prior.periodEnd, asOf: prior.asOf }),
     [ctx, prior.periodStart, prior.periodEnd, prior.asOf],
   );
-  const trendPeriods = sameCaliberTrendPeriods(filters.periodStart, filters.periodEnd);
+  const halfYear = filters.periodStart.endsWith("-01-01") && filters.periodEnd.endsWith("-06-30");
 
   const kpiBundle = (def: IndicatorDef) => {
     const m = computeIndicator(def, pageOrgIds, ctx);
     const priorM = computeIndicator(def, pageOrgIds, priorCtx);
     const yoy = formatComparableChange(def, m, priorM, prior.label);
-    const trend = formatTrendLine(
-      def,
-      trendPeriods.map((p) => ({
-        label: p.label,
-        value: computeIndicator(def, pageOrgIds, {
-          ...ctx,
-          periodStart: p.periodStart,
-          periodEnd: p.periodEnd,
-          asOf: p.asOf,
-        }).value,
-      })),
-    );
+    const meta = catalogIndicatorMeta(def.id);
+    const spec = trendSpecOf(def.id, {
+      applicability: meta?.trend_applicability === "never" ? "never" : undefined,
+      homeVisible: meta?.trend_home_visible,
+      detailVisible: meta?.trend_detail_visible,
+      frequency: meta?.trend_frequency,
+    });
+    const rawPoints = spec
+      ? computeTrendPoints(def, pageOrgIds, ctx, spec, computeIndicator)
+      : [];
+    const points = spec && spec.homeVisible ? eligibleTrendPoints(rawPoints, spec.minPoints) : null;
     const stmtAux =
       def.id === "CASH2-I06" && stmt
         ? `构成：负债总额 ${fmtAmountSmart(stmt.total_liabilities)} 万／净资产 ${fmtAmountSmart(stmt.equity)} 万`
@@ -150,7 +137,7 @@ export default function FundsDomainView() {
           : def.id === "CASH2-I08" && stmt
             ? `构成：流动资产 ${fmtAmountSmart(stmt.current_assets)} 万／流动负债 ${fmtAmountSmart(stmt.current_liabilities)} 万`
             : undefined;
-    return { m, yoy, trend, stmtAux };
+    return { m, yoy, spec, points, stmtAux };
   };
 
   const topicNavRef = React.useRef<HTMLDivElement | null>(null);
@@ -231,23 +218,20 @@ export default function FundsDomainView() {
                 />
               );
             }
-            const { m, yoy, trend, stmtAux } = kpiBundle(def);
+            const { m, yoy, spec, points, stmtAux } = kpiBundle(def);
             const parts = formatMetricParts(def, m);
             const targetLine =
               def.target != null && m.value != null
                 ? `${def.targetLabel ?? "目标"} ${def.target}${def.unit}，偏差 ${fmtAmountSmart(m.value - def.target)}${def.unit}`
                 : null;
+            const timeLabel = valueTimeLabel(spec, halfYear);
             const dataState = statementKpi
               ? stmt
-                ? stmt.report_scope === "consolidated"
-                  ? "合并口径"
-                  : stmt.report_scope === "management"
-                    ? "管理汇总"
-                    : "个别口径"
+                ? `${stmt.report_scope === "consolidated" ? "合并口径" : stmt.report_scope === "management" ? "管理汇总" : "个别口径"}${timeLabel ? `｜${timeLabel}` : ""}`
                 : "本期缺数"
               : avail === "no_report"
                 ? "无独立报表｜已有对象明细"
-                : "账户口径";
+                : `账户口径${timeLabel ? `｜${timeLabel}` : ""}`;
             return (
               <KpiCard
                 key={def.id}
@@ -262,7 +246,7 @@ export default function FundsDomainView() {
                 returnKey={def.id}
                 extra={
                   <>
-                    <span className="block">{trend}</span>
+                    {spec && points ? <CompactSparkline def={def} points={points} spec={spec} /> : null}
                     {stmtAux ? <span className="block mt-0.5">{stmtAux}</span> : null}
                     {targetLine ? <span className="block mt-0.5">{targetLine}</span> : null}
                   </>
@@ -270,93 +254,6 @@ export default function FundsDomainView() {
               />
             );
           })}
-        </div>
-
-        <div className="mt-5 overflow-x-auto">
-          <table className="min-w-[880px] w-full text-[13px]">
-            <thead>
-              <tr className="text-textsub border-b border-line">
-                <th className="text-left font-medium py-2 pr-3">单位</th>
-                <th className="text-left font-medium py-2 pr-3">类型</th>
-                {kpiDefs.map((d) => (
-                  <th key={d.id} className="text-right font-medium py-2 px-2">
-                    {d.name}
-                  </th>
-                ))}
-                <th className="text-left font-medium py-2 pl-3">报表</th>
-              </tr>
-            </thead>
-            <tbody>
-              {compareRows.length === 0 && (
-                <tr>
-                  <td colSpan={kpiDefs.length + 3} className="py-4 text-textsub">
-                    无下一级管理单位。可直接查看本级业务对象。
-                  </td>
-                </tr>
-              )}
-              {flattenUnits(compareRows, expanded, globalOrgIds).map(({ org: row, depth }) => {
-                const ids = new Set(descendantOrgIds(row.id).filter((id) => globalOrgIds.has(id)));
-                if (!ids.size) ids.add(row.id);
-                const st = reportAvailability(row.id);
-                const children = childOrgs(row.id).filter(
-                  (c) =>
-                    (isManagedUnit(c) || c.node_type === "headquarters") &&
-                    (globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id))),
-                );
-                return (
-                  <tr key={row.id} className="border-b border-line/70">
-                    <td className="py-2 pr-3" style={{ paddingLeft: 8 + depth * 16 }}>
-                      <button type="button" className="text-brand hover:underline" onClick={() => { setSubjectId(row.id); setSubjectChildren(true); }}>
-                        {row.name}
-                      </button>
-                      {children.length > 0 && (
-                        <button
-                          type="button"
-                          className="ml-2 text-[12px] text-textsub hover:text-brand"
-                          onClick={() =>
-                            setExpanded((prev) => {
-                              const n = new Set(prev);
-                              if (n.has(row.id)) n.delete(row.id);
-                              else n.add(row.id);
-                              return n;
-                            })
-                          }
-                          title="只展开真实下级，不改变当前主体"
-                        >
-                          {expanded.has(row.id) ? "收起" : "展开"}
-                        </button>
-                      )}
-                    </td>
-                    <td className="py-2 pr-3 text-textsub">{orgUnitTypeLabel(row)}</td>
-                    {kpiDefs.map((d) => {
-                      const statementKpi = d.id.startsWith("CASH2-");
-                      if (st === "no_report" && statementKpi) {
-                        return (
-                          <td key={d.id} className="text-right px-2 text-textsub">
-                            无独立报表
-                          </td>
-                        );
-                      }
-                      const m = computeIndicator(d, ids, ctx);
-                      const priorM = computeIndicator(d, ids, priorCtx);
-                      const parts = formatMetricParts(d, m);
-                      const yoy = formatYoyShort(d, m, priorM);
-                      return (
-                        <td key={d.id} className="text-right px-2">
-                          <button type="button" className="num text-brand hover:underline" onClick={() => openIndicator(d.id, row.id)}>
-                            {parts.value}
-                            {parts.unit ? ` ${parts.unit}` : ""}
-                          </button>
-                          <div className="text-[11px] text-textsub">{st === "no_report" ? "无独立报表｜已有对象明细" : yoy}</div>
-                        </td>
-                      );
-                    })}
-                    <td className="py-2 pl-3 text-textsub">{st === "no_report" ? "无独立报表" : statementOf(row.id, ctx)?.report_scope === "consolidated" ? "合并" : "个别"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
       </Card>
 
@@ -548,22 +445,3 @@ function CashBridgeTable() {
   );
 }
 
-function flattenUnits(
-  rows: ReturnType<typeof childOrgs>,
-  expanded: Set<string>,
-  globalOrgIds: Set<string>,
-  depth = 0,
-): { org: (typeof rows)[number]; depth: number }[] {
-  const out: { org: (typeof rows)[number]; depth: number }[] = [];
-  for (const row of rows) {
-    out.push({ org: row, depth });
-    if (!expanded.has(row.id)) continue;
-    const kids = childOrgs(row.id).filter(
-      (c) =>
-        (isManagedUnit(c) || c.node_type === "headquarters") &&
-        (globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id))),
-    );
-    out.push(...flattenUnits(kids, expanded, globalOrgIds, depth + 1));
-  }
-  return out;
-}

@@ -16,6 +16,7 @@ import { fmtPct } from "@/lib/format";
 import { configStatusLabel, displayPositionLabel, domainCodeLabel } from "@/lib/labels";
 import { INDICATORS, computeIndicator, indicatorById } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store";
+import { CATEGORY_LABEL } from "@/lib/fp-trend";
 import { ActionCell, FormDrawer, SaveBar, denyTitle, fieldClass } from "./shared";
 
 type Mode = "view" | "edit" | "create" | null;
@@ -153,6 +154,12 @@ export default function IndicatorsTab() {
             },
             { key: "pos", title: "展示位置", width: "90px", render: (r) => displayPositionLabel(r.display_position) },
             {
+              key: "cat",
+              title: "分类",
+              width: "96px",
+              render: (r) => CATEGORY_LABEL[r.category_id as keyof typeof CATEGORY_LABEL] ?? "—",
+            },
+            {
               key: "en",
               title: "启用",
               width: "64px",
@@ -261,9 +268,83 @@ export default function IndicatorsTab() {
               onChange={(e) => setDraft({ ...draft, display_position: e.target.value })}
             >
               <option value="homepage">首页</option>
+              <option value="domain_page">领域页</option>
               <option value="metric_library">指标目录</option>
             </select>
           </Field>
+          {(draft.domain === "CASH" || draft.domain === "RIGHTS") && (
+            <>
+              <Field label="指标分类" error={errors.category_id}>
+                <select
+                  className={fieldClass(errors.category_id)}
+                  value={draft.category_id ?? ""}
+                  disabled={readonly}
+                  onChange={(e) => setDraft({ ...draft, category_id: e.target.value || undefined })}
+                >
+                  <option value="">未指定</option>
+                  <option value="profitability">盈利能力</option>
+                  <option value="balance_sheet">资产负债状况</option>
+                  <option value="liquidity">资金流动性</option>
+                  <option value="property_census">法人及股权统计</option>
+                </select>
+              </Field>
+              <Field label="趋势适用">
+                <select
+                  className={fieldClass()}
+                  value={draft.trend_applicability ?? "conditional"}
+                  disabled={readonly}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      trend_applicability: e.target.value as CatalogIndicator["trend_applicability"],
+                    })
+                  }
+                >
+                  <option value="conditional">有有效历史才显示</option>
+                  <option value="never">不配趋势</option>
+                </select>
+              </Field>
+              <Field label="首页小趋势">
+                <select
+                  className={fieldClass()}
+                  value={draft.trend_home_visible === false ? "off" : "on"}
+                  disabled={readonly}
+                  onChange={(e) => setDraft({ ...draft, trend_home_visible: e.target.value === "on" })}
+                >
+                  <option value="on">显示（满足点数时）</option>
+                  <option value="off">关闭（保留指标卡）</option>
+                </select>
+              </Field>
+              <Field label="详情趋势">
+                <select
+                  className={fieldClass()}
+                  value={draft.trend_detail_visible === false ? "off" : "on"}
+                  disabled={readonly}
+                  onChange={(e) => setDraft({ ...draft, trend_detail_visible: e.target.value === "on" })}
+                >
+                  <option value="on">显示（满足点数时）</option>
+                  <option value="off">关闭</option>
+                </select>
+              </Field>
+              <Field label="趋势频率">
+                <select
+                  className={fieldClass()}
+                  value={draft.trend_frequency ?? "month"}
+                  disabled={readonly}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      trend_frequency: e.target.value as CatalogIndicator["trend_frequency"],
+                    })
+                  }
+                >
+                  <option value="month">月</option>
+                  <option value="quarter">季</option>
+                  <option value="half">半年</option>
+                </select>
+              </Field>
+            </>
+          )}
           <p className="text-[12px] text-textsub">编号 {draft.id}。无计算器的新增指标仅进入目录，不会虚报已可运行。</p>
         </FormDrawer>
       )}

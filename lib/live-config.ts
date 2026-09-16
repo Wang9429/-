@@ -31,6 +31,11 @@ export interface LiveIndicatorMeta {
   display_position: string;
   name: string;
   domain: string;
+  category_id?: string;
+  trend_applicability?: "conditional" | "never" | "always";
+  trend_home_visible?: boolean;
+  trend_detail_visible?: boolean;
+  trend_frequency?: "month" | "quarter" | "half";
 }
 
 interface LiveState {
@@ -117,6 +122,11 @@ export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined):
       display_position: i.display_position,
       name: i.name,
       domain: i.domain,
+      category_id: i.category_id,
+      trend_applicability: i.trend_applicability,
+      trend_home_visible: i.trend_home_visible,
+      trend_detail_visible: i.trend_detail_visible,
+      trend_frequency: i.trend_frequency,
     });
   }
   const subs = new Map(catalog.subscenarios.map((s) => [s.id, s]));
@@ -182,6 +192,10 @@ export function liveRule(id: string): CatalogRule | undefined {
 export function liveRuleLabel(id: string): string {
   const r = liveRule(id);
   return r ? `${r.id} ${r.name}` : id;
+}
+
+export function catalogIndicatorMeta(id: string): LiveIndicatorMeta | undefined {
+  return current.indicators.get(id);
 }
 
 export function catalogIndicatorVisible(id: string): boolean {

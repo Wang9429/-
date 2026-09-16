@@ -1,0 +1,821 @@
+{
+  "package_version": "FP-20260916-R3",
+  "artifact_type": "reference_contract_not_application_seed",
+  "baseline": "current repository; reported feature 4ae94ac and published 4df4f8c are for locating only",
+  "scope": {
+    "modify": [
+      "/funds",
+      "/property-rights"
+    ],
+    "synchronize": [
+      "two_domain_settings",
+      "scenario_library",
+      "metric_drawer",
+      "linked_object_detail"
+    ],
+    "overview": "preserve_layout_labels_metric_selection_interaction; normal data linkage remains",
+    "hosting": "existing GitHub Pages /-/; no provider migration"
+  },
+  "categories": [
+    {
+      "id": "profitability",
+      "name": "盈利能力"
+    },
+    {
+      "id": "balance_sheet",
+      "name": "资产负债状况"
+    },
+    {
+      "id": "liquidity",
+      "name": "资金流动性"
+    }
+  ],
+  "funds_metrics": [
+    {
+      "semantic_key": "revenue",
+      "display_name": "营业收入",
+      "domain_id": "funds",
+      "category_id": "profitability",
+      "existing_id_hint": "CASH2-I01",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "flow",
+      "unit": "万元",
+      "formula_reference": "report.operating_revenue",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_amount",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": null
+    },
+    {
+      "semantic_key": "operating_profit",
+      "display_name": "营业利润",
+      "domain_id": "funds",
+      "category_id": "profitability",
+      "existing_id_hint": "CASH2-I02",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "flow",
+      "unit": "万元",
+      "formula_reference": "report.operating_profit",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_amount",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": null
+    },
+    {
+      "semantic_key": "operating_margin",
+      "display_name": "营业利润率",
+      "domain_id": "funds",
+      "category_id": "profitability",
+      "existing_id_hint": "CASH2-I03",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "period_ratio",
+      "unit": "%",
+      "formula_reference": "operating_profit / operating_revenue",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_ratio",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": "follow_confirmed_metric_validity_rules; never infinity_or_fabricated_zero"
+    },
+    {
+      "semantic_key": "return_on_equity",
+      "display_name": "净资产收益率",
+      "domain_id": "funds",
+      "category_id": "profitability",
+      "existing_id_hint": null,
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "period_ratio",
+      "unit": "%",
+      "formula_reference": "matching_net_profit / matching_average_net_assets",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "quarter",
+        "time_basis": "same_length_period_return",
+        "min_comparable_points": 2,
+        "preferred_window_points": 4,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold",
+        "additional_rule": "每点的利润期间长度及净资产平均方法可比；仅有H1当前值时不画月度ROE；禁止默认年化。"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": "follow_confirmed_metric_validity_rules; never infinity_or_fabricated_zero"
+    },
+    {
+      "semantic_key": "total_assets",
+      "display_name": "资产总额",
+      "domain_id": "funds",
+      "category_id": "balance_sheet",
+      "existing_id_hint": "CASH2-I04",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "stock",
+      "unit": "万元",
+      "formula_reference": "report.total_assets",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": null
+    },
+    {
+      "semantic_key": "liability_ratio",
+      "display_name": "资产负债率",
+      "domain_id": "funds",
+      "category_id": "balance_sheet",
+      "existing_id_hint": "CASH2-I06",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "point_ratio",
+      "unit": "%",
+      "formula_reference": "matching_total_liabilities / matching_total_assets",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_end_ratio",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": "follow_confirmed_metric_validity_rules; never infinity_or_fabricated_zero"
+    },
+    {
+      "semantic_key": "interest_bearing_debt",
+      "display_name": "带息债务余额",
+      "domain_id": "funds",
+      "category_id": "balance_sheet",
+      "existing_id_hint": "CASH2-I07",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "stock",
+      "unit": "万元",
+      "formula_reference": "confirmed_unpaid_debt_principal",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": null
+    },
+    {
+      "semantic_key": "current_ratio",
+      "display_name": "流动比率",
+      "domain_id": "funds",
+      "category_id": "balance_sheet",
+      "existing_id_hint": "CASH2-I08",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "point_ratio",
+      "unit": "倍",
+      "formula_reference": "current_assets / current_liabilities",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_end_ratio",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": "follow_confirmed_metric_validity_rules; never infinity_or_fabricated_zero"
+    },
+    {
+      "semantic_key": "account_balance",
+      "display_name": "账户资金余额",
+      "domain_id": "funds",
+      "category_id": "liquidity",
+      "existing_id_hint": "CASH-I01",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "stock",
+      "unit": "万元",
+      "formula_reference": "deduplicated_confirmed_account_balance",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": null
+    },
+    {
+      "semantic_key": "available_cash",
+      "display_name": "可用资金",
+      "domain_id": "funds",
+      "category_id": "liquidity",
+      "existing_id_hint": null,
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "stock",
+      "unit": "万元",
+      "formula_reference": "account_balance - deduplicated_restricted_balance",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": null
+    },
+    {
+      "semantic_key": "restricted_cash_ratio",
+      "display_name": "受限资金占比",
+      "domain_id": "funds",
+      "category_id": "liquidity",
+      "existing_id_hint": null,
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "point_ratio",
+      "unit": "%",
+      "formula_reference": "restricted_balance / matching_account_balance",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_end_ratio",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": "follow_confirmed_metric_validity_rules; never infinity_or_fabricated_zero"
+    },
+    {
+      "semantic_key": "operating_cash_flow",
+      "display_name": "经营活动现金流量净额",
+      "domain_id": "funds",
+      "category_id": "liquidity",
+      "existing_id_hint": "CASH2-I09",
+      "id_policy": "resolve_actual_existing_id_first; hint is not an instruction to create or overwrite",
+      "time_type": "flow",
+      "unit": "万元",
+      "formula_reference": "report.net_operating_cash_flow",
+      "enablement_policy": "preserve user settings; calculator and required current-period data must be available before first enablement",
+      "display_positions": [
+        "funds_home",
+        "funds_indicator_drawer"
+      ],
+      "trend": {
+        "applicability": "conditional",
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "preferred_frequency": "month",
+        "time_basis": "period_amount",
+        "min_comparable_points": 2,
+        "preferred_window_points": 6,
+        "window_limit": "selected_period_and_as_of_date",
+        "missing_point_policy": "gap_no_zero_no_interpolation",
+        "history_source_binding": "resolve_actual_supported_source_id; empty means no chart",
+        "no_history_behavior": "hide_chart_keep_valid_current_metric",
+        "threshold_line": "only_with_approved_applicable_versioned_threshold"
+      },
+      "switch_scope": [
+        "same_domain",
+        "same_category",
+        "enabled",
+        "entry_allowed",
+        "calculator_available",
+        "authorized"
+      ],
+      "denominator_policy": null
+    }
+  ],
+  "property_metrics": [
+    {
+      "semantic_key": "legal_entity_count",
+      "display_name": "纳管法人户数",
+      "domain_id": "property-rights",
+      "category_id": "legal_equity_panorama",
+      "existing_id_hint": null,
+      "id_policy": "resolve_actual_existing_id_first",
+      "trend": {
+        "applicability": "conditional",
+        "eligible_source": [
+          "validated_historical_snapshots",
+          "complete_event_reconstruction"
+        ],
+        "chart_type": "step_line",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "no_history_behavior": "hide_chart_keep_current_count"
+      },
+      "details": "preserve_existing_count_list_and_scope_drill; do not force funds-only metric selector"
+    },
+    {
+      "semantic_key": "controlled_entity_count",
+      "display_name": "控股及实际控制企业户数",
+      "domain_id": "property-rights",
+      "category_id": "legal_equity_panorama",
+      "existing_id_hint": null,
+      "id_policy": "resolve_actual_existing_id_first",
+      "trend": {
+        "applicability": "conditional",
+        "eligible_source": [
+          "validated_historical_snapshots",
+          "complete_event_reconstruction"
+        ],
+        "chart_type": "step_line",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "no_history_behavior": "hide_chart_keep_current_count"
+      },
+      "details": "preserve_existing_count_list_and_scope_drill; do not force funds-only metric selector"
+    },
+    {
+      "semantic_key": "participated_entity_count",
+      "display_name": "参股企业户数",
+      "domain_id": "property-rights",
+      "category_id": "legal_equity_panorama",
+      "existing_id_hint": null,
+      "id_policy": "resolve_actual_existing_id_first",
+      "trend": {
+        "applicability": "conditional",
+        "eligible_source": [
+          "validated_historical_snapshots",
+          "complete_event_reconstruction"
+        ],
+        "chart_type": "step_line",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "no_history_behavior": "hide_chart_keep_current_count"
+      },
+      "details": "preserve_existing_count_list_and_scope_drill; do not force funds-only metric selector"
+    },
+    {
+      "semantic_key": "open_property_matters",
+      "display_name": "在办产权事项数",
+      "domain_id": "property-rights",
+      "category_id": "legal_equity_panorama",
+      "existing_id_hint": null,
+      "id_policy": "resolve_actual_existing_id_first",
+      "trend": {
+        "applicability": "conditional",
+        "eligible_source": [
+          "validated_historical_snapshots",
+          "complete_event_reconstruction"
+        ],
+        "chart_type": "step_line",
+        "time_basis": "period_end",
+        "min_comparable_points": 2,
+        "home_visible_when_eligible": true,
+        "detail_visible_when_eligible": true,
+        "no_history_behavior": "hide_chart_keep_current_count"
+      },
+      "details": "preserve_existing_count_list_and_scope_drill; do not force funds-only metric selector"
+    }
+  ],
+  "funds_topics": [
+    {
+      "id": "funds_accounts",
+      "name": "账户管理",
+      "main_scenario_count": 2
+    },
+    {
+      "id": "funds_payments",
+      "name": "资金收付",
+      "main_scenario_count": 21
+    },
+    {
+      "id": "funds_financing",
+      "name": "融资与担保",
+      "main_scenario_count": 7
+    },
+    {
+      "id": "funds_operations",
+      "name": "资金运作",
+      "main_scenario_count": 5
+    },
+    {
+      "id": "funds_special",
+      "name": "专项资金",
+      "main_scenario_count": 3
+    },
+    {
+      "id": "funds_performance",
+      "name": "经营风险",
+      "main_scenario_count": 2
+    }
+  ],
+  "property_topics": [
+    {
+      "id": "property_transactions",
+      "name": "产权交易",
+      "shows_transaction_flow": true
+    },
+    {
+      "id": "property_registration",
+      "name": "产权登记",
+      "shows_transaction_flow": false
+    },
+    {
+      "id": "property_identity",
+      "name": "标识与名称资质",
+      "shows_transaction_flow": false
+    },
+    {
+      "id": "property_control",
+      "name": "股权与控制权",
+      "shows_transaction_flow": false
+    }
+  ],
+  "transaction_stage_dictionary": [
+    {
+      "id": "scope_permission",
+      "name": "方案及权限核验"
+    },
+    {
+      "id": "decision_approval",
+      "name": "决策审批"
+    },
+    {
+      "id": "audit_valuation",
+      "name": "审计评估"
+    },
+    {
+      "id": "transaction_execution",
+      "name": "交易实施"
+    },
+    {
+      "id": "settlement_handover",
+      "name": "签约结算与交割"
+    },
+    {
+      "id": "registration_archive",
+      "name": "登记变更及归档"
+    }
+  ],
+  "transaction_templates": {
+    "policy": "reuse_confirmed_existing_behavior_templates; dictionary is NOT global legal stage order",
+    "fields": [
+      "template_id",
+      "behavior_type",
+      "stage_sequence",
+      "prerequisites",
+      "allowed_skip_conditions",
+      "source_basis",
+      "version",
+      "effective_date"
+    ],
+    "all_behaviors_view": "aggregate_table_without_one_fake_universal_progress_line",
+    "non_transaction_topics": "hide_economic_behavior_and_flow; clear_incompatible_stage"
+  },
+  "scenario_catalog_file": "04_80条子场景配置参考_R3.json",
+  "scenario_form_fields": [
+    "primary_id",
+    "name",
+    "main_topic_id",
+    "main_stage_id",
+    "applicable_behavior_types",
+    "applicable_object_types",
+    "conditional_routes",
+    "execution_mode",
+    "runtime_capability",
+    "effective_date",
+    "enabled"
+  ],
+  "form_validation": [
+    "non_transaction_main_stage_is_null",
+    "stage_belongs_to_selected_behavior_template",
+    "conditional_route_requires_explicit_business_keys_and_condition",
+    "no_enablement_without_confirmed_runtime_or_review_path",
+    "new_fields_do_not_grant_business_permissions"
+  ],
+  "representative_paths": {
+    "funds_accounts": "CASH2-S040",
+    "funds_payments": "CASH2-S039",
+    "funds_financing": "CASH2-S012",
+    "funds_operations": "CASH2-S029",
+    "funds_special": "CASH2-S031",
+    "funds_performance": "CASH2-S035",
+    "property_transactions": [
+      "PTY2-S006",
+      "PTY2-S035"
+    ],
+    "property_registration": "PTY2-S028",
+    "property_identity": "PTY2-S025",
+    "property_control": "PTY2-S032"
+  },
+  "representative_policy": "every topic has a working applicable enabled example; no requirement to enable all 80; existing equivalent paths allowed with evidence",
+  "scene_layout": {
+    "order": [
+      "topic_navigation",
+      "transaction_behavior_and_flow_if_applicable",
+      "execution_title_with_selection_label",
+      "compact_stats",
+      "grouped_subscenario_table"
+    ],
+    "compact_stats": [
+      "hit_rules",
+      "involved_units",
+      "pending_verification",
+      "open_rectification",
+      "completed_rectification_in_period",
+      "overdue_rectification"
+    ],
+    "default_columns": [
+      "subscenario",
+      "execution_state",
+      "assessed_vs_eligible_by_type",
+      "hit_rules",
+      "hit_objects_by_type",
+      "open_rectification",
+      "detail"
+    ],
+    "prohibited_blocks": [
+      "separate_large_current_stage_panel",
+      "repeated_large_business_summary_before_table"
+    ]
+  },
+  "drawer_context": {
+    "entry": [
+      "domain",
+      "category",
+      "organization",
+      "include_descendants",
+      "period",
+      "as_of",
+      "authorization"
+    ],
+    "local_drill_changes_background": false,
+    "unsupported_leaf_switch": "nearest_applicable_authorized_ancestor_within_entry_root; else entry_root_state",
+    "component_updates": [
+      "tree",
+      "value",
+      "trend",
+      "comparison",
+      "composition",
+      "related_cases",
+      "basis"
+    ]
+  },
+  "migration": {
+    "mode": "stable_id_incremental_idempotent",
+    "preserve": [
+      "current_user_configuration",
+      "enablement",
+      "evaluations",
+      "versions",
+      "case_ids",
+      "workflow_history",
+      "organization_master"
+    ],
+    "legacy_fields": "legacy_topic and legacy_stage provenance only",
+    "new_definitions": "draft disabled until ready",
+    "never": [
+      "overwrite_seed",
+      "clear_all_browser_storage",
+      "bulk_mark_executable",
+      "rename_ids_to_match_hints",
+      "reset_histories"
+    ]
+  },
+  "data_guardrails": {
+    "cash_s039_tolerance": "fixed_zero_without_precision_basis; reject illegal save/publish, never silent clamp",
+    "payment_facts_wan": [
+      1200,
+      800,
+      2000
+    ],
+    "cash_balances_wan": {
+      "confirmed": 7152,
+      "restricted": 834.4,
+      "available": 6317.6,
+      "report_cash": 6800,
+      "difference_pending_verification": 352
+    },
+    "property_source_percentages": [
+      60,
+      60,
+      55
+    ],
+    "rectification": "all_old_and_new_cases_by_asof_records; never hardcode eight"
+  },
+  "validation_file": "05_验收清单_R3.md"
+}

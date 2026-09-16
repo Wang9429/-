@@ -5,6 +5,7 @@ import { INDICATOR_CALIBER, inDateRange, periodFact } from "./period";
 import { publishedWatchRule } from "./live-config";
 import { consecutiveLossPeriods, financeLeaves, loanDetailLeaves, roeLeaves, segmentProfitLeaves, segmentRevenueLeaves, smeOverdueWan, cashBridgeNote } from "./finance";
 import { censusEntities, openMatterCount } from "./fp-census";
+import { accountBalancesAt, censusSnapAt } from "./fp-history-seed";
 
 /**
  * 指标一律从基础业务记录计算；expected_results 只用于验收核对，
@@ -257,6 +258,15 @@ function openRiskLeaves(domain: DomainId, ctx: IndicatorContext): LeafMetric[] {
       riskIds: [r.id],
       dataComplete: true,
     }));
+}
+
+function accountNativeAt(accountId: string, asOf: string): { closing: number; restricted: number; complete: boolean } | null {
+  const a = accounts().find((x) => x.id === accountId);
+  if (!a) return null;
+  if (a.id === "ACC-INT") return { closing: 0, restricted: 0, complete: true };
+  const b = accountBalancesAt(a, asOf);
+  if (!b) return { closing: 0, restricted: 0, complete: false };
+  return { closing: b.closing, restricted: b.restricted, complete: true };
 }
 
 function accountFlowExtras(accountId: string, ctx: IndicatorContext): MetricExtra[] {
@@ -931,30 +941,35 @@ export const INDICATORS: IndicatorDef[] = [
     caliber: "余额按截至日统计，不跨期间相加；原币金额、单位及模拟汇率可查。",
     sourceNote: cashBridgeNote(),
     leaves: (ctx) =>
-      accounts().map((a) => ({
-        objectId: a.id,
-        objectType: "account" as ObjectType,
-        name: a.name,
-        orgId: a.owner_org_id,
-        numerator: (a.closing_balance_native * a.fx_to_cny) / 10000,
-        denominator: null,
-        extras: [
-          {
-            label: "原币期末余额",
-            value: `${a.closing_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit}`,
-          },
-          { label: "币种", value: a.currency },
-          {
-            label: "模拟汇率",
-            value: `${a.fx_to_cny}${a.fx_nature === "simulated" ? "（模拟）" : ""}`,
-          },
-          { label: "余额日期", value: a.balance_as_of },
-          ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
-          ...accountFlowExtras(a.id, ctx),
-        ],
-        riskIds: risksFor(a.id, ctx),
-        dataComplete: true,
-      })),
+      accounts().map((a) => {
+        const at = accountNativeAt(a.id, ctx.asOf);
+        const closing = at?.closing ?? 0;
+        return {
+          objectId: a.id,
+          objectType: "account" as ObjectType,
+          name: a.name,
+          orgId: a.owner_org_id,
+          numerator: (closing * a.fx_to_cny) / 10000,
+          denominator: null,
+          extras: [
+            {
+              label: "原币期末余额",
+              value: `${closing.toLocaleString("zh-CN")} ${a.native_amount_unit}`,
+            },
+            { label: "币种", value: a.currency },
+            {
+              label: "模拟汇率",
+              value: `${a.fx_to_cny}${a.fx_nature === "simulated" ? "（模拟）" : ""}`,
+            },
+            { label: "余额日期", value: ctx.asOf },
+            ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
+            ...accountFlowExtras(a.id, ctx),
+          ],
+          riskIds: risksFor(a.id, ctx),
+          dataComplete: Boolean(at?.complete),
+          gapNote: at?.complete ? undefined : "该截至日无账户余额快照",
+        };
+      }),
   },
   {
     id: "CASH-I02",
@@ -967,29 +982,35 @@ export const INDICATORS: IndicatorDef[] = [
     caliber: "受限资金显示限制类型与金额；多重限制账户金额不重复计入。",
     sourceNote: "账户余额及受限记录（模拟）",
     leaves: (ctx) =>
-      accounts().map((a) => ({
-        objectId: a.id,
-        objectType: "account" as ObjectType,
-        name: a.name,
-        orgId: a.owner_org_id,
-        numerator: ((a.closing_balance_native - a.restricted_balance_native) * a.fx_to_cny) / 10000,
-        denominator: null,
-        extras: [
-          { label: "期末余额", value: `${((a.closing_balance_native * a.fx_to_cny) / 10000).toFixed(2)} 万元` },
-          {
-            label: "受限余额",
-            value: `${((a.restricted_balance_native * a.fx_to_cny) / 10000).toFixed(2)} 万元`,
-          },
-          {
-            label: "原币受限",
-            value: `${a.restricted_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit}`,
-          },
-          ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
-          ...accountFlowExtras(a.id, ctx),
-        ],
-        riskIds: risksFor(a.id, ctx),
-        dataComplete: true,
-      })),
+      accounts().map((a) => {
+        const at = accountNativeAt(a.id, ctx.asOf);
+        const closing = at?.closing ?? 0;
+        const rest = at?.restricted ?? 0;
+        return {
+          objectId: a.id,
+          objectType: "account" as ObjectType,
+          name: a.name,
+          orgId: a.owner_org_id,
+          numerator: ((closing - rest) * a.fx_to_cny) / 10000,
+          denominator: null,
+          extras: [
+            { label: "期末余额", value: `${((closing * a.fx_to_cny) / 10000).toFixed(2)} 万元` },
+            {
+              label: "受限余额",
+              value: `${((rest * a.fx_to_cny) / 10000).toFixed(2)} 万元`,
+            },
+            {
+              label: "原币受限",
+              value: `${rest.toLocaleString("zh-CN")} ${a.native_amount_unit}`,
+            },
+            ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
+            ...accountFlowExtras(a.id, ctx),
+          ],
+          riskIds: risksFor(a.id, ctx),
+          dataComplete: Boolean(at?.complete),
+          gapNote: at?.complete ? undefined : "该截至日无账户余额快照",
+        };
+      }),
   },
   {
     id: "CASH-I07",
@@ -1003,21 +1024,27 @@ export const INDICATORS: IndicatorDef[] = [
     sourceNote: "账户受限记录（模拟）",
     evaluate: (v) => (v === null ? "unknown" : v >= 20 ? "attention" : "normal"),
     leaves: (ctx) =>
-      accounts().map((a) => ({
-        objectId: a.id,
-        objectType: "account" as ObjectType,
-        name: a.name,
-        orgId: a.owner_org_id,
-        numerator: (a.restricted_balance_native * a.fx_to_cny) / 10000,
-        denominator: (a.closing_balance_native * a.fx_to_cny) / 10000,
-        extras: [
-          { label: "币种", value: a.currency },
-          { label: "受限原币", value: `${a.restricted_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit}` },
-          ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
-        ],
-        riskIds: risksFor(a.id, ctx),
-        dataComplete: true,
-      })),
+      accounts().map((a) => {
+        const at = accountNativeAt(a.id, ctx.asOf);
+        const closing = at?.closing ?? 0;
+        const rest = at?.restricted ?? 0;
+        return {
+          objectId: a.id,
+          objectType: "account" as ObjectType,
+          name: a.name,
+          orgId: a.owner_org_id,
+          numerator: (rest * a.fx_to_cny) / 10000,
+          denominator: (closing * a.fx_to_cny) / 10000,
+          extras: [
+            { label: "币种", value: a.currency },
+            { label: "受限原币", value: `${rest.toLocaleString("zh-CN")} ${a.native_amount_unit}` },
+            ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
+          ],
+          riskIds: risksFor(a.id, ctx),
+          dataComplete: Boolean(at?.complete) && closing !== 0,
+          gapNote: at?.complete ? undefined : "该截至日无账户余额快照",
+        };
+      }),
   },
   {
     id: "CASH-I04",
@@ -1571,7 +1598,26 @@ export const INDICATORS: IndicatorDef[] = [
     formula: "有效范围内法人按统一主体ID去重",
     caliber: "境内以统一社会信用代码、境外以登记号与国家地区识别；含海工本体但仅当其在当前范围。分支机构、部门、账户不计户。",
     sourceNote: "法人及控制关系快照（模拟）",
-    leaves: (ctx) => censusEntityLeaves(ctx),
+    leaves: (ctx) => {
+      const snap = censusSnapAt(ctx.asOf);
+      if (snap) {
+        return [
+          {
+            objectId: `CENSUS-N-${ctx.asOf}`,
+            objectType: "legal_entity" as ObjectType,
+            name: `纳管法人快照 ${ctx.asOf}`,
+            orgId: "ORG-HQ",
+            numerator: snap.N,
+            denominator: null,
+            countWeight: snap.N,
+            extras: [{ label: "快照", value: `${ctx.asOf} 月末户数` }],
+            riskIds: [],
+            dataComplete: true,
+          },
+        ];
+      }
+      return censusEntityLeaves(ctx);
+    },
   },
   {
     id: "PTY2-I02",
@@ -1583,7 +1629,26 @@ export const INDICATORS: IndicatorDef[] = [
     formula: "纳管法人中经有效治理依据确认控制的被投企业",
     caliber: "含已确认控制的全资及非全资企业，排除海工本体。占比分母为被投法人 N−B。",
     sourceNote: "治理控制依据（模拟）",
-    leaves: (ctx) => censusEntityLeaves(ctx, "controlled"),
+    leaves: (ctx) => {
+      const snap = censusSnapAt(ctx.asOf);
+      if (snap) {
+        return [
+          {
+            objectId: `CENSUS-C-${ctx.asOf}`,
+            objectType: "legal_entity" as ObjectType,
+            name: `控股及实控快照 ${ctx.asOf}`,
+            orgId: "ORG-HQ",
+            numerator: snap.C,
+            denominator: null,
+            countWeight: snap.C,
+            extras: [{ label: "快照", value: `${ctx.asOf} 月末户数` }],
+            riskIds: [],
+            dataComplete: true,
+          },
+        ];
+      }
+      return censusEntityLeaves(ctx, "controlled");
+    },
   },
   {
     id: "PTY2-I03",
@@ -1595,7 +1660,26 @@ export const INDICATORS: IndicatorDef[] = [
     formula: "纳管法人中已确认不控制的被投企业",
     caliber: "未录入控制结论的不归为参股，单列控制待核实。",
     sourceNote: "治理控制依据（模拟）",
-    leaves: (ctx) => censusEntityLeaves(ctx, "participating"),
+    leaves: (ctx) => {
+      const snap = censusSnapAt(ctx.asOf);
+      if (snap) {
+        return [
+          {
+            objectId: `CENSUS-P-${ctx.asOf}`,
+            objectType: "legal_entity" as ObjectType,
+            name: `参股快照 ${ctx.asOf}`,
+            orgId: "ORG-HQ",
+            numerator: snap.P,
+            denominator: null,
+            countWeight: snap.P,
+            extras: [{ label: "快照", value: `${ctx.asOf} 月末户数` }],
+            riskIds: [],
+            dataComplete: true,
+          },
+        ];
+      }
+      return censusEntityLeaves(ctx, "participating");
+    },
   },
   {
     id: "PTY2-I04",
@@ -1608,6 +1692,23 @@ export const INDICATORS: IndicatorDef[] = [
     caliber: "不是规则命中数，也不是整改数。交易、登记、名称资质、治理变动在事项详情分类型展开。",
     sourceNote: "产权事项台账（模拟）",
     leaves: (ctx) => {
+      const snap = censusSnapAt(ctx.asOf);
+      if (snap) {
+        return [
+          {
+            objectId: `CENSUS-T-${ctx.asOf}`,
+            objectType: "property_matter" as ObjectType,
+            name: `在办事项快照 ${ctx.asOf}`,
+            orgId: "ORG-HQ",
+            numerator: snap.T,
+            denominator: null,
+            countWeight: snap.T,
+            extras: [{ label: "快照", value: `${ctx.asOf} 月末事项数` }],
+            riskIds: [],
+            dataComplete: true,
+          },
+        ];
+      }
       void ctx;
       return openMatterCount(new Set(seed.organizations.map((o) => o.id))).matters.map((m) => ({
         objectId: m.id,

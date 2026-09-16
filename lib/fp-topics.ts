@@ -51,10 +51,14 @@ export const FIRST_BATCH_SUBS = [
   "CASH2-S033",
   "CASH2-S031",
   "CASH2-S035",
+  "CASH2-S040",
+  "CASH2-S012",
+  "CASH2-S029",
   "PTY2-S006",
   "PTY2-S035",
   "PTY2-S028",
   "PTY2-S032",
+  "PTY2-S025",
 ] as const;
 
 export type RuntimeCapability =
@@ -77,10 +81,14 @@ export const FIRST_BATCH_RUNTIME: Record<string, RuntimeCapability> = {
   "CASH2-S033": "assisted_review",
   "CASH2-S031": "assisted_review",
   "CASH2-S035": "assisted_review",
+  "CASH2-S040": "assisted_review",
+  "CASH2-S012": "structured_executable",
+  "CASH2-S029": "structured_executable",
   "PTY2-S006": "structured_executable",
   "PTY2-S035": "structured_executable",
   "PTY2-S028": "structured_executable",
   "PTY2-S032": "professional_review",
+  "PTY2-S025": "assisted_review",
 };
 
 export const LEGACY_SCENARIO_MAP: Record<string, string> = {
@@ -103,6 +111,23 @@ export function topicIdForLabel(label: string | undefined, domain: DomainId): st
   }
   return TOPIC_BY_LABEL[label] ?? (domain === "CASH" ? "CASH2-T-PAYMENT" : "PTY2-T-TRADE");
 }
+
+/** R3 替代冲突映射：捐赠付款主专题为资金收付。 */
+export const MAIN_TOPIC_OVERRIDE: Record<string, string> = {
+  "CASH2-S011": "CASH2-T-PAYMENT",
+};
+
+export function resolvedTopicId(subId: string, label: string | undefined, domain: DomainId): string {
+  return MAIN_TOPIC_OVERRIDE[subId] ?? topicIdForLabel(label, domain);
+}
+
+export const CASH_CONDITIONAL_ROUTES: Record<string, string[]> = {
+  "CASH2-S001": ["CASH2-T-FINANCE", "CASH2-T-OPERATION", "CASH2-T-SPECIAL"],
+  "CASH2-S003": ["CASH2-T-FINANCE", "CASH2-T-OPERATION", "CASH2-T-SPECIAL"],
+  "CASH2-S014": ["CASH2-T-FINANCE"],
+  "CASH2-S015": ["CASH2-T-PAYMENT"],
+  "CASH2-S016": ["CASH2-T-PAYMENT"],
+};
 
 export const RIGHTS_STAGE_TEMPLATE = [
   { id: "PTY2-ST-SCHEME", name: "方案及权限核验", order: 1 },

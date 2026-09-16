@@ -2,7 +2,7 @@ import { config, type ConfigUser, type DataScope } from "./config";
 import { buildFpCatalogSlice } from "./fp-catalog";
 import { CASH_S039_TOLERANCE_MAX_WAN, CASH_S039_TOLERANCE_MAX_YUAN } from "./fp-tolerance";
 import type { DomainId, RuleEvaluation } from "./types";
-import type { RuntimeCapability } from "./fp-topics";
+import { canonicalRightsStage, FIRST_BATCH_RUNTIME, MAIN_TOPIC_OVERRIDE, type RuntimeCapability } from "./fp-topics";
 
 const SEED_AS_OF = "2026-06-30";
 
@@ -58,6 +58,10 @@ export interface CatalogSubscenario {
   rule_text?: string;
   applicability_note?: string;
   associated_phase_ids?: string[];
+  conditional_routes?: string[];
+  business_type?: string;
+  legacy_topic?: string;
+  legacy_stage?: string;
 }
 
 export interface RuleVersion {
@@ -93,6 +97,12 @@ export interface CatalogIndicator {
   status: string;
   enabled: boolean;
   display_position: string;
+  category_id?: string;
+  time_type?: string;
+  trend_applicability?: "conditional" | "never" | "always";
+  trend_home_visible?: boolean;
+  trend_detail_visible?: boolean;
+  trend_frequency?: "month" | "quarter" | "half";
 }
 
 export interface CatalogAiTask {
@@ -337,7 +347,7 @@ export function extractCatalog(): CatalogPersist {
     groups: mergeById(groups, fp.groups),
     subscenarios: stamped,
     rules: mergeById(rules, fp.rules),
-    indicators: mergeById(indicators, fp.indicators),
+    indicators: fillIndicatorDefaults(mergeById(indicators, fp.indicators), fp.indicators),
     ai: {
       ...ai,
       tasks: mergeById(ai.tasks, fp.ai.tasks),
@@ -350,9 +360,39 @@ export function extractCatalog(): CatalogPersist {
 
 function stampLegacyTopics(subs: CatalogSubscenario[]): CatalogSubscenario[] {
   return subs.map((s) => {
-    if (s.id === "CASH-S01") return { ...s, topic_id: s.topic_id ?? "CASH2-T-PAYMENT" };
-    if (s.id === "PTY-S01") return { ...s, topic_id: s.topic_id ?? "PTY2-T-REG" };
-    return s;
+    let next = { ...s };
+    if (s.id === "CASH-S01") next.topic_id = s.topic_id ?? "CASH2-T-PAYMENT";
+    if (s.id === "PTY-S01") next.topic_id = s.topic_id ?? "PTY2-T-REG";
+    if (MAIN_TOPIC_OVERRIDE[s.id]) next.topic_id = MAIN_TOPIC_OVERRIDE[s.id];
+    const runtime = FIRST_BATCH_RUNTIME[s.id];
+    if (runtime && s.status === "draft") {
+      next = {
+        ...next,
+        enabled: true,
+        status: "published",
+        applicability: "confirmed",
+        runtime_capability: runtime,
+      };
+    }
+    return next;
+  });
+}
+
+function fillIndicatorDefaults(indicators: CatalogIndicator[], seed: CatalogIndicator[]): CatalogIndicator[] {
+  const byId = new Map(seed.map((i) => [i.id, i]));
+  return indicators.map((i) => {
+    const src = byId.get(i.id);
+    if (!src) return i;
+    return {
+      ...src,
+      ...i,
+      category_id: i.category_id ?? src.category_id,
+      time_type: i.time_type ?? src.time_type,
+      trend_applicability: i.trend_applicability ?? src.trend_applicability,
+      trend_home_visible: i.trend_home_visible ?? src.trend_home_visible,
+      trend_detail_visible: i.trend_detail_visible ?? src.trend_detail_visible,
+      trend_frequency: i.trend_frequency ?? src.trend_frequency,
+    };
   });
 }
 
@@ -382,13 +422,23 @@ export function hydrateCatalog(raw: unknown): CatalogPersist {
         object_types: Array.isArray(s.object_types) ? s.object_types : [],
       })),
     ),
-    rules: mergeById(base.rules, r.rules).map((rule) => ({
-      ...rule,
-      draft_parameters: { ...(rule.draft_parameters ?? {}) },
-      versions: Array.isArray(rule.versions) ? rule.versions : [],
-      published: rule.published ?? null,
-    })),
-    indicators: mergeById(base.indicators, r.indicators),
+    rules: mergeById(base.rules, r.rules).map((rule) => {
+      const seedRule = base.rules.find((x) => x.id === rule.id);
+      const subId = rule.primary_subscenario_id;
+      const upgraded =
+        seedRule &&
+        FIRST_BATCH_RUNTIME[subId] &&
+        rule.status === "draft"
+          ? { ...rule, ...seedRule, draft_parameters: { ...(seedRule.draft_parameters ?? {}), ...(rule.draft_parameters ?? {}) } }
+          : rule;
+      return {
+        ...upgraded,
+        draft_parameters: { ...(upgraded.draft_parameters ?? {}) },
+        versions: Array.isArray(upgraded.versions) ? upgraded.versions : [],
+        published: upgraded.published ?? null,
+      };
+    }),
+    indicators: fillIndicatorDefaults(mergeById(base.indicators, r.indicators), base.indicators),
     ai: {
       ...base.ai,
       ...(r.ai ?? {}),
@@ -502,6 +552,22 @@ export function validateSub(s: CatalogSubscenario, groups: CatalogGroup[], all: 
   const parent = groups.find((g) => g.id === s.parent_id);
   if (s.parent_id && !parent) errors.parent_id = "所属一级监管场景不存在";
   if (parent && s.domain && parent.domain !== s.domain) errors.domain = "子场景领域须与一级场景一致";
+  if (s.domain === "CASH" && s.topic_id && !s.topic_id.startsWith("CASH2-T-")) {
+    errors.topic_id = "资金子场景不能使用产权专题";
+  }
+  if (s.domain === "RIGHTS" && s.topic_id && !s.topic_id.startsWith("PTY2-T-")) {
+    errors.topic_id = "产权子场景不能使用资金专题";
+  }
+  if (s.domain === "CASH" && s.primary_phase_id) {
+    errors.primary_phase_id = "资金子场景不使用产权交易环节作为主环节";
+  }
+  if (s.domain === "RIGHTS" && s.topic_id && s.topic_id !== "PTY2-T-TRADE") {
+    const stage = canonicalRightsStage(s.primary_phase_id) ?? s.primary_phase_id;
+    const tradeOnly = new Set(["PTY2-ST-SCHEME", "PTY2-ST-DECISION", "PTY2-ST-AUDIT", "PTY2-ST-TRADE", "PTY2-ST-SETTLE"]);
+    if (stage && tradeOnly.has(stage)) {
+      errors.primary_phase_id = "非产权交易专题不能把交易环节设为主环节";
+    }
+  }
   if (isNew && all.some((x) => x.id === s.id)) errors.id = "编号已存在";
   return errors;
 }
@@ -536,6 +602,18 @@ export function validateIndicator(i: CatalogIndicator, all: CatalogIndicator[], 
   if (!i.name.trim()) errors.name = "请填写指标名称";
   if (!i.domain) errors.domain = "请选择领域";
   if (!i.formula_display.trim()) errors.formula_display = "请填写口径/计算公式";
+  if (
+    i.category_id &&
+    i.category_id !== "profitability" &&
+    i.category_id !== "balance_sheet" &&
+    i.category_id !== "liquidity" &&
+    i.category_id !== "property_census"
+  ) {
+    errors.category_id = "指标分类须为盈利能力、资产负债状况、资金流动性或法人及股权统计";
+  }
+  if (i.trend_applicability && i.trend_applicability !== "conditional" && i.trend_applicability !== "never" && i.trend_applicability !== "always") {
+    errors.trend_applicability = "趋势适用性只能是按历史条件、从不显示或始终尝试";
+  }
   if (isNew && all.some((x) => x.id === i.id)) errors.id = "编号已存在";
   return errors;
 }

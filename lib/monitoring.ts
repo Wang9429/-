@@ -257,10 +257,14 @@ function scenarioBelongsToTopic(
   rowTopic: string | null | undefined,
 ): boolean {
   if (!topicId) return true;
+  const live = getLiveConfig().subs.get(scenarioId);
+  const routes = live?.conditional_routes ?? [];
+  if (rowTopic === topicId || live?.topic_id === topicId || routes.includes(topicId)) return true;
   if (rowTopic && rowTopic !== topicId) return false;
   if (!rowTopic) {
-    const mapped = getLiveConfig().subs.get(scenarioId)?.topic_id;
-    if (mapped !== topicId) return false;
+    const mapped = live?.topic_id;
+    if (mapped && mapped !== topicId) return false;
+    if (!mapped && !routes.includes(topicId)) return false;
   }
   return true;
 }
@@ -284,12 +288,17 @@ export function configuredScenarios(domain: DomainId, phaseId?: string | null, t
   for (const extra of live.extraScenarios) {
     if (extra.domain !== domain) continue;
     if (phaseId && extra.primary_phase_id && extra.primary_phase_id !== phaseId) continue;
-    if (topicId && extra.enabled === false && !set.has(extra.id)) continue;
+    if (topicId) {
+      const sub = live.subs.get(extra.id);
+      const routes = sub?.conditional_routes ?? [];
+      if (sub?.topic_id && sub.topic_id !== topicId && !routes.includes(topicId)) continue;
+      if (extra.enabled === false && !set.has(extra.id)) continue;
+    }
     if (extra.enabled || set.has(extra.id)) set.add(extra.id);
   }
   for (const s of live.subs.values()) {
     if (s.domain !== domain) continue;
-    if (topicId && s.topic_id !== topicId) continue;
+    if (topicId && s.topic_id !== topicId && !(s.conditional_routes ?? []).includes(topicId)) continue;
     if (phaseId) {
       const subStage = canonicalRightsStage(s.primary_phase_id) ?? s.primary_phase_id;
       const selectedStage = canonicalRightsStage(phaseName(phaseId)) ?? canonicalRightsStage(phaseId) ?? phaseId;

@@ -13,6 +13,7 @@ import { isOpen, statusLabel } from "@/lib/risks";
 import { useDemoStore } from "@/lib/store";
 import type { LifecycleInstance } from "@/lib/types";
 import { FP_CONTROLS, FP_GUARANTEES, FP_LENDS, FP_LOANS, FP_SME, FP_SPECIALS, FP_GOVERNANCE } from "@/lib/fp-seed";
+import { FP_ACCOUNT_OPENINGS, FP_NAME_LICENSES } from "@/lib/fp-history-seed";
 
 /**
  * P74 对象档案 + P79 横向业务关系 + P75 详细环节核查。
@@ -553,11 +554,27 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
   const gov = FP_GOVERNANCE.find((x) => x.legal_entity_id === objectId || x.id === objectId);
   const ctrl = FP_CONTROLS.find((x) => x.legal_entity_id === objectId);
   const le = seed.legal_entities.find((e) => e.id === objectId);
+  const opening = FP_ACCOUNT_OPENINGS.find((x) => x.account_id === objectId);
+  const nameLic = FP_NAME_LICENSES.find((x) => x.matter_id === objectId);
   const idBtn = (id: string) => (
     <button type="button" className="num text-brand hover:underline" onClick={() => onOpenObject?.(id)}>
       {id}
     </button>
   );
+  if (opening) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "开户日", value: <span className="num">{opening.opened_on}</span> },
+          { label: "是否需事前审批", value: opening.approval_required ? "是" : "否" },
+          { label: "有效批准日", value: <span className="num">{opening.approval_on ?? "缺失"}</span> },
+          { label: "检索是否完整", value: opening.evidence_complete ? "完整" : "不完整，未评估" },
+          { label: "检索说明", value: opening.search_note },
+        ]}
+      />
+    );
+  }
   if (loan) {
     return (
       <DescList
@@ -573,12 +590,17 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
     );
   }
   if (guar) {
+    const occupancy = FP_GUARANTEES.filter(
+      (x) => x.guarantor_id === guar.guarantor_id && x.beneficiary_id === guar.beneficiary_id && !x.released,
+    ).reduce((s, x) => s + x.amount_wan, 0);
     return (
       <DescList
         cols={3}
         items={[
           { label: "类型", value: guar.kind === "performance_bond" ? "保函" : "借款担保" },
           { label: "金额", value: <span className="num">{fmtAmount(guar.amount_wan)}</span> },
+          { label: "有效占用", value: <span className="num">{fmtAmount(occupancy)}</span>, hint: guar.occupancy_basis },
+          { label: "批准额度", value: <span className="num">{fmtAmount(guar.approved_limit_wan)}</span> },
           { label: "有效期", value: <span className="num">{guar.start_date}～{guar.end_date}</span> },
           { label: "担保人", value: idBtn(guar.guarantor_id) },
           { label: "被担保/受益", value: idBtn(guar.beneficiary_id) },
@@ -588,13 +610,17 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
     );
   }
   if (lend) {
+    const unrecovered = Math.max(0, lend.outstanding_wan - lend.recovered_wan);
     return (
       <DescList
         cols={3}
         items={[
           { label: "出借人", value: idBtn(lend.lender_id) },
           { label: "借入人", value: idBtn(lend.borrower_id) },
-          { label: "未收回", value: <span className="num">{fmtAmount(lend.outstanding_wan - lend.recovered_wan)}</span> },
+          { label: "本金", value: <span className="num">{fmtAmount(lend.principal_wan)}</span> },
+          { label: "未偿本金", value: <span className="num">{fmtAmount(lend.outstanding_wan)}</span> },
+          { label: "已回收", value: <span className="num">{fmtAmount(lend.recovered_wan)}</span> },
+          { label: "未收回", value: <span className="num">{fmtAmount(unrecovered)}</span> },
           { label: "到期日", value: <span className="num">{lend.due_date}</span> },
         ]}
       />
@@ -629,6 +655,22 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
           { label: "已付", value: <span className="num">{fmtAmount(sme.paid_wan)}</span> },
           { label: "未付余额", value: <span className="num">{fmtAmount(unpaid)}</span> },
           { label: "到期依据", value: `按${sme.start_event}日起合同${sme.contracted_days}日，不以发票日加60日` },
+        ]}
+      />
+    );
+  }
+  if (nameLic) {
+    return (
+      <DescList
+        cols={3}
+        items={[
+          { label: "使用主体", value: idBtn(nameLic.entity_id) },
+          { label: "登记名称", value: nameLic.registered_name },
+          { label: "使用字号", value: nameLic.trade_name },
+          { label: "授权文件", value: nameLic.auth_file ?? "缺文件" },
+          { label: "授权截止", value: <span className="num">{nameLic.auth_until ?? "缺期限"}</span> },
+          { label: "退出/解约", value: <span className="num">{nameLic.exit_event_on ?? "无"}</span> },
+          { label: "说明", value: nameLic.note },
         ]}
       />
     );

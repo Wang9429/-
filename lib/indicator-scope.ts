@@ -3,12 +3,13 @@
  * 取数必须是授权范围 ∩ 当前组织筛选，禁止按名称猜测指标。
  */
 
-import { catalogIndicatorOnDomainPage, catalogIndicatorOnHomepage, catalogIndicatorVisible } from "./live-config";
-import { descendantOrgIds, orgPath } from "./org";
+import { catalogIndicatorOnDomainPage, catalogIndicatorOnHomepage, catalogIndicatorVisible, catalogIndicatorMeta } from "./live-config";
+import { descendantOrgIds, orgById, orgPath } from "./org";
 import { INDICATORS, type IndicatorDef, type LeafMetric, type MetricStatus, type NodeMetric } from "./metrics";
 import type { DomainId, Organization } from "./types";
 import { visibleChildOrgs } from "./overview";
 import { reportAvailability } from "./finance";
+import { METRIC_CATEGORY, usesFinancialStatement } from "./fp-trend";
 
 export type DrawerSelection = { kind: "org"; id: string } | { kind: "leaf"; id: string };
 
@@ -28,9 +29,37 @@ export function switchableDrawerIndicators(
   domain: DomainId,
   options: IndicatorDef[],
   entry: "homepage" | "domain_page" = "homepage",
+  categoryId?: string | null,
 ): IndicatorDef[] {
   const allowed = new Set(runnableDrawerIndicators(domain, entry).map((d) => d.id));
-  return options.filter((d) => d.domain === domain && allowed.has(d.id) && isRunnableDrawerIndicator(d, entry));
+  return options.filter((d) => {
+    if (d.domain !== domain || !allowed.has(d.id) || !isRunnableDrawerIndicator(d, entry)) return false;
+    if (!categoryId) return true;
+    const cat = catalogIndicatorMeta(d.id)?.category_id ?? METRIC_CATEGORY[d.id];
+    return cat === categoryId;
+  });
+}
+
+export function orgApplicableForIndicator(orgId: string, indicatorId: string): boolean {
+  if (!usesFinancialStatement(indicatorId)) return true;
+  return reportAvailability(orgId) !== "no_report";
+}
+
+export function nearestApplicableOrgId(
+  fromOrgId: string,
+  initialOrgId: string,
+  dataOrgIds: Set<string>,
+  indicatorId: string,
+): string {
+  let cur: string | undefined = fromOrgId;
+  const seen = new Set<string>();
+  while (cur && !seen.has(cur)) {
+    seen.add(cur);
+    if (dataOrgIds.has(cur) && orgApplicableForIndicator(cur, indicatorId)) return cur;
+    if (cur === initialOrgId) break;
+    cur = orgById(cur)?.parent_id ?? undefined;
+  }
+  return initialOrgId;
 }
 
 export function isIndicatorAbnormalStatus(status: MetricStatus): boolean {
