@@ -111,7 +111,7 @@ export function financeLeaves(
 }
 
 export function cashBridgeNote(): string {
-  return "报表货币资金6800万元与纳入监测账户折人民币6632万元差额168万元，为在途及未纳入专户视图的调节项；内部结算账户余额为0，不重复计银行余额。专户520万元计入账户余额且全部受限。";
+  return "总部合并报表货币资金6800万元；原银行账户监管口径6632万元，差额168万元为在途及未纳入专户视图的调节项。专项专户ACC-SPEC新增520万元（截至2026-06-30，专项〔2026〕12号，全部受限）计入监管账户后合计7152万元，受限834.4万元，可用仍为6317.6万元。内部结算账户ACC-INT余额为0，不重复计银行余额。报表货币资金与监管账户不是同一口径，不能互相替代。";
 }
 
 export function consecutiveLossPeriods(orgId: string, n = 3): { count: number; name: string; profits: number[] } | null {

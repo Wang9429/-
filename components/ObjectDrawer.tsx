@@ -369,7 +369,7 @@ function ObjectDrawerBody({
                   { label: "币种", value: account.currency },
                   { label: "期初余额（原币）", value: <span className="num">{fmtAmount(account.opening_balance_native)}</span>, hint: `期初日 ${account.opening_balance_date}` },
                   { label: "期末余额（原币）", value: <span className="num">{fmtAmount(account.closing_balance_native)}</span>, hint: `余额日 ${account.balance_as_of}` },
-                  { label: "受限余额（原币）", value: <span className="num">{fmtAmount(account.restricted_balance_native)}</span> },
+                  { label: "受限余额（原币）", value: <span className="num">{fmtAmount(account.restricted_balance_native)}</span>, hint: account.restriction_basis },
                   { label: "折人民币汇率", value: <span className="num">{account.fx_to_cny}</span>, hint: account.fx_nature },
                   { label: "折人民币期末余额", value: <span className="num">{fmtAmount(account.closing_balance_native * account.fx_to_cny)}</span> },
                   { label: "可动用余额（折人民币）", value: <span className="num">{fmtAmount((account.closing_balance_native - account.restricted_balance_native) * account.fx_to_cny)}</span> },
@@ -546,7 +546,10 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
   const guar = FP_GUARANTEES.find((x) => x.id === objectId);
   const lend = FP_LENDS.find((x) => x.id === objectId);
   const spec = FP_SPECIALS.find((x) => x.id === objectId);
-  const sme = FP_SME.find((x) => x.id === objectId);
+  const sme =
+    FP_SME.find((x) => x.id === objectId) ??
+    FP_SME.find((x) => x.contract_id === objectId) ??
+    FP_SME.find((x) => seed.obligations.find((o) => o.id === objectId)?.contract_id === x.contract_id);
   const gov = FP_GOVERNANCE.find((x) => x.legal_entity_id === objectId || x.id === objectId);
   const ctrl = FP_CONTROLS.find((x) => x.legal_entity_id === objectId);
   const le = seed.legal_entities.find((e) => e.id === objectId);
@@ -610,13 +613,22 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
     );
   }
   if (sme) {
+    const unpaid = Math.max(0, sme.undisputed_wan - sme.paid_wan);
+    const ob = seed.obligations.find((o) => o.contract_id === sme.contract_id);
     return (
       <DescList
         cols={3}
         items={[
-          { label: "订立时中小企业", value: sme.sme_at_contract == null ? "缺数" : sme.sme_at_contract ? "是" : "否" },
+          { label: "订立时中小企业", value: sme.sme_at_contract == null ? "缺数，未评估" : sme.sme_at_contract ? "是" : "否" },
+          { label: "付款义务", value: idBtn(ob?.id ?? sme.id) },
+          { label: "合同", value: idBtn(sme.contract_id) },
+          { label: "起算事件", value: `${sme.start_event} ${sme.start_date}` },
+          { label: "合同约定期限", value: <span className="num">{sme.contracted_days}日</span> },
           { label: "到期日", value: <span className="num">{sme.due_date}</span> },
-          { label: "无争议未付", value: <span className="num">{fmtAmount(Math.max(0, sme.undisputed_wan - sme.paid_wan))}</span> },
+          { label: "无争议应付", value: <span className="num">{fmtAmount(sme.undisputed_wan)}</span> },
+          { label: "已付", value: <span className="num">{fmtAmount(sme.paid_wan)}</span> },
+          { label: "未付余额", value: <span className="num">{fmtAmount(unpaid)}</span> },
+          { label: "到期依据", value: `按${sme.start_event}日起合同${sme.contracted_days}日，不以发票日加60日` },
         ]}
       />
     );
@@ -633,7 +645,11 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
           ...(gov
             ? [
                 { label: "章程董事会席位", value: String(gov.charter_board_seats) },
+                { label: "控股应派席位", value: "3" },
                 { label: "实际委派到任", value: String(gov.appointed_seats) },
+                { label: "表决是否受阻", value: gov.blocked ? "待专业核查" : "未见受阻记录" },
+                { label: "治理依据", value: gov.evidence_ids.join("、") },
+                { label: "核查要点", value: gov.note },
               ]
             : []),
         ]}

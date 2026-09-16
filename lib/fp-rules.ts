@@ -1,5 +1,8 @@
-import { FP_CONTROLS_PAY, FP_EVENTS, FP_REPORTS, FP_SEGMENTS, FP_SME, FP_SPECIALS } from "./fp-seed";
+import { FP_CONTROLS_PAY, FP_EVENTS, FP_GOVERNANCE, FP_REPORTS, FP_SEGMENTS, FP_SME, FP_SPECIALS } from "./fp-seed";
+import { liveRule } from "./live-config";
 import { seed } from "./seed";
+import type { CatalogRule } from "./config-catalog";
+import type { RuleEvaluation } from "./types";
 
 export type RuleTrialResult = {
   objectId: string;
@@ -9,27 +12,75 @@ export type RuleTrialResult = {
   missing?: string[];
 };
 
-export function trialCashS039(objectId: string): RuleTrialResult {
+export const FP_TRIAL_OBJECTS: Record<string, { id: string; name: string }[]> = {
+  "CASH2-S039": [
+    { id: "P-PAY001", name: "付款 P-PAY001" },
+    { id: "P-FA001", name: "付款 P-FA001" },
+  ],
+  "CASH2-S037": [
+    { id: "P-FP-AUTH", name: "付款 P-FP-AUTH" },
+    { id: "P-PAY001", name: "付款 P-PAY001" },
+  ],
+  "CASH2-S024": [
+    { id: "P-FP-ACCCHG", name: "付款 P-FP-ACCCHG" },
+    { id: "P-FP-ACCCHG-OK", name: "付款 P-FP-ACCCHG-OK" },
+  ],
+  "CASH2-S033": [
+    { id: "SME-01", name: "账款 SME-01" },
+    { id: "SME-02", name: "账款 SME-02" },
+  ],
+  "CASH2-S031": [
+    { id: "P-FP-SPEC", name: "专项支出 P-FP-SPEC" },
+    { id: "P-FP-SPEC-OK", name: "专项支出 P-FP-SPEC-OK" },
+  ],
+  "CASH2-S035": [{ id: "SEG-A-EPCI-2026Q2", name: "海洋工程总承包" }],
+  "PTY2-S006": [
+    { id: "PTY-M007", name: "事项 PTY-M007" },
+    { id: "PTY-M002", name: "事项 PTY-M002" },
+  ],
+  "PTY2-S035": [
+    { id: "PTY-M008", name: "事项 PTY-M008" },
+    { id: "PTY-M002", name: "事项 PTY-M002" },
+  ],
+  "PTY2-S028": [{ id: "PTY-M009", name: "事项 PTY-M009" }],
+  "PTY2-S032": [{ id: "LE-CTRL", name: "法人 LE-CTRL" }],
+};
+
+function ruleParams(
+  ruleOrSubId: string,
+  override?: Record<string, string | number>,
+): Record<string, string | number> {
+  if (override) return override;
+  const rule = liveRule(ruleOrSubId) ?? liveRule(ruleOrSubId.replace("-S", "-R"));
+  return {
+    ...(rule?.published?.parameters ?? {}),
+    ...(rule?.draft_parameters ?? {}),
+  };
+}
+
+export function trialCashS039(objectId: string, params?: Record<string, string | number>): RuleTrialResult {
   const tx = seed.cash_transactions.find((t) => t.id === objectId);
   if (!tx) return { objectId, result: "not_applicable", formula: "对象不是付款", inputs: {} };
   if (tx.direction !== "outflow" || tx.approved_amount === undefined) {
     return { objectId, result: "not_applicable", formula: "非支付核查对象", inputs: { direction: tx.direction } };
   }
+  const p = ruleParams("CASH2-R039", params);
+  const tol = Number(p.amount_tolerance_wan ?? 0) || 0;
   const over = tx.amount_wan_cny - tx.approved_amount;
   const overCert = tx.certified_payable_amount !== undefined ? tx.amount_wan_cny - tx.certified_payable_amount : null;
-  if (over > 0) {
+  if (over > tol) {
     return {
       objectId,
       result: "hit",
-      formula: `实付${tx.amount_wan_cny} − 该笔有效批准${tx.approved_amount} = ${over}；业务上限${tx.certified_payable_amount ?? "—"}`,
-      inputs: { actual: tx.amount_wan_cny, approved: tx.approved_amount, limit: tx.certified_payable_amount, over, overCert },
+      formula: `实付${tx.amount_wan_cny} − 该笔有效批准${tx.approved_amount} = ${over}；容差${tol}；业务上限${tx.certified_payable_amount ?? "—"}`,
+      inputs: { actual: tx.amount_wan_cny, approved: tx.approved_amount, limit: tx.certified_payable_amount, over, overCert, amount_tolerance_wan: tol },
     };
   }
   return {
     objectId,
     result: "clear",
-    formula: `实付${tx.amount_wan_cny} ≤ 批准${tx.approved_amount}`,
-    inputs: { actual: tx.amount_wan_cny, approved: tx.approved_amount },
+    formula: `实付${tx.amount_wan_cny} − 批准${tx.approved_amount} = ${over} ≤ 容差${tol}`,
+    inputs: { actual: tx.amount_wan_cny, approved: tx.approved_amount, amount_tolerance_wan: tol },
   };
 }
 
@@ -164,21 +215,26 @@ export function trialPtyS032(objectId: string): RuleTrialResult {
   if (objectId !== "LE-CTRL" && objectId !== "PTY-M010" && objectId !== "GOV-CTRL") {
     return { objectId, result: "not_applicable", formula: "非该治理对象", inputs: {} };
   }
+  const gov = FP_GOVERNANCE.find((g) => g.legal_entity_id === "LE-CTRL") ?? FP_GOVERNANCE[0];
   return {
     objectId,
     result: "data_insufficient",
-    formula: "专业核查：章程应派3席实际到任2席，不自动判定为控制失效或已控权",
-    inputs: { charter: 3, seated: 2 },
+    formula: `专业核查：章程董事会${gov.charter_board_seats}席、控股应派3席、实际到任${gov.appointed_seats}席；不自动判定为控制失效或已控权`,
+    inputs: { charter_board_seats: gov.charter_board_seats, appointed_seats: gov.appointed_seats, should_appoint: 3, blocked: gov.blocked },
     missing: ["专业核查结论"],
   };
 }
 
-export function trialRule(ruleOrSubId: string, objectId: string): RuleTrialResult {
+export function trialRule(
+  ruleOrSubId: string,
+  objectId: string,
+  params?: Record<string, string | number>,
+): RuleTrialResult {
   const id = ruleOrSubId.replace("-R", "-S");
   switch (id) {
     case "CASH2-S039":
     case "CASH-S01":
-      return trialCashS039(objectId);
+      return trialCashS039(objectId, params);
     case "CASH2-S037":
       return trialCashS037(objectId);
     case "CASH2-S024":
@@ -200,4 +256,41 @@ export function trialRule(ruleOrSubId: string, objectId: string): RuleTrialResul
     default:
       return { objectId, result: "data_insufficient", formula: "仅维护定义，无执行器", inputs: {}, missing: ["执行器"] };
   }
+}
+
+/** 发布后追加新评估，不改写种子历史评估 ID。 */
+export function evaluationsForPublish(rule: CatalogRule, asOf: string): RuleEvaluation[] {
+  const subId = rule.primary_subscenario_id;
+  const objects = FP_TRIAL_OBJECTS[subId] ?? [];
+  const params = { ...(rule.published?.parameters ?? rule.draft_parameters) };
+  const version = rule.published?.version ?? rule.version_id;
+  const out: RuleEvaluation[] = [];
+  for (const o of objects) {
+    const t = trialRule(subId, o.id, params);
+    if (t.result !== "hit" && t.result !== "clear") continue;
+    out.push({
+      id: `LIVE-EVAL-${rule.id}-${o.id}-${version}`,
+      rule_id: rule.id,
+      subject_object_id: o.id,
+      evaluated_at: asOf,
+      period_start: "2026-01-01",
+      period_end: "2026-06-30",
+      window_start: "2026-01-01",
+      window_end: "2026-06-30",
+      result: t.result,
+      rule_version: version,
+      inputs: t.inputs,
+      formula: t.formula,
+      risk_ids: t.result === "hit" && o.id === "P-PAY001" ? ["R07"] : [],
+      evidence_ids: [],
+      data_nature: "simulated",
+      effective_result: t.result,
+      hit_validity: "current",
+      generic_formula: t.formula,
+      formula_role: "published_runtime",
+      input_snapshot_note: `发布版本 ${version} 追加，不覆盖历史评估`,
+      input_bindings: [],
+    });
+  }
+  return out;
 }

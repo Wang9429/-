@@ -21,42 +21,10 @@ import { statusLabel } from "@/lib/risks";
 import { seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
 import { INDEPENDENT_TRIAL_PROJECTS } from "@/lib/trial";
-import { trialRule } from "@/lib/fp-rules";
+import { evaluationsForPublish, FP_TRIAL_OBJECTS, trialRule } from "@/lib/fp-rules";
+import { allRuleEvaluations } from "@/lib/evaluations";
 import { FIRST_BATCH_SUBS } from "@/lib/fp-topics";
 import { ActionCell, FormDrawer, SaveBar, denyTitle, fieldClass } from "./shared";
-
-const FP_TRIAL_OBJECTS: Record<string, { id: string; name: string }[]> = {
-  "CASH2-S039": [
-    { id: "P-PAY001", name: "付款 P-PAY001" },
-    { id: "P-FA001", name: "付款 P-FA001" },
-  ],
-  "CASH2-S037": [
-    { id: "P-FP-AUTH", name: "付款 P-FP-AUTH" },
-    { id: "P-PAY001", name: "付款 P-PAY001" },
-  ],
-  "CASH2-S024": [
-    { id: "P-FP-ACCCHG", name: "付款 P-FP-ACCCHG" },
-    { id: "P-FP-ACCCHG-OK", name: "付款 P-FP-ACCCHG-OK" },
-  ],
-  "CASH2-S033": [
-    { id: "SME-01", name: "账款 SME-01" },
-    { id: "SME-02", name: "账款 SME-02" },
-  ],
-  "CASH2-S031": [
-    { id: "P-FP-SPEC", name: "专项支出 P-FP-SPEC" },
-    { id: "P-FP-SPEC-OK", name: "专项支出 P-FP-SPEC-OK" },
-  ],
-  "CASH2-S035": [{ id: "SEG-A-EPCI-2026Q2", name: "海洋工程总承包" }],
-  "PTY2-S006": [
-    { id: "PTY-M007", name: "事项 PTY-M007" },
-    { id: "PTY-M002", name: "事项 PTY-M002" },
-  ],
-  "PTY2-S035": [
-    { id: "PTY-M008", name: "事项 PTY-M008" },
-    { id: "PTY-M002", name: "事项 PTY-M002" },
-  ],
-  "PTY2-S032": [{ id: "LE-CTRL", name: "法人 LE-CTRL" }],
-};
 
 type Mode = "view" | "edit" | "create" | null;
 
@@ -80,7 +48,7 @@ export default function RulesTab() {
     if (!draft) return [];
     if (isFpTrial) {
       return (FP_TRIAL_OBJECTS[fpSubId] ?? []).map((o) => {
-        const t = trialRule(draft.id, o.id);
+        const t = trialRule(draft.id, o.id, draft.draft_parameters);
         return { id: o.id, name: o.name, pct: null as number | null, result: t.result, formula: t.formula, hit: t.result === "hit" };
       });
     }
@@ -166,16 +134,20 @@ export default function RulesTab() {
       published: version,
       versions: [...rule.versions, version],
     };
-    persist(
-      catalog.rules.some((r) => r.id === rule.id)
-        ? catalog.rules.map((r) => (r.id === rule.id ? published : r))
-        : [...catalog.rules, published],
+    const nextRules = catalog.rules.some((r) => r.id === rule.id)
+      ? catalog.rules.map((r) => (r.id === rule.id ? published : r))
+      : [...catalog.rules, published];
+    const appended = evaluationsForPublish(published, filters.asOf);
+    const prev = catalog.runtime_evaluations ?? [];
+    const keep = prev.filter((e) => !appended.some((n) => n.id === e.id));
+    saveCatalog(
+      { ...catalog, rules: nextRules, runtime_evaluations: [...keep, ...appended] },
       "config.rules.publish",
     );
     const kind = runtimeOf(published);
     if (kind === "executable") {
       setFlash(
-        `已发布「${rule.name}」${version.version}，生效日 ${version.effective_date}。后续评估采用该版本；历史事项与历史评估不被覆盖。`,
+        `已发布「${rule.name}」${version.version}，生效日 ${version.effective_date}。新增评估 ${appended.length} 条采用该版本；历史评估、原参数与已有事项未被覆盖。`,
       );
     } else if (kind === "manual_review") {
       setFlash(
@@ -362,31 +334,54 @@ export default function RulesTab() {
               onChange={(e) => setDraft({ ...draft, condition_description: e.target.value })}
             />
           </Field>
-          <Field
-            label="偏差率阈值（%）"
-            hint={
-              runtimeOf(draft) === "executable"
-                ? "草稿参数，试算用；发布后才进入后续评估"
-                : "定义项。当前规则不会按该阈值自动执行。"
-            }
-            error={errors.deviation_gt_pct}
-          >
-            <input
-              className={fieldClass(errors.deviation_gt_pct) + " w-28"}
-              type="number"
-              disabled={readonly}
-              value={draft.draft_parameters.deviation_gt_pct ?? ""}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  draft_parameters: {
-                    ...draft.draft_parameters,
-                    deviation_gt_pct: e.target.value === "" ? "" : Number(e.target.value),
-                  },
-                })
+          {fpSubId === "CASH2-S039" ? (
+            <Field
+              label="付款差额容差（万元）"
+              hint="草稿参数，试算与发布后新评估使用。历史评估保持原参数。"
+            >
+              <input
+                className={fieldClass() + " w-28"}
+                type="number"
+                disabled={readonly}
+                value={draft.draft_parameters.amount_tolerance_wan ?? 0}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    draft_parameters: {
+                      ...draft.draft_parameters,
+                      amount_tolerance_wan: e.target.value === "" ? 0 : Number(e.target.value),
+                    },
+                  })
+                }
+              />
+            </Field>
+          ) : (
+            <Field
+              label="偏差率阈值（%）"
+              hint={
+                runtimeOf(draft) === "executable"
+                  ? "草稿参数，试算用；发布后才进入后续评估"
+                  : "定义项。当前规则不会按该阈值自动执行。"
               }
-            />
-          </Field>
+              error={errors.deviation_gt_pct}
+            >
+              <input
+                className={fieldClass(errors.deviation_gt_pct) + " w-28"}
+                type="number"
+                disabled={readonly}
+                value={draft.draft_parameters.deviation_gt_pct ?? ""}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    draft_parameters: {
+                      ...draft.draft_parameters,
+                      deviation_gt_pct: e.target.value === "" ? "" : Number(e.target.value),
+                    },
+                  })
+                }
+              />
+            </Field>
+          )}
           <p className="text-[12px] text-textsub">
             {RULE_RUNTIME_LABEL[runtimeOf(draft)]}
             {runtimeOf(draft) === "definition_only"
@@ -459,6 +454,20 @@ export default function RulesTab() {
                   .join("，") || "—",
             },
             { key: "op", title: "发布人", width: "100px", render: (r) => r.operator },
+          ]}
+        />
+        <p className="text-[13px] text-textmain mt-4 mb-2">采用各版本的评估（含发布后追加，不覆盖历史）</p>
+        <DataTable
+          dense
+          rows={allRuleEvaluations().filter((e) => e.rule_id === versionsOf?.id)}
+          rowKey={(r) => r.id}
+          empty="尚无评估记录"
+          columns={[
+            { key: "id", title: "评估ID", width: "220px", render: (r) => <span className="num">{r.id}</span> },
+            { key: "v", title: "版本", width: "100px", render: (r) => r.rule_version },
+            { key: "obj", title: "对象", render: (r) => r.subject_object_id },
+            { key: "res", title: "结果", width: "80px", render: (r) => (r.result === "hit" ? "命中" : "未命中") },
+            { key: "f", title: "公式", render: (r) => <span className="text-[12px] text-textsub">{r.formula}</span> },
           ]}
         />
       </Modal>

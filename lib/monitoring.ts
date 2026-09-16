@@ -1,6 +1,6 @@
 import { coverageById } from "./config";
 import { coverageRows, phaseName, seed } from "./seed";
-import { getLiveConfig, liveSub } from "./live-config";
+import { getLiveConfig, isScenarioMonitoringActive, liveSub } from "./live-config";
 import {
   isOpen,
   isOverdueRectification,
@@ -55,6 +55,7 @@ export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
   if (f.allowedObjectIds !== undefined && f.allowedObjectIds !== null) {
     if (!f.allowedObjectIds.includes(row.monitoring_object_id)) return false;
   }
+  if (!isScenarioMonitoringActive(row.scenario_id)) return false;
   return true;
 }
 
@@ -250,30 +251,40 @@ export function scenariosInScope(f: ScopeFilter): string[] {
   return [...set].sort();
 }
 
-/** 领域内已配置场景。停用后仍保留已有覆盖与事项入口；仅未启用且无历史的新增项不进入业务清单。 */
+function scenarioBelongsToTopic(
+  scenarioId: string,
+  topicId: string | null | undefined,
+  rowTopic: string | null | undefined,
+): boolean {
+  if (!topicId) return true;
+  if (rowTopic && rowTopic !== topicId) return false;
+  if (!rowTopic) {
+    const mapped = getLiveConfig().subs.get(scenarioId)?.topic_id;
+    if (mapped !== topicId) return false;
+  }
+  return true;
+}
+
+/** 业务执行表默认只收录已启用且适用当前环节/专题的场景。停用项由历史未关闭事项另行挂入。 */
 export function configuredScenarios(domain: DomainId, phaseId?: string | null, topicId?: string | null): string[] {
   const live = getLiveConfig();
   const set = new Set<string>();
   for (const row of coverageRows) {
     if (row.domain !== domain) continue;
     if (phaseId && row.phase_id !== phaseId) continue;
-    if (topicId) {
-      if (row.topic_id && row.topic_id !== topicId) continue;
-      if (!row.topic_id) {
-        const mapped = live.subs.get(row.scenario_id)?.topic_id;
-        if (mapped !== topicId) continue;
-      }
-    }
+    if (!scenarioBelongsToTopic(row.scenario_id, topicId, row.topic_id)) continue;
+    if (!isScenarioMonitoringActive(row.scenario_id)) continue;
     set.add(row.scenario_id);
   }
   if (!phaseId && !topicId) {
     for (const s of seed.supplemental_scenarios) {
-      if (s.domain === domain) set.add(s.id);
+      if (s.domain === domain && isScenarioMonitoringActive(s.id)) set.add(s.id);
     }
   }
   for (const extra of live.extraScenarios) {
     if (extra.domain !== domain) continue;
     if (phaseId && extra.primary_phase_id && extra.primary_phase_id !== phaseId) continue;
+    if (topicId && extra.enabled === false && !set.has(extra.id)) continue;
     if (extra.enabled || set.has(extra.id)) set.add(extra.id);
   }
   for (const s of live.subs.values()) {
@@ -284,6 +295,8 @@ export function configuredScenarios(domain: DomainId, phaseId?: string | null, t
       const selectedStage = canonicalRightsStage(phaseName(phaseId)) ?? canonicalRightsStage(phaseId) ?? phaseId;
       if (s.primary_phase_id && subStage !== selectedStage && s.primary_phase_id !== phaseId) continue;
     }
+    if (!isScenarioMonitoringActive(s.id)) continue;
+    if (s.runtime_capability === "definition_only" && s.status === "draft") continue;
     set.add(s.id);
   }
   return [...set].sort();
@@ -352,7 +365,7 @@ export function scenarioRuntimeStatus(
   const pendingByCatalog = sub?.applicability === "pending";
   const pendingByCoverage = scenarioHasPendingApplicability(scenarioId);
 
-  if ((sub?.runtime_capability === "definition_only" || sub?.enabled === false) && rows.length === 0) {
+  if (sub?.runtime_capability === "definition_only" && !isScenarioMonitoringActive(scenarioId) && rows.length === 0) {
     return { code: "definition_only", label: "仅维护定义", tone: "neutral", missingFields: [] };
   }
 

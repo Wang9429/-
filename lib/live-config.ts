@@ -2,6 +2,7 @@ import type { CatalogPersist, CatalogSubscenario, CatalogRule } from "./config-c
 import { extractCatalog, ruleRuntimeKind } from "./config-catalog";
 import { config } from "./config";
 import { setLiveScenarioNames } from "./scenario-names-live";
+import type { RuleEvaluation } from "./types";
 
 export interface LiveExtraScenario {
   id: string;
@@ -45,6 +46,7 @@ interface LiveState {
   aiDomains: Set<string>;
   aiExternalConnected: boolean;
   aiModeDisplay: string;
+  runtimeEvaluations: RuleEvaluation[];
 }
 
 const seedIds = new Set(extractCatalog().subscenarios.map((s) => s.id));
@@ -63,6 +65,7 @@ function emptyLive(): LiveState {
     aiDomains: new Set(["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"]),
     aiExternalConnected: false,
     aiModeDisplay: config.ai.mode_display,
+    runtimeEvaluations: [],
   };
 }
 
@@ -147,6 +150,7 @@ export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined):
     aiDomains: new Set(catalog.ai.allowed_domains),
     aiExternalConnected: Boolean(catalog.ai.external_model_connected),
     aiModeDisplay: catalog.ai.mode_display,
+    runtimeEvaluations: catalog.runtime_evaluations ?? [],
   };
   setLiveScenarioNames(scenarioNames);
 }

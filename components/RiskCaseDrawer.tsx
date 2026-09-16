@@ -30,6 +30,7 @@ import { daysBetween, fmtDate } from "@/lib/format";
 import { isIndependentReviewer, objectAllowed, riskVisible } from "@/lib/config";
 import { isScenarioMonitoringActive, liveRuleLabel } from "@/lib/live-config";
 import { draftsForRisk } from "@/lib/materials";
+import { allRuleEvaluations } from "@/lib/evaluations";
 import { useDemoStore, type ActionKind } from "@/lib/store";
 import type { CaseAction, RiskCase } from "@/lib/types";
 
@@ -59,22 +60,34 @@ interface ActionOption {
 }
 
 function optionsFor(r: RiskCase): ActionOption[] {
+  const professional = r.scenario_ids.includes("PTY2-S032");
   switch (r.status) {
     case "pending_review":
       return [
-        { kind: "claim", label: "认领核查", primary: true, hint: "认领后事项进入核查中，责任人记为当前用户。" },
+        { kind: "claim", label: professional ? "打开治理依据并认领专业核查" : "认领核查", primary: true, hint: professional ? "打开章程、任免与到任材料后认领。结论须人工记录，不能只看专业核查标签。" : "认领后事项进入核查中，责任人记为当前用户。" },
       ];
     case "investigating":
-      return [
-        {
-          kind: "confirm_rectification",
-          label: "核查确认需整改",
-          primary: true,
-          needsMeasure: true,
-          hint: "确认属实后进入整改中，需要填写整改措施、责任人与期限。",
-        },
-        { kind: "exclude", label: "核查排除", hint: "确认为误报或有有效例外，事项关闭并记录排除原因，不计入未关闭数。" },
-      ];
+      return professional
+        ? [
+            {
+              kind: "confirm_rectification",
+              label: "记录专业核查结论并关联整改",
+              primary: true,
+              needsMeasure: true,
+              hint: "结论写入事项。权利行使受阻时转入整改，填写整改措施、责任人与期限。",
+            },
+            { kind: "exclude", label: "记录专业核查结论：未见权利受阻", hint: "结论为未见实质阻碍，事项关闭为排除，不转入整改。" },
+          ]
+        : [
+            {
+              kind: "confirm_rectification",
+              label: "核查确认需整改",
+              primary: true,
+              needsMeasure: true,
+              hint: "确认属实后进入整改中，需要填写整改措施、责任人与期限。",
+            },
+            { kind: "exclude", label: "核查排除", hint: "确认为误报或有有效例外，事项关闭并记录排除原因，不计入未关闭数。" },
+          ];
     case "rectifying":
       return [
         {
@@ -199,7 +212,7 @@ function RiskCaseDrawerBody({
 
   const links = seed.risk_context_links.filter((l) => l.risk_id === risk.id);
   const evidences = risk.evidence_ids.map((id) => evidenceById(id)).filter(Boolean);
-  const ruleEvals = seed.rule_evaluations.filter((e) => e.risk_ids.includes(risk.id));
+  const ruleEvals = allRuleEvaluations().filter((e) => e.risk_ids.includes(risk.id) || e.subject_object_id === risk.primary_object_id);
   const traces = seed.data_traces.filter((t) => t.risk_id === risk.id);
   const myUrges = urges.filter((u) => u.riskId === risk.id);
   const dueDate = rectificationDueDate(risk);

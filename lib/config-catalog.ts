@@ -1,6 +1,6 @@
 import { config, type ConfigUser, type DataScope } from "./config";
 import { buildFpCatalogSlice } from "./fp-catalog";
-import type { DomainId } from "./types";
+import type { DomainId, RuleEvaluation } from "./types";
 import type { RuntimeCapability } from "./fp-topics";
 
 const SEED_AS_OF = "2026-06-30";
@@ -125,6 +125,7 @@ export interface CatalogPersist {
   indicators: CatalogIndicator[];
   ai: CatalogAi;
   dataSources: CatalogDataSource[];
+  runtime_evaluations?: RuleEvaluation[];
 }
 
 export const DEFAULT_DATA_SOURCES: CatalogDataSource[] = [
@@ -342,6 +343,7 @@ export function extractCatalog(): CatalogPersist {
       allowed_domains: fp.ai.allowed_domains,
     },
     dataSources: DEFAULT_DATA_SOURCES.map((d) => ({ ...d })),
+    runtime_evaluations: [],
   };
 }
 
@@ -393,6 +395,9 @@ export function hydrateCatalog(raw: unknown): CatalogPersist {
       allowed_domains: r.ai?.allowed_domains?.length ? r.ai.allowed_domains : base.ai.allowed_domains,
     },
     dataSources: mergeById(base.dataSources, r.dataSources),
+    runtime_evaluations: Array.isArray((r as CatalogPersist).runtime_evaluations)
+      ? (r as CatalogPersist).runtime_evaluations
+      : [],
   };
 }
 

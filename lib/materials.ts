@@ -55,5 +55,54 @@ export const R07_MATERIALS: DraftMaterial[] = [
 ];
 
 export function draftsForRisk(riskId: string, kind?: DraftMaterial["kind"]): DraftMaterial[] {
-  return R07_MATERIALS.filter((m) => m.riskId === riskId && (!kind || m.kind === kind));
+  const extra: DraftMaterial[] = [
+    {
+      id: "MAT-FP-033-RECT",
+      riskId: "R-FP-033",
+      title: "中小企业账款到期依据与未付余额核查记录",
+      kind: "rectification",
+      dataNature: "合成样例",
+      pages: [
+        {
+          title: "到期依据",
+          body: "合同CT-SME-01：验收合格日2026-03-21起60日，到期日2026-05-20。不以发票日加60日计算。无争议应付90万元，已付0万元。",
+        },
+        {
+          title: "拟采取措施",
+          body: "按有效合同清偿无争议到期余额，争议部分另案。本材料不构成真实付款指令。",
+        },
+      ],
+    },
+    {
+      id: "MAT-FP-033-VERIFY",
+      riskId: "R-FP-033",
+      title: "中小企业账款整改复核记录",
+      kind: "verification",
+      dataNature: "合成样例",
+      pages: [
+        {
+          title: "复核意见",
+          body: "到期依据与合同条款一致，未采用发票日+60日。原90万元未付记录保留。",
+        },
+      ],
+    },
+    {
+      id: "MAT-FP-032-GOV",
+      riskId: "R-FP-032",
+      title: "章程与董事到任对照及专业核查结论稿",
+      kind: "rectification",
+      dataNature: "合成样例",
+      pages: [
+        {
+          title: "治理依据",
+          body: "章程董事会5席，控股股东应派3席，实际到任2席；重大事项表决连续两期缺席。不能仅凭51%股比认定已控权。",
+        },
+        {
+          title: "结论栏",
+          body: "须由核查人记录专业结论后再决定是否关联整改。本页不是自动命中结果。",
+        },
+      ],
+    },
+  ];
+  return [...R07_MATERIALS, ...extra].filter((m) => m.riskId === riskId && (!kind || m.kind === kind));
 }

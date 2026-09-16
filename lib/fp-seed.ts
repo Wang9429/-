@@ -406,6 +406,7 @@ export const FP_ACCOUNTS: Account[] = [
     native_amount_unit: "元人民币",
     balance_as_of: "2026-06-30",
     opening_balance_date: "2026-01-01",
+    restriction_basis: "专项〔2026〕12号，海洋工程技能提升专项专户，用途限培训/教材/实训设备，截至2026-06-30全部受限",
   },
   {
     id: "ACC-INT",

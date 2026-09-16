@@ -257,6 +257,7 @@ export interface Account {
   native_amount_unit: string;
   balance_as_of: string;
   opening_balance_date: string;
+  restriction_basis?: string;
 }
 
 export interface OwnershipSnapshot {

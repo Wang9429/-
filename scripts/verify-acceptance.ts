@@ -8,14 +8,16 @@
 import { seed, AS_OF } from "../lib/seed";
 import { INDICATORS, computeIndicator, indicatorLeaves, type IndicatorDef, type NodeMetric } from "../lib/metrics";
 import { orgScope, ROOT_ORG_ID, isManagedUnit } from "../lib/org";
-import { computeFiveCounts, openCountForPhase } from "../lib/monitoring";
+import { computeFiveCounts, configuredScenarios, openCountForPhase } from "../lib/monitoring";
+import { extractCatalog } from "../lib/config-catalog";
+import { FIRST_BATCH_SUBS } from "../lib/fp-topics";
+import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule } from "../lib/fp-rules";
+import { syncLiveFromCatalog } from "../lib/live-config";
+import { FP_SME } from "../lib/fp-seed";
 import { isOpen, isOverdueRectification } from "../lib/risks";
 import type { DomainId } from "../lib/types";
 import { authorizedObjectIds, can, canCaseAction, intersectOrgScope, userById } from "../lib/config";
 import { inDateRange } from "../lib/period";
-import { extractCatalog } from "../lib/config-catalog";
-import { FIRST_BATCH_SUBS } from "../lib/fp-topics";
-import { trialCashS039, trialPtyS028, trialRule } from "../lib/fp-rules";
 import { INDEPENDENT_TRIAL_PROJECTS } from "../lib/trial";
 import {
   applicableMonitorExecutions,
@@ -521,6 +523,55 @@ check("领域页含营业收入", cashPage.some((d) => d.id === "CASH2-I01"), tr
 const r07 = seed.risk_cases.find((r) => r.id === "R07");
 check("R07 仍关联CASH-S01", r07?.scenario_ids.includes("CASH-S01"), true);
 check("R07 同步关联CASH2-S039", r07?.scenario_ids.includes("CASH2-S039"), true);
+
+syncLiveFromCatalog(fpCat);
+const payScenarios = configuredScenarios("CASH", null, "CASH2-T-PAYMENT");
+check("业务收付表不含仅定义CASH2-S001", payScenarios.includes("CASH2-S001"), false);
+check("业务收付表含已启用CASH2-S039", payScenarios.includes("CASH2-S039"), true);
+check("业务收付表不含草稿CASH2-S901", payScenarios.includes("CASH2-S901"), false);
+const specScenarios = configuredScenarios("CASH", null, "CASH2-T-SPECIAL");
+check("专项专题含CASH2-S031", specScenarios.includes("CASH2-S031"), true);
+check("专项专题不含CASH2-S039", specScenarios.includes("CASH2-S039"), false);
+const tradeScenarios = configuredScenarios("RIGHTS", null, "PTY2-T-TRADE");
+check("产权交易不含PTY-S01", tradeScenarios.includes("PTY-S01"), false);
+check("产权交易含PTY2-S006", tradeScenarios.includes("PTY2-S006"), true);
+const identScenarios = configuredScenarios("RIGHTS", null, "PTY2-T-IDENTITY");
+check("标识专题默认无仅定义条目", identScenarios.every((id) => fpCat.subscenarios.find((s) => s.id === id)?.enabled), true);
+
+const specAcc = seed.accounts.find((a) => a.id === "ACC-SPEC");
+const intAcc = seed.accounts.find((a) => a.id === "ACC-INT");
+check("专户ACC-SPEC期末520万", specAcc ? (specAcc.closing_balance_native * specAcc.fx_to_cny) / 10000 : 0, 520);
+check("专户ACC-SPEC全部受限", specAcc?.restricted_balance_native, specAcc?.closing_balance_native);
+check("专户截至日", specAcc?.balance_as_of, "2026-06-30");
+check("内部账户不重复计余额", intAcc?.closing_balance_native, 0);
+const uniqueAcc = new Set(seed.accounts.map((a) => a.id));
+check("账户ID不重复", uniqueAcc.size, seed.accounts.length);
+check("容差0仍命中P-PAY001", trialCashS039("P-PAY001", { amount_tolerance_wan: 0 }).result, "hit");
+check("容差500试算未命中P-PAY001", trialCashS039("P-PAY001", { amount_tolerance_wan: 500 }).result, "clear");
+const sme01 = FP_SME.find((s) => s.id === "SME-01");
+check("SME到期按验收日起合同日", sme01?.due_date, "2026-05-20");
+check("SME起算不是发票日", sme01?.start_event, "验收合格");
+const histEval = seed.rule_evaluations.find((e) => e.id === "FP-EVAL-S039-OK");
+check("历史评估版本仍为FP-R2-1", histEval?.rule_version, "FP-R2-1");
+const rule039 = fpCat.rules.find((r) => r.id === "CASH2-R039");
+if (rule039) {
+  const published = {
+    ...rule039,
+    published: {
+      version: "FP-R2-2",
+      at: "2026-06-30",
+      operator: "验收",
+      scope: "样例",
+      effective_date: "2026-06-30",
+      parameters: { amount_tolerance_wan: 500 },
+    },
+    version_id: "FP-R2-2",
+  };
+  const neu = evaluationsForPublish(published, "2026-06-30");
+  check("发布追加新评估", neu.some((e) => e.id.includes("FP-R2-2") && e.subject_object_id === "P-PAY001"), true);
+  check("新评估不占用历史ID", neu.every((e) => e.id !== "FP-EVAL-S039-OK"), true);
+  check("历史评估仍在种子", Boolean(histEval), true);
+}
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

@@ -381,6 +381,12 @@ function TopicScale({
       { label: `受限 ${fmtAmountSmart(rest)} 万元` },
       { label: `内部账户 ${accounts.filter((a) => a.id === "ACC-INT").length} 户` },
     );
+    const specAcc = accounts.find((a) => a.id === "ACC-SPEC");
+    if (specAcc) {
+      chips.push({
+        label: `专户ACC-SPEC ${fmtAmountSmart(yuanToWan(specAcc.closing_balance_native * specAcc.fx_to_cny))} 万元全部受限｜${specAcc.balance_as_of}`,
+      });
+    }
   } else if (topicId === "CASH2-T-PAYMENT") {
     chips.push(
       { label: `收款 ${inflows.length} 笔 / ${fmtAmountSmart(inflows.reduce((s, t) => s + t.amount_wan_cny, 0))} 万元` },
@@ -437,7 +443,15 @@ function TopicScale({
         type: "资金交易",
         extra: `${fmtAmountSmart(t.amount_wan_cny)} 万元｜${t.date}`,
       })),
-      ...sme.map((s) => ({ id: s.id, name: s.name, type: "付款义务", extra: `到期 ${s.due_date}` })),
+      ...sme.map((s) => {
+        const ob = seed.obligations.find((o) => o.contract_id === s.contract_id);
+        return {
+          id: ob?.id ?? s.id,
+          name: s.name,
+          type: "付款义务",
+          extra: `到期 ${s.due_date}｜未付 ${fmtAmountSmart(Math.max(0, s.undisputed_wan - s.paid_wan))} 万元`,
+        };
+      }),
     ];
   } else if (topicId === "CASH2-T-FINANCE") {
     rows = [

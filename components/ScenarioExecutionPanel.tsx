@@ -158,6 +158,7 @@ export default function ScenarioExecutionPanel({
           objectTypes: [...new Set(rows.map((r) => r.object_type))],
         };
       })
+      .filter((r) => r.monitoringActive || r.counts.openRiskIds.length > 0)
       .sort((a, b) => {
         const rank = (r: ScenarioRow) =>
           r.redOpen > 0

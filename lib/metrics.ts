@@ -3,7 +3,7 @@ import { isOpen, riskMatches } from "./risks";
 import type { DomainId, ObjectType, RiskCase } from "./types";
 import { INDICATOR_CALIBER, periodFact } from "./period";
 import { publishedWatchRule } from "./live-config";
-import { consecutiveLossPeriods, financeLeaves, smeOverdueWan } from "./finance";
+import { consecutiveLossPeriods, financeLeaves, smeOverdueWan, cashBridgeNote } from "./finance";
 
 /**
  * 指标一律从基础业务记录计算；expected_results 只用于验收核对，
@@ -890,7 +890,7 @@ export const INDICATORS: IndicatorDef[] = [
     leafObjectType: "account",
     formula: "同截至日纳入范围账户余额折人民币合计（原币 × 模拟汇率 ÷ 10000）",
     caliber: "余额按截至日统计，不跨期间相加；原币金额、单位及模拟汇率可查。",
-    sourceNote: "银行账户余额记录拟来源（模拟），美元汇率 7.2 为模拟假设",
+    sourceNote: cashBridgeNote(),
     leaves: (ctx) =>
       accounts().map((a) => ({
         objectId: a.id,
@@ -910,6 +910,7 @@ export const INDICATORS: IndicatorDef[] = [
             value: `${a.fx_to_cny}${a.fx_nature === "simulated" ? "（模拟）" : ""}`,
           },
           { label: "余额日期", value: a.balance_as_of },
+          ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
         ],
         riskIds: risksFor(a.id, ctx),
         dataComplete: true,
