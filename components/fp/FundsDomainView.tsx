@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import FilterBar from "@/components/FilterBar";
 import PageHeader from "@/components/PageHeader";
-import IndicatorDrawer, { formatKpiCaption, formatMetricParts } from "@/components/IndicatorDrawer";
+import IndicatorDrawer, { formatMetricParts } from "@/components/IndicatorDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import ObjectDrawer from "@/components/ObjectDrawer";
@@ -14,8 +14,9 @@ import { authorizedObjectIds, canDomain, intersectOrgScope } from "@/lib/config"
 import { childOrgs, descendantOrgIds, isManagedUnit, orgName, orgPath, orgUnitTypeLabel } from "@/lib/org";
 import { computeIndicator, indicatorById, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
-import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, CASH_TOPICS } from "@/lib/fp-topics";
+import { CASH2_BS_IDS, CASH2_FINANCE_HOMEPAGE_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, CASH_TOPICS } from "@/lib/fp-topics";
 import { reportAvailability, statementOf, cashAccountStatementBridge } from "@/lib/finance";
+import { formatComparableChange, formatTrendLine, formatYoyShort, priorYearPeriod, sameCaliberTrendPeriods } from "@/lib/fp-compare";
 import { fmtAmountSmart } from "@/lib/format";
 import { seed } from "@/lib/seed";
 import { inDateRange } from "@/lib/period";
@@ -86,6 +87,13 @@ export default function FundsDomainView() {
       .filter((d): d is IndicatorDef => Boolean(d && isRunnableDrawerIndicator(d, "domain_page")));
   }, [kpiIds, user, catalog]);
 
+  const switchableDefs = useMemo(() => {
+    if (!canDomain(user, "CASH")) return [];
+    return (CASH2_FINANCE_HOMEPAGE_IDS as readonly string[])
+      .map((id) => indicatorById(id))
+      .filter((d): d is IndicatorDef => Boolean(d && isRunnableDrawerIndicator(d, "domain_page")));
+  }, [user, catalog]);
+
   const path = orgPath(subjectId).filter((o) => globalOrgIds.has(o.id) || o.id === filters.orgId);
   const gate = path.findIndex((o) => o.id === filters.orgId);
   const visiblePath = gate >= 0 ? path.slice(gate) : path;
@@ -106,6 +114,46 @@ export default function FundsDomainView() {
   const stmt = statementOf(subjectId, ctx, subjectId === "ORG-HQ" && subjectChildren ? "consolidated" : "standalone");
   const avail = reportAvailability(subjectId);
   const hqSelf = subjectId === "ORG-HQ" && !subjectChildren;
+
+  const prior = priorYearPeriod(filters.periodStart, filters.periodEnd, filters.asOf);
+  const priorCtx = useMemo(
+    () => ({ ...ctx, periodStart: prior.periodStart, periodEnd: prior.periodEnd, asOf: prior.asOf }),
+    [ctx, prior.periodStart, prior.periodEnd, prior.asOf],
+  );
+  const trendPeriods = sameCaliberTrendPeriods(filters.periodStart, filters.periodEnd);
+
+  const kpiBundle = (def: IndicatorDef) => {
+    const m = computeIndicator(def, pageOrgIds, ctx);
+    const priorM = computeIndicator(def, pageOrgIds, priorCtx);
+    const yoy = formatComparableChange(def, m, priorM, prior.label);
+    const trend = formatTrendLine(
+      def,
+      trendPeriods.map((p) => ({
+        label: p.label,
+        value: computeIndicator(def, pageOrgIds, {
+          ...ctx,
+          periodStart: p.periodStart,
+          periodEnd: p.periodEnd,
+          asOf: p.asOf,
+        }).value,
+      })),
+    );
+    const stmtAux =
+      def.id === "CASH2-I06" && stmt
+        ? `构成：负债总额 ${fmtAmountSmart(stmt.total_liabilities)} 万／净资产 ${fmtAmountSmart(stmt.equity)} 万`
+        : def.id === "CASH2-I13" && stmt
+          ? `构成：净利润 ${fmtAmountSmart(stmt.net_profit)} 万／平均净资产 ${
+              stmt.equity_begin != null && stmt.equity != null
+                ? fmtAmountSmart((stmt.equity_begin + stmt.equity) / 2)
+                : "—"
+            } 万，不年化`
+          : def.id === "CASH2-I08" && stmt
+            ? `构成：流动资产 ${fmtAmountSmart(stmt.current_assets)} 万／流动负债 ${fmtAmountSmart(stmt.current_liabilities)} 万`
+            : undefined;
+    return { m, yoy, trend, stmtAux };
+  };
+
+  const topicNavRef = React.useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="space-y-4">
@@ -166,34 +214,58 @@ export default function FundsDomainView() {
             {stmt.report_scope === "consolidated" ? "合并报表" : "个别报表"}｜{stmt.period_start}～{stmt.period_end}｜合成报告
           </div>
         )}
-        <div className="reg-kpis-domain">
+        <div className="reg-kpis-domain" data-testid="funds-kpi-grid">
           {kpiDefs.map((def) => {
-            if (hqSelf || avail === "no_report") {
+            const statementKpi = def.id.startsWith("CASH2-");
+            if ((hqSelf || avail === "no_report") && statementKpi) {
               return (
                 <KpiCard
                   key={def.id}
                   name={def.name}
                   value="—"
-                  dataState={hqSelf ? "无独立报表" : "无独立报表"}
+                  dataState="无独立报表"
                   scopeLabel={`${orgName(subjectId)}${subjectChildren ? "（含下级）" : "（仅本级）"}`}
+                  onOpen={() => openIndicator(def.id, subjectId)}
                   returnKey={def.id}
                 />
               );
             }
-            const m = computeIndicator(def, pageOrgIds, ctx);
+            const { m, yoy, trend, stmtAux } = kpiBundle(def);
             const parts = formatMetricParts(def, m);
-            const caption = formatKpiCaption(m, def);
+            const targetLine =
+              def.target != null && m.value != null
+                ? `${def.targetLabel ?? "目标"} ${def.target}${def.unit}，偏差 ${fmtAmountSmart(m.value - def.target)}${def.unit}`
+                : null;
+            const dataState = statementKpi
+              ? stmt
+                ? stmt.report_scope === "consolidated"
+                  ? "合并口径"
+                  : stmt.report_scope === "management"
+                    ? "管理汇总"
+                    : "个别口径"
+                : "本期缺数"
+              : avail === "no_report"
+                ? "无独立报表｜已有对象明细"
+                : "账户口径";
             return (
               <KpiCard
                 key={def.id}
                 name={def.name}
                 value={parts.value}
                 unit={parts.unit}
-                compare={caption.compare}
-                dataState={caption.dataState}
+                compare={yoy.text}
+                compareTone={yoy.tone}
+                dataState={dataState}
                 scopeLabel={`${orgName(subjectId)}${subjectChildren ? "（含下级）" : "（仅本级）"}`}
                 onOpen={() => openIndicator(def.id, subjectId)}
                 returnKey={def.id}
+                extra={
+                  <>
+                    <span className="block">{trend}</span>
+                    {stmtAux ? <span className="block mt-0.5">{stmtAux}</span> : null}
+                    {targetLine ? <span className="block mt-0.5">{targetLine}</span> : null}
+                  </>
+                }
               />
             );
           })}
@@ -256,7 +328,8 @@ export default function FundsDomainView() {
                     </td>
                     <td className="py-2 pr-3 text-textsub">{orgUnitTypeLabel(row)}</td>
                     {kpiDefs.map((d) => {
-                      if (st === "no_report") {
+                      const statementKpi = d.id.startsWith("CASH2-");
+                      if (st === "no_report" && statementKpi) {
                         return (
                           <td key={d.id} className="text-right px-2 text-textsub">
                             无独立报表
@@ -264,13 +337,16 @@ export default function FundsDomainView() {
                         );
                       }
                       const m = computeIndicator(d, ids, ctx);
+                      const priorM = computeIndicator(d, ids, priorCtx);
                       const parts = formatMetricParts(d, m);
+                      const yoy = formatYoyShort(d, m, priorM);
                       return (
                         <td key={d.id} className="text-right px-2">
                           <button type="button" className="num text-brand hover:underline" onClick={() => openIndicator(d.id, row.id)}>
                             {parts.value}
                             {parts.unit ? ` ${parts.unit}` : ""}
                           </button>
+                          <div className="text-[11px] text-textsub">{st === "no_report" ? "无独立报表｜已有对象明细" : yoy}</div>
                         </td>
                       );
                     })}
@@ -283,47 +359,52 @@ export default function FundsDomainView() {
         </div>
       </Card>
 
-      <Card title="资金专题监管">
-        <div className="flex flex-wrap gap-2 mb-4">
-          {CASH_TOPICS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTopicId(t.id)}
-              className={`h-[48px] px-4 rounded-[6px] border text-[13px] ${
-                topicId === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
-              }`}
-            >
-              {t.short}
-            </button>
-          ))}
-        </div>
-        <TopicScale topicId={topicId} orgIds={pageOrgIds} />
-        <p className="text-[12px] text-textsub mt-3">
-          账户、收付、融资等业务对象从下方监管场景执行情况进入：点场景打开定义，点命中对象或未关闭事项查看挂钩明细。
-        </p>
-        <div className="mt-4">
-          <ScenarioExecutionPanel
-            domain="CASH"
-            topicId={topicId}
-            orgIds={pageOrgIds}
-            allowedObjectIds={allowedObjectIds}
-            scopeTitle={CASH_TOPICS.find((t) => t.id === topicId)?.name ?? "专题"}
-            onOpenRisk={setRiskId}
-            onOpenObject={setObjectId}
-            onOpenScenario={(id, source) => {
-              setScenarioSourceOpen(Boolean(source));
-              setScenarioId(id);
-            }}
-          />
-        </div>
-      </Card>
+      <div ref={topicNavRef} className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-pagebg" id="funds-topic-nav" style={{ background: "var(--page-bg)" }}>
+        <Card title="资金专题监管">
+          <div className="flex flex-wrap gap-2" data-testid="funds-topic-nav">
+            {CASH_TOPICS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTopicId(t.id)}
+                className={`h-[48px] px-4 rounded-[6px] border text-[13px] ${
+                  topicId === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
+                }`}
+              >
+                {t.short}
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <ScenarioExecutionPanel
+        domain="CASH"
+        topicId={topicId}
+        orgIds={pageOrgIds}
+        allowedObjectIds={allowedObjectIds}
+        scopeTitle={CASH_TOPICS.find((t) => t.id === topicId)?.name ?? "专题"}
+        onOpenRisk={setRiskId}
+        onOpenObject={setObjectId}
+        onOpenScenario={(id, source) => {
+          setScenarioSourceOpen(Boolean(source));
+          setScenarioId(id);
+        }}
+        ledger={
+          <details className="rounded-[8px] border border-line bg-[#fafcff]">
+            <summary className="cursor-pointer px-4 py-2.5 text-[13px] font-medium">查看业务台账与账户报表对照</summary>
+            <div className="px-4 pb-4">
+              <TopicScale topicId={topicId} orgIds={pageOrgIds} />
+            </div>
+          </details>
+        }
+      />
 
       <IndicatorDrawer
         open={Boolean(indicatorId)}
         onClose={() => setIndicatorId(null)}
         indicator={indicatorId ? indicatorById(indicatorId) ?? null : null}
-        indicatorOptions={kpiDefs}
+        indicatorOptions={switchableDefs}
         onSwitchIndicator={setIndicatorId}
         allowIndicatorSwitch
         drawerEntry="domain_page"

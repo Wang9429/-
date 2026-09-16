@@ -1,11 +1,12 @@
 import {
+  FP_LOANS,
   FP_NO_REPORT,
   FP_SEGMENTS,
   FP_SME,
   FP_STATEMENTS,
   type FinancialStatement,
 } from "./fp-seed";
-import { orgById } from "./org";
+import { isManagedUnit, orgById } from "./org";
 import { seed } from "./seed";
 import type { Account, ObjectType } from "./types";
 import type { IndicatorContext, LeafMetric } from "./metrics";
@@ -56,6 +57,8 @@ function leafBase(orgId: string, stmt: FinancialStatement | undefined, gap: stri
           { label: "数据性质", value: "合成报告，不冒用公开公司实际报表" },
           { label: "报告期间", value: `${stmt.period_start}～${stmt.period_end}` },
           { label: "资产=负债+权益", value: stmt.total_assets != null && stmt.total_liabilities != null && stmt.equity != null ? `${stmt.total_assets}=${stmt.total_liabilities}+${stmt.equity}` : "—" },
+          { label: "负债总额", value: stmt.total_liabilities != null ? `${stmt.total_liabilities} 万元` : "—" },
+          { label: "净资产", value: stmt.equity != null ? `${stmt.equity} 万元` : "—" },
         ]
       : [{ label: "报表口径", value: gap ?? "无独立报表" }],
     riskIds: [],
@@ -72,10 +75,24 @@ type StmtField =
   | "operating_cf"
   | "interest_bearing_debt"
   | "current_assets"
-  | "current_liabilities";
+  | "current_liabilities"
+  | "net_profit"
+  | "equity";
 
-/** 核心业务分部利润叶子，挂在对应管理单位下，供营业利润等继续下钻。 */
+function managedOrgIds(): string[] {
+  return seed.organizations.filter((o) => isManagedUnit(o)).map((o) => o.id);
+}
+
+/** 核心业务分部叶子，挂在对应管理单位下，不进入报表汇总。 */
 export function segmentProfitLeaves(ctx: IndicatorContext): LeafMetric[] {
+  return segmentLeaves(ctx, "profit");
+}
+
+export function segmentRevenueLeaves(ctx: IndicatorContext): LeafMetric[] {
+  return segmentLeaves(ctx, "revenue");
+}
+
+function segmentLeaves(ctx: IndicatorContext, field: "profit" | "revenue"): LeafMetric[] {
   const inWindow = FP_SEGMENTS.filter((s) => s.period_end >= ctx.periodStart && s.period_end <= ctx.periodEnd);
   const source = inWindow.length ? inWindow : FP_SEGMENTS.filter((s) => s.closed);
   const latest = new Map<string, (typeof FP_SEGMENTS)[0]>();
@@ -92,14 +109,17 @@ export function segmentProfitLeaves(ctx: IndicatorContext): LeafMetric[] {
     extras: [
       { label: "核心业务", value: s.name },
       { label: "期间", value: `${s.period_start}～${s.period_end}` },
+      { label: "营业收入", value: `${s.revenue} 万元` },
       { label: "营业利润", value: `${s.operating_profit} 万元` },
       { label: "可比", value: s.comparable ? "是" : "否" },
+      { label: "归集依据", value: "合成分部经营结果，不替代合并报表" },
     ],
     riskIds: [],
     dataComplete: s.closed && s.comparable,
     gapNote: s.closed ? undefined : "本期未关账",
-    numerator: s.operating_profit,
+    numerator: field === "profit" ? s.operating_profit : s.revenue,
     denominator: null,
+    excludeFromRollup: true,
   }));
 }
 
@@ -108,8 +128,7 @@ export function financeLeaves(
   ctx: IndicatorContext,
   opts?: { asRatioNumerator?: StmtField; asRatioDenominator?: StmtField },
 ): LeafMetric[] {
-  const orgs = ["ORG-HQ", "ORG-A", "ORG-B", "ORG-C", "ORG-A1", "ORG-OV"];
-  return orgs.map((orgId) => {
+  return managedOrgIds().map((orgId) => {
     const avail = reportAvailability(orgId);
     if (avail === "no_report") {
       return {
@@ -138,6 +157,81 @@ export function financeLeaves(
       dataComplete: !ratioInvalid && n !== null && n !== undefined,
     };
   });
+}
+
+/** 净资产收益率：期间净利润 ÷ 平均净资产，不年化。 */
+export function roeLeaves(ctx: IndicatorContext): LeafMetric[] {
+  return managedOrgIds().map((orgId) => {
+    const avail = reportAvailability(orgId);
+    if (avail === "no_report") {
+      return { ...leafBase(orgId, undefined, "无独立报表"), numerator: null, denominator: null };
+    }
+    const prefer = orgId === "ORG-HQ" ? "consolidated" : "standalone";
+    const stmt = statementOf(orgId, ctx, prefer);
+    if (!stmt) {
+      return { ...leafBase(orgId, undefined, "本期缺数"), numerator: null, denominator: null };
+    }
+    const np = stmt.net_profit;
+    const begin = stmt.equity_begin;
+    const end = stmt.equity;
+    if (np === null || begin === null || end === null) {
+      return {
+        ...leafBase(orgId, stmt, "缺净利润或期初/期末净资产，净资产收益率不适用"),
+        numerator: null,
+        denominator: null,
+        dataComplete: false,
+      };
+    }
+    const avg = (begin + end) / 2;
+    if (avg <= 0) {
+      return {
+        ...leafBase(orgId, stmt, "平均净资产≤0，不适用"),
+        numerator: null,
+        denominator: null,
+        dataComplete: false,
+      };
+    }
+    const extras = [
+      ...leafBase(orgId, stmt, undefined).extras,
+      { label: "净利润", value: `${np} 万元` },
+      { label: "期初净资产", value: `${begin} 万元` },
+      { label: "期末净资产", value: `${end} 万元` },
+      { label: "平均净资产", value: `${avg} 万元＝（${begin}+${end}）÷2` },
+      { label: "是否年化", value: "不年化，使用期间净利润" },
+    ];
+    return {
+      ...leafBase(orgId, stmt, undefined),
+      extras,
+      numerator: np,
+      denominator: avg,
+      dataComplete: true,
+    };
+  });
+}
+
+/** 带息债务合同明细，不进入报表余额汇总。 */
+export function loanDetailLeaves(ctx: IndicatorContext): LeafMetric[] {
+  void ctx;
+  return FP_LOANS.map((l) => ({
+    objectId: l.id,
+    objectType: "contract" as ObjectType,
+    name: l.name,
+    orgId: l.owner_org_id,
+    extras: [
+      { label: "方向", value: l.direction === "external_borrow" ? "外部借款" : "内部借入" },
+      { label: "合同本金", value: `${l.principal_wan} 万元` },
+      { label: "未偿本金", value: `${l.outstanding_wan} 万元` },
+      { label: "未使用授信", value: `${l.unused_credit_wan} 万元（不计借款）` },
+      { label: "利率", value: `${l.rate_pct}%` },
+      { label: "还本付息计划", value: `${l.next_repay_date} 还本付息 ${l.next_repay_wan} 万元` },
+      { label: "到期日", value: l.due_date },
+    ],
+    riskIds: [],
+    dataComplete: true,
+    numerator: l.outstanding_wan,
+    denominator: null,
+    excludeFromRollup: true,
+  }));
 }
 
 function accountWan(a: Account): number {

@@ -227,7 +227,8 @@ export default function PropertyDomainView() {
         )}
       </Card>
 
-      <Card title="产权事项监管" id="rights-topics">
+      <div className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-pagebg" id="rights-topic-nav" data-testid="rights-topic-nav" style={{ background: "var(--page-bg)" }}>
+      <Card title="产权事项监管">
         <div className="flex flex-wrap gap-2 mb-4">
           {RIGHTS_TOPICS.map((t) => (
             <button
@@ -273,28 +274,27 @@ export default function PropertyDomainView() {
             )}
           </>
         )}
-
-        <p className="text-[12px] text-textsub my-3">
-          产权事项与监测对象从下方监管场景执行情况进入：点场景打开定义，点命中对象或未关闭事项查看挂钩明细。经济行为与环节用于收窄当前专题的场景范围。
-        </p>
-
-        <div className="mt-4">
-          <ScenarioExecutionPanel
-            domain="RIGHTS"
-            topicId={topicId}
-            phaseId={topicId === "PTY2-T-TRADE" ? phaseId : null}
-            orgIds={pageOrgIds}
-            allowedObjectIds={allowedObjectIds}
-            scopeTitle={RIGHTS_TOPICS.find((t) => t.id === topicId)?.name ?? "专题"}
-            onOpenRisk={setRiskId}
-            onOpenObject={setObjectId}
-            onOpenScenario={(id, source) => {
-              setScenarioSourceOpen(Boolean(source));
-              setScenarioId(id);
-            }}
-          />
-        </div>
       </Card>
+      </div>
+
+      <ScenarioExecutionPanel
+        domain="RIGHTS"
+        topicId={topicId}
+        phaseId={topicId === "PTY2-T-TRADE" ? phaseId : null}
+        orgIds={pageOrgIds}
+        allowedObjectIds={allowedObjectIds}
+        scopeTitle={
+          topicId === "PTY2-T-TRADE" && phaseId
+            ? (chevrons.find((c) => c.id === phaseId)?.name ?? "环节")
+            : (RIGHTS_TOPICS.find((t) => t.id === topicId)?.name ?? "专题")
+        }
+        onOpenRisk={setRiskId}
+        onOpenObject={setObjectId}
+        onOpenScenario={(id, source) => {
+          setScenarioSourceOpen(Boolean(source));
+          setScenarioId(id);
+        }}
+      />
 
       <IndicatorDrawer
         open={Boolean(indicatorId)}

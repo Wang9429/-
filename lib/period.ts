@@ -5,7 +5,7 @@ import { AS_OF, DEFAULT_PERIOD } from "./seed";
  * 缺期间事实时返回未覆盖，不把缺数据当 0。
  */
 
-export type FactCaliber = "period_snapshot" | "ytd" | "balance" | "dated";
+export type FactCaliber = "period_snapshot" | "ytd" | "balance" | "dated" | "reported";
 
 export const SNAPSHOT_PERIOD = {
   start: DEFAULT_PERIOD.start,
@@ -25,6 +25,12 @@ export function periodFact(
   if (caliber === "dated") {
     const end = ctx.asOf < ctx.periodEnd ? ctx.asOf : ctx.periodEnd;
     return { ok: true, label: `期间发生额（${ctx.periodStart}～${end}，不晚于截至日）` };
+  }
+  if (caliber === "reported") {
+    return {
+      ok: true,
+      label: `合成报表期间 ${ctx.periodStart}～${ctx.periodEnd}，截至 ${ctx.asOf}；无对应关账报告则显示缺数`,
+    };
   }
   if (caliber === "balance") {
     if (ctx.asOf !== SNAPSHOT_PERIOD.asOf) {
@@ -75,17 +81,18 @@ export const INDICATOR_CALIBER: Record<string, FactCaliber> = {
   "CASH-I07": "balance",
   "CASH-I04": "balance",
   "CASH-I06": "dated",
-  "CASH2-I01": "period_snapshot",
-  "CASH2-I02": "period_snapshot",
-  "CASH2-I03": "period_snapshot",
-  "CASH2-I04": "balance",
-  "CASH2-I05": "balance",
-  "CASH2-I06": "balance",
-  "CASH2-I07": "balance",
-  "CASH2-I08": "balance",
-  "CASH2-I09": "period_snapshot",
+  "CASH2-I01": "reported",
+  "CASH2-I02": "reported",
+  "CASH2-I03": "reported",
+  "CASH2-I04": "reported",
+  "CASH2-I05": "reported",
+  "CASH2-I06": "reported",
+  "CASH2-I07": "reported",
+  "CASH2-I08": "reported",
+  "CASH2-I09": "reported",
   "CASH2-I11": "period_snapshot",
   "CASH2-I12": "dated",
+  "CASH2-I13": "reported",
   "INTL-CNT": "balance",
   "INTL-EXPOSURE": "balance",
   "INTL-AFFECTED": "balance",

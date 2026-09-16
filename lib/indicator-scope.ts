@@ -4,9 +4,11 @@
  */
 
 import { catalogIndicatorOnDomainPage, catalogIndicatorOnHomepage, catalogIndicatorVisible } from "./live-config";
-import { childOrgs, descendantOrgIds, orgPath } from "./org";
-import { INDICATORS, type IndicatorDef, type LeafMetric, type MetricStatus } from "./metrics";
+import { descendantOrgIds, orgPath } from "./org";
+import { INDICATORS, type IndicatorDef, type LeafMetric, type MetricStatus, type NodeMetric } from "./metrics";
 import type { DomainId, Organization } from "./types";
+import { visibleChildOrgs } from "./overview";
+import { reportAvailability } from "./finance";
 
 export type DrawerSelection = { kind: "org"; id: string } | { kind: "leaf"; id: string };
 
@@ -76,15 +78,10 @@ export function drawerChildOrgs(
   initialOrgId: string,
   includeChildren: boolean,
   dataOrgIds: Set<string>,
-  leafOrgIds?: Set<string>,
+  _leafOrgIds?: Set<string>,
 ): Organization[] {
   if (!includeChildren && orgId === initialOrgId) return [];
-  return childOrgs(orgId).filter((c) => {
-    const subtree = descendantOrgIds(c.id);
-    if (!subtree.some((id) => dataOrgIds.has(id))) return false;
-    if (!leafOrgIds) return true;
-    return subtree.some((id) => leafOrgIds.has(id));
-  });
+  return visibleChildOrgs(orgId, dataOrgIds);
 }
 
 /** 祖先仅用于路径展示，不进入可取数节点。 */
@@ -95,4 +92,19 @@ export function drawerAncestorPath(initialOrgId: string): Organization[] {
 
 export function relatedMatterIds(leaves: LeafMetric[]): string[] {
   return [...new Set(leaves.flatMap((l) => l.riskIds))];
+}
+
+/** 节点数据状态：无报表标状态，不复制上级、不当 0。 */
+export function orgMetricDataState(orgId: string, metric: NodeMetric): string {
+  if (metric.emptyReason) return metric.emptyReason;
+  const avail = reportAvailability(orgId);
+  if (avail === "no_report") {
+    return metric.value === null ? "无独立报表" : "无独立报表｜已有对象明细";
+  }
+  if (metric.value === null) return "本期缺数";
+  const rollup = metric.leaves.filter((l) => !l.excludeFromRollup);
+  if (rollup.some((l) => l.extras.some((e) => e.value === "合并报表"))) return "合并口径";
+  if (rollup.some((l) => l.extras.some((e) => e.value === "个别报表"))) return "个别口径";
+  if (rollup.some((l) => l.extras.some((e) => e.value === "管理汇总"))) return "管理汇总";
+  return "已取数";
 }

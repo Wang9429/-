@@ -295,6 +295,7 @@ export function KpiCard({
   icon,
   iconTone = "brand",
   returnKey,
+  extra,
 }: {
   name: string;
   value: React.ReactNode;
@@ -308,6 +309,7 @@ export function KpiCard({
   icon?: React.ReactNode;
   iconTone?: ToneName;
   returnKey?: string;
+  extra?: React.ReactNode;
 }) {
   const iconBg: Record<ToneName, { bg: string; fg: string }> = {
     brand: { bg: "#EAF1FD", fg: "var(--brand)" },
@@ -336,6 +338,8 @@ export function KpiCard({
       title={scopeLabel}
       data-overlay-return={returnKey || name}
       className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[168px] h-full flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] whitespace-normal ${
+        extra ? "min-h-[196px]" : ""
+      } ${
         active ? "border-brand" : "border-line"
       } shadow-[0_2px_10px_rgba(17,43,77,0.04)] relative`}
     >
@@ -384,6 +388,7 @@ export function KpiCard({
           {compare && showDataState ? "　" : null}
           {showDataState ? dataState : null}
         </span>
+        {extra ? <span className="mt-1.5 text-[12px] text-textsub leading-5">{extra}</span> : null}
       </span>
     </button>
   );

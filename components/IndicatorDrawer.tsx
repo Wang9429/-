@@ -14,12 +14,14 @@ import {
   isIndicatorAbnormalStatus,
   isOrgMirrorLeaf,
   metricRollupOrgIds,
+  orgMetricDataState,
   relatedMatterIds,
   resolveDrawerSelection,
   scopedIndicatorLeaves,
   switchableDrawerIndicators,
   type DrawerSelection,
 } from "@/lib/indicator-scope";
+import { formatComparableChange, formatYoyShort, priorYearPeriod } from "@/lib/fp-compare";
 
 function statusTag(m: NodeMetric) {
   switch (m.status) {
@@ -153,6 +155,18 @@ function IndicatorDrawerBody({
     [filters.periodStart, filters.periodEnd, filters.asOf, risks, allowedObjectIds],
   );
 
+  const prior = priorYearPeriod(filters.periodStart, filters.periodEnd, filters.asOf);
+  const priorCtx = useMemo(
+    () => ({
+      periodStart: prior.periodStart,
+      periodEnd: prior.periodEnd,
+      asOf: prior.asOf,
+      risks,
+      allowedObjectIds,
+    }),
+    [prior.periodStart, prior.periodEnd, prior.asOf, risks, allowedObjectIds],
+  );
+
   const allLeaves: LeafMetric[] = useMemo(
     () => (indicator ? indicatorLeaves(indicator, ctx) : []),
     [indicator, ctx],
@@ -160,6 +174,10 @@ function IndicatorDrawerBody({
   const scopedLeaves = useMemo(
     () => scopedIndicatorLeaves(allLeaves, dataOrgIds),
     [allLeaves, dataOrgIds],
+  );
+  const priorScopedLeaves = useMemo(
+    () => (indicator ? scopedIndicatorLeaves(indicatorLeaves(indicator, priorCtx), dataOrgIds) : []),
+    [indicator, priorCtx, dataOrgIds],
   );
   const leafOrgIds = useMemo(() => new Set(scopedLeaves.map((l) => l.orgId)), [scopedLeaves]);
   const applicableLeafIds = useMemo(
@@ -186,6 +204,12 @@ function IndicatorDrawerBody({
     if (!indicator) return emptyMetric();
     const rollup = metricRollupOrgIds(orgId, initialOrgId, includeChildren, dataOrgIds);
     return aggregate(indicator, scopedLeaves, rollup);
+  };
+
+  const nodeMetricPrior = (orgId: string): NodeMetric => {
+    if (!indicator) return emptyMetric();
+    const rollup = metricRollupOrgIds(orgId, initialOrgId, includeChildren, dataOrgIds);
+    return aggregate(indicator, priorScopedLeaves, rollup);
   };
 
   const leafMetricOf = (leaf: LeafMetric): NodeMetric => {
@@ -300,6 +324,9 @@ function IndicatorDrawerBody({
     const kids = drawerChildOrgs(orgId, initialOrgId, includeChildren, dataOrgIds, leafOrgIds);
     const leaves = scopedLeaves.filter((l) => l.orgId === orgId && !isOrgMirrorLeaf(l));
     const metric = nodeMetric(orgId);
+    const priorM = nodeMetricPrior(orgId);
+    const yoy = formatYoyShort(indicator, metric, priorM);
+    const dataState = orgMetricDataState(orgId, metric);
     const isExpanded = expanded.has(orgId);
     const selected = resolved.kind === "org" && resolved.id === orgId;
     const related = relatedMatterIds(
@@ -309,10 +336,10 @@ function IndicatorDrawerBody({
     return (
       <div key={orgId}>
         <div
-          className={`flex items-center gap-1.5 pr-2 rounded-[4px] cursor-pointer transition-colors duration-150 ${
+          className={`flex items-start gap-1.5 pr-2 rounded-[4px] cursor-pointer transition-colors duration-150 ${
             selected ? "bg-tint" : "hover:bg-[#eef3fb]"
           }`}
-          style={{ paddingLeft: 6 + depth * 14, minHeight: 34 }}
+          style={{ paddingLeft: 6 + depth * 14, minHeight: 44, paddingTop: 6, paddingBottom: 6 }}
           onClick={() => setSelection({ kind: "org", id: orgId })}
           role="treeitem"
           aria-selected={selected}
@@ -351,12 +378,16 @@ function IndicatorDrawerBody({
           >
             {org.name}
           </span>
-          <span className="text-[11px] text-textsub shrink-0">{orgLevelLabel(org)}</span>
-          <span
-            className="num text-[13px] shrink-0 min-w-[64px] max-w-[88px] text-right text-textmain truncate"
-            title={formatMetric(indicator, metric)}
-          >
-            {formatMetric(indicator, metric)}
+          <span className="flex flex-col items-end shrink-0 max-w-[120px]">
+            <span
+              className="num text-[13px] text-right text-textmain truncate w-full"
+              title={formatMetric(indicator, metric)}
+            >
+              {formatMetric(indicator, metric)}
+            </span>
+            <span className="text-[11px] text-textsub truncate w-full text-right" title={`${dataState}｜${yoy}`}>
+              {yoy} · {dataState}
+            </span>
           </span>
           {related > 0 && (
             <span className="text-[11px] shrink-0 text-textsub" title={`对象关联事项 ${related} 件，不计入当前指标异常`}>
@@ -371,6 +402,8 @@ function IndicatorDrawerBody({
               const lm = leafMetricOf(leaf);
               if (onlyAbnormal && !abnormalLeafIds.has(leaf.objectId)) return null;
               const sel = resolved.kind === "leaf" && resolved.id === leaf.objectId;
+              const leafYoy = formatYoyShort(indicator, lm, aggregate(indicator, priorScopedLeaves.filter((x) => x.objectId === leaf.objectId), new Set([leaf.orgId])));
+              const leafState = lm.emptyReason ?? (lm.value === null ? "未取数" : "已取数");
               return (
                 <div
                   key={leaf.objectId}
@@ -401,10 +434,13 @@ function IndicatorDrawerBody({
                     {objectTypeLabel[leaf.objectType] ?? leaf.objectType}
                   </span>
                   <span
-                    className="num text-[13px] shrink-0 min-w-[64px] max-w-[88px] text-right text-textmain truncate"
-                    title={formatMetric(indicator, lm)}
+                    className="num text-[13px] shrink-0 min-w-[64px] max-w-[120px] text-right text-textmain truncate"
+                    title={`${formatMetric(indicator, lm)}｜${leafYoy}｜${leafState}`}
                   >
                     {formatMetric(indicator, lm)}
+                  </span>
+                  <span className="text-[11px] text-textsub shrink-0 max-w-[88px] truncate" title={leafState}>
+                    {leafYoy}
                   </span>
                   {leaf.riskIds.length > 0 && (
                     <span
@@ -523,6 +559,12 @@ function IndicatorDrawerBody({
                     </span>
                     {statusTag(selectedMetric)}
                   </div>
+                  {resolved.kind === "org" && (
+                    <div className="text-[12px] text-textsub mt-1" data-drawer-yoy>
+                      {formatComparableChange(indicator, selectedMetric, nodeMetricPrior(resolved.id), prior.label).text}
+                      ｜{orgMetricDataState(resolved.id, selectedMetric)}
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   {target !== null ? (
@@ -614,10 +656,29 @@ function IndicatorDrawerBody({
                       render: (r) => formatMetric(indicator, r.metric),
                     },
                     {
+                      key: "yoy",
+                      title: "同期变化",
+                      align: "right",
+                      width: "120px",
+                      render: (r) =>
+                        r.isOrg
+                          ? formatYoyShort(indicator, r.metric, nodeMetricPrior(r.id))
+                          : formatYoyShort(
+                              indicator,
+                              r.metric,
+                              aggregate(
+                                indicator,
+                                priorScopedLeaves.filter((x) => x.objectId === r.id),
+                                new Set([scopedLeaves.find((l) => l.objectId === r.id)?.orgId ?? initialOrgId]),
+                              ),
+                            ),
+                    },
+                    {
                       key: "status",
-                      title: "状态",
-                      width: "140px",
-                      render: (r) => statusTag(r.metric),
+                      title: "数据状态",
+                      width: "150px",
+                      render: (r) =>
+                        r.isOrg ? orgMetricDataState(r.id, r.metric) : r.metric.emptyReason ?? (r.metric.value === null ? "未取数" : "已取数"),
                     },
                   ]}
                 />

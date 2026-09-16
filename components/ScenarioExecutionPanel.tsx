@@ -33,7 +33,7 @@ import {
 } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { objectName } from "@/lib/objects";
-import { isOverdueRectification, rectificationDueDate, snapshotRisksAtAsOf, statusLabel } from "@/lib/risks";
+import { isOverdueRectification, rectificationDueDate, riskMatches, snapshotRisksAtAsOf, statusLabel } from "@/lib/risks";
 import { daysBetween, fmtDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
@@ -51,7 +51,7 @@ export interface SubtopicOption {
   note: string;
 }
 
-type DetailKind = "monitored" | "hit" | "open" | "closed" | "overdue";
+type DetailKind = "monitored" | "hit" | "open" | "closed" | "overdue" | "pending" | "rules" | "units";
 
 const DETAIL_TITLE: Record<DetailKind, string> = {
   monitored: "监测对象清单（观察期）",
@@ -59,6 +59,9 @@ const DETAIL_TITLE: Record<DetailKind, string> = {
   open: "未关闭事项清单（截至日）",
   closed: "本期已整改闭环事项",
   overdue: "逾期整改事项（截至日）",
+  pending: "待核查事项",
+  rules: "命中规则清单",
+  units: "涉及单位清单",
 };
 
 interface ScenarioRow {
@@ -73,6 +76,7 @@ interface ScenarioRow {
   monitoringActive: boolean;
   redOpen: number;
   objectTypes: string[];
+  hitRuleCount: number;
 }
 
 export default function ScenarioExecutionPanel({
@@ -88,6 +92,7 @@ export default function ScenarioExecutionPanel({
   onOpenRisk,
   onOpenObject,
   onOpenScenario,
+  ledger,
 }: {
   domain: DomainId;
   phaseId?: string | null;
@@ -101,6 +106,7 @@ export default function ScenarioExecutionPanel({
   onOpenRisk: (id: string) => void;
   onOpenObject?: (id: string) => void;
   onOpenScenario?: (id: string, source?: boolean) => void;
+  ledger?: React.ReactNode;
 }) {
   const { filters, risks, actions, canAct, catalog } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
@@ -108,6 +114,8 @@ export default function ScenarioExecutionPanel({
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [objectTypeFilter, setObjectTypeFilter] = useState("all");
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const [openRowId, setOpenRowId] = useState<string | null>(null);
 
   const baseScope: ScopeFilter = useMemo(
     () => ({
@@ -171,6 +179,7 @@ export default function ScenarioExecutionPanel({
           monitoringActive: isScenarioMonitoringActive(id),
           redOpen,
           objectTypes: [...new Set(rows.map((r) => r.object_type))],
+          hitRuleCount: new Set(rows.filter((x) => x.status === "evaluated_hit").flatMap((x) => x.rule_ids)).size,
         };
       })
       .filter((r) => r.monitoringActive || r.counts.openRiskIds.length > 0)
@@ -234,85 +243,136 @@ export default function ScenarioExecutionPanel({
 
   const scopeLine = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}｜截至 ${filters.asOf}｜${scopeTitle}`;
 
-  const summaryItems: { kind: DetailKind; label: string; value: number; caliber: string; tone: "red" | "amber" | "neutral" | "brand" }[] = [
-    {
-      kind: "monitored",
-      label: "监测对象数",
-      value: summary.monitoredObjects.length,
-      caliber: "观察期",
-      tone: "brand",
-    },
-    { kind: "hit", label: "命中对象数", value: summary.hitObjects.length, caliber: "观察期", tone: "amber" },
-    { kind: "open", label: "未关闭事项数", value: summary.openRiskIds.length, caliber: "截至日", tone: "red" },
-    {
-      kind: "closed",
-      label: "本期已整改闭环数",
-      value: summary.rectifiedClosedRiskIds.length,
-      caliber: "本期闭环",
-      tone: "neutral",
-    },
-    { kind: "overdue", label: "逾期整改数", value: summary.overdueRiskIds.length, caliber: "截至日", tone: "red" },
+  const hitRuleIds = useMemo(
+    () => [...new Set(summary.rows.filter((r) => r.status === "evaluated_hit").flatMap((r) => r.rule_ids))].sort(),
+    [summary.rows],
+  );
+  const involvedOrgIds = useMemo(
+    () => [...new Set(summary.rows.filter((r) => r.status === "evaluated_hit").map((r) => r.owner_org_id))].sort(),
+    [summary.rows],
+  );
+  const pendingIds = useMemo(
+    () =>
+      asOfRisks
+        .filter(
+          (r) =>
+            (r.status === "pending_review" || r.status === "investigating") &&
+            riskMatches(r, {
+              domain,
+              orgScope: orgIds,
+              topicId: topicId ?? undefined,
+              phaseId: phaseId ?? undefined,
+            }),
+        )
+        .map((r) => r.id),
+    [asOfRisks, orgIds, domain, topicId, phaseId],
+  );
+
+  const compactStats: { kind: DetailKind; label: string; value: number; unit: string }[] = [
+    { kind: "rules", label: "命中规则数", value: hitRuleIds.length, unit: "条" },
+    { kind: "units", label: "涉及单位数", value: involvedOrgIds.length, unit: "个" },
+    { kind: "pending", label: "待核查事项", value: pendingIds.length, unit: "件" },
+    { kind: "open", label: "未关闭整改", value: summary.openRiskIds.length, unit: "件" },
+    { kind: "closed", label: "本期完成整改", value: summary.rectifiedClosedRiskIds.length, unit: "件" },
+    { kind: "overdue", label: "逾期整改", value: summary.overdueRiskIds.length, unit: "件" },
   ];
+
+  const groupedRows = useMemo(() => {
+    const map = new Map<string, ScenarioRow[]>();
+    for (const r of visibleScenarioRows) {
+      const g = r.groupName || "未分组";
+      const list = map.get(g) ?? [];
+      list.push(r);
+      map.set(g, list);
+    }
+    return [...map.entries()];
+  }, [visibleScenarioRows]);
+
+  React.useEffect(() => {
+    setOpenGroups(new Set(groupedRows.filter(([, rows]) => rows.some((r) => r.counts.openRiskIds.length > 0 || r.monitoringActive)).map(([g]) => g)));
+  }, [topicId, phaseId, groupedRows.length]);
 
   return (
     <div className="space-y-4" id="scenario-execution">
       <Card
-        title={`当前环节：${scopeTitle}`}
+        title={
+          <span className="inline-flex items-center gap-2 flex-wrap">
+            场景执行情况
+            <Tag tone="brand">{scopeTitle}</Tag>
+          </span>
+        }
         right={
-          subtopicOptions && subtopicOptions.length > 0 ? (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[12px] text-textsub">业务子类</span>
-              <div className="flex rounded-[6px] border border-line overflow-hidden">
-                {subtopicOptions.map((o) => (
-                  <button
-                    key={o.id}
-                    onClick={() => onSubtopicChange?.(o.id)}
-                    className={`h-8 px-3 text-[12px] transition-colors duration-150 ${
-                      (subtopicId ?? subtopicOptions[0].id) === o.id
-                        ? "bg-brand text-white"
-                        : "bg-surface text-textsub hover:bg-tint"
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
+          <div className="flex items-center gap-2 flex-wrap">
+            {subtopicOptions && subtopicOptions.length > 0 ? (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[12px] text-textsub">业务子类</span>
+                <div className="flex rounded-[6px] border border-line overflow-hidden">
+                  {subtopicOptions.map((o) => (
+                    <button
+                      key={o.id}
+                      onClick={() => onSubtopicChange?.(o.id)}
+                      className={`h-8 px-3 text-[12px] transition-colors duration-150 ${
+                        (subtopicId ?? subtopicOptions[0].id) === o.id
+                          ? "bg-brand text-white"
+                          : "bg-surface text-textsub hover:bg-tint"
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : undefined
+            ) : null}
+            <Button
+              disabled={!canAct("business.export")}
+              title={canAct("business.export") ? "导出当前筛选范围内的场景执行清单" : "当前身份不能导出业务数据"}
+              onClick={() => {
+                if (!canAct("business.export")) return;
+                downloadCsv(
+                  `场景执行清单_${domain}_${phaseId ?? topicId ?? "全部"}.csv`,
+                  [
+                    "一级场景",
+                    "监管子场景",
+                    "执行状态",
+                    "已评估",
+                    "应评估",
+                    "命中规则数",
+                    "命中对象数",
+                    "未关闭整改",
+                  ],
+                  visibleScenarioRows.map((r) => [
+                    r.groupName,
+                    r.name,
+                    r.statusLabelText,
+                    r.counts.monitoredObjects.length,
+                    r.counts.requiredObjects.length,
+                    r.hitRuleCount,
+                    r.counts.hitObjects.length,
+                    r.counts.openRiskIds.length,
+                  ]),
+                  {
+                    title: "监管场景执行清单",
+                    scopeLines: [scopeLine, "对象数按类型与对象编号去重，规则按规则ID去重，事项按事项去重"],
+                  },
+                );
+              }}
+            >
+              导出当前筛选
+            </Button>
+          </div>
         }
       >
-        <div className="grid grid-cols-2 min-[1440px]:grid-cols-5 gap-3">
-          {summaryItems.map((it) => (
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]" data-testid="scenario-compact-stats">
+          {compactStats.map((it) => (
             <button
               key={it.kind}
+              type="button"
               onClick={() => setDetail({ kind: it.kind, scenarioId: null })}
-              className="text-left rounded-[8px] border border-line bg-surface px-3.5 py-3 hover:border-[#c3d8f7] hover:bg-[#fcfdff] transition-colors duration-150"
+              className="inline-flex items-baseline gap-1 hover:text-brand"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] text-textsub">{it.label}</span>
-                <Tag tone="neutral">{it.caliber}</Tag>
-              </div>
-              <div className="mt-1.5 flex items-baseline gap-1.5">
-                <span
-                  className="num text-[26px] font-semibold leading-8"
-                  style={{
-                    color:
-                      it.value === 0
-                        ? "var(--text-main)"
-                        : it.tone === "red"
-                          ? "var(--risk-red-fg)"
-                          : it.tone === "amber"
-                            ? "var(--risk-amber-fg)"
-                            : "var(--text-main)",
-                  }}
-                >
-                  {it.value}
-                </span>
-                <span className="text-[12px] text-textsub">
-                  {it.kind === "monitored" || it.kind === "hit" ? "个" : "件"}
-                </span>
-                <span className="text-[12px] text-brand ml-auto">明细 ›</span>
-              </div>
+              <span className="text-textsub">{it.label}</span>
+              <span className="num font-semibold">{it.value}</span>
+              <span className="text-[12px] text-textsub">{it.unit}</span>
             </button>
           ))}
         </div>
@@ -320,57 +380,20 @@ export default function ScenarioExecutionPanel({
         {summary.monitoredObjects.length === 0 && summary.openRiskIds.length > 0 && (
           <div className="mt-3">
             <Notice tone="amber" title="历史遗留">
-              本期已监测 0 个、历史未关闭 {summary.openRiskIds.length} 件。
+              本期已监测 0 个、历史未关闭 {summary.openRiskIds.length} 件，仍可查阅办理。
             </Notice>
           </div>
         )}
-      </Card>
 
-      <Card
-        title="监管场景执行情况"
-        right={
-          <Button
-            disabled={!canAct("business.export")}
-            title={canAct("business.export") ? "导出当前筛选范围内的场景执行清单" : "当前身份不能导出业务数据"}
-            onClick={() => {
-              if (!canAct("business.export")) return;
-              downloadCsv(
-                `场景执行清单_${domain}_${phaseId ?? topicId ?? "全部"}.csv`,
-                [
-                  "场景ID",
-                  "场景名称",
-                  "纳入方式",
-                  "监测状态",
-                  "监测对象数",
-                  "命中对象数",
-                  "未关闭事项数",
-                  "本期已整改闭环数",
-                  "逾期整改数",
-                  "对象类型",
-                ],
-                visibleScenarioRows.map((r) => [
-                  r.id,
-                  r.name,
-                  r.adoption,
-                  r.statusLabelText,
-                  r.counts.monitoredObjects.length,
-                  r.counts.hitObjects.length,
-                  r.counts.openRiskIds.length,
-                  r.counts.rectifiedClosedRiskIds.length,
-                  r.counts.overdueRiskIds.length,
-                  r.objectTypes.map((t) => objectTypeLabel[t] ?? t).join("/"),
-                ]),
-                {
-                  title: "监管场景执行清单",
-                  scopeLines: [scopeLine, "金额单位：万元人民币", "口径：对象数按对象类型与对象编号去重，事项数按事项去重"],
-                },
-              );
-            }}
-          >
-            导出当前筛选
-          </Button>
-        }
-      >
+        {Object.keys(summary.objectTypeBreakdown).length > 0 && (
+          <p className="mt-2 text-[12px] text-textsub">
+            对象分类型：
+            {Object.entries(summary.objectTypeBreakdown)
+              .map(([t, n]) => `${objectTypeLabel[t] ?? t} 已评估 ${n.monitored}／命中 ${n.hit}`)
+              .join("；")}
+            。场景、规则、单位与业务对象分别计数，不混用。
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <input
             className={`${inputClass} w-[220px]`}
@@ -421,156 +444,159 @@ export default function ScenarioExecutionPanel({
           )}
         </div>
 
-        <DataTable
-          rows={visibleScenarioRows}
-          rowKey={(r) => r.id}
-          empty={
-            scenarioRows.length === 0
-              ? "当前环节尚未配置监管场景。"
-              : "当前筛选条件下没有匹配场景，请调整搜索或筛选。"
-          }
-          pageSize={domain === "CASH" || domain === "RIGHTS" ? 40 : 8}
-          compactEmpty
-          tableClassName="min-w-[1080px]"
-          columns={[
-            ...(domain === "CASH" || domain === "RIGHTS"
-              ? [
-                  {
-                    key: "group",
-                    title: "一级场景",
-                    width: "160px" as const,
-                    render: (r: (typeof visibleScenarioRows)[number]) => (
-                      <span className="text-[13px] text-textsub">{r.groupName || "—"}</span>
-                    ),
-                  },
-                ]
-              : []),
-            {
-              key: "name",
-              title: "监管场景",
-              minWidth: "240px",
-              render: (r) => (
-                <button
-                  className="text-left hover:text-brand transition-colors duration-150"
-                  onClick={() => onOpenScenario?.(r.id)}
-                  title={scenarioSourceLabel(r.id)}
-                >
-                  <span className="text-[14px] text-textmain block break-words whitespace-normal leading-5">{r.name}</span>
-                  <span className="num text-[12px] text-textsub">{r.id}</span>
-                  <Tag tone={r.adoption === "结构化监测" ? "brand" : "neutral"}>{r.adoption}</Tag>
-                </button>
-              ),
-            },
-            {
-              key: "src",
-              title: "来源",
-              width: "100px",
-              nowrap: true,
-              render: (r) => (
-                <LinkButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenScenario?.(r.id, true);
-                  }}
-                >
-                  查看依据
-                </LinkButton>
-              ),
-            },
-            {
-              key: "status",
-              title: "监测状态",
-              width: "132px",
-              render: (r) => (
-                <span className="inline-flex flex-wrap items-center gap-1">
-                  <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>
-                  {!r.monitoringActive && r.statusLabelText !== "仅维护定义" && <Tag tone="neutral">已停用</Tag>}
-                </span>
-              ),
-            },
-            {
-              key: "monitored",
-              title: "监测对象数",
-              align: "right",
-              width: "110px",
-              render: (r) =>
-                r.rows.length === 0 ? (
-                  <span className="text-textsub">{r.statusLabelText === "无业务" ? "无业务" : "—"}</span>
-                ) : (
-                  <button
-                    className="num text-brand hover:underline"
-                    onClick={() => setDetail({ kind: "monitored", scenarioId: r.id })}
-                  >
-                    {r.counts.monitoredObjects.length}
-                  </button>
-                ),
-            },
-            {
-              key: "hit",
-              title: "命中对象数",
-              align: "right",
-              width: "110px",
-              render: (r) =>
-                r.adoption === "核查依据" && r.counts.hitObjects.length === 0 ? (
-                  <span className="text-textsub" title="专业核查尚无结论">
-                    —（待人工核查）
-                  </span>
-                ) : (
-                  <button
-                    className="num text-brand hover:underline"
-                    onClick={() => setDetail({ kind: "hit", scenarioId: r.id })}
-                  >
-                    {r.counts.hitObjects.length}
-                  </button>
-                ),
-            },
-            {
-              key: "open",
-              title: "未关闭事项数",
-              align: "right",
-              width: "120px",
-              render: (r) => (
-                <button
-                  className="num hover:underline"
-                  style={{ color: r.redOpen > 0 ? "var(--risk-red-fg)" : r.counts.openRiskIds.length > 0 ? "var(--risk-amber-fg)" : "var(--text-sub)" }}
-                  onClick={() => setDetail({ kind: "open", scenarioId: r.id })}
-                >
-                  {r.counts.openRiskIds.length}
-                  {r.redOpen > 0 && <span className="ml-1">●</span>}
-                </button>
-              ),
-            },
-            {
-              key: "closed",
-              title: "本期闭环",
-              align: "right",
-              width: "96px",
-              render: (r) => (
-                <button
-                  className="num text-brand hover:underline"
-                  onClick={() => setDetail({ kind: "closed", scenarioId: r.id })}
-                >
-                  {r.counts.rectifiedClosedRiskIds.length}
-                </button>
-              ),
-            },
-            {
-              key: "overdue",
-              title: "逾期整改",
-              align: "right",
-              width: "96px",
-              render: (r) => (
-                <button
-                  className="num hover:underline"
-                  style={{ color: r.counts.overdueRiskIds.length > 0 ? "var(--risk-red-fg)" : "var(--text-sub)" }}
-                  onClick={() => setDetail({ kind: "overdue", scenarioId: r.id })}
-                >
-                  {r.counts.overdueRiskIds.length}
-                </button>
-              ),
-            },
-          ]}
-        />
+        <div className="overflow-x-auto -mx-1 px-1" data-testid="scenario-exec-table">
+          <table className="w-full min-w-[1080px] border-separate border-spacing-0 text-[14px]">
+            <thead>
+              <tr className="bg-[#f6f8fc]">
+                <th className="px-3 py-2.5 text-left text-[13px] font-semibold text-textsub border-b border-line">监管子场景</th>
+                <th className="px-3 py-2.5 text-left text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap w-[132px]">执行状态</th>
+                <th className="px-3 py-2.5 text-right text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap w-[130px]">已评估/应评估对象</th>
+                <th className="px-3 py-2.5 text-right text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap w-[110px]">命中规则数</th>
+                <th className="px-3 py-2.5 text-right text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap w-[110px]">命中对象数</th>
+                <th className="px-3 py-2.5 text-right text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap w-[110px]">未关闭整改</th>
+                <th className="px-3 py-2.5 text-left text-[13px] font-semibold text-textsub border-b border-line whitespace-nowrap w-[96px]">查看详情</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleScenarioRows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-3 py-4 text-center text-[13px] text-textsub border-b border-line">
+                    {scenarioRows.length === 0 ? "当前范围尚未配置监管场景。" : "当前筛选条件下没有匹配场景，请调整搜索或筛选。"}
+                  </td>
+                </tr>
+              )}
+              {groupedRows.map(([group, rows]) => {
+                const opened = openGroups.has(group);
+                return (
+                  <React.Fragment key={group}>
+                    <tr className="bg-[#f7f9fd]">
+                      <td colSpan={7} className="px-3 py-2 border-b border-line">
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-2 text-[13px] font-medium text-textmain"
+                          onClick={() =>
+                            setOpenGroups((prev) => {
+                              const n = new Set(prev);
+                              if (n.has(group)) n.delete(group);
+                              else n.add(group);
+                              return n;
+                            })
+                          }
+                        >
+                          <span className="text-textsub w-3">{opened ? "▼" : "▶"}</span>
+                          {group}
+                          <span className="text-[12px] text-textsub font-normal">{rows.length} 个子场景</span>
+                        </button>
+                      </td>
+                    </tr>
+                    {opened &&
+                      rows.map((r) => (
+                        <React.Fragment key={r.id}>
+                          <tr className="hover:bg-tint border-b border-line">
+                            <td className="px-3 py-2 align-top">
+                              <button
+                                className="text-left hover:text-brand transition-colors duration-150"
+                                onClick={() => onOpenScenario?.(r.id)}
+                                title={scenarioSourceLabel(r.id)}
+                              >
+                                <span className="text-[14px] text-textmain block break-words whitespace-normal leading-5">{r.name}</span>
+                                <span className="num text-[12px] text-textsub">{r.id}</span>
+                                <Tag tone={r.adoption === "结构化监测" ? "brand" : "neutral"}>{r.adoption}</Tag>
+                              </button>
+                            </td>
+                            <td className="px-3 py-2 align-top">
+                              <span className="inline-flex flex-wrap items-center gap-1">
+                                <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>
+                                {!r.monitoringActive && r.statusLabelText !== "仅维护定义" && <Tag tone="neutral">已停用</Tag>}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
+                              {r.rows.length === 0 ? (
+                                <span className="text-textsub">{r.statusLabelText === "无业务" ? "无业务" : "—"}</span>
+                              ) : (
+                                <button
+                                  className="text-brand hover:underline"
+                                  onClick={() => setDetail({ kind: "monitored", scenarioId: r.id })}
+                                >
+                                  {r.counts.monitoredObjects.length}/{r.counts.requiredObjects.length}
+                                </button>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
+                              <button
+                                className="text-brand hover:underline"
+                                onClick={() => setDetail({ kind: "rules", scenarioId: r.id })}
+                              >
+                                {r.hitRuleCount}
+                              </button>
+                            </td>
+                            <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
+                              {r.adoption === "核查依据" && r.counts.hitObjects.length === 0 ? (
+                                <span className="text-textsub" title="专业核查尚无结论">
+                                  —（待人工核查）
+                                </span>
+                              ) : (
+                                <button
+                                  className="text-brand hover:underline"
+                                  onClick={() => setDetail({ kind: "hit", scenarioId: r.id })}
+                                >
+                                  {r.counts.hitObjects.length}
+                                </button>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
+                              <button
+                                className="hover:underline"
+                                style={{
+                                  color:
+                                    r.redOpen > 0
+                                      ? "var(--risk-red-fg)"
+                                      : r.counts.openRiskIds.length > 0
+                                        ? "var(--risk-amber-fg)"
+                                        : "var(--text-sub)",
+                                }}
+                                onClick={() => setDetail({ kind: "open", scenarioId: r.id })}
+                              >
+                                {r.counts.openRiskIds.length}
+                                {r.redOpen > 0 && <span className="ml-1">●</span>}
+                              </button>
+                            </td>
+                            <td className="px-3 py-2 align-top whitespace-nowrap">
+                              <LinkButton
+                                onClick={() => setOpenRowId((id) => (id === r.id ? null : r.id))}
+                              >
+                                {openRowId === r.id ? "收起" : "查看详情"}
+                              </LinkButton>
+                            </td>
+                          </tr>
+                          {openRowId === r.id && (
+                            <tr className="bg-[#fbfcfe]">
+                              <td colSpan={7} className="px-4 py-3 text-[13px] border-b border-line">
+                                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                                  <button type="button" className="hover:text-brand" onClick={() => setDetail({ kind: "closed", scenarioId: r.id })}>
+                                    本期完成整改 <span className="num font-medium">{r.counts.rectifiedClosedRiskIds.length}</span> 件
+                                  </button>
+                                  <button type="button" className="hover:text-brand" onClick={() => setDetail({ kind: "overdue", scenarioId: r.id })}>
+                                    逾期整改 <span className="num font-medium">{r.counts.overdueRiskIds.length}</span> 件
+                                  </button>
+                                  <button type="button" className="hover:text-brand" onClick={() => setDetail({ kind: "rules", scenarioId: r.id })}>
+                                    命中规则 <span className="num font-medium">{r.hitRuleCount}</span> 条
+                                  </button>
+                                  <LinkButton onClick={() => onOpenScenario?.(r.id, true)}>查看命中依据</LinkButton>
+                                  <LinkButton onClick={() => onOpenScenario?.(r.id)}>打开场景定义</LinkButton>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {ledger ? <div className="mt-4">{ledger}</div> : null}
       </Card>
 
       <Modal
@@ -728,6 +754,82 @@ export default function ScenarioExecutionPanel({
                         },
                       ]
                     : []),
+                ]}
+              />
+            );
+          })()
+        )}
+
+        {detail && detail.kind === "pending" && (
+          (() => {
+            const ids = detail.scenarioId
+              ? pendingIds.filter((id) => asOfRisks.find((r) => r.id === id)?.scenario_ids.includes(detail.scenarioId as string))
+              : pendingIds;
+            const list = riskList(ids);
+            if (list.length === 0) return <EmptyState title="当前范围没有待核查事项" />;
+            return (
+              <DataTable
+                rows={list}
+                rowKey={(r) => r.id}
+                onRowClick={(r) => {
+                  setDetail(null);
+                  onOpenRisk(r.id);
+                }}
+                columns={[
+                  { key: "id", title: "事项", width: "80px", render: (r) => <span className="num">{r.id}</span> },
+                  { key: "title", title: "名称", render: (r) => r.title },
+                  { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
+                  { key: "status", title: "办理状态", width: "110px", render: (r) => statusLabel[r.status] },
+                  { key: "org", title: "责任单位", width: "140px", render: (r) => orgName(r.owner_org_id) },
+                ]}
+              />
+            );
+          })()
+        )}
+
+        {detail && detail.kind === "rules" && (
+          (() => {
+            const ids = detail.scenarioId && detailData
+              ? [...new Set(detailData.rows.filter((r) => r.status === "evaluated_hit").flatMap((r) => r.rule_ids))].sort()
+              : hitRuleIds;
+            if (ids.length === 0) return <EmptyState title="当前范围没有命中规则" />;
+            const rows = ids.map((id) => ({
+              id,
+              name: catalog.rules.find((r) => r.id === id)?.name ?? id,
+              scenario: catalog.rules.find((r) => r.id === id)?.primary_subscenario_id ?? "",
+            }));
+            return (
+              <DataTable
+                rows={rows}
+                rowKey={(r) => r.id}
+                columns={[
+                  { key: "id", title: "规则ID", width: "140px", render: (r) => <span className="num">{r.id}</span> },
+                  { key: "name", title: "规则名称", render: (r) => r.name },
+                  {
+                    key: "sc",
+                    title: "主场景",
+                    render: (r) => (r.scenario ? `${r.scenario} ${scenarioName(r.scenario)}` : "—"),
+                  },
+                ]}
+              />
+            );
+          })()
+        )}
+
+        {detail && detail.kind === "units" && (
+          (() => {
+            const ids = detail.scenarioId && detailData
+              ? [...new Set(detailData.rows.filter((r) => r.status === "evaluated_hit").map((r) => r.owner_org_id))].sort()
+              : involvedOrgIds;
+            if (ids.length === 0) return <EmptyState title="当前范围没有命中涉及单位" />;
+            const rows = ids.map((id) => ({ id, name: orgName(id) }));
+            return (
+              <DataTable
+                rows={rows}
+                rowKey={(r) => r.id}
+                columns={[
+                  { key: "id", title: "组织ID", width: "120px", render: (r) => <span className="num">{r.id}</span> },
+                  { key: "name", title: "单位", render: (r) => r.name },
                 ]}
               />
             );

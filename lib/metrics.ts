@@ -1,9 +1,9 @@
 import { AS_OF, seed } from "./seed";
 import { isOpen, riskMatches } from "./risks";
 import type { DomainId, ObjectType, RiskCase } from "./types";
-import { INDICATOR_CALIBER, periodFact } from "./period";
+import { INDICATOR_CALIBER, inDateRange, periodFact } from "./period";
 import { publishedWatchRule } from "./live-config";
-import { consecutiveLossPeriods, financeLeaves, segmentProfitLeaves, smeOverdueWan, cashBridgeNote } from "./finance";
+import { consecutiveLossPeriods, financeLeaves, loanDetailLeaves, roeLeaves, segmentProfitLeaves, segmentRevenueLeaves, smeOverdueWan, cashBridgeNote } from "./finance";
 import { censusEntities, openMatterCount } from "./fp-census";
 
 /**
@@ -35,6 +35,8 @@ export interface LeafMetric {
   riskIds: string[];
   dataComplete: boolean;
   gapNote?: string;
+  /** 构成明细（分部、合同等），不进入上级汇总，避免与报表叶子重复加总。 */
+  excludeFromRollup?: boolean;
 }
 
 export interface NodeMetric {
@@ -97,10 +99,11 @@ export function aggregate(
   orgIds: Set<string>,
 ): NodeMetric {
   const inScope = leaves.filter((l) => orgIds.has(l.orgId));
-  const expected = inScope.length;
-  const evaluated = inScope.filter((l) => l.dataComplete).length;
+  const rollupCandidates = inScope.filter((l) => !l.excludeFromRollup);
+  const expected = rollupCandidates.length;
+  const evaluated = rollupCandidates.filter((l) => l.dataComplete).length;
 
-  if (inScope.length === 0) {
+  if (rollupCandidates.length === 0) {
     if (def.kind === "count" && hasCountBusiness(def, orgIds)) {
       const status = def.evaluate ? def.evaluate(0) : "normal";
       return {
@@ -123,9 +126,9 @@ export function aggregate(
     };
   }
 
-  const usable = inScope.filter((l) => l.dataComplete);
+  const usable = rollupCandidates.filter((l) => l.dataComplete);
   if (usable.length === 0) {
-    const gap = inScope.find((l) => l.gapNote)?.gapNote;
+    const gap = rollupCandidates.find((l) => l.gapNote)?.gapNote ?? inScope.find((l) => l.gapNote)?.gapNote;
     return {
       value: null,
       numerator: null,
@@ -254,6 +257,20 @@ function openRiskLeaves(domain: DomainId, ctx: IndicatorContext): LeafMetric[] {
       riskIds: [r.id],
       dataComplete: true,
     }));
+}
+
+function accountFlowExtras(accountId: string, ctx: IndicatorContext): MetricExtra[] {
+  const txs = seed.cash_transactions.filter(
+    (t) => t.account_id === accountId && inDateRange(t.date, ctx.periodStart, ctx.periodEnd) && t.date <= ctx.asOf,
+  );
+  const inflow = txs.filter((t) => t.direction === "inflow").reduce((s, t) => s + t.amount_wan_cny, 0);
+  const outflow = txs.filter((t) => t.direction === "outflow").reduce((s, t) => s + t.amount_wan_cny, 0);
+  return [
+    {
+      label: "本期流水",
+      value: `${txs.length} 笔（收款 ${inflow} 万元／付款 ${outflow} 万元）`,
+    },
+  ];
 }
 
 export const INDICATORS: IndicatorDef[] = [
@@ -903,11 +920,9 @@ export const INDICATORS: IndicatorDef[] = [
     evaluate: (v) => (v === null ? "unknown" : (v as number) > 0 ? "risk" : "normal"),
     leaves: (ctx) => openRiskLeaves("ENG", ctx),
   },
-
-  /* ---------------- 资金 ---------------- */
   {
     id: "CASH-I01",
-    name: "期末资金余额",
+    name: "账户资金余额",
     domain: "CASH",
     unit: "万元",
     kind: "amount",
@@ -935,6 +950,7 @@ export const INDICATORS: IndicatorDef[] = [
           },
           { label: "余额日期", value: a.balance_as_of },
           ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
+          ...accountFlowExtras(a.id, ctx),
         ],
         riskIds: risksFor(a.id, ctx),
         dataComplete: true,
@@ -968,6 +984,8 @@ export const INDICATORS: IndicatorDef[] = [
             label: "原币受限",
             value: `${a.restricted_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit}`,
           },
+          ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
+          ...accountFlowExtras(a.id, ctx),
         ],
         riskIds: risksFor(a.id, ctx),
         dataComplete: true,
@@ -995,6 +1013,7 @@ export const INDICATORS: IndicatorDef[] = [
         extras: [
           { label: "币种", value: a.currency },
           { label: "受限原币", value: `${a.restricted_balance_native.toLocaleString("zh-CN")} ${a.native_amount_unit}` },
+          ...(a.restriction_basis ? [{ label: "受限依据", value: a.restriction_basis }] : []),
         ],
         riskIds: risksFor(a.id, ctx),
         dataComplete: true,
@@ -1095,7 +1114,7 @@ export const INDICATORS: IndicatorDef[] = [
     caliber: "期间发生额。上级有合并报表时用合并口径，下级对比用自身报表，不把下级百分比或金额直接加总冒称合并。",
     sourceNote: "合成财务报表（模拟）",
     preferConsolidated: true,
-    leaves: (ctx) => financeLeaves("revenue", ctx),
+    leaves: (ctx) => [...financeLeaves("revenue", ctx), ...segmentRevenueLeaves(ctx)],
   },
   {
     id: "CASH2-I02",
@@ -1173,7 +1192,7 @@ export const INDICATORS: IndicatorDef[] = [
     caliber: "不得等同负债总额；未使用授信不计借款。",
     sourceNote: "合成财务报表（模拟）",
     preferConsolidated: true,
-    leaves: (ctx) => financeLeaves("interest_bearing_debt", ctx),
+    leaves: (ctx) => [...financeLeaves("interest_bearing_debt", ctx), ...loanDetailLeaves(ctx)],
   },
   {
     id: "CASH2-I08",
@@ -1201,6 +1220,19 @@ export const INDICATORS: IndicatorDef[] = [
     sourceNote: "合成财务报表（模拟）",
     preferConsolidated: true,
     leaves: (ctx) => financeLeaves("operating_cf", ctx),
+  },
+  {
+    id: "CASH2-I13",
+    name: "净资产收益率",
+    domain: "CASH",
+    unit: "%",
+    kind: "ratio",
+    leafObjectType: "legal_entity",
+    formula: "期间净利润÷平均净资产×100%",
+    caliber: "平均净资产＝（期初净资产＋期末净资产）÷2。使用期间净利润，不年化。净利润、期初与期末净资产须同主体、同报表口径；缺一项则不适用。父子比率按合计分子分母重算，不平均下级收益率。",
+    sourceNote: "合成财务报表（模拟）",
+    preferConsolidated: true,
+    leaves: (ctx) => roeLeaves(ctx),
   },
   {
     id: "CASH2-I11",

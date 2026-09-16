@@ -37,8 +37,10 @@ import {
   overviewIndicatorEnabled,
   overviewIndicatorOnHomepage,
   validHitRecords,
+  visibleChildOrgs,
 } from "../lib/overview";
 import {
+  drawerChildOrgs,
   isIndicatorAbnormalStatus,
   isRunnableDrawerIndicator,
   metricRollupOrgIds,
@@ -48,6 +50,7 @@ import {
   scopedIndicatorLeaves,
   switchableDrawerIndicators,
 } from "../lib/indicator-scope";
+import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS } from "../lib/fp-topics";
 
 const PERIOD_START = "2026-01-01";
 const PERIOD_END = AS_OF;
@@ -566,9 +569,29 @@ check("PTY-M009 应登记未办命中", trialPtyS028("PTY-M009").result, "hit");
 check("PTY2-S032 专业核查不自动刷绿", trialRule("PTY2-S032", "LE-CTRL").result, "data_insufficient");
 const i10 = fpCat.indicators.find((i) => i.id === "CASH2-I10");
 check("CASH2-I10 未启用", Boolean(i10 && i10.enabled === false), true);
+syncLiveFromCatalog(fpCat);
 const cashPage = runnableDrawerIndicators("CASH", "domain_page");
 check("领域页不含未启用CASH2-I10", cashPage.some((d) => d.id === "CASH2-I10"), false);
 check("领域页含营业收入", cashPage.some((d) => d.id === "CASH2-I01"), true);
+check("领域页含带息债务", cashPage.some((d) => d.id === "CASH2-I07"), true);
+check("领域页含流动比率", cashPage.some((d) => d.id === "CASH2-I08"), true);
+check("领域页含净资产收益率", cashPage.some((d) => d.id === "CASH2-I13"), true);
+check("领域页含账户资金余额", cashPage.some((d) => d.id === "CASH-I01"), true);
+check("领域页不含负债总额主卡", cashPage.some((d) => d.id === "CASH2-I05"), false);
+const i05 = fpCat.indicators.find((i) => i.id === "CASH2-I05");
+check("CASH2-I05 仅指标目录", i05?.display_position, "metric_library");
+const i13 = fpCat.indicators.find((i) => i.id === "CASH2-I13");
+check("CASH2-I13 领域页启用", Boolean(i13?.enabled && i13.display_position === "domain_page"), true);
+const roe = nodeValue("CASH2-I13");
+check("总部净资产收益率不年化", Number(roe.value?.toFixed(2)), Number(((4920 / 82500) * 100).toFixed(2)));
+check("ROE分子净利润", roe.numerator, 4920);
+check("ROE分母平均净资产", roe.denominator, 82500);
+check("盈利能力四项", [...CASH2_PROFIT_IDS], ["CASH2-I01", "CASH2-I02", "CASH2-I03", "CASH2-I13"]);
+check("资产负债四项", [...CASH2_BS_IDS], ["CASH2-I04", "CASH2-I06", "CASH2-I07", "CASH2-I08"]);
+check("资金流动性四项", [...CASH2_LIQ_IDS], ["CASH-I01", "CASH-I02", "CASH-I07", "CASH2-I09"]);
+const hqKidsDrawer = drawerChildOrgs("ORG-HQ", "ORG-HQ", true, HQ).map((o) => o.id);
+const hqKidsOverview = visibleChildOrgs("ORG-HQ", HQ).map((o) => o.id);
+check("抽屉组织树与总览直属下级一致", hqKidsDrawer, hqKidsOverview);
 const r07 = seed.risk_cases.find((r) => r.id === "R07");
 check("R07 仍关联CASH-S01", r07?.scenario_ids.includes("CASH-S01"), true);
 check("R07 同步关联CASH2-S039", r07?.scenario_ids.includes("CASH2-S039"), true);

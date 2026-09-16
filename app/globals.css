@@ -348,7 +348,7 @@ details > summary::-webkit-details-marker {
 
 .reg-kpis-domain {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -637,6 +637,17 @@ tr.reg-row-hl:hover > .reg-td-sticky {
 @media (min-width: 1440px) {
   .reg-split {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1280px) {
+  .reg-exec-table,
+  [data-testid="scenario-exec-table"] {
+    font-size: 13px;
+  }
+  [data-testid="funds-topic-nav"] button,
+  [data-testid="rights-topic-nav"] button {
+    min-height: 44px;
   }
 }
 

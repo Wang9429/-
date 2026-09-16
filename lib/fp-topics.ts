@@ -182,14 +182,17 @@ export const CASH2_FINANCE_HOMEPAGE_IDS = [
   "CASH2-I01",
   "CASH2-I02",
   "CASH2-I03",
+  "CASH2-I13",
   "CASH2-I04",
-  "CASH2-I05",
   "CASH2-I06",
-  "CASH2-I09",
+  "CASH2-I07",
+  "CASH2-I08",
+  "CASH-I01",
   "CASH-I02",
   "CASH-I07",
+  "CASH2-I09",
 ] as const;
 
-export const CASH2_PROFIT_IDS = ["CASH2-I01", "CASH2-I02", "CASH2-I03"] as const;
-export const CASH2_BS_IDS = ["CASH2-I04", "CASH2-I05", "CASH2-I06"] as const;
-export const CASH2_LIQ_IDS = ["CASH2-I09", "CASH-I02", "CASH-I07"] as const;
+export const CASH2_PROFIT_IDS = ["CASH2-I01", "CASH2-I02", "CASH2-I03", "CASH2-I13"] as const;
+export const CASH2_BS_IDS = ["CASH2-I04", "CASH2-I06", "CASH2-I07", "CASH2-I08"] as const;
+export const CASH2_LIQ_IDS = ["CASH-I01", "CASH-I02", "CASH-I07", "CASH2-I09"] as const;
