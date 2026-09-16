@@ -115,7 +115,7 @@ Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部�
 
 ## 公网发布
 
-当前固定 HTTPS 地址（GitHub Pages，功能提交 `4ae94ac`）：
+当前固定 HTTPS 地址（GitHub Pages，功能提交 `a42ff23`）：
 
 - 站点根路径：<https://wang9429.github.io/-/>
 - 综合总览：<https://wang9429.github.io/-/overview/>
@@ -123,13 +123,15 @@ Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部�
 - 产权管理：<https://wang9429.github.io/-/property-rights/>
 - 系统配置：<https://wang9429.github.io/-/settings/>
 
-本轮资金/产权界面截图（可下载）：
+本轮资金/产权 R3 界面截图（可下载；Pages 工作流完成后生效）：
 
-- [资金上半区经营指标](https://wang9429.github.io/-/deliverables/funds-upper-kpis.png)
-- [指标树展开至实际末级](https://wang9429.github.io/-/deliverables/funds-indicator-tree-leaf.png)
-- [资金场景执行区域](https://wang9429.github.io/-/deliverables/funds-scenario-execution.png)
-- [产权流程与场景执行区域](https://wang9429.github.io/-/deliverables/property-flow-and-execution.png)
-- [四张截图打包 zip](https://wang9429.github.io/-/deliverables/fp-pages-screenshots-4ae94ac.zip)
+- [盈利能力主卡与小趋势](https://wang9429.github.io/-/deliverables/r3-funds-profit-sparks.png)
+- [营业收入详情趋势与同分类切换](https://wang9429.github.io/-/deliverables/r3-funds-revenue-detail-trend.png)
+- [账户专题代表路径 S040](https://wang9429.github.io/-/deliverables/r3-funds-topic-account.png)
+- [产权四卡快照趋势](https://wang9429.github.io/-/deliverables/r3-rights-census-sparks.png)
+- [标识名称专题（无交易流程）](https://wang9429.github.io/-/deliverables/r3-rights-identity.png)
+- [产权交易流程](https://wang9429.github.io/-/deliverables/property-flow-and-execution.png)
+- [R3 截图打包 zip](https://wang9429.github.io/-/deliverables/fp-r3-screenshots-a42ff23.zip)
 
 推送 `main` 会跑 `.github/workflows/github-pages.yml`：静态导出后写入 `gh-pages` 分支。仓库子路径为 `/-/`（仓库名为 `-`）。页面、样式与脚本均带此前缀；刷新上述路径应直接打开。
 
