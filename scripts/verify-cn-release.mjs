@@ -27,7 +27,7 @@ async function waitFor(url, timeoutMs = 60000) {
   while (Date.now() - start < timeoutMs) {
     try {
       const res = await fetch(url, { redirect: "manual" });
-      if (res.status < 500) return;
+      if (res.status === 200) return;
     } catch {
       /* retry */
     }
