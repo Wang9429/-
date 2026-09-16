@@ -3,7 +3,8 @@ import { isOpen, riskMatches } from "./risks";
 import type { DomainId, ObjectType, RiskCase } from "./types";
 import { INDICATOR_CALIBER, periodFact } from "./period";
 import { publishedWatchRule } from "./live-config";
-import { consecutiveLossPeriods, financeLeaves, smeOverdueWan, cashBridgeNote } from "./finance";
+import { consecutiveLossPeriods, financeLeaves, segmentProfitLeaves, smeOverdueWan, cashBridgeNote } from "./finance";
+import { censusEntities, openMatterCount } from "./fp-census";
 
 /**
  * 指标一律从基础业务记录计算；expected_results 只用于验收核对，
@@ -185,6 +186,29 @@ const accounts = () => seed.accounts;
 
 function risksFor(objectId: string, ctx: IndicatorContext): string[] {
   return ctx.risks.filter((r) => isOpen(r) && r.primary_object_id === objectId).map((r) => r.id);
+}
+
+function censusEntityLeaves(ctx: IndicatorContext, cls?: "controlled" | "participating"): LeafMetric[] {
+  const allOrgs = new Set(seed.organizations.map((o) => o.id));
+  let list = censusEntities(allOrgs, ctx.asOf);
+  if (cls) list = list.filter((x) => x.class === cls);
+  const classLabel = { body: "海工本体", controlled: "控股及实控", participating: "参股", unverified: "控制待核实" } as const;
+  return list.map((x) => ({
+    objectId: x.entity.id,
+    objectType: "legal_entity" as ObjectType,
+    name: x.entity.name,
+    orgId: x.ownerOrgId,
+    numerator: 1,
+    denominator: null,
+    countWeight: 1,
+    extras: [
+      { label: "口径", value: classLabel[x.class] },
+      { label: "控制依据", value: x.controlBasis || "—" },
+      { label: "全资", value: x.whollyOwned ? "是" : "否" },
+    ],
+    riskIds: risksFor(x.entity.id, ctx),
+    dataComplete: true,
+  }));
 }
 
 function hasDomainObjects(domain: DomainId, orgIds: Set<string>): boolean {
@@ -1084,7 +1108,7 @@ export const INDICATORS: IndicatorDef[] = [
     caliber: "期间发生额；不替换为现金净流入。",
     sourceNote: "合成财务报表（模拟）",
     preferConsolidated: true,
-    leaves: (ctx) => financeLeaves("operating_profit", ctx),
+    leaves: (ctx) => [...financeLeaves("operating_profit", ctx), ...segmentProfitLeaves(ctx)],
   },
   {
     id: "CASH2-I03",
@@ -1504,6 +1528,72 @@ export const INDICATORS: IndicatorDef[] = [
     sourceNote: "本平台监管事项",
     evaluate: (v) => (v === null ? "unknown" : (v as number) > 0 ? "attention" : "normal"),
     leaves: (ctx) => openRiskLeaves("RIGHTS", ctx),
+  },
+  {
+    id: "PTY2-I01",
+    name: "纳管法人户数",
+    domain: "RIGHTS",
+    unit: "户",
+    kind: "count",
+    leafObjectType: "legal_entity",
+    formula: "有效范围内法人按统一主体ID去重",
+    caliber: "境内以统一社会信用代码、境外以登记号与国家地区识别；含海工本体但仅当其在当前范围。分支机构、部门、账户不计户。",
+    sourceNote: "法人及控制关系快照（模拟）",
+    leaves: (ctx) => censusEntityLeaves(ctx),
+  },
+  {
+    id: "PTY2-I02",
+    name: "控股及实际控制企业",
+    domain: "RIGHTS",
+    unit: "户",
+    kind: "count",
+    leafObjectType: "legal_entity",
+    formula: "纳管法人中经有效治理依据确认控制的被投企业",
+    caliber: "含已确认控制的全资及非全资企业，排除海工本体。占比分母为被投法人 N−B。",
+    sourceNote: "治理控制依据（模拟）",
+    leaves: (ctx) => censusEntityLeaves(ctx, "controlled"),
+  },
+  {
+    id: "PTY2-I03",
+    name: "参股企业",
+    domain: "RIGHTS",
+    unit: "户",
+    kind: "count",
+    leafObjectType: "legal_entity",
+    formula: "纳管法人中已确认不控制的被投企业",
+    caliber: "未录入控制结论的不归为参股，单列控制待核实。",
+    sourceNote: "治理控制依据（模拟）",
+    leaves: (ctx) => censusEntityLeaves(ctx, "participating"),
+  },
+  {
+    id: "PTY2-I04",
+    name: "在办产权事项",
+    domain: "RIGHTS",
+    unit: "项",
+    kind: "count",
+    leafObjectType: "property_matter",
+    formula: "截至日已启动、尚未完成或正式终止的产权事项按事项ID去重",
+    caliber: "不是规则命中数，也不是整改数。交易、登记、名称资质、治理变动在事项详情分类型展开。",
+    sourceNote: "产权事项台账（模拟）",
+    leaves: (ctx) => {
+      void ctx;
+      return openMatterCount(new Set(seed.organizations.map((o) => o.id))).matters.map((m) => ({
+        objectId: m.id,
+        objectType: "property_matter" as ObjectType,
+        name: m.name,
+        orgId: m.owner_org_id,
+        numerator: 1,
+        denominator: null,
+        countWeight: 1,
+        extras: [
+          { label: "事项类型", value: m.matter_type },
+          { label: "相关法人", value: `${m.investor_id} → ${m.investee_id}` },
+          { label: "当前环节", value: m.current_phase_id },
+        ],
+        riskIds: risksFor(m.id, ctx),
+        dataComplete: true,
+      }));
+    },
   },
 ];
 

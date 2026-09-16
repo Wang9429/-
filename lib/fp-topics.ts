@@ -38,6 +38,12 @@ export const TOPIC_BY_LABEL: Record<string, string> = {
   "股权与控制权": "PTY2-T-CONTROL",
 };
 
+/** 业需 80 条子场景（不含 CASH2-S901/S902 补充草稿）。 */
+export function isOfficialFpSub(id: string): boolean {
+  if (id === "CASH2-S901" || id === "CASH2-S902") return false;
+  return /^(CASH2|PTY2)-S\d+$/.test(id);
+}
+
 export const FIRST_BATCH_SUBS = [
   "CASH2-S039",
   "CASH2-S037",

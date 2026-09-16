@@ -73,6 +73,35 @@ type StmtField =
   | "current_assets"
   | "current_liabilities";
 
+/** 核心业务分部利润叶子，挂在对应管理单位下，供营业利润等继续下钻。 */
+export function segmentProfitLeaves(ctx: IndicatorContext): LeafMetric[] {
+  const inWindow = FP_SEGMENTS.filter((s) => s.period_end >= ctx.periodStart && s.period_end <= ctx.periodEnd);
+  const source = inWindow.length ? inWindow : FP_SEGMENTS.filter((s) => s.closed);
+  const latest = new Map<string, (typeof FP_SEGMENTS)[0]>();
+  for (const s of source) {
+    const k = `${s.org_id}::${s.name}`;
+    const prev = latest.get(k);
+    if (!prev || s.period_end > prev.period_end) latest.set(k, s);
+  }
+  return [...latest.values()].map((s) => ({
+    objectId: s.id,
+    objectType: "legal_entity" as ObjectType,
+    name: s.name,
+    orgId: s.org_id,
+    extras: [
+      { label: "核心业务", value: s.name },
+      { label: "期间", value: `${s.period_start}～${s.period_end}` },
+      { label: "营业利润", value: `${s.operating_profit} 万元` },
+      { label: "可比", value: s.comparable ? "是" : "否" },
+    ],
+    riskIds: [],
+    dataComplete: s.closed && s.comparable,
+    gapNote: s.closed ? undefined : "本期未关账",
+    numerator: s.operating_profit,
+    denominator: null,
+  }));
+}
+
 export function financeLeaves(
   field: StmtField,
   ctx: IndicatorContext,

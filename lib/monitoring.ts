@@ -8,7 +8,7 @@ import {
   riskMatches,
 } from "./risks";
 import type { DomainId, MonitoringRow, RiskCase } from "./types";
-import { canonicalRightsStage } from "./fp-topics";
+import { canonicalRightsStage, isOfficialFpSub } from "./fp-topics";
 
 export interface ScopeFilter {
   domain: DomainId;
@@ -294,6 +294,10 @@ export function configuredScenarios(domain: DomainId, phaseId?: string | null, t
       const subStage = canonicalRightsStage(s.primary_phase_id) ?? s.primary_phase_id;
       const selectedStage = canonicalRightsStage(phaseName(phaseId)) ?? canonicalRightsStage(phaseId) ?? phaseId;
       if (s.primary_phase_id && subStage !== selectedStage && s.primary_phase_id !== phaseId) continue;
+    }
+    if (isOfficialFpSub(s.id)) {
+      set.add(s.id);
+      continue;
     }
     if (!isScenarioMonitoringActive(s.id)) continue;
     if (s.runtime_capability === "definition_only" && s.status === "draft") continue;

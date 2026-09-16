@@ -18,12 +18,12 @@ import { censusCounts, openMatterCount, penetratePaths } from "@/lib/fp-census";
 import { ECONOMIC_BEHAVIORS, RIGHTS_TOPICS } from "@/lib/fp-topics";
 import { fmtPct } from "@/lib/format";
 import { openCountForPhase } from "@/lib/monitoring";
-import { riskMatches, isOpen } from "@/lib/risks";
-import { indicatorById } from "@/lib/metrics";
-import { runnableDrawerIndicators } from "@/lib/indicator-scope";
+import { riskMatches } from "@/lib/risks";
+import { indicatorById, type IndicatorDef } from "@/lib/metrics";
+import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
 
 export default function PropertyDomainView() {
-  const { filters, risks, user } = useDemoStore();
+  const { filters, risks, user, catalog } = useDemoStore();
   const [subjectId, setSubjectId] = useState(filters.orgId);
   const [subjectChildren, setSubjectChildren] = useState(filters.includeChildren);
   const [focusEntity, setFocusEntity] = useState<string | null>(null);
@@ -37,7 +37,6 @@ export default function PropertyDomainView() {
   const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [scenarioSourceOpen, setScenarioSourceOpen] = useState(false);
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
-  const [ledgerMode, setLedgerMode] = useState<"all" | "hit" | "uneval">("all");
 
   const globalOrgIds = useMemo(
     () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
@@ -95,6 +94,19 @@ export default function PropertyDomainView() {
   const gate = path.findIndex((o) => o.id === filters.orgId);
   const visiblePath = gate >= 0 ? path.slice(gate) : path;
 
+  const censusKpiDefs = useMemo(() => {
+    if (!canDomain(user, "RIGHTS")) return [];
+    return (["PTY2-I01", "PTY2-I02", "PTY2-I03", "PTY2-I04"] as const)
+      .map((id) => indicatorById(id))
+      .filter((d): d is IndicatorDef => Boolean(d && isRunnableDrawerIndicator(d, "domain_page")));
+  }, [user, catalog]);
+
+  const openCensusIndicator = (id: string, filter: "N" | "C" | "P" | "T") => {
+    setCensusFilter(filter);
+    setIndicatorId(id);
+    if (filter === "T") setTopicId("PTY2-T-TRADE");
+  };
+
   const listEntities = useMemo(() => {
     let rows = census.list;
     if (censusFilter === "C") rows = rows.filter((x) => x.class === "controlled");
@@ -102,51 +114,6 @@ export default function PropertyDomainView() {
     if (censusFilter === "N") rows = census.list;
     return rows;
   }, [census, censusFilter]);
-
-  const matterRows = useMemo(() => {
-    let rows = seed.property_matters.filter((m) => pageOrgIds.has(m.owner_org_id));
-    if (focusEntity) {
-      rows = rows.filter((m) => m.investor_id === focusEntity || m.investee_id === focusEntity);
-    }
-    if (topicId === "PTY2-T-TRADE") {
-      rows = rows.filter((m) => m.template_id === eb.templateId || ["产权转让", "无偿划转", "企业增资", "资产转让", "上市股份"].includes(m.matter_type));
-      if (behavior === "free_transfer") rows = seed.property_matters.filter((m) => pageOrgIds.has(m.owner_org_id) && m.template_id === "PR-FREE-TEMPLATE-V12");
-      if (behavior === "capital_increase") rows = seed.property_matters.filter((m) => pageOrgIds.has(m.owner_org_id) && m.template_id === "PR-CAPITAL-TEMPLATE-V12");
-      if (behavior === "asset_transfer") rows = seed.property_matters.filter((m) => pageOrgIds.has(m.owner_org_id) && m.template_id === "PR-ASSET-TEMPLATE-V16");
-      if (behavior === "listed_shares") rows = seed.property_matters.filter((m) => pageOrgIds.has(m.owner_org_id) && m.template_id === "PR-LISTED-TEMPLATE-V16");
-      if (behavior === "nonlisted_transfer") {
-        rows = seed.property_matters.filter(
-          (m) => pageOrgIds.has(m.owner_org_id) && (m.template_id === "PR-TRANSFER-TEMPLATE-V12" || m.matter_type === "产权转让"),
-        );
-      }
-      if (phaseId) rows = rows.filter((m) => m.current_phase_id === phaseId);
-    } else if (topicId === "PTY2-T-REG") {
-      rows = seed.property_matters.filter((m) => pageOrgIds.has(m.owner_org_id) && (m.matter_type === "产权登记" || m.template_id === "PR-REG-TEMPLATE-V12"));
-    } else if (topicId === "PTY2-T-IDENTITY") {
-      rows = [];
-    } else {
-      rows = seed.property_matters.filter((m) => pageOrgIds.has(m.owner_org_id) && m.matter_type === "股权与控制权");
-    }
-    if (focusEntity) rows = rows.filter((m) => m.investor_id === focusEntity || m.investee_id === focusEntity);
-    return rows;
-  }, [pageOrgIds, focusEntity, topicId, eb.templateId, behavior, phaseId]);
-
-  const hitIds = new Set(
-    seed.scenario_monitoring_coverage
-      .filter((r) => r.domain === "RIGHTS" && r.topic_id === topicId && r.status === "evaluated_hit")
-      .map((r) => r.monitoring_object_id),
-  );
-  const unevalIds = new Set(
-    seed.scenario_monitoring_coverage
-      .filter((r) => r.domain === "RIGHTS" && r.topic_id === topicId && r.status === "data_insufficient")
-      .map((r) => r.monitoring_object_id),
-  );
-
-  const shownMatters = matterRows.filter((m) => {
-    if (ledgerMode === "hit") return hitIds.has(m.id) || m.risk_ids.some((id) => hitIds.has(id));
-    if (ledgerMode === "uneval") return unevalIds.has(m.id);
-    return true;
-  });
 
   const pctLabel = (v: number | null) => (v === null ? "不适用" : fmtPct(v));
 
@@ -195,10 +162,10 @@ export default function PropertyDomainView() {
       <Card title="法人及股权全景">
         {canDomain(user, "RIGHTS") ? (
           <div className="reg-kpis-domain">
-            <KpiCard name="纳管法人户数" value={String(census.N)} unit="户" compare={census.check ? `B+C+P+U=${census.B}+${census.C}+${census.P}+${census.U}` : "构成待核"} onOpen={() => setCensusFilter("N")} returnKey="N" />
-            <KpiCard name="控股及实际控制企业" value={String(census.C)} unit="户" compare={pctLabel(census.cPct)} dataState={`全资${census.whollyInC}／非全资${census.nonWhollyInC}`} onOpen={() => setCensusFilter("C")} returnKey="C" />
-            <KpiCard name="参股企业" value={String(census.P)} unit="户" compare={pctLabel(census.pPct)} onOpen={() => setCensusFilter("P")} returnKey="P" />
-            <KpiCard name="在办产权事项" value={String(matters.count)} unit="项" compare="按事项ID去重" onOpen={() => { setCensusFilter("T"); setTopicId("PTY2-T-TRADE"); }} returnKey="T" />
+            <KpiCard name="纳管法人户数" value={String(census.N)} unit="户" compare={census.check ? `B+C+P+U=${census.B}+${census.C}+${census.P}+${census.U}` : "构成待核"} onOpen={() => openCensusIndicator("PTY2-I01", "N")} returnKey="N" />
+            <KpiCard name="控股及实际控制企业" value={String(census.C)} unit="户" compare={pctLabel(census.cPct)} dataState={`全资${census.whollyInC}／非全资${census.nonWhollyInC}`} onOpen={() => openCensusIndicator("PTY2-I02", "C")} returnKey="C" />
+            <KpiCard name="参股企业" value={String(census.P)} unit="户" compare={pctLabel(census.pPct)} onOpen={() => openCensusIndicator("PTY2-I03", "P")} returnKey="P" />
+            <KpiCard name="在办产权事项" value={String(matters.count)} unit="项" compare="按事项ID去重" onOpen={() => openCensusIndicator("PTY2-I04", "T")} returnKey="T" />
           </div>
         ) : (
           <p className="text-[13px] text-textsub">当前身份不能查看产权经营数据。</p>
@@ -305,43 +272,9 @@ export default function PropertyDomainView() {
           </>
         )}
 
-        <div className="flex gap-1 my-3">
-          {(
-            [
-              ["all", "全部对象"],
-              ["hit", "命中对象"],
-              ["uneval", "未评估对象"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setLedgerMode(id)}
-              className={`h-8 px-3 rounded-[6px] border text-[12px] ${ledgerMode === id ? "border-brand bg-tint text-brand" : "border-line text-textsub"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {topicId === "PTY2-T-IDENTITY" && shownMatters.length === 0 && (
-          <p className="text-[13px] text-textsub mb-3">当前范围无业务</p>
-        )}
-
-        <DataTable
-          rows={shownMatters}
-          rowKey={(m) => m.id}
-          onRowClick={(m) => setObjectId(m.id)}
-          empty={matterRows.length === 0 ? "当前范围无业务" : "当前筛选没有事项。"}
-          pageSize={8}
-          compactEmpty
-          columns={[
-            { key: "name", title: "事项", minWidth: "200px", render: (m) => m.name },
-            { key: "type", title: "类型", width: "110px", render: (m) => m.matter_type },
-            { key: "phase", title: "当前环节", width: "120px", render: (m) => templateById(m.template_id)?.phase_nodes.find((n) => n.id === m.current_phase_id)?.name ?? m.current_phase_id },
-            { key: "le", title: "相关法人", render: (m) => `${m.investor_id} → ${m.investee_id}` },
-          ]}
-        />
+        <p className="text-[12px] text-textsub my-3">
+          产权事项与监测对象从下方监管场景执行情况进入：点场景打开定义，点命中对象或未关闭事项查看挂钩明细。经济行为与环节用于收窄当前专题的场景范围。
+        </p>
 
         <div className="mt-4">
           <ScenarioExecutionPanel
@@ -365,9 +298,10 @@ export default function PropertyDomainView() {
         open={Boolean(indicatorId)}
         onClose={() => setIndicatorId(null)}
         indicator={indicatorId ? indicatorById(indicatorId) ?? null : null}
-        indicatorOptions={runnableDrawerIndicators("RIGHTS")}
+        indicatorOptions={censusKpiDefs}
         onSwitchIndicator={setIndicatorId}
         allowIndicatorSwitch
+        drawerEntry="domain_page"
         initialOrgId={subjectId}
         includeChildren={subjectChildren}
         scopeLabel={`${orgName(subjectId)}｜${filters.asOf}`}

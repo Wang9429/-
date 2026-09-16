@@ -12,6 +12,7 @@ import {
   drawerAncestorPath,
   drawerChildOrgs,
   isIndicatorAbnormalStatus,
+  isOrgMirrorLeaf,
   metricRollupOrgIds,
   relatedMatterIds,
   resolveDrawerSelection,
@@ -160,6 +161,7 @@ function IndicatorDrawerBody({
     () => scopedIndicatorLeaves(allLeaves, dataOrgIds),
     [allLeaves, dataOrgIds],
   );
+  const leafOrgIds = useMemo(() => new Set(scopedLeaves.map((l) => l.orgId)), [scopedLeaves]);
   const applicableLeafIds = useMemo(
     () => new Set(scopedLeaves.map((l) => l.objectId)),
     [scopedLeaves],
@@ -257,7 +259,7 @@ function IndicatorDrawerBody({
   const childRows =
     resolved.kind === "org"
       ? [
-          ...drawerChildOrgs(resolved.id, initialOrgId, includeChildren, dataOrgIds).map((c) => ({
+          ...drawerChildOrgs(resolved.id, initialOrgId, includeChildren, dataOrgIds, leafOrgIds).map((c) => ({
             id: c.id,
             name: c.name,
             type: orgLevelLabel(c),
@@ -265,7 +267,7 @@ function IndicatorDrawerBody({
             isOrg: true,
           })),
           ...scopedLeaves
-            .filter((l) => l.orgId === resolved.id)
+            .filter((l) => l.orgId === resolved.id && !isOrgMirrorLeaf(l))
             .map((l) => ({
               id: l.objectId,
               name: l.name,
@@ -295,8 +297,8 @@ function IndicatorDrawerBody({
     const org = orgById(orgId);
     if (!org || !dataOrgIds.has(orgId)) return null;
     if (onlyAbnormal && !keepOrgIds.has(orgId)) return null;
-    const kids = drawerChildOrgs(orgId, initialOrgId, includeChildren, dataOrgIds);
-    const leaves = scopedLeaves.filter((l) => l.orgId === orgId);
+    const kids = drawerChildOrgs(orgId, initialOrgId, includeChildren, dataOrgIds, leafOrgIds);
+    const leaves = scopedLeaves.filter((l) => l.orgId === orgId && !isOrgMirrorLeaf(l));
     const metric = nodeMetric(orgId);
     const isExpanded = expanded.has(orgId);
     const selected = resolved.kind === "org" && resolved.id === orgId;

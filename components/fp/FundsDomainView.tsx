@@ -8,12 +8,12 @@ import RiskCaseDrawer from "@/components/RiskCaseDrawer";
 import ScenarioDrawer from "@/components/ScenarioDrawer";
 import ObjectDrawer from "@/components/ObjectDrawer";
 import ScenarioExecutionPanel from "@/components/ScenarioExecutionPanel";
-import { Card, DataTable, KpiCard, Tag } from "@/components/ui";
+import { Card, KpiCard, Tag } from "@/components/ui";
 import { useDemoStore } from "@/lib/store";
 import { authorizedObjectIds, canDomain, intersectOrgScope } from "@/lib/config";
-import { childOrgs, descendantOrgIds, orgName, orgPath, orgUnitTypeLabel } from "@/lib/org";
+import { childOrgs, descendantOrgIds, isManagedUnit, orgName, orgPath, orgUnitTypeLabel } from "@/lib/org";
 import { computeIndicator, indicatorById, type IndicatorDef } from "@/lib/metrics";
-import { isRunnableDrawerIndicator, runnableDrawerIndicators } from "@/lib/indicator-scope";
+import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
 import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, CASH_TOPICS } from "@/lib/fp-topics";
 import { reportAvailability, statementOf } from "@/lib/finance";
 import { fmtAmountSmart } from "@/lib/format";
@@ -41,7 +41,6 @@ export default function FundsDomainView() {
   const [objectId, setObjectId] = useState<string | null>(null);
   const [scenarioId, setScenarioId] = useState<string | null>(null);
   const [scenarioSourceOpen, setScenarioSourceOpen] = useState(false);
-  const [ledgerMode, setLedgerMode] = useState<"all" | "hit" | "uneval">("all");
 
   const globalOrgIds = useMemo(
     () => intersectOrgScope(filters.orgId, filters.includeChildren, user),
@@ -57,6 +56,10 @@ export default function FundsDomainView() {
     setObjectId(null);
     setScenarioId(null);
   }, [filters.orgId, filters.includeChildren, filters.periodStart, filters.periodEnd, filters.asOf, user?.id]);
+
+  useEffect(() => {
+    setIndicatorId(null);
+  }, [finTab]);
 
   const pageOrgIds = useMemo(() => {
     const local = new Set(subjectChildren ? descendantOrgIds(subjectId) : [subjectId]);
@@ -83,14 +86,15 @@ export default function FundsDomainView() {
       .filter((d): d is IndicatorDef => Boolean(d && isRunnableDrawerIndicator(d, "domain_page")));
   }, [kpiIds, user, catalog]);
 
-  const drawerOptions = useMemo(() => runnableDrawerIndicators("CASH", "domain_page"), [catalog]);
-
   const path = orgPath(subjectId).filter((o) => globalOrgIds.has(o.id) || o.id === filters.orgId);
   const gate = path.findIndex((o) => o.id === filters.orgId);
   const visiblePath = gate >= 0 ? path.slice(gate) : path;
 
   const compareRows = useMemo(() => {
-    const kids = childOrgs(subjectId).filter((c) => globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id)));
+    const kids = childOrgs(subjectId).filter((c) => {
+      if (!isManagedUnit(c) && c.node_type !== "headquarters") return false;
+      return globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id));
+    });
     return kids;
   }, [subjectId, globalOrgIds]);
 
@@ -221,7 +225,11 @@ export default function FundsDomainView() {
                 const ids = new Set(descendantOrgIds(row.id).filter((id) => globalOrgIds.has(id)));
                 if (!ids.size) ids.add(row.id);
                 const st = reportAvailability(row.id);
-                const children = childOrgs(row.id).filter((c) => globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id)));
+                const children = childOrgs(row.id).filter(
+                  (c) =>
+                    (isManagedUnit(c) || c.node_type === "headquarters") &&
+                    (globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id))),
+                );
                 return (
                   <tr key={row.id} className="border-b border-line/70">
                     <td className="py-2 pr-3" style={{ paddingLeft: 8 + depth * 16 }}>
@@ -290,7 +298,10 @@ export default function FundsDomainView() {
             </button>
           ))}
         </div>
-        <TopicScale topicId={topicId} orgIds={pageOrgIds} onOpenObject={setObjectId} ledgerMode={ledgerMode} setLedgerMode={setLedgerMode} />
+        <TopicScale topicId={topicId} orgIds={pageOrgIds} />
+        <p className="text-[12px] text-textsub mt-3">
+          账户、收付、融资等业务对象从下方监管场景执行情况进入：点场景打开定义，点命中对象或未关闭事项查看挂钩明细。
+        </p>
         <div className="mt-4">
           <ScenarioExecutionPanel
             domain="CASH"
@@ -312,7 +323,7 @@ export default function FundsDomainView() {
         open={Boolean(indicatorId)}
         onClose={() => setIndicatorId(null)}
         indicator={indicatorId ? indicatorById(indicatorId) ?? null : null}
-        indicatorOptions={drawerOptions}
+        indicatorOptions={kpiDefs}
         onSwitchIndicator={setIndicatorId}
         allowIndicatorSwitch
         drawerEntry="domain_page"
@@ -344,19 +355,7 @@ export default function FundsDomainView() {
   );
 }
 
-function TopicScale({
-  topicId,
-  orgIds,
-  onOpenObject,
-  ledgerMode,
-  setLedgerMode,
-}: {
-  topicId: string;
-  orgIds: Set<string>;
-  onOpenObject: (id: string) => void;
-  ledgerMode: "all" | "hit" | "uneval";
-  setLedgerMode: (m: "all" | "hit" | "uneval") => void;
-}) {
+function TopicScale({ topicId, orgIds }: { topicId: string; orgIds: Set<string> }) {
   const { filters } = useDemoStore();
   const accounts = seed.accounts.filter((a) => orgIds.has(a.owner_org_id));
   const bank = accounts.filter((a) => a.id !== "ACC-INT");
@@ -371,162 +370,57 @@ function TopicScale({
   const specs = FP_SPECIALS.filter((s) => orgIds.has(s.owner_org_id));
   const sme = FP_SME.filter((s) => orgIds.has(s.owner_org_id));
 
-  const chips: { label: string; onClick?: () => void }[] = [];
+  const chips: string[] = [];
   if (topicId === "CASH2-T-ACCOUNT") {
     const total = bank.reduce((s, a) => s + yuanToWan(a.closing_balance_native * a.fx_to_cny), 0);
     const rest = bank.reduce((s, a) => s + yuanToWan(a.restricted_balance_native * a.fx_to_cny), 0);
     chips.push(
-      { label: `银行账户 ${bank.filter((a) => a.id !== "ACC-INT").length} 户` },
-      { label: `确认余额 ${fmtAmountSmart(total)} 万元` },
-      { label: `受限 ${fmtAmountSmart(rest)} 万元` },
-      { label: `内部账户 ${accounts.filter((a) => a.id === "ACC-INT").length} 户` },
+      `银行账户 ${bank.length} 户`,
+      `确认余额 ${fmtAmountSmart(total)} 万元`,
+      `受限 ${fmtAmountSmart(rest)} 万元`,
+      `内部账户 ${accounts.filter((a) => a.id === "ACC-INT").length} 户`,
     );
     const specAcc = accounts.find((a) => a.id === "ACC-SPEC");
     if (specAcc) {
-      chips.push({
-        label: `专户ACC-SPEC ${fmtAmountSmart(yuanToWan(specAcc.closing_balance_native * specAcc.fx_to_cny))} 万元全部受限｜${specAcc.balance_as_of}`,
-      });
+      chips.push(
+        `专户ACC-SPEC ${fmtAmountSmart(yuanToWan(specAcc.closing_balance_native * specAcc.fx_to_cny))} 万元全部受限｜${specAcc.balance_as_of}`,
+      );
     }
   } else if (topicId === "CASH2-T-PAYMENT") {
     chips.push(
-      { label: `收款 ${inflows.length} 笔 / ${fmtAmountSmart(inflows.reduce((s, t) => s + t.amount_wan_cny, 0))} 万元` },
-      { label: `付款 ${outflows.length} 笔 / ${fmtAmountSmart(outflows.reduce((s, t) => s + t.amount_wan_cny, 0))} 万元` },
-      { label: `逾期未付中小企业账款 ${fmtAmountSmart(sme.filter((s) => s.sme_at_contract).reduce((a, s) => a + Math.max(0, s.undisputed_wan - s.paid_wan), 0))} 万元` },
+      `收款 ${inflows.length} 笔 / ${fmtAmountSmart(inflows.reduce((s, t) => s + t.amount_wan_cny, 0))} 万元`,
+      `付款 ${outflows.length} 笔 / ${fmtAmountSmart(outflows.reduce((s, t) => s + t.amount_wan_cny, 0))} 万元`,
+      `逾期未付中小企业账款 ${fmtAmountSmart(sme.filter((s) => s.sme_at_contract).reduce((a, s) => a + Math.max(0, s.undisputed_wan - s.paid_wan), 0))} 万元`,
     );
   } else if (topicId === "CASH2-T-FINANCE") {
     chips.push(
-      { label: `外部融资未偿 ${fmtAmountSmart(loans.filter((l) => l.direction === "external_borrow").reduce((s, l) => s + l.outstanding_wan, 0))} 万元` },
-      { label: `内部借入 ${fmtAmountSmart(loans.filter((l) => l.direction === "internal_borrow").reduce((s, l) => s + l.outstanding_wan, 0))} 万元` },
-      { label: `担保责任 ${fmtAmountSmart(guars.filter((g) => g.kind === "loan_guarantee" && !g.released).reduce((s, g) => s + g.amount_wan, 0))} 万元` },
-      { label: `保函责任 ${fmtAmountSmart(guars.filter((g) => g.kind === "performance_bond" && !g.released).reduce((s, g) => s + g.amount_wan, 0))} 万元` },
+      `外部融资未偿 ${fmtAmountSmart(loans.filter((l) => l.direction === "external_borrow").reduce((s, l) => s + l.outstanding_wan, 0))} 万元`,
+      `内部借入 ${fmtAmountSmart(loans.filter((l) => l.direction === "internal_borrow").reduce((s, l) => s + l.outstanding_wan, 0))} 万元`,
+      `担保责任 ${fmtAmountSmart(guars.filter((g) => g.kind === "loan_guarantee" && !g.released).reduce((s, g) => s + g.amount_wan, 0))} 万元`,
+      `保函责任 ${fmtAmountSmart(guars.filter((g) => g.kind === "performance_bond" && !g.released).reduce((s, g) => s + g.amount_wan, 0))} 万元`,
     );
   } else if (topicId === "CASH2-T-OPERATION") {
     chips.push(
-      { label: `出借本金余额 ${fmtAmountSmart(lends.reduce((s, l) => s + l.outstanding_wan, 0))} 万元` },
-      { label: `到期未收回 ${fmtAmountSmart(lends.filter((l) => l.due_date <= filters.asOf).reduce((s, l) => s + (l.outstanding_wan - l.recovered_wan), 0))} 万元` },
+      `出借本金余额 ${fmtAmountSmart(lends.reduce((s, l) => s + l.outstanding_wan, 0))} 万元`,
+      `到期未收回 ${fmtAmountSmart(lends.filter((l) => l.due_date <= filters.asOf).reduce((s, l) => s + (l.outstanding_wan - l.recovered_wan), 0))} 万元`,
     );
   } else if (topicId === "CASH2-T-SPECIAL") {
     chips.push(
-      { label: `专项项目 ${specs.length} 个` },
-      { label: `期间支出 ${fmtAmountSmart(specs.reduce((s, x) => s + x.spent_wan, 0))} 万元` },
-      { label: `确认结余 ${fmtAmountSmart(specs.reduce((s, x) => s + x.confirmed_balance_wan, 0))} 万元` },
+      `专项项目 ${specs.length} 个`,
+      `期间支出 ${fmtAmountSmart(specs.reduce((s, x) => s + x.spent_wan, 0))} 万元`,
+      `确认结余 ${fmtAmountSmart(specs.reduce((s, x) => s + x.confirmed_balance_wan, 0))} 万元`,
     );
   } else {
-    chips.push({ label: "已覆盖核心业务 2 项" }, { label: "持续亏损业务 1 项" });
+    chips.push("已覆盖核心业务 2 项", "持续亏损业务 1 项");
   }
-
-  const hitIds = new Set(
-    seed.scenario_monitoring_coverage
-      .filter((r) => r.topic_id === topicId && r.status === "evaluated_hit" && orgIds.has(r.owner_org_id))
-      .map((r) => r.monitoring_object_id),
-  );
-  const unevalIds = new Set(
-    seed.scenario_monitoring_coverage
-      .filter((r) => r.topic_id === topicId && r.status === "data_insufficient" && orgIds.has(r.owner_org_id))
-      .map((r) => r.monitoring_object_id),
-  );
-
-  type Row = { id: string; name: string; type: string; extra: string };
-  let rows: Row[] = [];
-  if (topicId === "CASH2-T-ACCOUNT") {
-    rows = accounts.map((a) => ({
-      id: a.id,
-      name: a.name,
-      type: a.id === "ACC-INT" ? "内部账户" : "银行账户",
-      extra: `${fmtAmountSmart(yuanToWan(a.closing_balance_native * a.fx_to_cny))} 万元`,
-    }));
-  } else if (topicId === "CASH2-T-PAYMENT") {
-    rows = [
-      ...txs.map((t) => ({
-        id: t.id,
-        name: `${t.direction === "outflow" ? "付款" : "收款"} ${t.id}`,
-        type: "资金交易",
-        extra: `${fmtAmountSmart(t.amount_wan_cny)} 万元｜${t.date}`,
-      })),
-      ...sme.map((s) => {
-        const ob = seed.obligations.find((o) => o.contract_id === s.contract_id);
-        return {
-          id: ob?.id ?? s.id,
-          name: s.name,
-          type: "付款义务",
-          extra: `到期 ${s.due_date}｜未付 ${fmtAmountSmart(Math.max(0, s.undisputed_wan - s.paid_wan))} 万元`,
-        };
-      }),
-    ];
-  } else if (topicId === "CASH2-T-FINANCE") {
-    rows = [
-      ...loans.map((l) => ({ id: l.id, name: l.name, type: l.direction === "internal_borrow" ? "内部借入" : "外部融资", extra: `余额 ${fmtAmountSmart(l.outstanding_wan)} 万元` })),
-      ...guars.map((g) => ({ id: g.id, name: g.name, type: g.kind === "performance_bond" ? "保函" : "担保", extra: `${fmtAmountSmart(g.amount_wan)} 万元` })),
-    ];
-  } else if (topicId === "CASH2-T-OPERATION") {
-    rows = lends.map((l) => ({ id: l.id, name: l.name, type: "出借", extra: `未收回 ${fmtAmountSmart(l.outstanding_wan - l.recovered_wan)} 万元` }));
-  } else if (topicId === "CASH2-T-SPECIAL") {
-    rows = [
-      ...specs.map((s) => ({ id: s.id, name: s.name, type: "专项项目", extra: `结余 ${fmtAmountSmart(s.confirmed_balance_wan)} 万元` })),
-      ...txs.filter((t) => t.account_id === "ACC-SPEC").map((t) => ({ id: t.id, name: `专项支出 ${t.id}`, type: "资金交易", extra: `${fmtAmountSmart(t.amount_wan_cny)} 万元` })),
-    ];
-  } else {
-    rows = [
-      { id: "SEG-A-EPCI-2026Q2", name: "海洋工程总承包", type: "核心业务", extra: "连续三期亏损" },
-      { id: "SEG-B-FAB-2026Q2", name: "陆地建造", type: "核心业务", extra: "未达连续亏损" },
-    ];
-  }
-
-  const shown = rows.filter((r) => {
-    if (ledgerMode === "hit") return hitIds.has(r.id);
-    if (ledgerMode === "uneval") return unevalIds.has(r.id);
-    return true;
-  });
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {chips.map((c) => (
-          <Tag key={c.label} tone="neutral">
-            {c.label}
-          </Tag>
-        ))}
-      </div>
-      <div className="flex gap-1">
-        {(
-          [
-            ["all", "全部对象"],
-            ["hit", "命中对象"],
-            ["uneval", "未评估对象"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setLedgerMode(id)}
-            className={`h-8 px-3 rounded-[6px] border text-[12px] ${ledgerMode === id ? "border-brand bg-tint text-brand" : "border-line text-textsub"}`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <DataTable
-        rows={shown}
-        rowKey={(r) => r.id}
-        onRowClick={(r) => onOpenObject(r.id)}
-        empty={rows.length === 0 ? "当前范围无业务" : "当前筛选没有对象。"}
-        pageSize={8}
-        compactEmpty
-        columns={[
-          { key: "name", title: "对象", minWidth: "220px", render: (r) => r.name },
-          { key: "type", title: "类型", width: "110px", render: (r) => r.type },
-          { key: "extra", title: "核心事实", render: (r) => <span className="num">{r.extra}</span> },
-          {
-            key: "st",
-            title: "评估",
-            width: "88px",
-            render: (r) => (hitIds.has(r.id) ? <Tag tone="amber">命中</Tag> : unevalIds.has(r.id) ? <Tag tone="neutral">未评估</Tag> : <Tag tone="green">可查看</Tag>),
-          },
-        ]}
-      />
-      {topicId === "CASH2-T-PAYMENT" && (
-        <p className="text-[12px] text-textsub">正常付款与命中付款均可打开明细。授信占用不计入借款本金。</p>
-      )}
+    <div className="flex flex-wrap gap-2">
+      {chips.map((c) => (
+        <Tag key={c} tone="neutral">
+          {c}
+        </Tag>
+      ))}
     </div>
   );
 }
@@ -541,7 +435,11 @@ function flattenUnits(
   for (const row of rows) {
     out.push({ org: row, depth });
     if (!expanded.has(row.id)) continue;
-    const kids = childOrgs(row.id).filter((c) => globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id)));
+    const kids = childOrgs(row.id).filter(
+      (c) =>
+        (isManagedUnit(c) || c.node_type === "headquarters") &&
+        (globalOrgIds.has(c.id) || descendantOrgIds(c.id).some((id) => globalOrgIds.has(id))),
+    );
     out.push(...flattenUnits(kids, expanded, globalOrgIds, depth + 1));
   }
   return out;

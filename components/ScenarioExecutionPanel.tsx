@@ -37,6 +37,8 @@ import { isOverdueRectification, rectificationDueDate, statusLabel } from "@/lib
 import { daysBetween, fmtDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
+import { liveSub } from "@/lib/live-config";
+import { isOfficialFpSub } from "@/lib/fp-topics";
 import type { DomainId, MonitoringRow, RiskCase } from "@/lib/types";
 
 /**
@@ -63,6 +65,7 @@ const DETAIL_TITLE: Record<DetailKind, string> = {
 interface ScenarioRow {
   id: string;
   name: string;
+  groupName: string;
   adoption: string;
   rows: MonitoringRow[];
   counts: FiveCounts;
@@ -100,7 +103,7 @@ export default function ScenarioExecutionPanel({
   onOpenObject?: (id: string) => void;
   onOpenScenario?: (id: string, source?: boolean) => void;
 }) {
-  const { filters, risks, canAct } = useDemoStore();
+  const { filters, risks, canAct, catalog } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
   const [search, setSearch] = useState("");
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
@@ -127,10 +130,15 @@ export default function ScenarioExecutionPanel({
   const scenarioRows: ScenarioRow[] = useMemo(() => {
     const ids = configuredScenarios(domain, phaseId ?? null, topicId ?? null);
     const extra = new Set(ids);
-    // 历史遗留事项所属场景即使本期没有评估行也要出现
     summary.openRiskIds.forEach((rid) => {
       const r = risks.find((x) => x.id === rid);
-      r?.scenario_ids.forEach((s) => extra.add(s));
+      r?.scenario_ids.forEach((s) => {
+        if (topicId) {
+          const mapped = liveSub(s)?.topic_id;
+          if (mapped !== topicId) return;
+        }
+        extra.add(s);
+      });
     });
     return [...extra]
       .map((id) => {
@@ -145,9 +153,12 @@ export default function ScenarioExecutionPanel({
         const redOpen = counts.openRiskIds.filter(
           (rid) => risks.find((r) => r.id === rid)?.severity === "red",
         ).length;
+        const parentId = liveSub(id)?.parent_id;
+        const groupName = catalog.groups.find((g) => g.id === parentId)?.name ?? "";
         return {
           id,
           name: scenarioName(id),
+          groupName,
           adoption: scenarioAdoption(id),
           rows,
           counts,
@@ -158,8 +169,10 @@ export default function ScenarioExecutionPanel({
           objectTypes: [...new Set(rows.map((r) => r.object_type))],
         };
       })
-      .filter((r) => r.monitoringActive || r.counts.openRiskIds.length > 0)
+      .filter((r) => r.monitoringActive || r.counts.openRiskIds.length > 0 || isOfficialFpSub(r.id))
       .sort((a, b) => {
+        const g = a.groupName.localeCompare(b.groupName, "zh");
+        if (g !== 0) return g;
         const rank = (r: ScenarioRow) =>
           r.redOpen > 0
             ? 0
@@ -173,14 +186,19 @@ export default function ScenarioExecutionPanel({
         const d = rank(a) - rank(b);
         return d !== 0 ? d : a.id.localeCompare(b.id);
       });
-  }, [domain, phaseId, topicId, baseScope, risks, summary.openRiskIds, orgIds, allowedObjectIds]);
+  }, [domain, phaseId, topicId, baseScope, risks, summary.openRiskIds, orgIds, allowedObjectIds, catalog.groups]);
 
   const visibleScenarioRows = useMemo(
     () =>
       scenarioRows.filter((r) => {
         if (search.trim()) {
           const q = search.trim().toLowerCase();
-          if (!r.id.toLowerCase().includes(q) && !r.name.toLowerCase().includes(q)) return false;
+          if (
+            !r.id.toLowerCase().includes(q) &&
+            !r.name.toLowerCase().includes(q) &&
+            !r.groupName.toLowerCase().includes(q)
+          )
+            return false;
         }
         if (onlyAbnormal && r.counts.openRiskIds.length === 0 && r.counts.hitObjects.length === 0) return false;
         if (statusFilter !== "all" && r.statusLabelText !== statusFilter) return false;
@@ -407,10 +425,22 @@ export default function ScenarioExecutionPanel({
               ? "当前环节尚未配置监管场景。"
               : "当前筛选条件下没有匹配场景，请调整搜索或筛选。"
           }
-          pageSize={8}
+          pageSize={domain === "CASH" || domain === "RIGHTS" ? 40 : 8}
           compactEmpty
           tableClassName="min-w-[1080px]"
           columns={[
+            ...(domain === "CASH" || domain === "RIGHTS"
+              ? [
+                  {
+                    key: "group",
+                    title: "一级场景",
+                    width: "160px" as const,
+                    render: (r: (typeof visibleScenarioRows)[number]) => (
+                      <span className="text-[13px] text-textsub">{r.groupName || "—"}</span>
+                    ),
+                  },
+                ]
+              : []),
             {
               key: "name",
               title: "监管场景",

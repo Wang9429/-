@@ -66,14 +66,25 @@ export function scopedIndicatorLeaves(leaves: LeafMetric[], dataOrgIds: Set<stri
   return leaves.filter((l) => dataOrgIds.has(l.orgId));
 }
 
+/** 报表主体叶子与组织节点重复，树里只保留组织层级，避免看起来没有下钻。 */
+export function isOrgMirrorLeaf(leaf: LeafMetric): boolean {
+  return leaf.objectId.startsWith("FS-");
+}
+
 export function drawerChildOrgs(
   orgId: string,
   initialOrgId: string,
   includeChildren: boolean,
   dataOrgIds: Set<string>,
+  leafOrgIds?: Set<string>,
 ): Organization[] {
   if (!includeChildren && orgId === initialOrgId) return [];
-  return childOrgs(orgId).filter((c) => descendantOrgIds(c.id).some((id) => dataOrgIds.has(id)));
+  return childOrgs(orgId).filter((c) => {
+    const subtree = descendantOrgIds(c.id);
+    if (!subtree.some((id) => dataOrgIds.has(id))) return false;
+    if (!leafOrgIds) return true;
+    return subtree.some((id) => leafOrgIds.has(id));
+  });
 }
 
 /** 祖先仅用于路径展示，不进入可取数节点。 */

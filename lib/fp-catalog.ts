@@ -334,6 +334,49 @@ const FINANCE_INDICATORS: CatalogIndicator[] = [
   },
 ];
 
+const RIGHTS_INDICATORS: CatalogIndicator[] = [
+  {
+    id: "PTY2-I01",
+    domain: "RIGHTS",
+    name: "纳管法人户数",
+    formula_display: "有效范围内法人按统一主体ID去重",
+    definition_note: "境内以统一社会信用代码、境外以登记号与国家地区识别；含海工本体但仅当其在当前范围。分支机构、部门、账户不计户。",
+    status: "published",
+    enabled: true,
+    display_position: "domain_page",
+  },
+  {
+    id: "PTY2-I02",
+    domain: "RIGHTS",
+    name: "控股及实际控制企业",
+    formula_display: "纳管法人中经有效治理依据确认控制的被投企业",
+    definition_note: "含已确认控制的全资及非全资企业，排除海工本体。占比分母为被投法人 N−B。",
+    status: "published",
+    enabled: true,
+    display_position: "domain_page",
+  },
+  {
+    id: "PTY2-I03",
+    domain: "RIGHTS",
+    name: "参股企业",
+    formula_display: "纳管法人中已确认不控制的被投企业",
+    definition_note: "未录入控制结论的不归为参股，单列控制待核实。",
+    status: "published",
+    enabled: true,
+    display_position: "domain_page",
+  },
+  {
+    id: "PTY2-I04",
+    domain: "RIGHTS",
+    name: "在办产权事项",
+    formula_display: "截至日已启动、尚未完成或正式终止的产权事项按事项ID去重",
+    definition_note: "不是规则命中数，也不是整改数。交易、登记、名称资质、治理变动在事项详情分类型展开。",
+    status: "published",
+    enabled: true,
+    display_position: "domain_page",
+  },
+];
+
 const FP_AI_TASKS: CatalogAiTask[] = [
   { id: "CASH-EXPLAIN-PL", name: "资金经营变化解释", enabled: true },
   { id: "CASH-PAY-EVIDENCE", name: "付款依据核对", enabled: true },
@@ -362,7 +405,7 @@ export function buildFpCatalogSlice(): Pick<
     groups,
     subscenarios: subs,
     rules,
-    indicators: FINANCE_INDICATORS,
+    indicators: [...FINANCE_INDICATORS, ...RIGHTS_INDICATORS],
     ai: {
       enabled: true,
       mode_display: "预置分析（未接真实模型）",
