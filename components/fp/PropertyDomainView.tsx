@@ -238,6 +238,7 @@ export default function PropertyDomainView() {
                 setTopicId(t.id);
                 setPhaseId(null);
               }}
+              data-testid={`rights-topic-${t.id}`}
               className={`h-[48px] px-4 rounded-[6px] border text-[13px] ${
                 topicId === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
               }`}

@@ -12,8 +12,6 @@ import {
   SeverityTag,
   SimulatedBadge,
   Tag,
-  inputClass,
-  selectClass,
 } from "@/components/ui";
 import {
   computeFiveCounts,
@@ -396,12 +394,12 @@ export default function ScenarioExecutionPanel({
         )}
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <input
-            className={`${inputClass} w-[220px]`}
+            className="h-9 px-3 rounded-[8px] border border-line bg-surface text-[14px] w-[220px]"
             placeholder="搜索场景名称或ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select className={`${selectClass} w-[160px]`} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <select className="h-9 px-3 rounded-[8px] border border-line bg-surface text-[14px] w-[160px]" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="all">全部监测状态</option>
             {statusOptions.map((s) => (
               <option key={s} value={s}>
@@ -410,7 +408,7 @@ export default function ScenarioExecutionPanel({
             ))}
           </select>
           <select
-            className={`${selectClass} w-[170px]`}
+            className="h-9 px-3 rounded-[8px] border border-line bg-surface text-[14px] w-[170px]"
             value={objectTypeFilter}
             onChange={(e) => setObjectTypeFilter(e.target.value)}
           >

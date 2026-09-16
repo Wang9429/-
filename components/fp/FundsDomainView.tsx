@@ -197,6 +197,7 @@ export default function FundsDomainView() {
               key={t.id}
               type="button"
               onClick={() => setFinTab(t.id)}
+              data-testid={`funds-tab-${t.id}`}
               className={`h-9 px-3 rounded-[6px] border text-[13px] ${
                 finTab === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
               }`}
@@ -367,6 +368,7 @@ export default function FundsDomainView() {
                 key={t.id}
                 type="button"
                 onClick={() => setTopicId(t.id)}
+                data-testid={`funds-topic-${t.id}`}
                 className={`h-[48px] px-4 rounded-[6px] border text-[13px] ${
                   topicId === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
                 }`}
