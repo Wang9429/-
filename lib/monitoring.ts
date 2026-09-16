@@ -257,7 +257,13 @@ export function configuredScenarios(domain: DomainId, phaseId?: string | null, t
   for (const row of coverageRows) {
     if (row.domain !== domain) continue;
     if (phaseId && row.phase_id !== phaseId) continue;
-    if (topicId && row.topic_id && row.topic_id !== topicId) continue;
+    if (topicId) {
+      if (row.topic_id && row.topic_id !== topicId) continue;
+      if (!row.topic_id) {
+        const mapped = live.subs.get(row.scenario_id)?.topic_id;
+        if (mapped !== topicId) continue;
+      }
+    }
     set.add(row.scenario_id);
   }
   if (!phaseId && !topicId) {
