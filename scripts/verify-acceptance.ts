@@ -15,11 +15,14 @@ import { authorizedObjectIds, can, canCaseAction, intersectOrgScope, userById } 
 import { inDateRange } from "../lib/period";
 import { INDEPENDENT_TRIAL_PROJECTS } from "../lib/trial";
 import {
+  applicableMonitorExecutions,
   completedRectificationCases,
+  hitOrgMetric,
   hitOwnerOrgIds,
   inScopeProjectCount,
   managedOrganizations,
   managedOrgCount,
+  orgMonitorStatus,
   orgNodeStats,
   openRectificationCases,
   overdueRectificationCases,
@@ -379,6 +382,9 @@ const bSelf = inScopeProjectCount(new Set(["ORG-B"]), null, PERIOD_START, PERIOD
 check("无三级的单位B含下级与本级项目数相同", bStats.projectCount, bSelf);
 const faCard = overviewDomainCards(overviewScopeHq, () => true).find((c) => c.domain === "FA");
 check("固定资产完成额与执行率同属FA-I06", Boolean(faCard && faCard.metrics.length === 2 && faCard.metrics.every((m) => m.indicatorId === "FA-I06")), true);
+check("固定资产主指标为投资计划执行率", faCard?.metrics[0]?.label, "投资计划执行率");
+check("固定资产辅助字段为投资完成额", faCard?.metrics[1]?.label, "投资完成额");
+check("默认截至日命中单位显示数字", /^\d+$/.test(hitOrgMetric(overviewScopeHq).display), true);
 const histAsOf = "2026-05-15";
 const histScope = {
   ...overviewScopeHq,
@@ -388,7 +394,16 @@ const histScope = {
 const openRect = openRectificationCases(overviewScopeHq);
 check("历史截至日R11仍显示未关闭", openRectificationCases(histScope).some((r) => r.id === "R11"), true);
 check("6月末R11不在未关闭整改", openRect.some((r) => r.id === "R11"), false);
-check("历史截至日不含截至日后评估", validHitRecords(histScope).every((h) => true) && validHitRecords(histScope).length < validHitRecords(overviewScopeHq).length, true);
+check("历史截至日不含截至日后评估", validHitRecords(histScope).length, 0);
+check("历史截至日无适用监测执行", applicableMonitorExecutions(HQ, histScope).evaluations + applicableMonitorExecutions(HQ, histScope).actualRows, 0);
+check("历史截至日监测状态为未开展", orgMonitorStatus(HQ, histScope), "not_started");
+check("历史截至日命中单位显示—", hitOrgMetric(histScope).display, "—");
+check("历史截至日命中单位状态未开展监测", hitOrgMetric(histScope).caption, "未开展监测");
+check("历史截至日不按空命中数组报0", hitOrgMetric(histScope).orgIds.length, 0);
+const histFa = overviewDomainCards(histScope, () => true).find((c) => c.domain === "FA");
+check("历史截至日领域命中为—", histFa?.hitRuleDisplay, "—");
+check("历史截至日领域监测未开展", histFa?.hitMonitorLabel, "未开展监测");
+check("历史截至日单位卡命中为—", orgNodeStats("ORG-A", histScope).hitRuleDisplay, "—");
 check("历史截至日执行率不沿用6月末", computeIndicator(indicator("FA-I06"), HQ, { ...CTX, asOf: histAsOf }).status, "unknown");
 check(
   "待核查不计入未关闭整改",

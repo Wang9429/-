@@ -24,20 +24,24 @@ import type { DomainId, RiskCase } from "@/lib/types";
 import {
   completedRectificationCases,
   hitObjectsByType,
-  hitOwnerOrgIds,
+  hitOrgMetric,
   hitRuleIds,
   includesHeadquarters,
   inScopeProjects,
   managedOrganizations,
   managedOrgCount,
+  monitorStatusLabel,
   openRectificationCases,
+  orgMonitorStatus,
   overdueRectificationCases,
   overviewDomainCards,
   relatedObjects,
+  showsHitCount,
   validHitRecords,
   type DomainCardModel,
   type HitRecord,
   type MetricSlot,
+  type OrgMonitorStatus,
   type OverviewProjectRow,
   type OverviewScope,
 } from "@/lib/overview";
@@ -61,6 +65,16 @@ function metricValueText(slot: MetricSlot): { value: string; unit: string } {
     return { value: fmtAmountSmart(slot.metric.numerator), unit: slot.def.unit === "%" ? "万元" : slot.def.unit };
   }
   return formatMetricParts(slot.def, slot.metric);
+}
+
+function hitListSubtitle(scope: OverviewScope, domain: DomainId | undefined, scopeLabel: string): string {
+  const status = orgMonitorStatus(scope.orgIds, scope, domain);
+  if (!showsHitCount(status)) {
+    return `来源范围：${scopeLabel}｜${monitorStatusLabel[status]}`;
+  }
+  const n = hitRuleIds(scope, domain).length;
+  const extra = status === "partial" ? "｜部分完成" : "";
+  return `来源范围：${scopeLabel}｜命中规则 ${n} 条，不按运行次数累加${extra}`;
 }
 
 function scenariosForRule(ruleId: string): string[] {
@@ -124,7 +138,8 @@ export default function OverviewPage() {
   const openRect = useMemo(() => openRectificationCases(overviewScope), [overviewScope]);
   const overdueRect = useMemo(() => overdueRectificationCases(overviewScope), [overviewScope]);
   const completedRect = useMemo(() => completedRectificationCases(overviewScope), [overviewScope]);
-  const hitOrgs = useMemo(() => hitOwnerOrgIds(overviewScope), [overviewScope]);
+  const hitMetric = useMemo(() => hitOrgMetric(overviewScope), [overviewScope]);
+  const hitOrgs = hitMetric.orgIds;
 
   const domainCards = useMemo(
     () => overviewDomainCards(overviewScope, (d) => canDomain(user, d)),
@@ -206,7 +221,8 @@ export default function OverviewPage() {
 
   const unitTableIds = unitScope?.hitOnly ? hitOrgs : unitRows.map((o) => o.id);
   const hitScope = hitList ? scoped(hitList.orgIds) : overviewScope;
-  const hitRows = hitList ? validHitRecords(hitScope, hitList.domain) : [];
+  const hitListStatus = hitList ? orgMonitorStatus(hitScope.orgIds, hitScope, hitList.domain) : hitMetric.status;
+  const hitRows = hitList && showsHitCount(hitListStatus) ? validHitRecords(hitScope, hitList.domain) : [];
 
   return (
     <div className="space-y-4">
@@ -258,9 +274,9 @@ export default function OverviewPage() {
           />
           <KpiCard
             name="规则命中涉及单位数"
-            value={hitOrgs.length}
-            unit="家"
-            compare="按对象实际归属单位去重"
+            value={hitMetric.display}
+            unit={hitMetric.display === "—" ? undefined : "家"}
+            compare={hitMetric.caption}
             icon={<IconClipboard size={20} />}
             scopeLabel={scopeLabel}
             onOpen={() => {
@@ -467,14 +483,22 @@ export default function OverviewPage() {
           restoreScroll();
         }}
         title={unitScope?.title ?? "单位清单"}
-        subtitle={`来源范围：${scopeLabel}｜共 ${unitTableIds.length} 家`}
+        subtitle={
+          unitScope?.hitOnly && !showsHitCount(hitMetric.status)
+            ? `来源范围：${scopeLabel}｜${hitMetric.caption}`
+            : `来源范围：${scopeLabel}｜共 ${unitTableIds.length} 家`
+        }
         width={720}
       >
         <DataTable
           rows={unitTableIds.map((id) => ({ id }))}
           rowKey={(r) => r.id}
           pageSize={12}
-          empty="当前范围没有单位。"
+          empty={
+            unitScope?.hitOnly && !showsHitCount(hitMetric.status)
+              ? `当前范围、期间及截至日内，没有适用的监测执行记录：${hitMetric.caption}。`
+              : "当前范围没有单位。"
+          }
           compactEmpty
           columns={[
             { key: "name", title: "单位", render: (r) => orgName(r.id) },
@@ -654,10 +678,15 @@ export default function OverviewPage() {
           restoreScroll();
         }}
         title={hitList?.title ?? "监测结果"}
-        subtitle={`来源范围：${scopeLabel}｜命中规则 ${hitRuleIds(hitScope, hitList?.domain).length} 条，不按运行次数累加`}
+        subtitle={hitListSubtitle(hitScope, hitList?.domain, scopeLabel)}
         width={920}
       >
-        <HitResultPanel hits={hitRows} onOpenObject={setObjectId} onOpenScenario={setScenarioId} />
+        <HitResultPanel
+          hits={hitRows}
+          monitorStatus={hitListStatus}
+          onOpenObject={setObjectId}
+          onOpenScenario={setScenarioId}
+        />
       </Modal>
 
       <IndicatorDrawer
@@ -684,22 +713,43 @@ export default function OverviewPage() {
 
 function HitResultPanel({
   hits,
+  monitorStatus,
   onOpenObject,
   onOpenScenario,
 }: {
   hits: HitRecord[];
+  monitorStatus: OrgMonitorStatus;
   onOpenObject: (id: string) => void;
   onOpenScenario: (id: string) => void;
 }) {
   const byType = hitObjectsByType(hits);
   const rules = [...new Set(hits.map((h) => h.ruleId))];
   const scenarios = [...new Set(hits.flatMap((h) => scenariosForRule(h.ruleId)))];
+  const emptyNote =
+    monitorStatus === "not_started"
+      ? "当前范围、期间及截至日内，没有适用的监测执行记录。"
+      : monitorStatus === "unevaluated"
+        ? "已有监测对象，但尚未形成评估结论。"
+        : monitorStatus === "uncovered"
+          ? "当前范围存在明确的数据未覆盖记录。"
+          : monitorStatus === "pending"
+            ? "适用性尚未确认，不计入已开展监测。"
+            : monitorStatus === "no_business"
+              ? "当前范围无业务。"
+              : "已运行监测，没有命中。";
   return (
     <div className="space-y-4">
+      {!showsHitCount(monitorStatus) && (
+        <p className="text-[13px] text-textsub">
+          {emptyNote}状态：{monitorStatusLabel[monitorStatus]}。
+        </p>
+      )}
       <div>
         <h3 className="text-[14px] font-medium mb-2">命中规则</h3>
         {rules.length === 0 ? (
-          <p className="text-[13px] text-textsub">当前范围没有有效规则命中。</p>
+          <p className="text-[13px] text-textsub">
+            {showsHitCount(monitorStatus) ? "已运行监测，没有命中。" : emptyNote}
+          </p>
         ) : (
           <ul className="text-[13px] space-y-1">
             {rules.map((id) => (
@@ -794,7 +844,6 @@ function DomainOverviewCard({
         {card.metrics.map((slot, i) => {
           const parts = metricValueText(slot);
           const clickable = slot.status === "ok" && slot.def;
-          const pairedNumerator = slot.display === "numerator" && card.metrics.some((s) => s.indicatorId === slot.indicatorId && s.display === "value");
           const inner = (
             <>
               <div className="text-[13px] text-textsub leading-5">{slot.label}</div>
@@ -806,9 +855,6 @@ function DomainOverviewCard({
                   <span className="text-[13px] text-textsub whitespace-nowrap">{parts.unit}</span>
                 )}
               </div>
-              {pairedNumerator && (
-                <div className="text-[12px] text-textsub mt-1 leading-4">完成额为执行率分子</div>
-              )}
               {slot.status !== "ok" && (
                 <div className="text-[12px] text-textsub mt-1 leading-4">{slot.emptyReason ?? "—"}</div>
               )}
@@ -836,7 +882,9 @@ function DomainOverviewCard({
       </div>
       <div className="reg-domain-exceptions">
         <button type="button" className="text-[12px] rounded-full px-2 py-0.5 border border-line whitespace-nowrap" onClick={onOpenHits}>
-          命中规则 {card.hitRuleCount} 条
+          {card.hitRuleDisplay === "—"
+            ? `命中规则 —｜${card.hitMonitorLabel}`
+            : `命中规则 ${card.hitRuleDisplay} 条${card.hitMonitorStatus === "partial" ? "｜部分完成" : ""}`}
         </button>
         <button
           type="button"

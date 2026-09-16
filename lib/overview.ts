@@ -19,7 +19,14 @@ import type { CaseAction, DomainId, Organization, RiskCase, RuleEvaluation } fro
 
 export const OVERVIEW_DOMAIN_ORDER: DomainId[] = ["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"];
 
-export type OrgMonitorStatus = "no_business" | "pending" | "not_started" | "partial" | "complete";
+export type OrgMonitorStatus =
+  | "no_business"
+  | "pending"
+  | "not_started"
+  | "unevaluated"
+  | "uncovered"
+  | "partial"
+  | "complete";
 
 export interface OverviewScope {
   orgIds: Set<string>;
@@ -322,13 +329,48 @@ function hasBusinessObjects(
   return false;
 }
 
-export function orgMonitorStatus(orgIds: Set<string>, scope: OverviewScope): OrgMonitorStatus {
+function domainMatches(d: DomainId | null, domain?: DomainId): boolean {
+  if (!domain) return true;
+  if (!d) return domain === "ENG";
+  return d === domain;
+}
+
+/** 当前授权∩组织∩期间∩截至日内的适用监测执行（评估或已实际覆盖），不含覆盖规划候选。 */
+export function applicableMonitorExecutions(
+  orgIds: Set<string>,
+  scope: OverviewScope,
+  domain?: DomainId,
+): { coverageEvaluated: number; evaluations: number; actualRows: number } {
+  const rows = coverageRows.filter((row) => {
+    if (isCoverageCandidate(row)) return false;
+    if (!orgIds.has(row.owner_org_id)) return false;
+    if (row.window_end < scope.periodStart || row.window_end > scope.periodEnd) return false;
+    if (row.snapshot_date > scope.asOf) return false;
+    if (!objectAllowedInScope(row.monitoring_object_id, scope.allowedObjectIds)) return false;
+    if (domain && row.domain !== domain) return false;
+    return true;
+  });
+  const evals = seed.rule_evaluations.filter((e) => {
+    if (!evalInWindow(e, scope)) return false;
+    const orgId = ownerOfObject(e.subject_object_id);
+    if (!orgId || !orgIds.has(orgId) || !objectAllowedInScope(e.subject_object_id, scope.allowedObjectIds)) return false;
+    return domainMatches(domainFromRule(e.rule_id), domain);
+  });
+  return {
+    coverageEvaluated: rows.filter((r) => r.status === "evaluated_hit" || r.status === "evaluated_clear").length,
+    evaluations: evals.length,
+    actualRows: rows.length,
+  };
+}
+
+export function orgMonitorStatus(orgIds: Set<string>, scope: OverviewScope, domain?: DomainId): OrgMonitorStatus {
   if (!hasBusinessObjects(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd, scope.asOf)) return "no_business";
   const rows = coverageRows.filter((row) => {
     if (!orgIds.has(row.owner_org_id)) return false;
     if (row.window_end < scope.periodStart || row.window_end > scope.periodEnd) return false;
     if (row.snapshot_date > scope.asOf) return false;
     if (!objectAllowedInScope(row.monitoring_object_id, scope.allowedObjectIds)) return false;
+    if (domain && row.domain !== domain) return false;
     return true;
   });
   const candidates = rows.filter(isCoverageCandidate);
@@ -340,9 +382,19 @@ export function orgMonitorStatus(orgIds: Set<string>, scope: OverviewScope): Org
   const evals = seed.rule_evaluations.filter((e) => {
     if (!evalInWindow(e, scope)) return false;
     const orgId = ownerOfObject(e.subject_object_id);
-    return Boolean(orgId && orgIds.has(orgId) && objectAllowedInScope(e.subject_object_id, scope.allowedObjectIds));
+    if (!orgId || !orgIds.has(orgId) || !objectAllowedInScope(e.subject_object_id, scope.allowedObjectIds)) return false;
+    return domainMatches(domainFromRule(e.rule_id), domain);
   });
   if (evaluated.length === 0 && evals.length === 0) {
+    const insufficient = actual.filter((r) => r.status === "data_insufficient");
+    const notDue = actual.filter((r) => r.status === "not_due");
+    if (insufficient.length > 0) {
+      const uncovered = insufficient.filter(
+        (r) => r.missing_data?.length || /未覆盖|未接入|无数据/.test(`${r.note ?? ""}${r.rule_coverage ?? ""}`),
+      );
+      return uncovered.length === insufficient.length ? "uncovered" : "unevaluated";
+    }
+    if (notDue.length > 0) return "unevaluated";
     if (candidates.length > 0) return "pending";
     return "not_started";
   }
@@ -361,9 +413,42 @@ export const monitorStatusLabel: Record<OrgMonitorStatus, string> = {
   no_business: "无业务",
   pending: "待确认",
   not_started: "未开展监测",
+  unevaluated: "未评估",
+  uncovered: "数据未覆盖",
   partial: "部分完成",
   complete: "已完成",
 };
+
+/** 仅已开展监测（含部分完成）才显示命中数字；空命中数组不得当成已监测且为 0。 */
+export function showsHitCount(status: OrgMonitorStatus): boolean {
+  return status === "complete" || status === "partial";
+}
+
+export function hitCountDisplay(status: OrgMonitorStatus, count: number): string {
+  return showsHitCount(status) ? String(count) : "—";
+}
+
+export function hitStatusCaption(status: OrgMonitorStatus, completeCaption = "按对象实际归属单位去重"): string {
+  return status === "complete" ? completeCaption : monitorStatusLabel[status];
+}
+
+export interface HitOrgMetric {
+  orgIds: string[];
+  status: OrgMonitorStatus;
+  display: string;
+  caption: string;
+}
+
+export function hitOrgMetric(scope: OverviewScope): HitOrgMetric {
+  const status = orgMonitorStatus(scope.orgIds, scope);
+  const orgIds = hitOwnerOrgIds(scope);
+  return {
+    orgIds: showsHitCount(status) ? orgIds : [],
+    status,
+    display: hitCountDisplay(status, orgIds.length),
+    caption: hitStatusCaption(status),
+  };
+}
 
 export interface OrgNodeStats {
   orgId: string;
@@ -384,14 +469,13 @@ function statsForOrgSet(orgId: string, orgIds: Set<string>, scope: OverviewScope
   const nodeScope: OverviewScope = { ...scope, orgIds };
   const monitorStatus = orgMonitorStatus(orgIds, scope);
   const hitRuleCount = hitRuleIds(nodeScope).length;
-  const showHitNumber = monitorStatus === "complete" || monitorStatus === "partial" || hitRuleCount > 0;
   return {
     orgId,
     name: org?.name ?? orgId,
     unitType: org ? orgUnitTypeLabel(org) : "单位",
     projectCount: inScopeProjectCount(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd, scope.asOf),
-    hitRuleCount,
-    hitRuleDisplay: showHitNumber ? String(hitRuleCount) : "—",
+    hitRuleCount: showsHitCount(monitorStatus) ? hitRuleCount : 0,
+    hitRuleDisplay: hitCountDisplay(monitorStatus, hitRuleCount),
     openRectificationCount: openRectificationCases(nodeScope).length,
     overdueRectificationCount: overdueRectificationCases(nodeScope).length,
     monitorStatus,
@@ -443,6 +527,9 @@ export interface DomainCardModel {
   domain: DomainId;
   metrics: MetricSlot[];
   hitRuleCount: number;
+  hitRuleDisplay: string;
+  hitMonitorStatus: OrgMonitorStatus;
+  hitMonitorLabel: string;
   hitRecords: HitRecord[];
   openRectificationCount: number;
   openRectificationIds: string[];
@@ -501,9 +588,9 @@ function eqHomepageSlots(orgIds: Set<string>, ctx: IndicatorContext): MetricSlot
 const DOMAIN_METRIC_BUILDERS: Record<DomainId, (orgIds: Set<string>, ctx: IndicatorContext) => MetricSlot[]> = {
   FA: (orgIds, ctx) =>
     [
-      // 完成额与执行率同属 FA-I06：完成额是分子，不是独立首页指标。停用 FA-I06 时两项一起隐藏。
-      metricSlot("FA-I06", "投资完成额", "numerator", orgIds, ctx),
+      // 完成额与执行率同属 FA-I06：执行率为主指标，完成额为辅助业务字段（分子）。停用 FA-I06 时两项一起隐藏。
       metricSlot("FA-I06", "投资计划执行率", "value", orgIds, ctx),
+      metricSlot("FA-I06", "投资完成额", "numerator", orgIds, ctx),
     ].filter((s) => s.status !== "disabled" && s.status !== "missing"),
   EQ: eqHomepageSlots,
   INTL: (orgIds, ctx) =>
@@ -533,11 +620,16 @@ export function overviewDomainCards(scope: OverviewScope, canDomain: (d: DomainI
     const hits = validHitRecords(scope, domain);
     const open = openRectificationCases(scope, domain);
     const overdue = overdueRectificationCases(scope, domain);
+    const hitMonitorStatus = orgMonitorStatus(scope.orgIds, scope, domain);
+    const hitRuleCount = [...new Set(hits.map((h) => h.ruleId))].length;
     return {
       domain,
       metrics: DOMAIN_METRIC_BUILDERS[domain](scope.orgIds, scope.ctx),
-      hitRuleCount: [...new Set(hits.map((h) => h.ruleId))].length,
-      hitRecords: hits,
+      hitRuleCount: showsHitCount(hitMonitorStatus) ? hitRuleCount : 0,
+      hitRuleDisplay: hitCountDisplay(hitMonitorStatus, hitRuleCount),
+      hitMonitorStatus,
+      hitMonitorLabel: monitorStatusLabel[hitMonitorStatus],
+      hitRecords: showsHitCount(hitMonitorStatus) ? hits : [],
       openRectificationCount: open.length,
       openRectificationIds: open.map((r) => r.id),
       overdueRectificationCount: overdue.length,

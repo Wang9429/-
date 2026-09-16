@@ -632,6 +632,18 @@ function IndicatorDrawerBody({
                       </span>
                     ),
                   },
+                  ...(indicator.id === "FA-I06"
+                    ? [
+                        {
+                          label: "首页展示关系",
+                          value: (
+                            <span className="text-[13px]">
+                              投资完成额是本指标分子，与执行率共用启用和首页展示开关，不是独立首页指标。
+                            </span>
+                          ),
+                        },
+                      ]
+                    : []),
                 ]}
               />
               {selectedLeaf && (
@@ -720,6 +732,18 @@ function TraceModal({
               ),
             },
             { label: "口径说明", value: <span className="text-[13px]">{indicator.caliber}</span> },
+            ...(indicator.id === "FA-I06"
+              ? [
+                  {
+                    label: "首页展示关系",
+                    value: (
+                      <span className="text-[13px]">
+                        投资完成额是本指标分子，与执行率共用启用和首页展示开关，不是独立首页指标。
+                      </span>
+                    ),
+                  },
+                ]
+              : []),
             { label: "数据来源", value: <span className="text-[13px]">{indicator.sourceNote}</span> },
             { label: "数据性质", value: <Tag tone="neutral">模拟数据</Tag> },
           ]}

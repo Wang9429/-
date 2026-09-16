@@ -169,8 +169,8 @@ try {
   log("重新启用FA-I06", await clickPagedAction("FA-I06", "启用"));
   await gotoOverview();
   log(
-    "启用后完成额与执行率恢复",
-    (await textHas("投资计划执行率")) && (await textHas("投资完成额")) && (await textHas("完成额为执行率分子")),
+    "启用后完成额与执行率恢复且首页无分子说明",
+    (await textHas("投资计划执行率")) && (await textHas("投资完成额")) && !(await textHas("完成额为执行率分子")),
   );
   shots.push(await shot("wrap_fa_i06_enabled"));
 
@@ -275,8 +275,14 @@ try {
   const histOverlay = await page.evaluate(() => document.querySelectorAll('[role="dialog"]').length);
   log("切换截至日关闭旧清单", histOverlay === 0);
   const histKpi = parseRect((await kpis()).join(" "));
+  const histHitCard = ((await kpis()).find((t) => t.includes("规则命中涉及单位")) || "");
   const faUncovered = (await textHas("该截至日数据未覆盖")) || (await textHas("数据未覆盖"));
   log("历史截至日指标不沿用6月末", faUncovered && !(await textHas("84.555")));
+  log(
+    "历史截至日命中单位为未开展监测",
+    histHitCard.includes("未开展监测") && histHitCard.includes("—") && !/\d+\s*家/.test(histHitCard),
+    histHitCard,
+  );
   await clickReturn("kpi-open-rect");
   await new Promise((r) => setTimeout(r, 400));
   const histRect = await topDialog();
