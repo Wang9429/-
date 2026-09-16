@@ -67,3 +67,7 @@ export function orgUnitTypeLabel(o: Organization): string {
 export function orgLevelLabel(o: Organization): string {
   return orgUnitTypeLabel(o);
 }
+
+export function orgFilterCaption(orgId: string, includeChildren: boolean): string {
+  return `${orgName(orgId)}${includeChildren ? "（含下级）" : "（仅本级）"}`;
+}

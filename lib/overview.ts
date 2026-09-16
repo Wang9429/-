@@ -15,7 +15,7 @@ import {
   isRectifiedClosedInPeriod,
   riskAtAsOf,
 } from "./risks";
-import type { DomainId, Organization, RiskCase, RuleEvaluation } from "./types";
+import type { CaseAction, DomainId, Organization, RiskCase, RuleEvaluation } from "./types";
 
 export const OVERVIEW_DOMAIN_ORDER: DomainId[] = ["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"];
 
@@ -26,6 +26,7 @@ export interface OverviewScope {
   authorizedOrgIds: Set<string>;
   allowedObjectIds: string[] | null;
   risks: RiskCase[];
+  actions?: CaseAction[];
   asOf: string;
   periodStart: string;
   periodEnd: string;
@@ -85,12 +86,15 @@ export function inScopeProjects(
   allowedObjectIds: string[] | null,
   periodStart = "2026-01-01",
   periodEnd = "2026-06-30",
+  asOf?: string,
 ): OverviewProjectRow[] {
   const rows: OverviewProjectRow[] = [];
   const seen = new Set<string>();
+  const effectiveEnd = asOf && asOf < periodEnd ? asOf : periodEnd;
   const push = (row: OverviewProjectRow, start?: string, end?: string | null) => {
     if (!orgIds.has(row.orgId) || !objectAllowedInScope(row.id, allowedObjectIds) || seen.has(row.id)) return;
-    if (!overlapsPeriod(start, end, periodStart, periodEnd)) return;
+    if (!overlapsPeriod(start, end, periodStart, effectiveEnd)) return;
+    if (asOf && (start ?? "1900-01-01") > asOf) return;
     seen.add(row.id);
     rows.push(row);
   };
@@ -150,8 +154,9 @@ export function inScopeProjectCount(
   allowedObjectIds: string[] | null,
   periodStart?: string,
   periodEnd?: string,
+  asOf?: string,
 ): number {
-  return inScopeProjects(orgIds, allowedObjectIds, periodStart, periodEnd).length;
+  return inScopeProjects(orgIds, allowedObjectIds, periodStart, periodEnd, asOf).length;
 }
 
 export function inScopeAssets(orgIds: Set<string>, allowedObjectIds: string[] | null) {
@@ -262,7 +267,10 @@ export function hitRuleIds(scope: OverviewScope, domain?: DomainId): string[] {
   return [...new Set(validHitRecords(scope, domain).map((h) => h.ruleId))].sort();
 }
 
-/** 规则命中涉及单位：按命中对象的实际归属单位去重，不把上级汇总节点重复计入。 */
+/**
+ * 规则命中涉及单位：按命中对象的实际归属单位去重。
+ * 不把仅因下级命中而出现的祖先汇总节点重复计入；总部或二级单位若有直接归属的命中对象，仍计入。
+ */
 export function hitOwnerOrgIds(scope: OverviewScope): string[] {
   return [...new Set(validHitRecords(scope).map((h) => h.orgId))].sort();
 }
@@ -270,7 +278,7 @@ export function hitOwnerOrgIds(scope: OverviewScope): string[] {
 export function scopedRisksAtAsOf(scope: OverviewScope): RiskCase[] {
   const out: RiskCase[] = [];
   for (const r of scope.risks) {
-    const snap = riskAtAsOf(r, scope.asOf);
+    const snap = riskAtAsOf(r, scope.asOf, scope.actions);
     if (!snap) continue;
     if (!scope.orgIds.has(snap.owner_org_id)) continue;
     if (!objectAllowedInScope(snap.primary_object_id, scope.allowedObjectIds)) continue;
@@ -281,7 +289,7 @@ export function scopedRisksAtAsOf(scope: OverviewScope): RiskCase[] {
 
 export function openRectificationCases(scope: OverviewScope, domain?: DomainId): RiskCase[] {
   return scopedRisksAtAsOf(scope).filter((r) => {
-    if (!isOpenRectificationAt(r, scope.asOf)) return false;
+    if (!isOpenRectificationAt(r, scope.asOf, scope.actions)) return false;
     if (domain && !r.domains.includes(domain)) return false;
     return true;
   });
@@ -299,8 +307,14 @@ export function overdueRectificationCases(scope: OverviewScope, domain?: DomainI
   return openRectificationCases(scope, domain).filter((r) => isOverdueRectification(r, scope.asOf));
 }
 
-function hasBusinessObjects(orgIds: Set<string>, allowedObjectIds: string[] | null, periodStart: string, periodEnd: string): boolean {
-  if (inScopeProjects(orgIds, allowedObjectIds, periodStart, periodEnd).length > 0) return true;
+function hasBusinessObjects(
+  orgIds: Set<string>,
+  allowedObjectIds: string[] | null,
+  periodStart: string,
+  periodEnd: string,
+  asOf?: string,
+): boolean {
+  if (inScopeProjects(orgIds, allowedObjectIds, periodStart, periodEnd, asOf).length > 0) return true;
   if (inScopeAssets(orgIds, allowedObjectIds).length > 0) return true;
   if (seed.accounts.some((a) => orgIds.has(a.owner_org_id) && objectAllowedInScope(a.id, allowedObjectIds))) return true;
   if (seed.property_matters.some((m) => orgIds.has(m.owner_org_id) && objectAllowedInScope(m.id, allowedObjectIds)))
@@ -309,7 +323,7 @@ function hasBusinessObjects(orgIds: Set<string>, allowedObjectIds: string[] | nu
 }
 
 export function orgMonitorStatus(orgIds: Set<string>, scope: OverviewScope): OrgMonitorStatus {
-  if (!hasBusinessObjects(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd)) return "no_business";
+  if (!hasBusinessObjects(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd, scope.asOf)) return "no_business";
   const rows = coverageRows.filter((row) => {
     if (!orgIds.has(row.owner_org_id)) return false;
     if (row.window_end < scope.periodStart || row.window_end > scope.periodEnd) return false;
@@ -333,7 +347,7 @@ export function orgMonitorStatus(orgIds: Set<string>, scope: OverviewScope): Org
     return "not_started";
   }
   if (required.length > 0 && evaluated.length < required.length) return "partial";
-  const projectIds = inScopeProjects(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd).map((p) => p.id);
+  const projectIds = inScopeProjects(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd, scope.asOf).map((p) => p.id);
   const monitoredObjects = new Set([
     ...evaluated.map((r) => r.monitoring_object_id),
     ...evals.map((e) => e.subject_object_id),
@@ -375,7 +389,7 @@ function statsForOrgSet(orgId: string, orgIds: Set<string>, scope: OverviewScope
     orgId,
     name: org?.name ?? orgId,
     unitType: org ? orgUnitTypeLabel(org) : "单位",
-    projectCount: inScopeProjectCount(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd),
+    projectCount: inScopeProjectCount(orgIds, scope.allowedObjectIds, scope.periodStart, scope.periodEnd, scope.asOf),
     hitRuleCount,
     hitRuleDisplay: showHitNumber ? String(hitRuleCount) : "—",
     openRectificationCount: openRectificationCases(nodeScope).length,
@@ -487,6 +501,7 @@ function eqHomepageSlots(orgIds: Set<string>, ctx: IndicatorContext): MetricSlot
 const DOMAIN_METRIC_BUILDERS: Record<DomainId, (orgIds: Set<string>, ctx: IndicatorContext) => MetricSlot[]> = {
   FA: (orgIds, ctx) =>
     [
+      // 完成额与执行率同属 FA-I06：完成额是分子，不是独立首页指标。停用 FA-I06 时两项一起隐藏。
       metricSlot("FA-I06", "投资完成额", "numerator", orgIds, ctx),
       metricSlot("FA-I06", "投资计划执行率", "value", orgIds, ctx),
     ].filter((s) => s.status !== "disabled" && s.status !== "missing"),
@@ -531,8 +546,14 @@ export function overviewDomainCards(scope: OverviewScope, canDomain: (d: DomainI
   });
 }
 
-export function relatedObjects(orgIds: Set<string>, allowedObjectIds: string[] | null, periodStart?: string, periodEnd?: string) {
-  const projects = inScopeProjects(orgIds, allowedObjectIds, periodStart, periodEnd);
+export function relatedObjects(
+  orgIds: Set<string>,
+  allowedObjectIds: string[] | null,
+  periodStart?: string,
+  periodEnd?: string,
+  asOf?: string,
+) {
+  const projects = inScopeProjects(orgIds, allowedObjectIds, periodStart, periodEnd, asOf);
   const assets = inScopeAssets(orgIds, allowedObjectIds).map((a) => ({
     id: a.id,
     name: a.name,

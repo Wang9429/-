@@ -23,7 +23,8 @@ export function periodFact(
   caliber: FactCaliber,
 ): { ok: boolean; label: string; reason?: string } {
   if (caliber === "dated") {
-    return { ok: true, label: `期间发生额（${ctx.periodStart}～${ctx.periodEnd}）` };
+    const end = ctx.asOf < ctx.periodEnd ? ctx.asOf : ctx.periodEnd;
+    return { ok: true, label: `期间发生额（${ctx.periodStart}～${end}，不晚于截至日）` };
   }
   if (caliber === "balance") {
     if (ctx.asOf !== SNAPSHOT_PERIOD.asOf) {
@@ -33,17 +34,19 @@ export function periodFact(
   }
   if (caliber === "ytd") {
     if (ctx.asOf !== SNAPSHOT_PERIOD.asOf || !ctx.periodEnd.startsWith("2026")) {
-      return { ok: false, label: "年度累计", reason: "该期间数据未覆盖" };
+      return { ok: false, label: "年度累计", reason: "该期间或截至日数据未覆盖" };
     }
     return { ok: true, label: `年度累计（2026-01-01～${ctx.asOf}）` };
   }
   const match =
-    ctx.periodStart === SNAPSHOT_PERIOD.start && ctx.periodEnd === SNAPSHOT_PERIOD.end;
+    ctx.periodStart === SNAPSHOT_PERIOD.start &&
+    ctx.periodEnd === SNAPSHOT_PERIOD.end &&
+    ctx.asOf === SNAPSHOT_PERIOD.asOf;
   if (!match) {
     return {
       ok: false,
-      label: `期间发生额（${ctx.periodStart}～${ctx.periodEnd}）`,
-      reason: "该期间数据未覆盖",
+      label: `期间发生额（${ctx.periodStart}～${ctx.periodEnd}，截至 ${ctx.asOf}）`,
+      reason: ctx.asOf !== SNAPSHOT_PERIOD.asOf ? "该截至日数据未覆盖" : "该期间数据未覆盖",
     };
   }
   return { ok: true, label: `期间发生额（${ctx.periodStart}～${ctx.periodEnd}）` };

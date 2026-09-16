@@ -20,10 +20,13 @@ import {
   inScopeProjectCount,
   managedOrganizations,
   managedOrgCount,
+  orgNodeStats,
   openRectificationCases,
   overdueRectificationCases,
+  overviewDomainCards,
   overviewIndicatorEnabled,
   overviewIndicatorOnHomepage,
+  validHitRecords,
 } from "../lib/overview";
 import { isManagedUnit } from "../lib/org";
 
@@ -362,9 +365,31 @@ check("单位A含下级纳管单位（不含总部）", managedOrgCount(orgA), 3
 check("单位C纳管单位", managedOrgCount(orgScope("ORG-C", true)), 1);
 check("单位C纳管项目", inScopeProjectCount(orgScope("ORG-C", true), null, PERIOD_START, PERIOD_END), 0);
 const hitOrgs = hitOwnerOrgIds(overviewScopeHq);
-check("命中涉及单位不含总部祖先", hitOrgs.includes("ORG-HQ"), false);
-check("命中涉及单位不含仅因下级命中的单位A", hitOrgs.includes("ORG-A"), false);
+check("命中涉及单位不含无直接对象的总部", hitOrgs.includes("ORG-HQ"), false);
+check("命中涉及单位含单位A直接归属对象", hitOrgs.includes("ORG-A"), true);
+check("命中涉及单位仍含实际归属A1", hitOrgs.includes("ORG-A1"), true);
+const aStats = orgNodeStats("ORG-A", overviewScopeHq);
+const aSelfProjects = inScopeProjectCount(new Set(["ORG-A"]), null, PERIOD_START, PERIOD_END, AS_OF);
+check("单位A含下级项目数大于本级", aStats.projectCount > aSelfProjects, true);
+const a1Stats = orgNodeStats("ORG-A1", overviewScopeHq);
+const a1Self = inScopeProjectCount(new Set(["ORG-A1"]), null, PERIOD_START, PERIOD_END, AS_OF);
+check("末级A1含下级与本级项目数相同", a1Stats.projectCount, a1Self);
+const bStats = orgNodeStats("ORG-B", overviewScopeHq);
+const bSelf = inScopeProjectCount(new Set(["ORG-B"]), null, PERIOD_START, PERIOD_END, AS_OF);
+check("无三级的单位B含下级与本级项目数相同", bStats.projectCount, bSelf);
+const faCard = overviewDomainCards(overviewScopeHq, () => true).find((c) => c.domain === "FA");
+check("固定资产完成额与执行率同属FA-I06", Boolean(faCard && faCard.metrics.length === 2 && faCard.metrics.every((m) => m.indicatorId === "FA-I06")), true);
+const histAsOf = "2026-05-15";
+const histScope = {
+  ...overviewScopeHq,
+  asOf: histAsOf,
+  ctx: { ...CTX, asOf: histAsOf },
+};
 const openRect = openRectificationCases(overviewScopeHq);
+check("历史截至日R11仍显示未关闭", openRectificationCases(histScope).some((r) => r.id === "R11"), true);
+check("6月末R11不在未关闭整改", openRect.some((r) => r.id === "R11"), false);
+check("历史截至日不含截至日后评估", validHitRecords(histScope).every((h) => true) && validHitRecords(histScope).length < validHitRecords(overviewScopeHq).length, true);
+check("历史截至日执行率不沿用6月末", computeIndicator(indicator("FA-I06"), HQ, { ...CTX, asOf: histAsOf }).status, "unknown");
 check(
   "待核查不计入未关闭整改",
   openRect.every((r) => r.status !== "pending_review" && r.status !== "investigating"),

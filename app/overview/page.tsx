@@ -13,7 +13,7 @@ import { Card, DataTable, KpiCard, Modal, Notice } from "@/components/ui";
 import { IconAlert, IconClipboard, IconLayers, IconOverview, DOMAIN_ICONS } from "@/components/icons";
 import { DOMAIN_META, objectTypeLabel, scenarioName, seed } from "@/lib/seed";
 import { INDICATORS, indicatorById } from "@/lib/metrics";
-import { orgName, orgUnitTypeLabel, orgById, ROOT_ORG_ID } from "@/lib/org";
+import { orgName, orgUnitTypeLabel, orgById, orgFilterCaption, ROOT_ORG_ID } from "@/lib/org";
 import { authorizedObjectIds, authorizedOrgIds, can, canDomain, intersectOrgScope, riskVisible } from "@/lib/config";
 import { liveRuleLabel } from "@/lib/live-config";
 import { findObject } from "@/lib/objects";
@@ -49,7 +49,7 @@ type CaseQuery =
   | { title: string; mode: "ids"; ids: string[] };
 
 type ObjectQuery =
-  | { title: string; mode: "projects"; orgIds: Set<string> }
+  | { title: string; mode: "projects"; orgIds: Set<string>; focusOrgId: string; includeChildren: boolean }
   | { title: string; mode: "related"; orgIds: Set<string> }
   | { title: string; mode: "ids"; ids: string[] };
 
@@ -70,7 +70,7 @@ function scenariosForRule(ruleId: string): string[] {
 }
 
 export default function OverviewPage() {
-  const { filters, risks, setFilters, user, catalog } = useDemoStore();
+  const { filters, risks, actions, setFilters, user, catalog } = useDemoStore();
   const [riskId, setRiskId] = useState<string | null>(null);
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
   const [objectId, setObjectId] = useState<string | null>(null);
@@ -107,18 +107,19 @@ export default function OverviewPage() {
       authorizedOrgIds: authOrgs,
       allowedObjectIds: ctx.allowedObjectIds ?? null,
       risks: visibleRisks,
+      actions,
       asOf: filters.asOf,
       periodStart: filters.periodStart,
       periodEnd: filters.periodEnd,
       ctx,
     }),
-    [orgIds, authOrgs, ctx, visibleRisks, filters.asOf, filters.periodStart, filters.periodEnd],
+    [orgIds, authOrgs, ctx, visibleRisks, actions, filters.asOf, filters.periodStart, filters.periodEnd],
   );
 
   const unitRows = useMemo(() => managedOrganizations(orgIds), [orgIds]);
   const projectRows = useMemo(
-    () => inScopeProjects(orgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd),
-    [orgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd],
+    () => inScopeProjects(orgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd, filters.asOf),
+    [orgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd, filters.asOf],
   );
   const openRect = useMemo(() => openRectificationCases(overviewScope), [overviewScope]);
   const overdueRect = useMemo(() => overdueRectificationCases(overviewScope), [overviewScope]);
@@ -166,9 +167,21 @@ export default function OverviewPage() {
   const objectOrgIds = objectScope && "orgIds" in objectScope ? objectScope.orgIds : orgIds;
   const rawObjectRows =
     objectScope?.mode === "projects"
-      ? inScopeProjects(objectOrgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd)
+      ? inScopeProjects(
+          objectOrgIds,
+          overviewScope.allowedObjectIds,
+          filters.periodStart,
+          filters.periodEnd,
+          filters.asOf,
+        )
       : objectScope?.mode === "related"
-        ? relatedObjects(objectOrgIds, overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd)
+        ? relatedObjects(
+            objectOrgIds,
+            overviewScope.allowedObjectIds,
+            filters.periodStart,
+            filters.periodEnd,
+            filters.asOf,
+          )
         : objectScope?.mode === "ids"
           ? objectScope.ids.map((id) => {
               const obj = findObject(id);
@@ -233,7 +246,13 @@ export default function OverviewPage() {
             onOpen={() => {
               openOverlay();
               setProjectType("all");
-              setObjectScope({ title: "纳管项目", mode: "projects", orgIds });
+              setObjectScope({
+                title: `纳管项目｜${orgFilterCaption(filters.orgId, filters.includeChildren)}`,
+                mode: "projects",
+                orgIds,
+                focusOrgId: filters.orgId,
+                includeChildren: filters.includeChildren,
+              });
             }}
             returnKey="kpi-projects"
           />
@@ -321,10 +340,16 @@ export default function OverviewPage() {
             scope={overviewScope}
             onSelect={selectUnit}
             onReturnHq={() => selectUnit(ROOT_ORG_ID)}
-            onOpenProjects={(ids) => {
+            onOpenProjects={(ids, meta) => {
               openOverlay();
               setProjectType("all");
-              setObjectScope({ title: "纳管项目", mode: "projects", orgIds: ids });
+              setObjectScope({
+                title: `纳管项目｜${orgFilterCaption(meta.orgId, meta.includeChildren)}`,
+                mode: "projects",
+                orgIds: ids,
+                focusOrgId: meta.orgId,
+                includeChildren: meta.includeChildren,
+              });
             }}
             onOpenRules={(ids) => {
               openOverlay();
@@ -448,6 +473,7 @@ export default function OverviewPage() {
         <DataTable
           rows={unitTableIds.map((id) => ({ id }))}
           rowKey={(r) => r.id}
+          pageSize={12}
           empty="当前范围没有单位。"
           compactEmpty
           columns={[
@@ -464,14 +490,39 @@ export default function OverviewPage() {
             },
             {
               key: "n",
-              title: unitScope?.hitOnly ? "命中规则" : "纳管项目",
-              width: "100px",
+              title: unitScope?.hitOnly ? "命中规则" : "本级纳管项目数",
+              width: "128px",
               nowrap: true,
-              render: (r) =>
-                unitScope?.hitOnly
-                  ? hitRuleIds({ ...overviewScope, orgIds: new Set([r.id]) }).length
-                  : inScopeProjects(new Set([r.id]), overviewScope.allowedObjectIds, filters.periodStart, filters.periodEnd)
-                      .length,
+              render: (r) => {
+                if (unitScope?.hitOnly) {
+                  return hitRuleIds({ ...overviewScope, orgIds: new Set([r.id]) }).length;
+                }
+                const n = inScopeProjects(
+                  new Set([r.id]),
+                  overviewScope.allowedObjectIds,
+                  filters.periodStart,
+                  filters.periodEnd,
+                  filters.asOf,
+                ).length;
+                return (
+                  <button
+                    type="button"
+                    className="text-brand hover:underline num"
+                    onClick={() => {
+                      setProjectType("all");
+                      setObjectScope({
+                        title: `本级纳管项目｜${orgFilterCaption(r.id, false)}`,
+                        mode: "projects",
+                        orgIds: new Set([r.id]),
+                        focusOrgId: r.id,
+                        includeChildren: false,
+                      });
+                    }}
+                  >
+                    {n}
+                  </button>
+                );
+              },
             },
             {
               key: "act",
@@ -511,7 +562,13 @@ export default function OverviewPage() {
           restoreScroll();
         }}
         title={objectScope?.title ?? "对象清单"}
-        subtitle={`来源范围：${scopeLabel}｜共 ${objectRows.length} 条；打开档案不改变组织范围`}
+        subtitle={`来源范围：${
+          objectScope && "focusOrgId" in objectScope
+            ? orgFilterCaption(objectScope.focusOrgId, objectScope.includeChildren)
+            : objectScope && "orgIds" in objectScope && objectScope.orgIds.size === 1
+              ? orgFilterCaption([...objectScope.orgIds][0], false)
+              : scopeLabel.split("｜")[0]
+        }｜截至日 ${filters.asOf}｜共 ${objectRows.length} 条`}
         width={800}
       >
         {objectScope?.mode === "projects" && (
@@ -536,6 +593,7 @@ export default function OverviewPage() {
         <DataTable
           rows={objectRows}
           rowKey={(r) => r.id}
+          pageSize={12}
           onRowClick={(r) => setObjectId(r.id)}
           empty="当前范围没有关联对象。"
           compactEmpty
@@ -736,6 +794,7 @@ function DomainOverviewCard({
         {card.metrics.map((slot, i) => {
           const parts = metricValueText(slot);
           const clickable = slot.status === "ok" && slot.def;
+          const pairedNumerator = slot.display === "numerator" && card.metrics.some((s) => s.indicatorId === slot.indicatorId && s.display === "value");
           const inner = (
             <>
               <div className="text-[13px] text-textsub leading-5">{slot.label}</div>
@@ -747,6 +806,9 @@ function DomainOverviewCard({
                   <span className="text-[13px] text-textsub whitespace-nowrap">{parts.unit}</span>
                 )}
               </div>
+              {pairedNumerator && (
+                <div className="text-[12px] text-textsub mt-1 leading-4">完成额为执行率分子</div>
+              )}
               {slot.status !== "ok" && (
                 <div className="text-[12px] text-textsub mt-1 leading-4">{slot.emptyReason ?? "—"}</div>
               )}

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { AS_OF, seed } from "@/lib/seed";
+import { seed } from "@/lib/seed";
+import { SNAPSHOT_PERIOD } from "@/lib/period";
 import { authorizedOrgIds } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { selectClass } from "@/components/ui";
@@ -11,6 +12,12 @@ export const PERIOD_OPTIONS = [
   { id: "q2-2026", label: "2026年第二季度", start: "2026-04-01", end: "2026-06-30" },
   { id: "q1-2026", label: "2026年第一季度", start: "2026-01-01", end: "2026-03-31" },
   { id: "y2025-h2", label: "2025年下半年", start: "2025-07-01", end: "2025-12-31" },
+];
+
+/** 已有办理记录可还原的截至日。默认 6 月末快照；5 月 15 日可还原 R11 关闭前状态，无独立财务快照。 */
+export const AS_OF_OPTIONS = [
+  { value: SNAPSHOT_PERIOD.asOf, label: "2026-06-30", note: "期间快照" },
+  { value: "2026-05-15", label: "2026-05-15", note: "事项状态还原" },
 ];
 
 function encodeOrg(orgId: string, includeChildren: boolean) {
@@ -80,9 +87,14 @@ export default function FilterBar({ className = "" }: { className?: string }) {
           className={`${selectClass} w-[132px] min-w-[120px] max-w-full`}
           value={filters.asOf}
           aria-label="业务截至日"
-          disabled
+          onChange={(e) => setFilters({ asOf: e.target.value })}
         >
-          <option value={AS_OF}>{AS_OF}</option>
+          {AS_OF_OPTIONS.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
+          {!AS_OF_OPTIONS.some((d) => d.value === filters.asOf) && <option value={filters.asOf}>{filters.asOf}</option>}
         </select>
       </div>
     </div>

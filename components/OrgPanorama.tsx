@@ -89,7 +89,7 @@ export default function OrgPanorama({
   scope: OverviewScope;
   onSelect: (orgId: string) => void;
   onReturnHq: () => void;
-  onOpenProjects: (orgIds: Set<string>) => void;
+  onOpenProjects: (orgIds: Set<string>, meta: { orgId: string; includeChildren: boolean }) => void;
   onOpenRules: (orgIds: Set<string>) => void;
   onOpenRectification: (orgIds: Set<string>) => void;
   onOpenRelated: (orgIds: Set<string>) => void;
@@ -157,7 +157,7 @@ export default function OrgPanorama({
           stats={currentStats}
           selected
           onSelectUnit={() => onSelect(focusId)}
-          onOpenProjects={() => onOpenProjects(scope.orgIds)}
+          onOpenProjects={() => onOpenProjects(scope.orgIds, { orgId: focusId, includeChildren: scope.orgIds.size > 1 })}
           onOpenRules={() => onOpenRules(scope.orgIds)}
           onOpenRectification={() => onOpenRectification(scope.orgIds)}
           onOpenRelated={() => onOpenRelated(scope.orgIds)}
@@ -175,7 +175,9 @@ export default function OrgPanorama({
                 stats={stats}
                 selected={false}
                 onSelectUnit={() => onSelect(unit.id)}
-                onOpenProjects={() => onOpenProjects(childOrgs)}
+                onOpenProjects={() =>
+                  onOpenProjects(childOrgs, { orgId: unit.id, includeChildren: childOrgs.size > 1 })
+                }
                 onOpenRules={() => onOpenRules(childOrgs)}
                 onOpenRectification={() => onOpenRectification(childOrgs)}
                 onOpenRelated={() => onOpenRelated(childOrgs)}

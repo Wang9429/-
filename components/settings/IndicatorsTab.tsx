@@ -248,6 +248,11 @@ export default function IndicatorsTab() {
               onChange={(e) => setDraft({ ...draft, definition_note: e.target.value })}
             />
           </Field>
+          {draft.id === "FA-I06" && (
+            <p className="text-[13px] text-textsub -mt-1">
+              综合总览上的投资完成额是本指标分子，与执行率共用本配置项的启用和首页展示开关，不是另一条独立指标。
+            </p>
+          )}
           <Field label="展示位置">
             <select
               className={fieldClass()}

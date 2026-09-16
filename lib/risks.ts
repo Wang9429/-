@@ -115,8 +115,8 @@ export function riskAtAsOf(r: RiskCase, asOf: string, actions: CaseAction[] = se
   return { ...r, status };
 }
 
-export function isOpenRectificationAt(r: RiskCase, asOf: string): boolean {
-  const snapshot = riskAtAsOf(r, asOf);
+export function isOpenRectificationAt(r: RiskCase, asOf: string, actions: CaseAction[] = seed.case_actions): boolean {
+  const snapshot = riskAtAsOf(r, asOf, actions);
   if (!snapshot) return false;
   return isOpenRectificationStatus(snapshot.status);
 }
