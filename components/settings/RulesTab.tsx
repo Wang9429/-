@@ -226,6 +226,7 @@ export default function RulesTab() {
           pageSize={10}
           compactEmpty
           columns={[
+            { key: "id", title: "编号", width: "118px", nowrap: true, render: (r) => <span className="num text-[12px]">{r.id}</span> },
             { key: "name", title: "规则", minWidth: "200px", render: (r) => r.name },
             { key: "st", title: "状态", width: "88px", render: (r) => configStatusLabel(r.status) },
             {

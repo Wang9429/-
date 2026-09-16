@@ -166,6 +166,57 @@ async function paginateFind(text, max = 15) {
   return false;
 }
 
+async function setInput(placeholderPart, value) {
+  const ok = await page.evaluate(
+    (ph, v) => {
+      const el = [...document.querySelectorAll("input")].find((i) => (i.getAttribute("placeholder") || "").includes(ph));
+      if (!el) return false;
+      const proto = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value");
+      proto.set.call(el, v);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    },
+    placeholderPart,
+    value,
+  );
+  await new Promise((r) => setTimeout(r, 350));
+  return ok;
+}
+
+async function clickTab(text) {
+  const ok = await page.evaluate((t) => {
+    const b = [...document.querySelectorAll('[role="tab"]')].find((n) => (n.textContent || "").includes(t));
+    if (!b) return false;
+    b.click();
+    return true;
+  }, text);
+  await new Promise((r) => setTimeout(r, 400));
+  return ok;
+}
+
+async function snapshotStats(label) {
+  const t = await bodyText();
+  const pick = (re) => {
+    const m = t.match(re);
+    return m ? m[1] : "";
+  };
+  const snap = {
+    label,
+    待核查: pick(/待核查[（(](\d+)/),
+    整改跟踪: pick(/整改跟踪[（(](\d+)/),
+    待复核: pick(/待复核[（(](\d+)/),
+    已办事项: pick(/已办事项[（(](\d+)/),
+    未关闭整改: pick(/未关闭整改[^\d]{0,24}(\d+)/),
+    本期已整改: pick(/本期已整改[^\d]{0,24}(\d+)/),
+    未关闭事项: pick(/未关闭事项[^\d]{0,24}(\d+)/),
+  };
+  console.log("STAT", JSON.stringify(snap));
+  return snap;
+}
+
+const stats = [];
+
 try {
   await goto(`${BASE}/funds`);
   const fundsHome = await bodyText();
@@ -220,6 +271,8 @@ try {
   await page.keyboard.press("Escape");
   await new Promise((r) => setTimeout(r, 250));
   await page.goto(`${BASE}/supervision-workbench`, { waitUntil: "networkidle0" });
+  stats.push(await snapshotStats("AC04办理前-工作台"));
+  await setInput("搜索事项", "R-FP-033");
   await clickRowContaining("R-FP-033");
   const riskText = await bodyText();
   log("FP-AC04 打开事项", /R-FP-033|中小企业无争议/.test(riskText));
@@ -245,10 +298,16 @@ try {
   }
 
   await page.select('select[aria-label="当前用户（键盘）"]', "USER-HQ-REVIEW");
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 600));
   await page.goto(`${BASE}/supervision-workbench`, { waitUntil: "networkidle0" });
-  await clickRowContaining("R-FP-033");
-  const pass = await clickAction("复核通过");
+  const reviewerOk = (await bodyText()).includes("总部复核人员B");
+  log("FP-AC04 已切独立复核人", reviewerOk);
+  stats.push(await snapshotStats("AC04提交后-工作台"));
+  await clickTab("待复核");
+  await setInput("搜索事项", "R-FP-033");
+  const openedPending = await clickRowContaining("R-FP-033");
+  if (!openedPending) await clickRowContaining("中小企业无争议");
+  const pass = (await clickAction("复核通过（闭环）")) || (await clickAction("复核通过"));
   if (pass) {
     await fillNoteAndConfirm("确认复核通过（闭环）", "独立复核通过，到期依据与未付余额核对一致。");
   }
@@ -256,11 +315,14 @@ try {
   log("FP-AC04 独立复核关闭", /已关闭|复核通过|本期已整改/.test(afterClose), pass ? "" : "复核按钮未点到，保留办理轨迹");
   await shot("close_ac04_risk");
   await page.keyboard.press("Escape");
+  await clickTab("已办事项");
+  stats.push(await snapshotStats("AC04关闭后-工作台"));
   await page.select('select[aria-label="当前用户（键盘）"]', "USER-HQ-REG");
   await new Promise((r) => setTimeout(r, 400));
 
   await page.goto(`${BASE}/overview`, { waitUntil: "networkidle0" });
   const ov = await bodyText();
+  stats.push(await snapshotStats("AC04关闭后-总览"));
   log("总览仍保留布局", ov.includes("监管主体全景") && ov.includes("综合总览"));
   await shot("close_overview_after");
 
@@ -294,6 +356,8 @@ try {
   await shot("close_s032_entity");
   await page.keyboard.press("Escape");
   await page.goto(`${BASE}/supervision-workbench`, { waitUntil: "networkidle0" });
+  stats.push(await snapshotStats("S032办理前-工作台"));
+  await setInput("搜索事项", "R-FP-032");
   await clickRowContaining("R-FP-032");
   const s032 = await bodyText();
   log("PTY2-S032 不是只有标签", /打开治理依据并认领专业核查|记录专业核查结论/.test(s032) || /章程/.test(s032));
@@ -313,12 +377,13 @@ try {
   log("PTY2-S032 结论关联整改", /整改中|专业核查结论|整改安排/.test(after032), rec032 ? "" : "未点到结论按钮");
   await shot("close_s032_review");
   await page.keyboard.press("Escape");
+  await clickTab("整改跟踪");
+  stats.push(await snapshotStats("S032转入整改-工作台"));
 
   await goto(`${BASE}/settings?tab=rules`, false);
   await page.waitForSelector("input[placeholder*='搜索规则']");
-  await page.type("input[placeholder*='搜索规则']", "CASH2-R039");
-  await new Promise((r) => setTimeout(r, 400));
-  const foundRule = await paginateFind("CASH2-R039");
+  await setInput("搜索规则", "CASH2-R039");
+  const foundRule = (await bodyText()).includes("CASH2-R039");
   log("配置找到CASH2-R039", foundRule);
   if (foundRule) {
     await clickButtonInRow("CASH2-R039", "编辑");
@@ -337,7 +402,7 @@ try {
     log("试算使用新容差", /未命中|容差500/.test(trial) || trial.includes("P-PAY001"));
     await shot("close_rule_trial");
     await page.keyboard.press("Escape");
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 300));
     await clickText("button", "发布");
     await new Promise((r) => setTimeout(r, 600));
     const pub = await bodyText();
@@ -355,11 +420,7 @@ try {
   await new Promise((r) => setTimeout(r, 400));
   await clickText("button", "资金");
   await page.waitForSelector("input[placeholder*='搜索一级场景']");
-  const q = await page.$("input[placeholder*='搜索一级场景']");
-  if (q) {
-    await q.click({ clickCount: 3 });
-    await q.type("CASH2-S035");
-  }
+  await setInput("搜索一级场景", "CASH2-S035");
   await new Promise((r) => setTimeout(r, 500));
   const foundS035 = await paginateFind("CASH2-S035");
   if (foundS035) {
@@ -390,7 +451,7 @@ try {
   log("脚本异常", false, String(e && e.message ? e.message : e));
 } finally {
   const failed = results.filter((r) => !r.ok);
-  fs.writeFileSync(path.join(OUT, `fp_close_results_${COMMIT}.json`), JSON.stringify({ commit: COMMIT, results }, null, 2));
+  fs.writeFileSync(path.join(OUT, `fp_close_results_${COMMIT}.json`), JSON.stringify({ commit: COMMIT, results, stats }, null, 2));
   console.log(`\n收尾点击 ${results.filter((r) => r.ok).length}/${results.length} 通过`);
   await browser.close();
   if (failed.length) process.exit(1);
