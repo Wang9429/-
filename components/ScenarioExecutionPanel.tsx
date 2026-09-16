@@ -480,7 +480,7 @@ export default function ScenarioExecutionPanel({
               render: (r) => (
                 <span className="inline-flex flex-wrap items-center gap-1">
                   <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>
-                  {!r.monitoringActive && <Tag tone="neutral">已停用</Tag>}
+                  {!r.monitoringActive && r.statusLabelText !== "仅维护定义" && <Tag tone="neutral">已停用</Tag>}
                 </span>
               ),
             },
