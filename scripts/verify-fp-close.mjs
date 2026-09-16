@@ -68,6 +68,10 @@ function bodyText() {
   return page.evaluate(() => document.body.innerText);
 }
 
+function execText() {
+  return page.evaluate(() => document.querySelector("#scenario-execution")?.innerText ?? "");
+}
+
 async function clickRowContaining(text) {
   for (let i = 0; i < 12; i++) {
     const handle = await page.evaluateHandle((t) => {
@@ -237,9 +241,9 @@ try {
   for (const [label, forbidden, required] of topicChecks) {
     await clickText("button", label);
     const t = await bodyText();
+    const execSlice = await execText();
     const stillUpper = t.includes("主体经营与财务状况") && (!revenue || t.includes(revenue));
-    const bad = forbidden.filter((x) => t.includes(x) && t.includes("监管场景执行情况"));
-    const execSlice = t.split("监管场景执行情况")[1] ?? t;
+    const bad = forbidden.filter((x) => execSlice.includes(x));
     const miss = required.filter((x) => !execSlice.includes(x) && !t.includes(x));
     const ok = stillUpper && bad.length === 0;
     topicsOk = topicsOk && ok;
@@ -249,7 +253,7 @@ try {
   log("专题过滤 资金六专题", topicsOk, topicsDetail.join("；"));
 
   await clickText("button", "资金收付");
-  const payExec = (await bodyText()).split("监管场景执行情况")[1] ?? "";
+  const payExec = await execText();
   log("执行表不含仅维护定义", !payExec.includes("仅维护定义") && !payExec.includes("CASH2-S001"));
   log("执行表含已启用收付场景", /CASH2-S039|CASH2-S033|CASH2-S037/.test(payExec) || /超该笔有效批准|中小企业/.test(payExec));
 
@@ -349,7 +353,7 @@ try {
 
   await clickText("button", "产权交易");
   const trade = await bodyText();
-  const tradeExec = trade.split("监管场景执行情况")[1] ?? trade;
+  const tradeExec = await execText();
   log("产权交易不含PTY-S01", !tradeExec.includes("PTY-S01"));
   log("产权交易含PTY2-S006", /PTY2-S006|超授权/.test(tradeExec) || /PTY2-S035/.test(tradeExec));
   log("专题切换不上区", !census || trade.includes(census));
@@ -358,7 +362,7 @@ try {
   log("登记专题含PTY2-S028", /PTY2-S028|应登记未办/.test(reg));
   await clickText("button", "标识名称");
   const ident = await bodyText();
-  const identExec = ident.split("监管场景执行情况")[1] ?? "";
+  const identExec = await execText();
   log("标识专题不混入仅定义", !identExec.includes("仅维护定义") || ident.includes("尚未配置"));
   await clickText("button", "股权控制");
   const ctrl = await bodyText();
