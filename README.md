@@ -114,13 +114,21 @@ Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部�
 
 ## 公网发布
 
-当前固定 HTTPS 地址（GitHub Pages，提交 `7176942`）：
+当前固定 HTTPS 地址（GitHub Pages，功能提交 `4ae94ac`）：
 
 - 站点根路径：<https://wang9429.github.io/-/>
 - 综合总览：<https://wang9429.github.io/-/overview/>
 - 资金管理：<https://wang9429.github.io/-/funds/>
 - 产权管理：<https://wang9429.github.io/-/property-rights/>
 - 系统配置：<https://wang9429.github.io/-/settings/>
+
+本轮资金/产权界面截图（可下载）：
+
+- [资金上半区经营指标](https://wang9429.github.io/-/deliverables/funds-upper-kpis.png)
+- [指标树展开至实际末级](https://wang9429.github.io/-/deliverables/funds-indicator-tree-leaf.png)
+- [资金场景执行区域](https://wang9429.github.io/-/deliverables/funds-scenario-execution.png)
+- [产权流程与场景执行区域](https://wang9429.github.io/-/deliverables/property-flow-and-execution.png)
+- [四张截图打包 zip](https://wang9429.github.io/-/deliverables/fp-pages-screenshots-4ae94ac.zip)
 
 推送 `main` 会跑 `.github/workflows/github-pages.yml`：静态导出后写入 `gh-pages` 分支。仓库子路径为 `/-/`（仓库名为 `-`）。页面、样式与脚本均带此前缀；刷新上述路径应直接打开。
 

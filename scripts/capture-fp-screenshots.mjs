@@ -63,7 +63,7 @@ async function clickText(selector, text, exact = false) {
 }
 
 await page.setViewport({ width: 1440, height: 1100, deviceScaleFactor: 1 });
-await goto(`${BASE}/funds`);
+await goto(`${BASE}/funds${BASE.includes("github.io") ? "/" : ""}`);
 await page.waitForSelector("[data-testid='funds-kpi-grid']");
 const upper = await page.evaluate(() => {
   const grid = document.querySelector("[data-testid='funds-kpi-grid']");
@@ -95,7 +95,7 @@ await page.waitForSelector("[data-testid='scenario-compact-stats']");
 await sleep(200);
 await shotEl("funds-scenario-execution", "#scenario-execution");
 
-await goto(`${BASE}/property-rights`);
+await goto(`${BASE}/property-rights${BASE.includes("github.io") ? "/" : ""}`);
 await page.waitForSelector("[data-testid='rights-topic-nav']");
 await clickText("button", "审计评估");
 await page.waitForSelector("#scenario-execution");
