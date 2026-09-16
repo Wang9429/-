@@ -1,16 +1,24 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Drawer, Tag, DataTable, Notice, Button, LinkButton, DescList, Modal } from "@/components/ui";
 import { aggregate, indicatorLeaves, type IndicatorDef, type LeafMetric, type NodeMetric } from "@/lib/metrics";
-import { childOrgs, descendantOrgIds, orgLevelLabel, orgById, ROOT_ORG_ID } from "@/lib/org";
+import { descendantOrgIds, orgLevelLabel, orgById, orgName } from "@/lib/org";
 import { fmtAmount, fmtAmountSmart, fmtInt, fmtPctNumber, fmtSignedPct } from "@/lib/format";
 import { objectTypeLabel, seed } from "@/lib/seed";
 import { useDemoStore } from "@/lib/store";
-import { isOpen } from "@/lib/risks";
-import { authorizedObjectIds, authorizedOrgIds, riskVisible } from "@/lib/config";
-
-type Selection = { kind: "org"; id: string } | { kind: "leaf"; id: string };
+import { authorizedObjectIds, canDomain, intersectOrgScope } from "@/lib/config";
+import {
+  drawerAncestorPath,
+  drawerChildOrgs,
+  isIndicatorAbnormalStatus,
+  metricRollupOrgIds,
+  relatedMatterIds,
+  resolveDrawerSelection,
+  scopedIndicatorLeaves,
+  switchableDrawerIndicators,
+  type DrawerSelection,
+} from "@/lib/indicator-scope";
 
 function statusTag(m: NodeMetric) {
   switch (m.status) {
@@ -79,6 +87,8 @@ export interface IndicatorDrawerProps {
   onOpenRisk?: (id: string) => void;
   /** 与背景 KPI 一致的含下级/仅本级。抽屉内再选下级只改变浮层。 */
   includeChildren?: boolean;
+  /** 总览入口不提供切换；领域页仅在可运行指标之间切换。 */
+  allowIndicatorSwitch?: boolean;
 }
 
 /** 每次打开或换口径时以 key 重挂载，穿透定位回到当前范围的顶层节点。 */
@@ -103,12 +113,11 @@ function IndicatorDrawerBody({
   onOpenObject,
   onOpenRisk,
   includeChildren = true,
+  allowIndicatorSwitch = false,
 }: IndicatorDrawerProps) {
   const { filters, risks, user } = useDemoStore();
-  const [selection, setSelection] = useState<Selection>({ kind: "org", id: initialOrgId });
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set(descendantOrgIds(ROOT_ORG_ID)),
-  );
+  const [selection, setSelection] = useState<DrawerSelection>({ kind: "org", id: initialOrgId });
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(descendantOrgIds(initialOrgId)));
   const [onlyAbnormal, setOnlyAbnormal] = useState(false);
   const [traceLeafId, setTraceLeafId] = useState<string | null>(null);
 
@@ -122,7 +131,10 @@ function IndicatorDrawerBody({
     openObject(leaf.objectId);
   };
 
-  const allowedOrgs = useMemo(() => authorizedOrgIds(user), [user]);
+  const dataOrgIds = useMemo(
+    () => intersectOrgScope(initialOrgId, includeChildren, user),
+    [initialOrgId, includeChildren, user],
+  );
   const allowedObjectIds = useMemo(() => authorizedObjectIds(user), [user]);
 
   const ctx = useMemo(
@@ -140,77 +152,153 @@ function IndicatorDrawerBody({
     () => (indicator ? indicatorLeaves(indicator, ctx) : []),
     [indicator, ctx],
   );
+  const scopedLeaves = useMemo(
+    () => scopedIndicatorLeaves(allLeaves, dataOrgIds),
+    [allLeaves, dataOrgIds],
+  );
+  const applicableLeafIds = useMemo(
+    () => new Set(scopedLeaves.map((l) => l.objectId)),
+    [scopedLeaves],
+  );
+
+  const switchable = useMemo(() => {
+    if (!allowIndicatorSwitch || !indicator) return [];
+    if (!canDomain(user, indicator.domain)) return [];
+    return switchableDrawerIndicators(indicator.domain, indicatorOptions);
+  }, [allowIndicatorSwitch, indicator, indicatorOptions, user]);
+
+  const emptyMetric = (): NodeMetric => ({
+    value: null,
+    numerator: null,
+    denominator: null,
+    leaves: [],
+    status: "unknown",
+    coverage: { evaluated: 0, expected: 0, partial: false },
+  });
 
   const nodeMetric = (orgId: string): NodeMetric => {
-    if (!indicator) {
-      return {
-        value: null,
-        numerator: null,
-        denominator: null,
-        leaves: [],
-        status: "unknown",
-        coverage: { evaluated: 0, expected: 0, partial: false },
-      };
-    }
-    const navOnly = !allowedOrgs.has(orgId);
-    if (navOnly) {
-      return {
-        value: null,
-        numerator: null,
-        denominator: null,
-        leaves: [],
-        status: "unknown",
-        emptyReason: "上级导航节点，不含未授权数据",
-        coverage: { evaluated: 0, expected: 0, partial: false },
-      };
-    }
-    const rollup =
-      orgId === initialOrgId && !includeChildren
-        ? new Set([orgId])
-        : new Set(descendantOrgIds(orgId).filter((id) => allowedOrgs.has(id)));
-    return aggregate(indicator, allLeaves, rollup);
+    if (!indicator) return emptyMetric();
+    const rollup = metricRollupOrgIds(orgId, initialOrgId, includeChildren, dataOrgIds);
+    return aggregate(indicator, scopedLeaves, rollup);
   };
 
-  const selectedMetric: NodeMetric = useMemo(() => {
-    if (!indicator) return nodeMetric(ROOT_ORG_ID);
-    if (selection.kind === "org") return nodeMetric(selection.id);
-    const leaf = allLeaves.find((l) => l.objectId === selection.id);
-    if (!leaf) return nodeMetric(ROOT_ORG_ID);
+  const leafMetricOf = (leaf: LeafMetric): NodeMetric => {
+    if (!indicator) return emptyMetric();
     return aggregate(indicator, [leaf], new Set([leaf.orgId]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [indicator, selection, allLeaves]);
+  };
 
+  useEffect(() => {
+    setSelection((prev) => {
+      const next = resolveDrawerSelection(prev, initialOrgId, dataOrgIds, applicableLeafIds);
+      if (next.kind === prev.kind && next.id === prev.id) return prev;
+      return next;
+    });
+    setTraceLeafId((id) => (id && applicableLeafIds.has(id) ? id : null));
+  }, [indicator?.id, initialOrgId, dataOrgIds, applicableLeafIds]);
+
+  const resolved = resolveDrawerSelection(selection, initialOrgId, dataOrgIds, applicableLeafIds);
   const selectedLeaf =
-    selection.kind === "leaf" ? allLeaves.find((l) => l.objectId === selection.id) : undefined;
+    resolved.kind === "leaf" ? scopedLeaves.find((l) => l.objectId === resolved.id) : undefined;
+
+  const selectedMetric: NodeMetric = useMemo(() => {
+    if (!indicator) return emptyMetric();
+    if (resolved.kind === "org") return nodeMetric(resolved.id);
+    if (!selectedLeaf) return nodeMetric(initialOrgId);
+    return leafMetricOf(selectedLeaf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indicator, resolved.kind, resolved.id, selectedLeaf, scopedLeaves, dataOrgIds, initialOrgId, includeChildren]);
+
+  const abnormalLeafIds = useMemo(() => {
+    if (!indicator) return new Set<string>();
+    return new Set(
+      scopedLeaves.filter((l) => isIndicatorAbnormalStatus(leafMetricOf(l).status)).map((l) => l.objectId),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indicator, scopedLeaves]);
+
+  const keepOrgIds = useMemo(() => {
+    const keep = new Set<string>();
+    if (!onlyAbnormal) {
+      dataOrgIds.forEach((id) => keep.add(id));
+      return keep;
+    }
+    const markAncestors = (orgId: string) => {
+      let cur: string | undefined = orgId;
+      while (cur && dataOrgIds.has(cur)) {
+        keep.add(cur);
+        if (cur === initialOrgId) break;
+        cur = orgById(cur)?.parent_id ?? undefined;
+      }
+    };
+    for (const orgId of dataOrgIds) {
+      if (isIndicatorAbnormalStatus(nodeMetric(orgId).status)) markAncestors(orgId);
+    }
+    for (const leaf of scopedLeaves) {
+      if (abnormalLeafIds.has(leaf.objectId)) markAncestors(leaf.orgId);
+    }
+    if (keep.size === 0) keep.add(initialOrgId);
+    return keep;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onlyAbnormal, dataOrgIds, scopedLeaves, abnormalLeafIds, initialOrgId, indicator, includeChildren]);
 
   if (!indicator) return null;
 
-  const openRiskCountForOrg = (orgId: string) => {
-    const scope =
-      orgId === initialOrgId && !includeChildren
-        ? new Set([orgId])
-        : new Set(descendantOrgIds(orgId).filter((id) => allowedOrgs.has(id)));
-    return risks.filter((r) => isOpen(r) && scope.has(r.owner_org_id) && riskVisible(user, r)).length;
+  const selectedName =
+    resolved.kind === "org"
+      ? (orgById(resolved.id)?.name ?? orgName(initialOrgId))
+      : selectedLeaf
+        ? `${selectedLeaf.name}（${objectTypeLabel[selectedLeaf.objectType] ?? selectedLeaf.objectType}）`
+        : orgName(initialOrgId);
+
+  const childRows =
+    resolved.kind === "org"
+      ? [
+          ...drawerChildOrgs(resolved.id, initialOrgId, includeChildren, dataOrgIds).map((c) => ({
+            id: c.id,
+            name: c.name,
+            type: orgLevelLabel(c),
+            metric: nodeMetric(c.id),
+            isOrg: true,
+          })),
+          ...scopedLeaves
+            .filter((l) => l.orgId === resolved.id)
+            .map((l) => ({
+              id: l.objectId,
+              name: l.name,
+              type: objectTypeLabel[l.objectType] ?? l.objectType,
+              metric: leafMetricOf(l),
+              isOrg: false,
+            })),
+        ]
+      : [];
+
+  const detailLeaves = resolved.kind === "org" ? selectedMetric.leaves : selectedLeaf ? [selectedLeaf] : [];
+  const relatedIds = relatedMatterIds(detailLeaves);
+
+  const target = indicator.target ?? null;
+  const deviation =
+    target !== null && selectedMetric.value !== null ? selectedMetric.value - target : null;
+
+  const traceLeaf = traceLeafId ? scopedLeaves.find((l) => l.objectId === traceLeafId) : undefined;
+  const ancestors = drawerAncestorPath(initialOrgId);
+
+  const handleSwitch = (id: string) => {
+    if (!switchable.some((opt) => opt.id === id)) return;
+    onSwitchIndicator(id);
   };
 
   const renderTreeNode = (orgId: string, depth: number): React.ReactNode => {
     const org = orgById(orgId);
-    if (!org) return null;
-    const kids = childOrgs(orgId).filter((c) => {
-      const desc = descendantOrgIds(c.id);
-      return [...desc].some((id) => allowedOrgs.has(id));
-    });
-    if (!allowedOrgs.has(orgId) && kids.length === 0 && !allLeaves.some((l) => l.orgId === orgId)) {
-      return null;
-    }
+    if (!org || !dataOrgIds.has(orgId)) return null;
+    if (onlyAbnormal && !keepOrgIds.has(orgId)) return null;
+    const kids = drawerChildOrgs(orgId, initialOrgId, includeChildren, dataOrgIds);
+    const leaves = scopedLeaves.filter((l) => l.orgId === orgId);
     const metric = nodeMetric(orgId);
-    const leaves = allLeaves.filter((l) => l.orgId === orgId);
     const isExpanded = expanded.has(orgId);
-    const selected = selection.kind === "org" && selection.id === orgId;
-    const abnormalHere = metric.status === "risk" || metric.status === "attention";
-    const riskCount = openRiskCountForOrg(orgId);
-
-    if (onlyAbnormal && riskCount === 0 && !abnormalHere) return null;
+    const selected = resolved.kind === "org" && resolved.id === orgId;
+    const related = relatedMatterIds(
+      scopedLeaves.filter((l) => metricRollupOrgIds(orgId, initialOrgId, includeChildren, dataOrgIds).has(l.orgId)),
+    ).length;
 
     return (
       <div key={orgId}>
@@ -223,6 +311,8 @@ function IndicatorDrawerBody({
           role="treeitem"
           aria-selected={selected}
           tabIndex={0}
+          data-node-id={orgId}
+          data-node-kind="org"
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
@@ -262,9 +352,9 @@ function IndicatorDrawerBody({
           >
             {formatMetric(indicator, metric)}
           </span>
-          {riskCount > 0 && (
-            <span className="num text-[11px] shrink-0 text-[#b42318]" title={`含未关闭事项 ${riskCount} 件`}>
-              {riskCount}
+          {related > 0 && (
+            <span className="text-[11px] shrink-0 text-textsub" title={`对象关联事项 ${related} 件，不计入当前指标异常`}>
+              关{related}
             </span>
           )}
         </div>
@@ -272,10 +362,9 @@ function IndicatorDrawerBody({
           <>
             {kids.map((k) => renderTreeNode(k.id, depth + 1))}
             {leaves.map((leaf) => {
-              const lm = aggregate(indicator, [leaf], new Set([leaf.orgId]));
-              const leafAbnormal = lm.status === "risk" || lm.status === "attention";
-              if (onlyAbnormal && leaf.riskIds.length === 0 && !leafAbnormal) return null;
-              const sel = selection.kind === "leaf" && selection.id === leaf.objectId;
+              const lm = leafMetricOf(leaf);
+              if (onlyAbnormal && !abnormalLeafIds.has(leaf.objectId)) return null;
+              const sel = resolved.kind === "leaf" && resolved.id === leaf.objectId;
               return (
                 <div
                   key={leaf.objectId}
@@ -287,6 +376,8 @@ function IndicatorDrawerBody({
                   role="treeitem"
                   aria-selected={sel}
                   tabIndex={0}
+                  data-node-id={leaf.objectId}
+                  data-node-kind="leaf"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
@@ -310,7 +401,12 @@ function IndicatorDrawerBody({
                     {formatMetric(indicator, lm)}
                   </span>
                   {leaf.riskIds.length > 0 && (
-                    <span className="num text-[11px] shrink-0 text-[#b42318]">{leaf.riskIds.length}</span>
+                    <span
+                      className="text-[11px] shrink-0 text-textsub"
+                      title="对象关联事项，不计入当前指标异常"
+                    >
+                      关{leaf.riskIds.length}
+                    </span>
                   )}
                 </div>
               );
@@ -321,42 +417,12 @@ function IndicatorDrawerBody({
     );
   };
 
-  const childRows =
-    selection.kind === "org"
-      ? [
-          ...childOrgs(selection.id).map((c) => ({
-            id: c.id,
-            name: c.name,
-            type: orgLevelLabel(c),
-            metric: nodeMetric(c.id),
-            isOrg: true,
-          })),
-          ...allLeaves
-            .filter((l) => l.orgId === selection.id)
-            .map((l) => ({
-              id: l.objectId,
-              name: l.name,
-              type: objectTypeLabel[l.objectType] ?? l.objectType,
-              metric: aggregate(indicator, [l], new Set([l.orgId])),
-              isOrg: false,
-            })),
-        ]
-      : [];
-
-  const detailLeaves = selection.kind === "org" ? selectedMetric.leaves : selectedLeaf ? [selectedLeaf] : [];
-
-  const target = indicator.target ?? null;
-  const deviation =
-    target !== null && selectedMetric.value !== null ? selectedMetric.value - target : null;
-
-  const traceLeaf = traceLeafId ? allLeaves.find((l) => l.objectId === traceLeafId) : undefined;
-
   return (
     <Drawer
       open={open}
       onClose={onClose}
       title={
-        <span className="flex items-center gap-2 flex-wrap">
+        <span className="flex items-center gap-2 flex-wrap" data-drawer-indicator={indicator.id}>
           {indicator.name}
           <Tag tone="brand">组织穿透</Tag>
         </span>
@@ -378,7 +444,6 @@ function IndicatorDrawerBody({
       }
     >
       <div className="h-full flex min-h-0">
-        {/* 左侧组织树 30% */}
         <aside className="w-[30%] min-w-[280px] max-w-[380px] border-r border-line bg-[#f7f9fd] flex flex-col min-h-0">
           <div className="px-4 py-2.5 border-b border-line flex items-center justify-between gap-2">
             <span className="text-[13px] font-medium text-textmain">组织及对象穿透</span>
@@ -387,38 +452,47 @@ function IndicatorDrawerBody({
                 type="checkbox"
                 checked={onlyAbnormal}
                 onChange={(e) => setOnlyAbnormal(e.target.checked)}
+                data-only-abnormal
               />
               只看异常
             </label>
           </div>
           <div className="px-4 py-1.5 border-b border-line text-[11px] text-textsub leading-4">
-            海油工程总部—二级单位—三级单位—{objectTypeLabel[indicator.leafObjectType] ?? "末端对象"}；
-            缺层按真实管理关系跳过，被投企业不并入管理树。
+            取数范围为授权范围 ∩ 当前筛选；海油工程总部—二级单位—三级单位—{objectTypeLabel[indicator.leafObjectType] ?? "末端对象"}；
+            缺层按真实管理关系跳过。祖先路径仅展示，点击不会扩大范围。
           </div>
-          <div className="flex-1 overflow-auto py-2 px-2" role="tree">
-            {allowedOrgs.size === 0 ? (
-              <p className="px-3 py-6 text-[13px] text-textsub">当前身份无业务组织范围。</p>
+          {ancestors.length > 0 && (
+            <div className="px-4 py-1.5 border-b border-line text-[12px] text-textsub leading-5" data-drawer-ancestors>
+              {ancestors.map((a, i) => (
+                <span key={a.id}>
+                  {i > 0 && <span className="mx-1 text-textsub">›</span>}
+                  <span title="路径展示，不可扩大取数范围">{a.name}</span>
+                </span>
+              ))}
+              <span className="mx-1">›</span>
+              <span className="text-textmain">{orgName(initialOrgId)}</span>
+            </div>
+          )}
+          <div className="flex-1 overflow-auto py-2 px-2" role="tree" data-drawer-tree>
+            {dataOrgIds.size === 0 ? (
+              <p className="px-3 py-6 text-[13px] text-textsub">当前身份在所选范围内无业务组织。</p>
             ) : (
-              [...allowedOrgs]
-                .filter((id) => {
-                  const o = orgById(id);
-                  return o && (!o.parent_id || !allowedOrgs.has(o.parent_id));
-                })
-                .map((id) => renderTreeNode(id, 0))
+              renderTreeNode(initialOrgId, 0)
             )}
           </div>
         </aside>
 
-        {/* 右侧指标详情 70% */}
         <div className="flex-1 min-w-0 overflow-auto">
           <div className="px-6 py-4 space-y-4">
-            {indicatorOptions.length > 1 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[12px] text-textsub">切换指标（保留当前组织节点）：</span>
-                {indicatorOptions.map((opt) => (
+            {switchable.length > 1 && (
+              <div className="flex items-center gap-2 flex-wrap" data-indicator-switcher>
+                <span className="text-[12px] text-textsub">切换指标（仅本领域已启用入口，保留适用组织节点）：</span>
+                {switchable.map((opt) => (
                   <button
                     key={opt.id}
-                    onClick={() => onSwitchIndicator(opt.id)}
+                    type="button"
+                    onClick={() => handleSwitch(opt.id)}
+                    data-switch-indicator={opt.id}
                     className={`h-7 px-2.5 rounded-[6px] border text-[12px] transition-colors duration-150 ${
                       opt.id === indicator.id
                         ? "border-brand bg-tint text-brand"
@@ -434,14 +508,11 @@ function IndicatorDrawerBody({
             <div className="border border-line rounded-[8px] p-4 bg-surface">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                  <div className="text-[12px] text-textsub">
-                    当前节点：
-                    {selection.kind === "org"
-                      ? orgById(selection.id)?.name
-                      : `${selectedLeaf?.name}（${objectTypeLabel[selectedLeaf?.objectType ?? ""] ?? ""}）`}
+                  <div className="text-[12px] text-textsub" data-current-node>
+                    当前节点：{selectedName}
                   </div>
                   <div className="flex items-baseline gap-2 mt-1 flex-wrap">
-                    <span className="num text-[32px] font-semibold leading-9">
+                    <span className="num text-[32px] font-semibold leading-9" data-drawer-value>
                       {formatMetric(indicator, selectedMetric)}
                     </span>
                     {statusTag(selectedMetric)}
@@ -485,19 +556,22 @@ function IndicatorDrawerBody({
                     },
                     {
                       label: "数据覆盖",
-                      value: `${selectedMetric.coverage.evaluated}/${selectedMetric.coverage.expected} 个对象${
-                        selectedMetric.coverage.partial ? "（部分覆盖）" : ""
-                      }`,
+                      value: (
+                        <span data-drawer-coverage>
+                          {selectedMetric.coverage.evaluated}/{selectedMetric.coverage.expected} 个对象
+                          {selectedMetric.coverage.partial ? "（部分覆盖）" : ""}
+                        </span>
+                      ),
                     },
                     {
-                      label: "含未关闭事项",
+                      label: "对象关联事项",
                       value:
-                        selectedMetric.leaves.reduce((a, l) => a + l.riskIds.length, 0) > 0 ? (
-                          <span className="text-[#b42318]">
-                            含高风险对象 {selectedMetric.leaves.filter((l) => l.riskIds.length > 0).length} 个
+                        relatedIds.length > 0 ? (
+                          <span className="text-textsub" data-related-matters>
+                            {relatedIds.length} 件（不计入当前指标异常）
                           </span>
                         ) : (
-                          "0"
+                          <span data-related-matters>0</span>
                         ),
                     },
                   ]}
@@ -511,7 +585,7 @@ function IndicatorDrawerBody({
               )}
             </div>
 
-            {selection.kind === "org" && childRows.length > 0 && (
+            {resolved.kind === "org" && childRows.length > 0 && (
               <div className="border border-line rounded-[8px] overflow-hidden bg-surface">
                 <div className="px-4 py-2.5 border-b border-line text-[14px] font-medium">
                   下级比较
@@ -547,7 +621,7 @@ function IndicatorDrawerBody({
             <div className="border border-line rounded-[8px] overflow-hidden bg-surface">
               <div className="px-4 py-2.5 border-b border-line text-[14px] font-medium flex items-center justify-between">
                 <span>指标构成与业务明细</span>
-                <span className="text-[12px] text-textsub">
+                <span className="text-[12px] text-textsub" data-detail-count>
                   共 {detailLeaves.length} 个对象，按对象 ID 去重
                 </span>
               </div>
@@ -571,19 +645,24 @@ function IndicatorDrawerBody({
                           <Tag tone="neutral">{objectTypeLabel[leaf.objectType] ?? leaf.objectType}</Tag>
                           <span className="text-[12px] text-textsub num">{leaf.objectId}</span>
                           {!leaf.dataComplete && <Tag tone="neutral">数据不足</Tag>}
-                          {leaf.riskIds.map((id) => (
-                            <button key={id} type="button" onClick={() => openRisk(id)}>
-                              <Tag tone="red">未关闭事项 {id}</Tag>
-                            </button>
-                          ))}
                         </div>
                         <span className="num text-[16px] font-semibold">
-                          {formatMetric(indicator, aggregate(indicator, [leaf], new Set([leaf.orgId])))}
+                          {formatMetric(indicator, leafMetricOf(leaf))}
                         </span>
                       </div>
                       {leaf.gapNote && (
                         <div className="mt-2">
                           <Notice tone="amber">{leaf.gapNote}</Notice>
+                        </div>
+                      )}
+                      {leaf.riskIds.length > 0 && (
+                        <div className="mt-2 flex items-center gap-2 flex-wrap">
+                          <span className="text-[12px] text-textsub">对象关联事项</span>
+                          {leaf.riskIds.map((id) => (
+                            <button key={id} type="button" onClick={() => openRisk(id)}>
+                              <Tag tone="neutral">事项 {id}</Tag>
+                            </button>
+                          ))}
                         </div>
                       )}
                       <div className="mt-2 grid grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-1.5">
@@ -830,9 +909,10 @@ function TraceModal({
         />
         {leaf.riskIds.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[12px] text-textsub">对象关联事项</span>
             {leaf.riskIds.map((id) => (
               <Button key={id} variant="secondary" size="sm" onClick={() => onOpenRisk(id)}>
-                查看关联事项 {id}
+                查看事项 {id}
               </Button>
             ))}
           </div>

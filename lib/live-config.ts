@@ -192,6 +192,11 @@ export function catalogIndicatorOnHomepage(id: string): boolean {
   return meta.enabled && meta.display_position === "homepage";
 }
 
+/** 停用或仅目录（无首页展示）的指标不能作为业务抽屉运行入口。 */
+export function catalogIndicatorRunnableOnEntry(id: string): boolean {
+  return catalogIndicatorVisible(id) && catalogIndicatorOnHomepage(id);
+}
+
 export function homepageCatalogIndicatorIds(domain?: string): string[] {
   return [...current.indicators.values()]
     .filter((m) => m.enabled && m.display_position === "homepage" && (!domain || m.domain === domain))

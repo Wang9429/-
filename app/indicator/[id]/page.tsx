@@ -6,7 +6,8 @@ import React from "react";
 import IndicatorDrawer from "@/components/IndicatorDrawer";
 import { Card, Notice } from "@/components/ui";
 import { DOMAIN_META } from "@/lib/seed";
-import { indicatorById, indicatorsForDomain } from "@/lib/metrics";
+import { indicatorById } from "@/lib/metrics";
+import { runnableDrawerIndicators } from "@/lib/indicator-scope";
 import { orgName } from "@/lib/org";
 import { useDemoStore } from "@/lib/store";
 
@@ -44,8 +45,9 @@ export default function IndicatorPage() {
           open
           onClose={() => router.back()}
           indicator={def}
-          indicatorOptions={indicatorsForDomain(def.domain)}
+          indicatorOptions={runnableDrawerIndicators(def.domain)}
           onSwitchIndicator={(next) => router.replace(`/indicator/${next}`)}
+          allowIndicatorSwitch
           initialOrgId={filters.orgId}
           includeChildren={filters.includeChildren}
           scopeLabel={scopeLabel}

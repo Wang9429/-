@@ -12,7 +12,7 @@ import PageHeader from "@/components/PageHeader";
 import { Card, DataTable, KpiCard, Modal, Notice } from "@/components/ui";
 import { IconAlert, IconClipboard, IconLayers, IconOverview, DOMAIN_ICONS } from "@/components/icons";
 import { DOMAIN_META, objectTypeLabel, scenarioName, seed } from "@/lib/seed";
-import { INDICATORS, indicatorById } from "@/lib/metrics";
+import { indicatorById } from "@/lib/metrics";
 import { orgName, orgUnitTypeLabel, orgById, orgFilterCaption, ROOT_ORG_ID } from "@/lib/org";
 import { authorizedObjectIds, authorizedOrgIds, can, canDomain, intersectOrgScope, riskVisible } from "@/lib/config";
 import { liveRuleLabel } from "@/lib/live-config";
@@ -696,8 +696,9 @@ export default function OverviewPage() {
           restoreScroll();
         }}
         indicator={indicatorId ? indicatorById(indicatorId) ?? null : null}
-        indicatorOptions={INDICATORS}
-        onSwitchIndicator={setIndicatorId}
+        indicatorOptions={[]}
+        onSwitchIndicator={() => undefined}
+        allowIndicatorSwitch={false}
         initialOrgId={filters.orgId}
         includeChildren={filters.includeChildren}
         scopeLabel={scopeLabel}

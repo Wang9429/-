@@ -7,7 +7,7 @@
  */
 import { seed, AS_OF } from "../lib/seed";
 import { INDICATORS, computeIndicator, indicatorLeaves, type IndicatorDef, type NodeMetric } from "../lib/metrics";
-import { orgScope, ROOT_ORG_ID } from "../lib/org";
+import { orgScope, ROOT_ORG_ID, isManagedUnit } from "../lib/org";
 import { computeFiveCounts, openCountForPhase } from "../lib/monitoring";
 import { isOpen, isOverdueRectification } from "../lib/risks";
 import type { DomainId } from "../lib/types";
@@ -31,7 +31,16 @@ import {
   overviewIndicatorOnHomepage,
   validHitRecords,
 } from "../lib/overview";
-import { isManagedUnit } from "../lib/org";
+import {
+  isIndicatorAbnormalStatus,
+  isRunnableDrawerIndicator,
+  metricRollupOrgIds,
+  relatedMatterIds,
+  resolveDrawerSelection,
+  runnableDrawerIndicators,
+  scopedIndicatorLeaves,
+  switchableDrawerIndicators,
+} from "../lib/indicator-scope";
 
 const PERIOD_START = "2026-01-01";
 const PERIOD_END = AS_OF;
@@ -418,6 +427,66 @@ check("EQ-I11总览不因首页启用", overviewIndicatorEnabled(indicator("EQ-I
 check("现金回报偏差随 EQ-I08 未启用", overviewIndicatorEnabled(indicator("EQ-CASH-DEVIATION")), false);
 check("现金回报偏差不在首页展示", overviewIndicatorOnHomepage(indicator("EQ-CASH-DEVIATION")), false);
 check("部门节点存在但不计入单位数", seed.organizations.some((o) => o.id === "ORG-HQ-FIN") && !isManagedUnit(seed.organizations.find((o) => o.id === "ORG-HQ-FIN")!), true);
+
+console.log("\n[指标抽屉范围与联动]");
+const hqUser = userById("USER-HQ-REG");
+const aScope = intersectOrgScope("ORG-A", true, hqUser);
+check("单位A含下级取数不含B", aScope.has("ORG-B"), false);
+check("单位A含下级取数含A1", aScope.has("ORG-A1"), true);
+check("单位A含下级取数不含总部", aScope.has("ORG-HQ"), false);
+
+const faLeaves = indicatorLeaves(indicator("FA-I06"), CTX);
+const aLeaves = scopedIndicatorLeaves(faLeaves, aScope);
+check("单位A范围执行率明细不含单位B项目", aLeaves.every((l) => aScope.has(l.orgId)), true);
+check("单位A范围执行率明细不含ORG-B", aLeaves.some((l) => l.orgId === "ORG-B"), false);
+
+const aMetric = computeIndicator(indicator("FA-I06"), aScope, CTX);
+check("单位A执行率覆盖与明细同口径", aMetric.coverage.expected, aLeaves.length);
+check("单位A执行率叶子与覆盖一致", aMetric.leaves.length, aLeaves.length);
+
+const assetLeaves = scopedIndicatorLeaves(indicatorLeaves(indicator("FA-I14"), CTX), aScope);
+const assetIds = new Set(assetLeaves.map((l) => l.objectId));
+const projectLeaf = aLeaves[0];
+check("项目叶子对资产指标不适用", Boolean(projectLeaf) && !assetIds.has(projectLeaf.objectId), true);
+const clamped = resolveDrawerSelection(
+  { kind: "leaf", id: projectLeaf?.objectId ?? "FA-P001" },
+  "ORG-A",
+  aScope,
+  assetIds,
+);
+check("切换不适用叶子回到筛选单位A而非总部", clamped, { kind: "org", id: "ORG-A" });
+const clampedHq = resolveDrawerSelection({ kind: "org", id: "ORG-HQ" }, "ORG-A", aScope, assetIds);
+check("祖先总部不可作为A范围取数节点", clampedHq, { kind: "org", id: "ORG-A" });
+
+const rollupA = metricRollupOrgIds("ORG-A", "ORG-A", true, aScope);
+check("单位A汇总不含B", rollupA.has("ORG-B"), false);
+const rollupHqOutside = metricRollupOrgIds("ORG-HQ", "ORG-A", true, aScope);
+check("祖先总部汇总为空不扩大取数", rollupHqOutside.size, 0);
+
+const faRunnable = runnableDrawerIndicators("FA");
+check("固定资产可运行入口含FA-I06", faRunnable.some((d) => d.id === "FA-I06"), true);
+check("固定资产可运行入口不含停用或仅目录FA-I01", faRunnable.some((d) => d.id === "FA-I01"), false);
+check("固定资产可运行入口不含股权指标", faRunnable.some((d) => d.domain !== "FA"), false);
+check("EQ-I11不得作为运行入口", isRunnableDrawerIndicator(indicator("EQ-I11")), false);
+check("按ID过滤跨领域选项", switchableDrawerIndicators("FA", [indicator("FA-I06"), indicator("EQ-BALANCE")]).every((d) => d.domain === "FA" && d.id !== "EQ-BALANCE"), true);
+
+check("无业务不当成异常", isIndicatorAbnormalStatus("no_business"), false);
+check("未评估不当成异常", isIndicatorAbnormalStatus("unknown"), false);
+check("正常不当成异常", isIndicatorAbnormalStatus("normal"), false);
+check("关注计入当前指标异常", isIndicatorAbnormalStatus("attention"), true);
+check("高风险计入当前指标异常", isIndicatorAbnormalStatus("risk"), true);
+
+const mixedLeaf = {
+  ...aLeaves[0],
+  riskIds: ["R99"],
+};
+check("关联事项不改变异常判定函数", relatedMatterIds([mixedLeaf]).includes("R99") && !isIndicatorAbnormalStatus("normal"), true);
+
+const domains: DomainId[] = ["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"];
+for (const d of domains) {
+  const list = runnableDrawerIndicators(d);
+  check(`${d}运行入口均属本领域且可计算`, list.every((x) => x.domain === d && typeof x.leaves === "function"), true);
+}
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

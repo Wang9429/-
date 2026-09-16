@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ChevronFlow, { type ChevronItem } from "@/components/ChevronFlow";
 import IndicatorDrawer, { formatKpiCaption, formatMetricParts } from "@/components/IndicatorDrawer";
 import RiskCaseDrawer from "@/components/RiskCaseDrawer";
@@ -12,10 +12,10 @@ import FilterBar from "@/components/FilterBar";
 import PageHeader from "@/components/PageHeader";
 import { DOMAIN_META, phaseName, seed, templatesByDomain, topicName } from "@/lib/seed";
 import { computeIndicator, indicatorById, type IndicatorDef, type NodeMetric } from "@/lib/metrics";
-import { catalogIndicatorOnHomepage, homepageCatalogIndicatorIds } from "@/lib/live-config";
+import { isRunnableDrawerIndicator, runnableDrawerIndicators } from "@/lib/indicator-scope";
 import { openCountForPhase, openCountForTopic } from "@/lib/monitoring";
 import { orgName } from "@/lib/org";
-import { authorizedObjectIds, intersectOrgScope, riskVisible } from "@/lib/config";
+import { authorizedObjectIds, canDomain, intersectOrgScope, riskVisible } from "@/lib/config";
 import { isOpen, isOverdueRectification, rectificationDueDate, statusLabel } from "@/lib/risks";
 import { riskMatches } from "@/lib/risks";
 import { fmtDate } from "@/lib/format";
@@ -167,21 +167,18 @@ export default function DomainPage({
   }, [domainRisks, filters.asOf]);
 
   const kpiDefs = useMemo(() => {
-    const ids: string[] = [];
+    if (!canDomain(user, domain)) return [];
     const seen = new Set<string>();
-    for (const id of kpiIndicatorIds) {
-      if (!catalogIndicatorOnHomepage(id)) continue;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      ids.push(id);
-    }
-    for (const id of homepageCatalogIndicatorIds(domain)) {
-      if (!indicatorById(id) || seen.has(id)) continue;
-      seen.add(id);
-      ids.push(id);
-    }
-    return ids.map((id) => indicatorById(id)).filter((d): d is IndicatorDef => Boolean(d));
-  }, [kpiIndicatorIds, domain, catalog]);
+    const out: IndicatorDef[] = [];
+    const push = (def: IndicatorDef | undefined) => {
+      if (!def || def.domain !== domain || !isRunnableDrawerIndicator(def) || seen.has(def.id)) return;
+      seen.add(def.id);
+      out.push(def);
+    };
+    for (const id of kpiIndicatorIds) push(indicatorById(id));
+    for (const def of runnableDrawerIndicators(domain)) push(def);
+    return out;
+  }, [kpiIndicatorIds, domain, catalog, user]);
 
   const scopeTitle =
     flowMode === "phases"
@@ -193,6 +190,13 @@ export default function DomainPage({
         : "全部专题";
 
   const scopeLabel = `${orgName(filters.orgId)}${filters.includeChildren ? "（含下级）" : "（仅本级）"}｜${filters.periodStart}~${filters.periodEnd}`;
+
+  useEffect(() => {
+    setIndicatorId(null);
+    setRiskId(null);
+    setObjectId(null);
+    setScenarioId(null);
+  }, [filters.orgId, filters.includeChildren, filters.periodStart, filters.periodEnd, filters.asOf, user?.id]);
 
   const currentSubtopics = phaseId ? subtopicByPhase?.[phaseId] : undefined;
   const effectiveSubtopic = currentSubtopics ? (subtopicId ?? currentSubtopics[0].id) : null;
@@ -529,6 +533,7 @@ export default function DomainPage({
         indicator={indicatorId ? indicatorById(indicatorId) ?? null : null}
         indicatorOptions={kpiDefs}
         onSwitchIndicator={setIndicatorId}
+        allowIndicatorSwitch
         initialOrgId={filters.orgId}
         includeChildren={filters.includeChildren}
         scopeLabel={scopeLabel}
