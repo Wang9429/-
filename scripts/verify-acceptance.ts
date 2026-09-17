@@ -53,7 +53,7 @@ import {
 } from "../lib/indicator-scope";
 import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, FIRST_BATCH_SUBS, MAIN_TOPIC_OVERRIDE } from "../lib/fp-topics";
 import { CATEGORY_LABEL, computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "../lib/fp-trend";
-import { CASH_OFFICIAL_PRIMARY_IDS, RIGHTS_OFFICIAL_PRIMARY_IDS, officialDirectory, officialSubIds, scopedDirectory } from "../lib/fp-directory";
+import { CASH_OFFICIAL_PRIMARY_IDS, RIGHTS_OFFICIAL_PRIMARY_IDS, coveragePrimaries, officialDirectory, officialSubIds, scopedDirectory } from "../lib/fp-directory";
 import { scenarioAdoption, scenarioSourceLabel, SUPPLEMENTAL_SCENARIO_LABEL } from "../lib/seed";
 
 const PERIOD_START = "2026-01-01";
@@ -737,7 +737,9 @@ check("截至5月15日趋势不含5月末以后点", ptsMay.every((p) => p.asOf 
 const pty1 = indicator("PTY2-I01");
 const specPty = trendSpecOf(pty1.id);
 const ptsPty = specPty ? computeTrendPoints(pty1, HQ, CTX, specPty, computeIndicator) : [];
-check("产权户数有历史快照趋势", Boolean(eligibleTrendPoints(ptsPty, specPty?.minPoints ?? 2)), true);
+check("产权户数趋势适用为从不显示", specPty?.applicability, "never");
+check("产权户数首页不配趋势", specPty?.homeVisible, false);
+check("产权户数详情不配趋势", specPty?.detailVisible, false);
 
 console.log("\n[FP-20260916-R3.1 一级目录与下半区]");
 const cashDir = officialDirectory("CASH");
@@ -766,7 +768,14 @@ const identDir = scopedDirectory("RIGHTS", "PTY2-T-IDENTITY");
 check("标识专题不含交易一级P01", identDir.some((g) => g.id === "PTY2-P01"), false);
 check("标识专题含P08", identDir.some((g) => g.id === "PTY2-P08"), true);
 const tradeDir = scopedDirectory("RIGHTS", "PTY2-T-TRADE");
-check("交易专题不含登记P09", tradeDir.some((g) => g.id === "PTY2-P09"), false);
+check("交易专题按条件关联含登记P09", tradeDir.some((g) => g.id === "PTY2-P09"), true);
+check("交易专题按条件关联含标识P08", tradeDir.some((g) => g.id === "PTY2-P08"), true);
+check("交易专题按条件关联含控制P10", tradeDir.some((g) => g.id === "PTY2-P10"), true);
+check("登记专题不含交易P01", scopedDirectory("RIGHTS", "PTY2-T-REG").some((g) => g.id === "PTY2-P01"), false);
+const cashNames = coveragePrimaries("CASH").map((p) => p.primary_name);
+const rightsNames = coveragePrimaries("RIGHTS").map((p) => p.primary_name);
+check("资金一级名称与对照表一致", cashDir.map((g) => g.name), cashNames);
+check("产权一级名称与对照表一致", rightsDir.map((g) => g.name), rightsNames);
 check("S001 不标补充监管场景", scenarioAdoption("CASH2-S001") === SUPPLEMENTAL_SCENARIO_LABEL, false);
 check("S039 纳入方式为结构化监测", scenarioAdoption("CASH2-S039"), "结构化监测");
 check("S032 纳入方式为专业核查", scenarioAdoption("PTY2-S032"), "专业核查");

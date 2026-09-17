@@ -40,7 +40,7 @@ export default function ChevronFlow({
   showStats?: boolean;
 }) {
   return (
-    <div className="flex items-stretch gap-2">
+    <div className="flex items-stretch gap-2" data-testid="chevron-flow">
       <button
         type="button"
         onClick={() => onChange(null)}

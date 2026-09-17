@@ -17,6 +17,7 @@ import { configStatusLabel, displayPositionLabel, domainCodeLabel } from "@/lib/
 import { INDICATORS, computeIndicator, indicatorById } from "@/lib/metrics";
 import { useDemoStore } from "@/lib/store";
 import { CATEGORY_LABEL } from "@/lib/fp-trend";
+import { isPropertyCensusIndicator } from "@/lib/fp-catalog";
 import { ActionCell, FormDrawer, SaveBar, denyTitle, fieldClass } from "./shared";
 
 type Mode = "view" | "edit" | "create" | null;
@@ -63,8 +64,13 @@ export default function IndicatorsTab() {
     const errs = validateIndicator(draft, catalog.indicators, mode === "create");
     setErrors(errs);
     if (Object.keys(errs).length) return;
+    const payload = isPropertyCensusIndicator(draft.id)
+      ? { ...draft, trend_applicability: "never" as const, trend_home_visible: false, trend_detail_visible: false }
+      : draft;
     const next =
-      mode === "create" ? [...catalog.indicators, draft] : catalog.indicators.map((i) => (i.id === draft.id ? draft : i));
+      mode === "create"
+        ? [...catalog.indicators, payload]
+        : catalog.indicators.map((i) => (i.id === payload.id ? payload : i));
     persist(next);
     setFlash(
       indicatorById(draft.id)
@@ -291,8 +297,8 @@ export default function IndicatorsTab() {
               <Field label="趋势适用">
                 <select
                   className={fieldClass()}
-                  value={draft.trend_applicability ?? "conditional"}
-                  disabled={readonly}
+                  value={isPropertyCensusIndicator(draft.id) ? "never" : (draft.trend_applicability ?? "conditional")}
+                  disabled={readonly || isPropertyCensusIndicator(draft.id)}
                   onChange={(e) =>
                     setDraft({
                       ...draft,
@@ -307,8 +313,8 @@ export default function IndicatorsTab() {
               <Field label="首页小趋势">
                 <select
                   className={fieldClass()}
-                  value={draft.trend_home_visible === false ? "off" : "on"}
-                  disabled={readonly}
+                  value={isPropertyCensusIndicator(draft.id) || draft.trend_home_visible === false ? "off" : "on"}
+                  disabled={readonly || isPropertyCensusIndicator(draft.id)}
                   onChange={(e) => setDraft({ ...draft, trend_home_visible: e.target.value === "on" })}
                 >
                   <option value="on">显示（满足点数时）</option>
@@ -318,14 +324,17 @@ export default function IndicatorsTab() {
               <Field label="详情趋势">
                 <select
                   className={fieldClass()}
-                  value={draft.trend_detail_visible === false ? "off" : "on"}
-                  disabled={readonly}
+                  value={isPropertyCensusIndicator(draft.id) || draft.trend_detail_visible === false ? "off" : "on"}
+                  disabled={readonly || isPropertyCensusIndicator(draft.id)}
                   onChange={(e) => setDraft({ ...draft, trend_detail_visible: e.target.value === "on" })}
                 >
                   <option value="on">显示（满足点数时）</option>
                   <option value="off">关闭</option>
                 </select>
               </Field>
+              {isPropertyCensusIndicator(draft.id) && (
+                <p className="text-[12px] text-textsub">产权户数与在办事项固定不配趋势，刷新或切单位也不能打开。</p>
+              )}
               <Field label="趋势频率">
                 <select
                   className={fieldClass()}

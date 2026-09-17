@@ -221,7 +221,7 @@ try {
   await clickText("button", "产权登记");
   const reg = await bodyText();
   log("FP-AC07 登记专题", reg.includes("产权登记") || reg.includes("PTY-M009") || reg.includes("PTY-M001"));
-  await clickText("button", "股权控制");
+  await clickText("button", "股权与控制权");
   log("FP-AC07/S032 控制专题", (await bodyText()).includes("股权") || (await bodyText()).includes("控制"));
 
   await goto(`${BASE}/settings`);

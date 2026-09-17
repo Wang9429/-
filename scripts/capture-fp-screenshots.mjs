@@ -120,7 +120,15 @@ await shot("r3-funds-topic-operation");
 
 await goto(`${BASE}/property-rights${slash}`);
 await page.waitForSelector("[data-testid='rights-topic-nav']");
-await shot("r3-rights-census-sparks");
+await page.waitForSelector("[data-testid='rights-kpi-grid']");
+await shotEl("r31-rights-kpi-no-formula-trend", "[data-testid='rights-kpi-grid']");
+await shot("r3-rights-census-home");
+await page.click("[data-overlay-return='N']");
+await page.waitForSelector("[data-drawer-tree]");
+await sleep(400);
+await shot("r31-rights-indicator-detail-no-trend");
+await page.keyboard.press("Escape");
+await sleep(250);
 await page.click("[data-testid='scenario-expand-all']");
 await sleep(300);
 await page.evaluate(() => document.getElementById("scenario-execution")?.scrollIntoView({ block: "start" }));
@@ -128,6 +136,8 @@ await sleep(200);
 await shot("r31-rights-full-catalog");
 await page.click("[data-testid='rights-topic-PTY2-T-TRADE']");
 await page.waitForSelector("[data-testid='rights-behavior-select']");
+await page.select("[data-testid='rights-behavior-select']", "nonlisted_transfer");
+await page.waitForSelector("[data-testid='rights-chevron-flow']");
 await page.evaluate(() => document.getElementById("scenario-execution")?.scrollIntoView({ block: "start" }));
 await sleep(250);
 await shot("r31-rights-trade");
@@ -151,12 +161,13 @@ fs.writeFileSync(
 R3.1 截图：
 - r31-funds-full-catalog.png 资金全部专题 11 项一级目录
 - r31-rights-full-catalog.png 产权全部专题 10 项一级目录
-- r31-rights-trade.png 产权交易（经济行为下拉+肩形流程）
+- r31-rights-trade.png 产权交易（选定经济行为后的下拉+肩形流程）
 - r31-rights-nontrade.png 非交易专题（无经济行为、无流程）
-R3 上半区仍有效：
+- r31-rights-kpi-no-formula-trend.png 产权四卡：无公式、无趋势
+- r31-rights-indicator-detail-no-trend.png 产权指标详情：无趋势图，公式仅在计算依据
+资金趋势仍有效：
 - funds-upper-kpis.png 资金盈利能力主卡与小趋势
 - r3-funds-revenue-detail-trend.png 营业收入详情趋势与同分类切换
-- r3-rights-census-sparks.png 产权四卡与快照趋势
 `,
 );
 await browser.close();

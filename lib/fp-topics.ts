@@ -12,10 +12,10 @@ export const CASH_TOPICS = [
 ] as const;
 
 export const RIGHTS_TOPICS = [
-  { id: "PTY2-T-TRADE", name: "产权交易流转", short: "产权交易" },
+  { id: "PTY2-T-TRADE", name: "产权交易", short: "产权交易" },
   { id: "PTY2-T-REG", name: "产权登记", short: "产权登记" },
-  { id: "PTY2-T-IDENTITY", name: "标识与名称资质", short: "标识名称" },
-  { id: "PTY2-T-CONTROL", name: "股权与控制权", short: "股权控制" },
+  { id: "PTY2-T-IDENTITY", name: "标识与名称资质", short: "标识与名称资质" },
+  { id: "PTY2-T-CONTROL", name: "股权与控制权", short: "股权与控制权" },
 ] as const;
 
 export const CASH_TOPIC_NAME: Record<string, string> = Object.fromEntries(
@@ -32,6 +32,7 @@ export const TOPIC_BY_LABEL: Record<string, string> = {
   资金运作: "CASH2-T-OPERATION",
   专项资金: "CASH2-T-SPECIAL",
   经营风险: "CASH2-T-OPERATING",
+  产权交易: "PTY2-T-TRADE",
   产权交易流转: "PTY2-T-TRADE",
   产权登记: "PTY2-T-REG",
   "标识与名称资质": "PTY2-T-IDENTITY",

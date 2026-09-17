@@ -296,6 +296,7 @@ export function KpiCard({
   iconTone = "brand",
   returnKey,
   extra,
+  compact,
 }: {
   name: string;
   value: React.ReactNode;
@@ -310,6 +311,7 @@ export function KpiCard({
   iconTone?: ToneName;
   returnKey?: string;
   extra?: React.ReactNode;
+  compact?: boolean;
 }) {
   const iconBg: Record<ToneName, { bg: string; fg: string }> = {
     brand: { bg: "#EAF1FD", fg: "var(--brand)" },
@@ -337,8 +339,8 @@ export function KpiCard({
       onClick={onOpen}
       title={scopeLabel}
       data-overlay-return={returnKey || name}
-      className={`text-left bg-surface border rounded-[10px] px-5 py-[18px] min-h-[168px] h-full flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] whitespace-normal ${
-        extra ? "min-h-[196px]" : ""
+      className={`text-left bg-surface border rounded-[10px] px-5 flex gap-3.5 transition-colors duration-150 hover:border-[#c3d8f7] hover:bg-[#fcfdff] whitespace-normal ${
+        compact ? "py-3 min-h-[108px] h-auto" : extra ? "py-[18px] min-h-[196px] h-full" : "py-[18px] min-h-[168px] h-full"
       } ${
         active ? "border-brand" : "border-line"
       } shadow-[0_2px_10px_rgba(17,43,77,0.04)] relative`}

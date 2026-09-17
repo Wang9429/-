@@ -260,7 +260,7 @@ try {
 
   await clickText("button", "资金收付");
   const payExec = await execText();
-  log("执行表含官方目录定义项", payExec.includes("仅维护定义") || payExec.includes("CASH2-S001"));
+  log("执行表含官方目录定义项", payExec.includes("未启用") || payExec.includes("未开展监测") || payExec.includes("CASH2-S001") || payExec.includes("违反决策"));
   log("执行表不含补充草稿S901", !payExec.includes("CASH2-S901"));
   log("执行表含已启用收付场景", /CASH2-S039|CASH2-S033|CASH2-S037/.test(payExec) || /超该笔有效批准|中小企业/.test(payExec));
 
@@ -367,11 +367,11 @@ try {
   await clickText("button", "产权登记");
   const reg = await bodyText();
   log("登记专题含PTY2-S028", /PTY2-S028|应登记未办/.test(reg));
-  await clickText("button", "标识名称");
+  await clickText("button", "标识与名称资质");
   const ident = await bodyText();
   const identExec = await execText();
   log("标识专题含官方目录", identExec.includes("PTY2-S025") || ident.includes("PTY2-P08"));
-  await clickText("button", "股权控制");
+  await clickText("button", "股权与控制权");
   const ctrl = await bodyText();
   log("控制专题含PTY2-S032", /PTY2-S032|控股权利/.test(ctrl));
   await shot("close_pty_control");
@@ -413,7 +413,7 @@ try {
   log("总览未关闭整改由明细展示", /未关闭整改/.test(ov032) && /由截至日明细计算/.test(ov032));
 
   await page.goto(`${BASE}/property-rights`, { waitUntil: "networkidle0" });
-  await clickText("button", "股权控制");
+  await clickText("button", "股权与控制权");
   stats.push(await snapshotStats("S032转入整改-产权"));
   await shot("three_s032_property");
 

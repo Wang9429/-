@@ -408,7 +408,7 @@ const RIGHTS_INDICATORS: CatalogIndicator[] = [
   {
     id: "PTY2-I02",
     domain: "RIGHTS",
-    name: "控股及实际控制企业",
+    name: "控股及实际控制企业户数",
     formula_display: "纳管法人中经有效治理依据确认控制的被投企业",
     definition_note: "含已确认控制的全资及非全资企业，排除海工本体。占比分母为被投法人 N−B。",
     status: "published",
@@ -418,7 +418,7 @@ const RIGHTS_INDICATORS: CatalogIndicator[] = [
   {
     id: "PTY2-I03",
     domain: "RIGHTS",
-    name: "参股企业",
+    name: "参股企业户数",
     formula_display: "纳管法人中已确认不控制的被投企业",
     definition_note: "未录入控制结论的不归为参股，单列控制待核实。",
     status: "published",
@@ -428,7 +428,7 @@ const RIGHTS_INDICATORS: CatalogIndicator[] = [
   {
     id: "PTY2-I04",
     domain: "RIGHTS",
-    name: "在办产权事项",
+    name: "在办产权事项数",
     formula_display: "截至日已启动、尚未完成或正式终止的产权事项按事项ID去重",
     definition_note: "不是规则命中数，也不是整改数。交易、登记、名称资质、治理变动在事项详情分类型展开。",
     status: "published",
@@ -462,10 +462,10 @@ function withMetricConfig(list: CatalogIndicator[]): CatalogIndicator[] {
     "CASH-I02": { category_id: "liquidity", time_type: "stock", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
     "CASH-I07": { category_id: "liquidity", time_type: "period_ratio", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
     "CASH2-I09": { category_id: "liquidity", time_type: "flow", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
-    "PTY2-I01": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
-    "PTY2-I02": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
-    "PTY2-I03": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
-    "PTY2-I04": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "conditional", trend_home_visible: true, trend_detail_visible: true, trend_frequency: "month" },
+    "PTY2-I01": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "never", trend_home_visible: false, trend_detail_visible: false, trend_frequency: "month" },
+    "PTY2-I02": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "never", trend_home_visible: false, trend_detail_visible: false, trend_frequency: "month" },
+    "PTY2-I03": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "never", trend_home_visible: false, trend_detail_visible: false, trend_frequency: "month" },
+    "PTY2-I04": { category_id: "property_census", time_type: "point_snapshot", trend_applicability: "never", trend_home_visible: false, trend_detail_visible: false, trend_frequency: "month" },
   };
   return list.map((i) => ({ ...i, ...extra[i.id] }));
 }
@@ -514,4 +514,10 @@ export const FP_HOMEPAGE_SAFE = new Set<string>(["CASH-I01", "CASH-I02", "CASH-I
 
 export function isFundsPageIndicator(id: string): boolean {
   return (CASH2_FINANCE_HOMEPAGE_IDS as readonly string[]).includes(id);
+}
+
+export const PROPERTY_CENSUS_IDS = new Set(["PTY2-I01", "PTY2-I02", "PTY2-I03", "PTY2-I04"]);
+
+export function isPropertyCensusIndicator(id: string): boolean {
+  return PROPERTY_CENSUS_IDS.has(id);
 }

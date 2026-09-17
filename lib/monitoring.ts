@@ -352,7 +352,8 @@ export interface ScenarioRuntimeStatus {
     | "not_due"
     | "not_applicable"
     | "definition_only"
-    | "not_yet_monitoring";
+    | "not_yet_monitoring"
+    | "no_runtime";
   label: string;
   tone: "red" | "amber" | "green" | "neutral";
   missingFields: string[];
@@ -379,11 +380,15 @@ export function scenarioRuntimeStatus(
   if (inactive && rows.length === 0) {
     const cap = sub?.runtime_capability;
     const executable = cap === "structured_executable" || cap === "assisted_review" || cap === "professional_review";
-    if (cap === "definition_only" || (isOfficialFpSub(scenarioId) && !executable)) {
-      return { code: "definition_only", label: "仅维护定义", tone: "neutral", missingFields: [] };
+    const enabled = sub?.enabled === true && sub.status !== "disabled" && sub.status !== "retired";
+    if (!enabled) {
+      return { code: "definition_only", label: "未启用", tone: "neutral", missingFields: [] };
+    }
+    if (!executable) {
+      return { code: "no_runtime", label: "未具备运行条件", tone: "neutral", missingFields: [] };
     }
     if (isOfficialFpSub(scenarioId)) {
-      return { code: "not_yet_monitoring", label: "暂未开展监测", tone: "neutral", missingFields: [] };
+      return { code: "not_yet_monitoring", label: "未开展监测", tone: "neutral", missingFields: [] };
     }
   }
 

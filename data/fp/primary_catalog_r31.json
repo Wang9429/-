@@ -1,0 +1,544 @@
+{
+  "version": "FP-20260916-R3.1",
+  "type": "primary_catalog_coverage_acceptance_contract_not_application_seed",
+  "expected_primary_counts": {
+    "funds": 11,
+    "property-rights": 10
+  },
+  "expected_existing_subscenario_counts": {
+    "funds": 40,
+    "property-rights": 40
+  },
+  "default_topic_filter": "all",
+  "main_navigation": "one execution panel with topic tabs; property transaction behavior dropdown and stage filter appear only within transaction topic",
+  "primary_records": [
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P01",
+      "primary_name": "违反决策和审批程序筹集和使用资金",
+      "subscenario_ids": [
+        "CASH2-S001",
+        "CASH2-S002",
+        "CASH2-S003",
+        "CASH2-S040"
+      ],
+      "main_topics": [
+        "资金收付",
+        "账户管理"
+      ],
+      "conditional_topics": [
+        "融资与担保",
+        "资金运作",
+        "专项资金"
+      ],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P02",
+      "primary_name": "超越权限筹集和使用资金",
+      "subscenario_ids": [
+        "CASH2-S004",
+        "CASH2-S005",
+        "CASH2-S037",
+        "CASH2-S038",
+        "CASH2-S039"
+      ],
+      "main_topics": [
+        "融资与担保",
+        "资金收付"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P03",
+      "primary_name": "设立“小金库”",
+      "subscenario_ids": [
+        "CASH2-S006",
+        "CASH2-S007"
+      ],
+      "main_topics": [
+        "账户管理",
+        "资金收付"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P04",
+      "primary_name": "违反规定集资、发行股票或债券、捐赠、担保、委托理财、拆借资金或开立信用证、办理银行票据等",
+      "subscenario_ids": [
+        "CASH2-S008",
+        "CASH2-S009",
+        "CASH2-S010",
+        "CASH2-S011",
+        "CASH2-S012",
+        "CASH2-S013",
+        "CASH2-S014",
+        "CASH2-S015",
+        "CASH2-S016"
+      ],
+      "main_topics": [
+        "融资与担保",
+        "资金收付",
+        "资金运作"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P05",
+      "primary_name": "虚列支出套取资金",
+      "subscenario_ids": [
+        "CASH2-S017",
+        "CASH2-S018",
+        "CASH2-S019"
+      ],
+      "main_topics": [
+        "资金收付"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P06",
+      "primary_name": "违反规定自定薪酬，超发、滥发职工薪酬福利",
+      "subscenario_ids": [
+        "CASH2-S020",
+        "CASH2-S021",
+        "CASH2-S022"
+      ],
+      "main_topics": [
+        "资金收付"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P07",
+      "primary_name": "因财务内控缺失或未按照财务内控制度执行，发生资金挪用、侵占、盗取、欺诈等",
+      "subscenario_ids": [
+        "CASH2-S023",
+        "CASH2-S024",
+        "CASH2-S025",
+        "CASH2-S026"
+      ],
+      "main_topics": [
+        "资金收付"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P08",
+      "primary_name": "违规出借资金",
+      "subscenario_ids": [
+        "CASH2-S027",
+        "CASH2-S028",
+        "CASH2-S029"
+      ],
+      "main_topics": [
+        "资金运作"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P09",
+      "primary_name": "未按规定对有关专项资金实行专户管理和使用",
+      "subscenario_ids": [
+        "CASH2-S030",
+        "CASH2-S031",
+        "CASH2-S032"
+      ],
+      "main_topics": [
+        "专项资金"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P10",
+      "primary_name": "中小企业账款拖欠",
+      "subscenario_ids": [
+        "CASH2-S033",
+        "CASH2-S034"
+      ],
+      "main_topics": [
+        "资金收付"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "funds",
+      "primary_id": "CASH2-P11",
+      "primary_name": "核心业务持续亏损",
+      "subscenario_ids": [
+        "CASH2-S035",
+        "CASH2-S036"
+      ],
+      "main_topics": [
+        "经营风险"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P01",
+      "primary_name": "未按规定履行决策和审批程序转让、划转国有产权",
+      "subscenario_ids": [
+        "PTY2-S001",
+        "PTY2-S002",
+        "PTY2-S003",
+        "PTY2-S004"
+      ],
+      "main_topics": [
+        "产权交易"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P02",
+      "primary_name": "超越授权范围转让、划转国有产权",
+      "subscenario_ids": [
+        "PTY2-S005",
+        "PTY2-S006"
+      ],
+      "main_topics": [
+        "产权交易"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P03",
+      "primary_name": "财务审计和资产评估违反相关规定",
+      "subscenario_ids": [
+        "PTY2-S007",
+        "PTY2-S008",
+        "PTY2-S009",
+        "PTY2-S010",
+        "PTY2-S035",
+        "PTY2-S036"
+      ],
+      "main_topics": [
+        "产权交易"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P04",
+      "primary_name": "隐匿应当纳入审计、评估范围的资产，组织提供和披露虚假信息，授意、指使中介机构出具虚假财务审计、资产评估鉴证结果及法律意见书等",
+      "subscenario_ids": [
+        "PTY2-S011",
+        "PTY2-S012",
+        "PTY2-S013"
+      ],
+      "main_topics": [
+        "产权交易"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P05",
+      "primary_name": "未按相关规定执行回避制度",
+      "subscenario_ids": [
+        "PTY2-S014",
+        "PTY2-S015"
+      ],
+      "main_topics": [
+        "产权交易"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P06",
+      "primary_name": "违反相关规定和公开公平交易原则，低价转让企业产权、上市公司股权和资产等",
+      "subscenario_ids": [
+        "PTY2-S016",
+        "PTY2-S017",
+        "PTY2-S018",
+        "PTY2-S019"
+      ],
+      "main_topics": [
+        "产权交易"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P07",
+      "primary_name": "违反规定进行国有资产交易流转",
+      "subscenario_ids": [
+        "PTY2-S020",
+        "PTY2-S021",
+        "PTY2-S022",
+        "PTY2-S023",
+        "PTY2-S037"
+      ],
+      "main_topics": [
+        "产权交易"
+      ],
+      "conditional_topics": [],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P08",
+      "primary_name": "未按规定履行国有股东标识管理程序，违规管理国有企业名称、企业名称中的字号，违规使用企业许可证件、资质证明文件",
+      "subscenario_ids": [
+        "PTY2-S024",
+        "PTY2-S025",
+        "PTY2-S026",
+        "PTY2-S038"
+      ],
+      "main_topics": [
+        "标识与名称资质"
+      ],
+      "conditional_topics": [
+        "产权交易"
+      ],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P09",
+      "primary_name": "未按规定办理国家出资企业产权登记，违反规定使用国有资产产权登记证（表）",
+      "subscenario_ids": [
+        "PTY2-S027",
+        "PTY2-S028",
+        "PTY2-S029",
+        "PTY2-S039",
+        "PTY2-S040"
+      ],
+      "main_topics": [
+        "产权登记"
+      ],
+      "conditional_topics": [
+        "产权交易"
+      ],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    },
+    {
+      "domain_id": "property-rights",
+      "primary_id": "PTY2-P10",
+      "primary_name": "违反规定代持股权、虚假控股、控股不控权、虚假合资、挂靠经营等",
+      "subscenario_ids": [
+        "PTY2-S030",
+        "PTY2-S031",
+        "PTY2-S032",
+        "PTY2-S033",
+        "PTY2-S034"
+      ],
+      "main_topics": [
+        "股权与控制权"
+      ],
+      "conditional_topics": [
+        "产权交易"
+      ],
+      "catalog_visible_in_all_topics": true,
+      "visibility_independent_of": [
+        "hit_count",
+        "current_object_count",
+        "child_enablement",
+        "runtime_capability"
+      ],
+      "raw_title_must_preserve": true
+    }
+  ],
+  "visibility_policy": {
+    "primary": "All standard primary definitions visible in all-topics view regardless of child execution; specific topic/behavior/stage can filter with explicit selected context",
+    "child": "All confirmed child definitions reachable by expanding primary; preserve true enabled state and display execution status separately",
+    "disabled_metric": "unchanged: disabled indicator hidden, distinct from scenario catalog policy",
+    "execution_statistics": "only eligible authorized actual evaluation/task/case records; configured definition is not assessment; no false zeros"
+  },
+  "legacy_policy": "CASH-S01/PTY-S01 and other historical definitions map to standard primary only when semantics match; otherwise retain in separate supplemental/history view, excluded from 11/10; never delete histories or invent additional standard primary group",
+  "standard_child_label": "remove universal supplementary label from children mapped to standard original primary definitions",
+  "amended_on": "2026-09-17",
+  "property_metric_display": {
+    "scope": [
+      "legal_entity_count",
+      "controlled_entity_count",
+      "participated_entity_count",
+      "open_property_matters"
+    ],
+    "formula_on_home": false,
+    "formula_default_in_details": false,
+    "formula_access": "on_demand_calculation_basis",
+    "home_trend": false,
+    "detail_trend": false,
+    "trend_user_toggle": "disabled_for_property_metrics",
+    "remove_empty_chart_space": true,
+    "preserve": [
+      "metric_calculation",
+      "as_of_filters",
+      "historical_data",
+      "ownership_graph",
+      "organization_drill",
+      "business_lists",
+      "funds_trends"
+    ],
+    "precedence": "overrides R3 conditional property trends; does not alter funds trend applicability"
+  }
+}

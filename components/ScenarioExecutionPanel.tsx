@@ -365,14 +365,20 @@ export default function ScenarioExecutionPanel({
   ]);
 
   React.useEffect(() => {
-    setOpenGroups(
-      new Set(
-        groupedRows
-          .filter((g) => g.rows.some((r) => r.counts.openRiskIds.length > 0 || r.monitoringActive))
-          .map((g) => g.id),
-      ),
+    setOpenGroups(new Set());
+  }, [topicId, phaseId, directoryDomain]);
+
+  React.useEffect(() => {
+    const q = search.trim();
+    if (!q) return;
+    const hits = groupedRows.filter(
+      (g) =>
+        g.name.includes(q) ||
+        g.id.toLowerCase().includes(q.toLowerCase()) ||
+        g.rows.some((r) => r.name.includes(q) || r.id.toLowerCase().includes(q.toLowerCase())),
     );
-  }, [topicId, phaseId, groupedRows.length]);
+    if (hits.length === 1) setOpenGroups(new Set([hits[0].id]));
+  }, [search, groupedRows]);
 
   const expandAll = () => setOpenGroups(new Set(groupedRows.map((g) => g.id)));
   const collapseAll = () => setOpenGroups(new Set());
@@ -505,13 +511,13 @@ export default function ScenarioExecutionPanel({
           </div>
         )}
 
-        {Object.keys(summary.objectTypeBreakdown).length > 0 && (
+        {Object.keys(summary.objectTypeBreakdown).length > 0 && catalogMode === false && (
           <p className="mt-2 text-[12px] text-textsub">
             对象分类型：
             {Object.entries(summary.objectTypeBreakdown)
               .map(([t, n]) => `${objectTypeLabel[t] ?? t} 已评估 ${n.monitored}／命中 ${n.hit}`)
               .join("；")}
-            。场景、规则、单位与业务对象分别计数，不混用。
+            。
           </p>
         )}
         <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -617,13 +623,12 @@ export default function ScenarioExecutionPanel({
                           }
                         >
                           <span className="text-textsub w-3">{opened ? "▼" : "▶"}</span>
-                          <span>
+                          <span className="whitespace-normal break-words leading-5">
                             {group.name}
-                            <span className="num text-[12px] text-textsub font-normal ml-2">{group.id}</span>
                           </span>
                           <span className="text-[12px] text-textsub font-normal">{subCount} 个子场景</span>
                           {group.rows.length === 0 && (
-                            <span className="text-[12px] text-textsub font-normal">暂未开展监测</span>
+                            <span className="text-[12px] text-textsub font-normal">未开展监测</span>
                           )}
                         </button>
                       </td>
@@ -632,7 +637,14 @@ export default function ScenarioExecutionPanel({
                       group.rows.map((r) => {
                         const dormant =
                           r.rows.length === 0 &&
-                          (r.statusLabelText === "仅维护定义" || r.statusLabelText === "暂未开展监测" || r.statusLabelText === "无业务");
+                          (r.statusLabelText === "仅维护定义" ||
+                            r.statusLabelText === "暂未开展监测" ||
+                            r.statusLabelText === "未启用" ||
+                            r.statusLabelText === "未具备运行条件" ||
+                            r.statusLabelText === "未开展监测" ||
+                            r.statusLabelText === "无业务");
+                        const showAdoption =
+                          r.adoption === "结构化监测" || r.adoption === "线索核查" || r.adoption === "专业核查";
                         return (
                         <React.Fragment key={r.id}>
                           <tr className="hover:bg-tint border-b border-line" data-testid={`scenario-sub-${r.id}`}>
@@ -643,8 +655,9 @@ export default function ScenarioExecutionPanel({
                                 title={scenarioSourceLabel(r.id)}
                               >
                                 <span className="text-[14px] text-textmain block break-words whitespace-normal leading-5">{r.name}</span>
-                                <span className="num text-[12px] text-textsub">{r.id}</span>
-                                <Tag tone={r.adoption === "结构化监测" ? "brand" : "neutral"}>{r.adoption}</Tag>
+                                {showAdoption && (
+                                  <Tag tone={r.adoption === "结构化监测" ? "brand" : "neutral"}>{r.adoption}</Tag>
+                                )}
                               </button>
                             </td>
                             <td className="px-3 py-2 align-top">
@@ -652,7 +665,10 @@ export default function ScenarioExecutionPanel({
                                 <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>
                                 {!r.monitoringActive &&
                                   r.statusLabelText !== "仅维护定义" &&
-                                  r.statusLabelText !== "暂未开展监测" && <Tag tone="neutral">已停用</Tag>}
+                                  r.statusLabelText !== "暂未开展监测" &&
+                                  r.statusLabelText !== "未启用" &&
+                                  r.statusLabelText !== "未具备运行条件" &&
+                                  r.statusLabelText !== "未开展监测" && <Tag tone="neutral">已停用</Tag>}
                               </span>
                             </td>
                             <td className="px-3 py-2 align-top text-right num whitespace-nowrap">

@@ -127,10 +127,10 @@ export const DEFAULT_TREND: Record<string, TrendSpec> = {
   "CASH-I02": { ...STOCK, homeVisible: true, detailVisible: true },
   "CASH-I07": { ...RATIO_M, homeVisible: true, detailVisible: true, chartLabel: "各月末占比" },
   "CASH2-I09": { ...FLOW, homeVisible: true, detailVisible: true },
-  "PTY2-I01": { ...CENSUS, homeVisible: true, detailVisible: true },
-  "PTY2-I02": { ...CENSUS, homeVisible: true, detailVisible: true },
-  "PTY2-I03": { ...CENSUS, homeVisible: true, detailVisible: true },
-  "PTY2-I04": { ...CENSUS, homeVisible: true, detailVisible: true, valueLabel: "时点事项数" },
+  "PTY2-I01": { ...CENSUS, applicability: "never", homeVisible: false, detailVisible: false },
+  "PTY2-I02": { ...CENSUS, applicability: "never", homeVisible: false, detailVisible: false },
+  "PTY2-I03": { ...CENSUS, applicability: "never", homeVisible: false, detailVisible: false },
+  "PTY2-I04": { ...CENSUS, applicability: "never", homeVisible: false, detailVisible: false, valueLabel: "时点事项数" },
 };
 
 export function categoryIdOf(indicatorId: string, catalogRow?: CatalogIndicator | null): MetricCategoryId | null {
@@ -159,6 +159,11 @@ export function trendSpecOf(
   indicatorId: string,
   override?: Partial<Pick<TrendSpec, "applicability" | "homeVisible" | "detailVisible" | "frequency">>,
 ): TrendSpec | null {
+  if (/^PTY2-I0[1-4]$/.test(indicatorId)) {
+    const base = DEFAULT_TREND[indicatorId];
+    if (!base) return null;
+    return { ...base, applicability: "never", homeVisible: false, detailVisible: false };
+  }
   const base = DEFAULT_TREND[indicatorId];
   if (!base) return null;
   return { ...base, ...override };

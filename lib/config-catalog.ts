@@ -393,7 +393,11 @@ function fillIndicatorDefaults(indicators: CatalogIndicator[], seed: CatalogIndi
       trend_detail_visible: i.trend_detail_visible ?? src.trend_detail_visible,
       trend_frequency: i.trend_frequency ?? src.trend_frequency,
     };
-  });
+  }).map((i) =>
+    /^PTY2-I0[1-4]$/.test(i.id)
+      ? { ...i, trend_applicability: "never" as const, trend_home_visible: false, trend_detail_visible: false }
+      : i,
+  );
 }
 
 function mergeById<T extends { id: string }>(base: T[], extra?: T[] | null): T[] {

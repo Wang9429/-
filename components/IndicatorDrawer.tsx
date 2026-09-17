@@ -27,6 +27,7 @@ import { formatComparableChange, formatYoyShort, priorYearPeriod } from "@/lib/f
 import { catalogIndicatorMeta } from "@/lib/live-config";
 import { categoryIdOf, computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "@/lib/fp-trend";
 import { DetailTrend } from "@/components/fp/MetricTrend";
+import { isPropertyCensusIndicator } from "@/lib/fp-catalog";
 
 function statusTag(m: NodeMetric) {
   switch (m.status) {
@@ -672,7 +673,7 @@ function IndicatorDrawerBody({
               )}
             </div>
 
-            {trendBundle.spec && trendBundle.points ? (
+            {trendBundle.spec && trendBundle.points && !isPropertyCensusIndicator(indicator.id) ? (
               <DetailTrend def={indicator} points={trendBundle.points} spec={trendBundle.spec} />
             ) : null}
 
@@ -817,7 +818,9 @@ function IndicatorDrawerBody({
               <DescList
                 cols={1}
                 items={[
-                  { label: "计算公式", value: <span className="text-[13px]">{indicator.formula}</span> },
+                  ...(!isPropertyCensusIndicator(indicator.id)
+                    ? [{ label: "计算公式", value: <span className="text-[13px]">{indicator.formula}</span> }]
+                    : []),
                   { label: "口径说明", value: <span className="text-[13px]">{indicator.caliber}</span> },
                   { label: "数据来源", value: <span className="text-[13px]">{indicator.sourceNote}</span> },
                   {
@@ -842,10 +845,15 @@ function IndicatorDrawerBody({
                     : []),
                 ]}
               />
-              {selectedLeaf && (
+              {(selectedLeaf || (isPropertyCensusIndicator(indicator.id) && scopedLeaves[0])) && (
                 <div className="mt-3">
-                  <Button variant="primary" size="sm" onClick={() => setTraceLeafId(selectedLeaf.objectId)}>
-                    查看计算依据：{indicator.name}·{selectedLeaf.name}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setTraceLeafId(selectedLeaf?.objectId ?? scopedLeaves[0].objectId)}
+                  >
+                    查看计算依据
+                    {selectedLeaf ? `：${indicator.name}·${selectedLeaf.name}` : ""}
                   </Button>
                 </div>
               )}

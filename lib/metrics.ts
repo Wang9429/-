@@ -1621,7 +1621,7 @@ export const INDICATORS: IndicatorDef[] = [
   },
   {
     id: "PTY2-I02",
-    name: "控股及实际控制企业",
+    name: "控股及实际控制企业户数",
     domain: "RIGHTS",
     unit: "户",
     kind: "count",
@@ -1652,7 +1652,7 @@ export const INDICATORS: IndicatorDef[] = [
   },
   {
     id: "PTY2-I03",
-    name: "参股企业",
+    name: "参股企业户数",
     domain: "RIGHTS",
     unit: "户",
     kind: "count",
@@ -1683,7 +1683,7 @@ export const INDICATORS: IndicatorDef[] = [
   },
   {
     id: "PTY2-I04",
-    name: "在办产权事项",
+    name: "在办产权事项数",
     domain: "RIGHTS",
     unit: "项",
     kind: "count",

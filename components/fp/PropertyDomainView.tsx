@@ -16,22 +16,18 @@ import { descendantOrgIds, orgName, orgPath } from "@/lib/org";
 import { seed, templateById } from "@/lib/seed";
 import { censusCounts, openMatterCount, penetratePaths } from "@/lib/fp-census";
 import { ECONOMIC_BEHAVIORS, RIGHTS_TOPICS } from "@/lib/fp-topics";
-import { fmtPct } from "@/lib/format";
-import { indicatorById, computeIndicator, type IndicatorDef } from "@/lib/metrics";
+import { indicatorById, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
-import { catalogIndicatorMeta } from "@/lib/live-config";
-import { computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "@/lib/fp-trend";
-import { CompactSparkline } from "@/components/fp/MetricTrend";
 
 export default function PropertyDomainView() {
-  const { filters, risks, user, catalog } = useDemoStore();
+  const { filters, user, catalog } = useDemoStore();
   const [subjectId, setSubjectId] = useState(filters.orgId);
   const [subjectChildren, setSubjectChildren] = useState(filters.includeChildren);
   const [focusEntity, setFocusEntity] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "graph">("list");
   const [censusFilter, setCensusFilter] = useState<"N" | "C" | "P" | "T" | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null);
-  const [behavior, setBehavior] = useState<(typeof ECONOMIC_BEHAVIORS)[number]["id"]>("nonlisted_transfer");
+  const [behavior, setBehavior] = useState<string>("all");
   const [phaseId, setPhaseId] = useState<string | null>(null);
   const [riskId, setRiskId] = useState<string | null>(null);
   const [objectId, setObjectId] = useState<string | null>(null);
@@ -60,20 +56,10 @@ export default function PropertyDomainView() {
   }, [subjectId, subjectChildren, globalOrgIds]);
 
   const allowedObjectIds = useMemo(() => authorizedObjectIds(user), [user]);
-  const ctx = useMemo(
-    () => ({
-      periodStart: filters.periodStart,
-      periodEnd: filters.periodEnd,
-      asOf: filters.asOf,
-      risks,
-      allowedObjectIds,
-    }),
-    [filters.periodStart, filters.periodEnd, filters.asOf, risks, allowedObjectIds],
-  );
   const census = useMemo(() => censusCounts(pageOrgIds, filters.asOf), [pageOrgIds, filters.asOf]);
   const matters = useMemo(() => openMatterCount(pageOrgIds), [pageOrgIds]);
-  const eb = ECONOMIC_BEHAVIORS.find((x) => x.id === behavior)!;
-  const template = templateById(eb.templateId);
+  const selectedBehavior = ECONOMIC_BEHAVIORS.find((x) => x.id === behavior) ?? null;
+  const template = selectedBehavior ? templateById(selectedBehavior.templateId) : undefined;
 
   const chevrons: ChevronItem[] = useMemo(() => {
     if (topicId !== "PTY2-T-TRADE" || !template) return [];
@@ -108,7 +94,6 @@ export default function PropertyDomainView() {
   const openCensusIndicator = (id: string, filter: "N" | "C" | "P" | "T") => {
     setCensusFilter(filter);
     setIndicatorId(id);
-    if (filter === "T") setTopicId("PTY2-T-TRADE");
   };
 
   const listEntities = useMemo(() => {
@@ -118,24 +103,6 @@ export default function PropertyDomainView() {
     if (censusFilter === "N") rows = census.list;
     return rows;
   }, [census, censusFilter]);
-
-  const pctLabel = (v: number | null) => (v === null ? "不适用" : fmtPct(v));
-
-  const censusSpark = (def: IndicatorDef | undefined) => {
-    if (!def) return null;
-    const meta = catalogIndicatorMeta(def.id);
-    const spec = trendSpecOf(def.id, {
-      applicability: meta?.trend_applicability === "never" ? "never" : undefined,
-      homeVisible: meta?.trend_home_visible,
-      detailVisible: meta?.trend_detail_visible,
-      frequency: meta?.trend_frequency,
-    });
-    if (!spec?.homeVisible) return null;
-    const raw = computeTrendPoints(def, pageOrgIds, ctx, spec, computeIndicator);
-    const points = eligibleTrendPoints(raw, spec.minPoints);
-    if (!points) return null;
-    return <CompactSparkline def={def} points={points} spec={spec} />;
-  };
 
   return (
     <div className="space-y-4">
@@ -181,18 +148,26 @@ export default function PropertyDomainView() {
 
       <Card title="法人及股权全景">
         {canDomain(user, "RIGHTS") ? (
-          <div className="reg-kpis-domain">
+          <div className="reg-kpis-domain" data-testid="rights-kpi-grid">
             {censusKpiDefs.some((d) => d.id === "PTY2-I01") && (
-              <KpiCard name="纳管法人户数" value={String(census.N)} unit="户" compare={census.check ? `B+C+P+U=${census.B}+${census.C}+${census.P}+${census.U}` : "构成待核"} extra={censusSpark(indicatorById("PTY2-I01"))} onOpen={() => openCensusIndicator("PTY2-I01", "N")} returnKey="N" />
+              <KpiCard compact name="纳管法人户数" value={String(census.N)} unit="户" onOpen={() => openCensusIndicator("PTY2-I01", "N")} returnKey="N" />
             )}
             {censusKpiDefs.some((d) => d.id === "PTY2-I02") && (
-              <KpiCard name="控股及实际控制企业" value={String(census.C)} unit="户" compare={pctLabel(census.cPct)} dataState={`全资${census.whollyInC}／非全资${census.nonWhollyInC}`} extra={censusSpark(indicatorById("PTY2-I02"))} onOpen={() => openCensusIndicator("PTY2-I02", "C")} returnKey="C" />
+              <KpiCard
+                compact
+                name="控股及实际控制企业户数"
+                value={String(census.C)}
+                unit="户"
+                dataState={`全资${census.whollyInC}户／非全资${census.nonWhollyInC}户`}
+                onOpen={() => openCensusIndicator("PTY2-I02", "C")}
+                returnKey="C"
+              />
             )}
             {censusKpiDefs.some((d) => d.id === "PTY2-I03") && (
-              <KpiCard name="参股企业" value={String(census.P)} unit="户" compare={pctLabel(census.pPct)} extra={censusSpark(indicatorById("PTY2-I03"))} onOpen={() => openCensusIndicator("PTY2-I03", "P")} returnKey="P" />
+              <KpiCard compact name="参股企业户数" value={String(census.P)} unit="户" onOpen={() => openCensusIndicator("PTY2-I03", "P")} returnKey="P" />
             )}
             {censusKpiDefs.some((d) => d.id === "PTY2-I04") && (
-              <KpiCard name="在办产权事项" value={String(matters.count)} unit="项" compare="按事项ID去重" extra={censusSpark(indicatorById("PTY2-I04"))} onOpen={() => openCensusIndicator("PTY2-I04", "T")} returnKey="T" />
+              <KpiCard compact name="在办产权事项数" value={String(matters.count)} unit="项" onOpen={() => openCensusIndicator("PTY2-I04", "T")} returnKey="T" />
             )}
           </div>
         ) : (
@@ -260,6 +235,7 @@ export default function PropertyDomainView() {
         onTopicChange={(id) => {
           setTopicId(id);
           setPhaseId(null);
+          setBehavior("all");
         }}
         topicNavTestId="rights-topic-nav"
         allTopicTestId="rights-topic-all"
@@ -279,13 +255,15 @@ export default function PropertyDomainView() {
                 <span className="text-[12px] text-textsub">经济行为</span>
                 <select
                   data-testid="rights-behavior-select"
+                  aria-label="经济行为"
                   className="h-8 px-3 rounded-[6px] border border-line bg-surface text-[12px] min-w-[200px]"
                   value={behavior}
                   onChange={(e) => {
-                    setBehavior(e.target.value as (typeof ECONOMIC_BEHAVIORS)[number]["id"]);
+                    setBehavior(e.target.value);
                     setPhaseId(null);
                   }}
                 >
+                  <option value="all">全部</option>
                   {ECONOMIC_BEHAVIORS.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.label}
@@ -295,8 +273,8 @@ export default function PropertyDomainView() {
               </div>
               {behavior === "free_transfer" && <Tag tone="neutral">无偿划转无价款，不生成价款逾期</Tag>}
               {behavior === "listed_shares" && <Tag tone="neutral">上市股份模板，不套非上市挂牌</Tag>}
-              {template && (
-                <div className="mt-3">
+              {behavior !== "all" && template && (
+                <div className="mt-3" data-testid="rights-chevron-flow">
                   <ChevronFlow items={chevrons} value={phaseId} onChange={setPhaseId} ariaLabel="产权交易监管节点" showStats={false} />
                 </div>
               )}
