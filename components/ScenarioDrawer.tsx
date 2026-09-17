@@ -223,10 +223,11 @@ export default function ScenarioDrawer({
               {
                 key: "obj",
                 title: "监测对象",
+                minWidth: "280px",
                 render: (r) => (
-                  <span>
+                  <span className="block min-w-[260px]">
                     <span className="text-textmain">{objectTitle(r.monitoring_object_id)}</span>
-                    <span className="num text-[12px] text-textsub ml-2">对象编号 {r.monitoring_object_id}</span>
+                    <span className="num text-[12px] text-textsub ml-2 whitespace-nowrap">对象编号 {r.monitoring_object_id}</span>
                   </span>
                 ),
               },
