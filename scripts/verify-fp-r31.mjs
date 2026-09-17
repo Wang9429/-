@@ -89,7 +89,13 @@ try {
   log("R31-06 展开含未启用", expandedFunds.includes("未启用"));
   log("R31-06 展开含已启用S039", Boolean(await page.$("[data-testid='scenario-sub-CASH2-S039']")) || expandedFunds.includes("实付超过该笔有效批准金额"));
   log("R31-06 无启用P03子场景仍可查", Boolean(await page.$("[data-testid='scenario-sub-CASH2-S006']")));
-  log("R31-06 未启用不伪造已评估", !/未启用[\s\S]{0,40}已完成监测/.test(expandedFunds));
+  const s001El = await page.$("[data-testid='scenario-sub-CASH2-S001']");
+  const s001Text = s001El ? await page.evaluate((el) => el.innerText, s001El) : "";
+  log(
+    "R31-06 未启用不伪造已评估",
+    /未启用/.test(s001Text) && /—/.test(s001Text) && !/已完成监测/.test(s001Text),
+    s001Text.replace(/\s+/g, " ").slice(0, 80),
+  );
   log("R31-07 官方80不标补充监管场景", !expandedFunds.includes("补充监管场景"));
   log("R31-07 泛称不占标准一级", !expandedFunds.includes("资金管理监管"));
   await shot("r31_funds_full_catalog");
