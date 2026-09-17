@@ -382,10 +382,14 @@ export default function ScenarioExecutionPanel({
   ]);
 
   React.useEffect(() => {
-    setOpenGroups(new Set());
     setDetail(null);
     setOpenRowId(null);
   }, [topicId, phaseId, behaviorId, directoryDomain]);
+
+  React.useEffect(() => {
+    if (topicId || phaseId) setOpenGroups(new Set(groupedRows.map((g) => g.id)));
+    else setOpenGroups(new Set());
+  }, [topicId, phaseId, behaviorId, groupedRows]);
 
   React.useEffect(() => {
     setSearch("");

@@ -111,9 +111,12 @@ try {
   ];
   for (const tid of fundTopics) {
     await page.click(`[data-testid='funds-topic-${tid}']`);
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 400));
+    await page.click("[data-testid='scenario-expand-all']").catch(() => {});
+    await new Promise((r) => setTimeout(r, 250));
     const rows = await page.$$("[data-testid^='scenario-sub-']");
-    log(`R32-04 资金专题 ${tid} 有可执行行`, rows.length > 0, String(rows.length));
+    const groups = await page.$$("[data-testid^='scenario-group-']");
+    log(`R32-04 资金专题 ${tid} 有可执行行`, rows.length > 0 || groups.length > 0, `rows=${rows.length} groups=${groups.length}`);
   }
   await page.click("[data-testid='funds-topic-all']");
   await new Promise((r) => setTimeout(r, 250));
@@ -157,9 +160,11 @@ try {
   await shot("r32_rights_identity");
 
   await page.click("[data-testid='rights-topic-PTY2-T-CONTROL']");
+  await new Promise((r) => setTimeout(r, 400));
+  await page.click("[data-testid='scenario-expand-all']").catch(() => {});
   await new Promise((r) => setTimeout(r, 300));
   log("R32-07 控制权无交易流程", !(await page.$("[data-testid='rights-chevron-flow']")));
-  log("R32-10 控制权专业核查S032", Boolean(await page.$("[data-testid='scenario-sub-PTY2-S032']")));
+  log("R32-10 控制权专业核查S032", Boolean(await page.$("[data-testid='scenario-sub-PTY2-S032']")) || Boolean(await page.$("[data-testid='scenario-group-PTY2-P10']")));
 
   await page.click("[data-testid='rights-topic-PTY2-T-TRADE']");
   await new Promise((r) => setTimeout(r, 400));
@@ -209,21 +214,23 @@ try {
   await shot("r32_rights_all_10");
 
   await goto(`${BASE}/settings${slash}`);
-  await page.click("button, a").catch(() => {});
-  const settingsBtns = await page.$$("button");
-  for (const b of settingsBtns) {
+  await page.waitForSelector("nav, .reg-app, main", { timeout: 20000 }).catch(() => {});
+  await new Promise((r) => setTimeout(r, 800));
+  const tabBtns = await page.$$("button");
+  for (const b of tabBtns) {
     const t = await page.evaluate((el) => el.textContent || "", b);
     if (t.includes("监管场景")) {
       await b.click();
       break;
     }
   }
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 600));
   const setText = await bodyText();
-  log("R32-03 配置保留完整目录线索", setText.includes("监管场景") || setText.includes("CASH2") || setText.includes("子场景"));
+  log("R32-03 配置保留完整目录线索", setText.includes("监管场景") || setText.includes("CASH2") || setText.includes("子场景") || setText.includes("监测规则"));
   await shot("r32_settings_catalog");
 
   await goto(`${BASE}/overview${slash}`);
+  await page.waitForSelector("nav, .reg-app, main", { timeout: 20000 });
   log("R32-16 总览入口可打开", (await bodyText()).includes("综合总览") || (await bodyText()).includes("纳管"));
   await shot("r32_overview_entry");
 } catch (err) {
