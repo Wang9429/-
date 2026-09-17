@@ -14,6 +14,16 @@ import { useDemoStore } from "@/lib/store";
 import type { LifecycleInstance } from "@/lib/types";
 import { FP_CONTROLS, FP_GUARANTEES, FP_LENDS, FP_LOANS, FP_SME, FP_SPECIALS, FP_GOVERNANCE } from "@/lib/fp-seed";
 import { FP_ACCOUNT_OPENINGS, FP_NAME_LICENSES } from "@/lib/fp-history-seed";
+import HoldingsTable from "@/components/fp/HoldingsTable";
+import {
+  dataNatureLabel,
+  entityName,
+  evidenceTitle,
+  monitoringNoteLabel,
+  objectTitle,
+  relationTypeLabel,
+  riskTitleOf,
+} from "@/lib/fp-display";
 
 /**
  * P74 对象档案 + P79 横向业务关系 + P75 详细环节核查。
@@ -78,7 +88,7 @@ function StageTable({ instances }: { instances: LifecycleInstance[] }) {
               <span className="text-textsub">—</span>
             ) : (
               <span className="text-[12px] text-textsub" title={i.evidence_ids.map((e) => evidenceById(e)?.body ?? e).join("\n")}>
-                {i.evidence_ids.join("、")}
+                {i.evidence_ids.map((e) => evidenceTitle(e)).join("、")}
               </span>
             ),
         },
@@ -208,7 +218,7 @@ function ObjectDrawerBody({
   const titleNode = (
     <span className="flex items-center gap-2 flex-wrap">
       {obj.name}
-      <span className="num text-[14px] text-textsub">{obj.id}</span>
+      <span className="num text-[13px] text-textsub">对象编号 {obj.id}</span>
       <Tag tone="neutral">{obj.typeLabel}</Tag>
     </span>
   );
@@ -243,7 +253,7 @@ function ObjectDrawerBody({
                   items={[
                     { label: "项目类型", value: fa.project_type },
                     { label: "当前业务阶段", value: fa.phase },
-                    { label: "法律主体", value: fa.legal_entity_id },
+                    { label: "法律主体", value: entityName(fa.legal_entity_id) },
                     { label: "金额口径", value: `${fa.amount_unit}｜${fa.tax_basis ?? "—"}` },
                     { label: "可研批准估算", value: <span className="num">{fmtAmount(fa.feasibility_approved_estimate)}</span> },
                     { label: "原初设批准概算", value: <span className="num">{fmtAmount(fa.original_approved_budget)}</span> },
@@ -321,7 +331,7 @@ function ObjectDrawerBody({
                 cols={4}
                 items={[
                   { label: "投资类型", value: eq.investment_type },
-                  { label: "被投企业", value: <span className="num">{eq.investee_id}</span> },
+                  { label: "被投企业", value: entityName(eq.investee_id) },
                   { label: "持股比例", value: <span className="num">{fmtPct(eq.holding_pct)}</span> },
                   { label: "核算方法", value: eq.accounting_method_demo },
                   { label: "批准投资总额", value: <span className="num">{fmtAmount(eq.approved_total_investment)}</span> },
@@ -366,7 +376,7 @@ function ObjectDrawerBody({
               <DescList
                 cols={4}
                 items={[
-                  { label: "开户主体", value: <span className="num">{account.legal_entity_id}</span> },
+                  { label: "开户主体", value: entityName(account.legal_entity_id) },
                   { label: "币种", value: account.currency },
                   { label: "期初余额（原币）", value: <span className="num">{fmtAmount(account.opening_balance_native)}</span>, hint: `期初日 ${account.opening_balance_date}` },
                   { label: "期末余额（原币）", value: <span className="num">{fmtAmount(account.closing_balance_native)}</span>, hint: `余额日 ${account.balance_as_of}` },
@@ -385,11 +395,11 @@ function ObjectDrawerBody({
                   { label: "事项类型", value: matter.matter_type },
                   { label: "流程模板", value: templateById(matter.template_id)?.matter_type_name ?? matter.template_id },
                   { label: "当前环节", value: phaseName(matter.current_phase_id) },
-                  { label: "投资方", value: <span className="num">{matter.investor_id}</span> },
-                  { label: "被投企业", value: <span className="num">{matter.investee_id}</span> },
-                  { label: "关联投资项目", value: <span className="num">{matter.related_project_id}</span> },
+                  { label: "投资方", value: entityName(matter.investor_id) },
+                  { label: "被投企业", value: entityName(matter.investee_id) },
+                  { label: "关联投资项目", value: objectTitle(matter.related_project_id) },
                   { label: "说明", value: matter.note },
-                  { label: "数据性质", value: matter.data_nature },
+                  { label: "数据性质", value: dataNatureLabel(matter.data_nature) },
                 ]}
               />
             )}
@@ -402,13 +412,19 @@ function ObjectDrawerBody({
                   { label: "本次实付/实收", value: <span className="num">{fmtAmount(tx.amount_wan_cny)}</span> },
                   { label: "该笔有效批准", value: <span className="num">{tx.approved_amount === undefined ? "—" : fmtAmount(tx.approved_amount)}</span> },
                   { label: "合同可支付上限", value: <span className="num">{tx.certified_payable_amount === undefined ? "—" : fmtAmount(tx.certified_payable_amount)}</span> },
-                  { label: "付款账户", value: <span className="num">{tx.account_id}</span> },
-                  { label: "合同", value: <span className="num">{tx.contract_id ?? "—"}</span> },
-                  { label: "义务", value: <span className="num">{tx.obligation_id ?? "—"}</span> },
+                  { label: "付款账户", value: objectTitle(tx.account_id) },
+                  { label: "合同", value: tx.contract_id ? objectTitle(tx.contract_id) : "—" },
+                  { label: "义务", value: tx.obligation_id ? objectTitle(tx.obligation_id) : "—" },
                 ]}
               />
             )}
             <FpObjectFacts objectId={objectId} onOpenObject={onOpenObject} />
+            {seed.ownership_snapshots.some((s) => s.investee_id === objectId || s.investor_id === objectId || matter?.snapshot_ids?.includes(s.id)) && (
+              <HoldingsTable
+                investeeId={matter?.investee_id && matter.snapshot_ids?.length ? matter.investee_id : seed.ownership_snapshots.some((s) => s.investee_id === objectId) ? objectId : undefined}
+                investorId={seed.ownership_snapshots.some((s) => s.investor_id === objectId) && !seed.ownership_snapshots.some((s) => s.investee_id === objectId) ? objectId : undefined}
+              />
+            )}
             <FpCrossFacts objectId={objectId} onOpenObject={onOpenObject} />
           </>
         )}
@@ -429,19 +445,19 @@ function ObjectDrawerBody({
               compactEmpty
               columns={[
                 { key: "from", title: "来源对象", minWidth: "120px", nowrap: true, render: (l) => (
-                  <button type="button" className="num text-brand hover:underline" onClick={() => onOpenObject?.(l.from_id)}>
-                    {l.from_id}
+                  <button type="button" className="text-brand hover:underline" onClick={() => onOpenObject?.(l.from_id)}>
+                    {objectTitle(l.from_id)}
                   </button>
                 ) },
-                { key: "rel", title: "业务关系", width: "160px", nowrap: true, render: (l) => <Tag tone="brand">{l.relation_type}</Tag> },
+                { key: "rel", title: "业务关系", width: "160px", nowrap: true, render: (l) => <Tag tone="brand">{relationTypeLabel(l.relation_type)}</Tag> },
                 { key: "to", title: "关联对象", minWidth: "120px", nowrap: true, render: (l) => (
-                  <button type="button" className="num text-brand hover:underline" onClick={() => onOpenObject?.(l.to_id)}>
-                    {l.to_id}
+                  <button type="button" className="text-brand hover:underline" onClick={() => onOpenObject?.(l.to_id)}>
+                    {objectTitle(l.to_id)}
                   </button>
                 ) },
                 { key: "domains", title: "可进入的关联监管", render: (l) => l.domains.map((d) => DOMAIN_META[d].label).join("、") },
                 { key: "asof", title: "关系有效期", width: "110px", render: (l) => <span className="num text-[12px]">{l.as_of}</span> },
-                { key: "evid", title: "依据", render: (l) => <span className="text-[12px] text-textsub">{l.evidence_ids?.join("、") ?? "—"}</span> },
+                { key: "evid", title: "依据", render: (l) => <span className="text-[12px] text-textsub">{l.evidence_ids?.map((e) => evidenceTitle(e)).join("、") || "—"}</span> },
               ]}
             />
           </>
@@ -457,7 +473,8 @@ function ObjectDrawerBody({
             columns={[
               { key: "sc", title: "监管场景", minWidth: "200px", render: (r) => (
                 <span>
-                  {r.scenario_id} {scenarioName(r.scenario_id)}
+                  {scenarioName(r.scenario_id)}
+                  <span className="num text-[12px] text-textsub ml-2">场景编号 {r.scenario_id}</span>
                   {!isScenarioMonitoringActive(r.scenario_id) ? (
                     <Tag tone="neutral">已停用</Tag>
                   ) : null}
@@ -474,7 +491,7 @@ function ObjectDrawerBody({
                   </span>
                 ),
               },
-              { key: "status", title: "监测状态", width: "140px", render: (r) => r.note || r.status },
+              { key: "status", title: "监测状态", width: "160px", render: (r) => monitoringNoteLabel(r.note, r.status) },
               {
                 key: "risk",
                 title: "事项",
@@ -484,8 +501,8 @@ function ObjectDrawerBody({
                     <span className="text-textsub">—</span>
                   ) : (
                     r.risk_ids.map((id) => (
-                      <button key={id} className="num text-brand hover:underline mr-1" onClick={() => onOpenRisk?.(id)}>
-                        {id}
+                      <button key={id} className="text-brand hover:underline mr-1" onClick={() => onOpenRisk?.(id)}>
+                        {riskTitleOf(id)}
                       </button>
                     ))
                   ),
@@ -506,8 +523,12 @@ function ObjectDrawerBody({
                 pageSize={8}
                 compactEmpty
                 columns={[
-                  { key: "id", title: "事项", width: "76px", nowrap: true, render: (r) => <span className="num">{r.id}</span> },
-                  { key: "title", title: "名称", minWidth: "180px", render: (r) => r.title },
+                  { key: "id", title: "事项", width: "240px", nowrap: true, render: (r) => (
+                    <span>
+                      {r.title}
+                      <span className="num text-[12px] text-textsub ml-1">事项编号 {r.id}</span>
+                    </span>
+                  ) },
                   { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
                   { key: "status", title: "办理状态", width: "110px", render: (r) => statusLabel[r.status] },
                   { key: "open", title: "是否未关闭", width: "110px", render: (r) => (isOpen(r) ? "是" : "否") },
@@ -525,7 +546,7 @@ function ObjectDrawerBody({
       <div className="space-y-4">
         <PageHeader title={obj.name}>
           <span className="flex items-center gap-2 flex-wrap">
-            <span className="num text-[14px] text-textsub">{obj.id}</span>
+            <span className="num text-[13px] text-textsub">对象编号 {obj.id}</span>
             <Tag tone="neutral">{obj.typeLabel}</Tag>
           </span>
         </PageHeader>
@@ -557,8 +578,8 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
   const opening = FP_ACCOUNT_OPENINGS.find((x) => x.account_id === objectId);
   const nameLic = FP_NAME_LICENSES.find((x) => x.matter_id === objectId);
   const idBtn = (id: string) => (
-    <button type="button" className="num text-brand hover:underline" onClick={() => onOpenObject?.(id)}>
-      {id}
+    <button type="button" className="text-brand hover:underline" onClick={() => onOpenObject?.(id)}>
+      {objectTitle(id)}
     </button>
   );
   if (opening) {
@@ -690,7 +711,7 @@ function FpObjectFacts({ objectId, onOpenObject }: { objectId: string; onOpenObj
                 { label: "控股应派席位", value: "3" },
                 { label: "实际委派到任", value: String(gov.appointed_seats) },
                 { label: "表决是否受阻", value: gov.blocked ? "待专业核查" : "未见受阻记录" },
-                { label: "治理依据", value: gov.evidence_ids.join("、") },
+                { label: "治理依据", value: gov.evidence_ids.map((e) => evidenceTitle(e)).join("、") },
                 { label: "核查要点", value: gov.note },
               ]
             : []),
@@ -707,8 +728,8 @@ function FpCrossFacts({ objectId, onOpenObject }: { objectId: string; onOpenObje
   const rights = links.filter((l) => l.domains.includes("RIGHTS"));
   if (cash.length + rights.length === 0) return null;
   const btn = (id: string) => (
-    <button key={id} type="button" className="num text-brand hover:underline mr-2" onClick={() => onOpenObject?.(id)}>
-      {id}
+    <button key={id} type="button" className="text-brand hover:underline mr-2" onClick={() => onOpenObject?.(id)}>
+      {objectTitle(id)}
     </button>
   );
   return (
@@ -717,7 +738,7 @@ function FpCrossFacts({ objectId, onOpenObject }: { objectId: string; onOpenObje
         <Notice tone="brand" title="关联资金">
           {cash.map((l) => (
             <span key={l.id} className="mr-3">
-              {l.relation_type} {btn(l.from_id === objectId ? l.to_id : l.from_id)}
+              {relationTypeLabel(l.relation_type)} {btn(l.from_id === objectId ? l.to_id : l.from_id)}
             </span>
           ))}
         </Notice>
@@ -726,7 +747,7 @@ function FpCrossFacts({ objectId, onOpenObject }: { objectId: string; onOpenObje
         <Notice tone="brand" title="关联产权">
           {rights.map((l) => (
             <span key={l.id} className="mr-3">
-              {l.relation_type} {btn(l.from_id === objectId ? l.to_id : l.from_id)}
+              {relationTypeLabel(l.relation_type)} {btn(l.from_id === objectId ? l.to_id : l.from_id)}
             </span>
           ))}
         </Notice>

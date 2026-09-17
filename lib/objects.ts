@@ -56,7 +56,7 @@ export function findObject(id: string): ObjectRecord | undefined {
   const ct = seed.contracts.find((c) => c.id === id);
   if (ct) {
     const proj = seed.engineering_projects.find((p) => p.id === ct.project_id);
-    return { id, type: "contract", name: `${ct.kind}合同 ${ct.id}`, orgId: proj?.owner_org_id ?? "ORG-HQ", typeLabel: objectTypeLabel.contract };
+    return { id, type: "contract", name: `${ct.kind}合同`, orgId: proj?.owner_org_id ?? "ORG-HQ", typeLabel: objectTypeLabel.contract };
   }
 
   const ob = seed.obligations.find((o) => o.id === id);
@@ -65,7 +65,7 @@ export function findObject(id: string): ObjectRecord | undefined {
       seed.engineering_projects.find((p) => p.id === ob.project_id) ??
       seed.equity_projects.find((p) => p.id === ob.project_id) ??
       seed.fixed_asset_projects.find((p) => p.id === ob.project_id);
-    return { id, type: "obligation", name: `${ob.kind} ${ob.id}`, orgId: proj?.owner_org_id ?? "ORG-HQ", typeLabel: objectTypeLabel.obligation };
+    return { id, type: "obligation", name: ob.kind, orgId: proj?.owner_org_id ?? "ORG-HQ", typeLabel: objectTypeLabel.obligation };
   }
 
   const extra = lookupFpObject(id);
@@ -117,9 +117,27 @@ function lookupFpObject(id: string): ObjectRecord | undefined {
   const seg = FP_SEGMENTS.find((x) => x.id === id);
   if (seg) return { id, type: "legal_entity", name: `${seg.name}（${seg.period_start}～${seg.period_end}）`, orgId: seg.org_id, typeLabel: "核心业务" };
   const gov = FP_GOVERNANCE.find((x) => x.id === id);
-  if (gov) return { id, type: "legal_entity", name: `治理权利 ${gov.legal_entity_id}`, orgId: gov.owner_org_id, typeLabel: objectTypeLabel.legal_entity };
+  if (gov) {
+    const le = seed.legal_entities.find((e) => e.id === gov.legal_entity_id);
+    return {
+      id,
+      type: "legal_entity",
+      name: le?.name ?? "控股企业治理权利",
+      orgId: gov.owner_org_id,
+      typeLabel: objectTypeLabel.legal_entity,
+    };
+  }
   const bank = FP_BANK_CONFIRMATIONS.find((x) => x.id === id);
-  if (bank) return { id, type: "account", name: `${bank.legal_entity_id} 银行确认清单`, orgId: bank.owner_org_id, typeLabel: "银行确认清单" };
+  if (bank) {
+    const le = seed.legal_entities.find((e) => e.id === bank.legal_entity_id);
+    return {
+      id,
+      type: "account",
+      name: `${le?.name ?? "法人"}银行确认清单`,
+      orgId: bank.owner_org_id,
+      typeLabel: "银行确认清单",
+    };
+  }
   const vch = FP_VOUCHERS.find((x) => x.id === id);
   if (vch) return { id, type: "cash_transaction", name: `费用凭据 ${vch.voucher_no}`, orgId: vch.owner_org_id, typeLabel: "费用凭据" };
   const sal = FP_SALARY_ADJS.find((x) => x.id === id);

@@ -38,6 +38,7 @@ import { useDemoStore } from "@/lib/store";
 import type { DomainId, MonitoringRow, RiskCase } from "@/lib/types";
 import { officialDirectory, scopedDirectory } from "@/lib/fp-directory";
 import { scenarioFitsBehavior } from "@/lib/fp-topics";
+import { monitoringNoteLabel, objectTitle, riskTitleOf, ruleDisplayName } from "@/lib/fp-display";
 
 /**
  * 环节/专题选中后的执行情况（完整业需 5.3、5.4）。
@@ -800,7 +801,7 @@ export default function ScenarioExecutionPanel({
         title={
           <span className="flex items-center gap-2 flex-wrap">
             {detail ? DETAIL_TITLE[detail.kind] : ""}
-            {detail?.scenarioId && <Tag tone="brand">{detail.scenarioId} {scenarioName(detail.scenarioId)}</Tag>}
+            {detail?.scenarioId && <Tag tone="brand">{scenarioName(detail.scenarioId)}<span className="num text-[11px] ml-1">场景编号 {detail.scenarioId}</span></Tag>}
           </span>
         }
       >
@@ -825,8 +826,8 @@ export default function ScenarioExecutionPanel({
                     { key: "type", title: "对象类型", width: "150px", render: (o) => objectTypeLabel[o.objectType] ?? o.objectType },
                     { key: "id", title: "对象", render: (o) => (
                       <span>
-                        <span className="text-textmain">{objectName(o.objectId)}</span>
-                        <span className="num text-[12px] text-textsub ml-2">{o.objectId}</span>
+                        <span className="text-textmain">{objectTitle(o.objectId)}</span>
+                        <span className="num text-[12px] text-textsub ml-2">对象编号 {o.objectId}</span>
                       </span>
                     ) },
                     {
@@ -855,7 +856,7 @@ export default function ScenarioExecutionPanel({
                       title: "说明",
                       render: (o) => {
                         const r = detailData.rows.find((x) => x.monitoring_object_id === o.objectId);
-                        return <span className="text-[12px] text-textsub">{r?.note ?? "—"}</span>;
+                        return <span className="text-[12px] text-textsub">{monitoringNoteLabel(r?.note, r?.status)}</span>;
                       },
                     },
                   ]}
@@ -896,7 +897,9 @@ export default function ScenarioExecutionPanel({
                   onOpenRisk(r.id);
                 }}
                 columns={[
-                  { key: "id", title: "事项", width: "80px", render: (r) => <span className="num">{r.id}</span> },
+                  { key: "id", title: "事项", width: "220px", render: (r) => (
+                    <span>{r.title}<span className="num text-[12px] text-textsub ml-1">事项编号 {r.id}</span></span>
+                  ) },
                   { key: "title", title: "名称", render: (r) => r.title },
                   { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
                   { key: "status", title: "办理状态", width: "110px", render: (r) => statusLabel[r.status] },
@@ -970,7 +973,9 @@ export default function ScenarioExecutionPanel({
                   onOpenRisk(r.id);
                 }}
                 columns={[
-                  { key: "id", title: "事项", width: "80px", render: (r) => <span className="num">{r.id}</span> },
+                  { key: "id", title: "事项", width: "220px", render: (r) => (
+                    <span>{r.title}<span className="num text-[12px] text-textsub ml-1">事项编号 {r.id}</span></span>
+                  ) },
                   { key: "title", title: "名称", render: (r) => r.title },
                   { key: "sev", title: "等级", width: "88px", render: (r) => <SeverityTag severity={r.severity} /> },
                   { key: "status", title: "办理状态", width: "110px", render: (r) => statusLabel[r.status] },
@@ -997,8 +1002,8 @@ export default function ScenarioExecutionPanel({
                 rows={rows}
                 rowKey={(r) => r.id}
                 columns={[
-                  { key: "id", title: "规则ID", width: "140px", render: (r) => <span className="num">{r.id}</span> },
-                  { key: "name", title: "规则名称", render: (r) => r.name },
+                  { key: "name", title: "规则名称", render: (r) => r.name || ruleDisplayName(r.id) },
+                  { key: "id", title: "规则编号", width: "140px", render: (r) => <span className="num">{r.id}</span> },
                   {
                     key: "sc",
                     title: "主场景",
@@ -1022,8 +1027,8 @@ export default function ScenarioExecutionPanel({
                 rows={rows}
                 rowKey={(r) => r.id}
                 columns={[
-                  { key: "id", title: "组织ID", width: "120px", render: (r) => <span className="num">{r.id}</span> },
                   { key: "name", title: "单位", render: (r) => r.name },
+                  { key: "id", title: "组织编号", width: "120px", render: (r) => <span className="num">{r.id}</span> },
                 ]}
               />
             );

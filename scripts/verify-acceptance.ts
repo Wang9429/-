@@ -10,6 +10,7 @@ import { INDICATORS, computeIndicator, indicatorLeaves, type IndicatorDef, type 
 import { orgScope, ROOT_ORG_ID, isManagedUnit } from "../lib/org";
 import { computeFiveCounts, configuredScenarios, openCountForPhase } from "../lib/monitoring";
 import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule, trialCashS012, trialCashS029, trialCashS040, trialPtyS025, trialCashS006, trialCashS017, trialCashS020, trialPtyS003, trialPtyS011, trialPtyS014, trialPtyS016, trialPtyS037, trialPtyS038 } from "../lib/fp-rules";
+import { verificationFromEval, holdingRowsFor, holdingDiffNote, objectTitle, monitoringNoteLabel, inputFieldLabel } from "../lib/fp-display";
 import { extractCatalog, validateSub } from "../lib/config-catalog";
 import { lastExecutableCoverageNote } from "../lib/config-impact";
 import { cashAccountStatementBridge, cashBridgeNote } from "../lib/finance";
@@ -827,6 +828,64 @@ check(
   true,
 );
 check("R32 未批量启用全部80条", fpCat.subscenarios.filter((s) => s.enabled && /^CASH2-S\d{3}$|^PTY2-S\d{3}$/.test(s.id) && !s.id.startsWith("CASH2-S9")).length < 80, true);
+
+console.log("\n[监管场景详情业务化展示]");
+const payEval = seed.rule_evaluations.find((e) => e.id === "EVAL-P-PAY001-APPROVAL")!;
+const s039View = verificationFromEval(payEval, { riskStatus: "pending_review", scenarioIds: ["CASH2-S039"] });
+check("S039 展示该笔有效批准800", s039View.facts.some((f) => f.label === "该笔有效批准金额" && f.value === "800万元"), true);
+check("S039 展示实际支付1200", s039View.facts.some((f) => f.label === "实际支付金额" && f.value === "1200万元"), true);
+check("S039 展示超出批准400", s039View.facts.some((f) => f.label === "超出批准金额" && f.value === "400万元"), true);
+check("S039 业务授权上限2000单独展示", s039View.facts.some((f) => f.label === "业务授权上限" && f.value === "2000万元"), true);
+check("S039 上限说明不与该笔批准混淆", s039View.facts.some((f) => f.label === "业务授权上限" && (f.note ?? "").includes("不得与该笔有效批准金额混淆")), true);
+check("S039 容差0", s039View.facts.some((f) => f.label === "货币精度容差" && f.value === "0万元"), true);
+check("S039 核验结果为命中待核查", s039View.resultLabel, "命中，待核查");
+check("S039 结果不是已确认违规", s039View.resultLabel.includes("已确认违规"), false);
+check("S039 保留原公式", Boolean(s039View.formula.includes("1200") && s039View.formula.includes("800")), true);
+const s039Ok = seed.rule_evaluations.find((e) => e.id === "FP-EVAL-S039-OK")!;
+const s039OkView = verificationFromEval(s039Ok, { riskStatus: "closed" });
+check("S039 正常付款展示未命中", s039OkView.resultLabel.includes("未命中"), true);
+check("S039 正常付款批准与实付一致", s039OkView.facts.some((f) => f.label === "该笔有效批准金额" && f.value === "4200万元") && s039OkView.facts.some((f) => f.label === "实际支付金额" && f.value === "4200万元"), true);
+const s037p = seed.rule_evaluations.find((e) => e.id === "FP-EVAL-S037P-HIT")!;
+const s037View = verificationFromEval(s037p, { riskStatus: "pending_review", scenarioIds: ["PTY2-S037"] });
+check("S037 应收价款800", s037View.facts.some((f) => f.label === "应收价款" && f.value === "800万元"), true);
+check("S037 已核实到账480", s037View.facts.some((f) => f.label === "已核实到账" && f.value === "480万元"), true);
+check("S037 到期未收320", s037View.facts.some((f) => f.label === "到期未收" && f.value === "320万元"), true);
+check("S037 结果命中待核查", s037View.resultLabel, "命中，待核查");
+const s011Trial = trialPtyS011("PTY-M002");
+const s011View = verificationFromEval(
+  {
+    rule_id: "PTY2-R011",
+    subject_object_id: "PTY-M002",
+    inputs: s011Trial.inputs,
+    formula: s011Trial.formula,
+    effective_result: "data_insufficient",
+    result: "clear",
+    rule_version: "FP-R32-1",
+    window_start: "2026-01-01",
+    window_end: "2026-06-30",
+    evidence_ids: ["EVID-FP-011"],
+    risk_ids: ["R-FP-011"],
+    missing: s011Trial.missing,
+  },
+  { riskStatus: "pending_review", scenarioIds: ["PTY2-S011"] },
+);
+check("S011 专业核查标明不能视为已确认违规", s011View.resultLabel.includes("不能视为已确认违规"), true);
+check("S011 结论为待专业核查", s011View.resultLabel.includes("待专业核查"), true);
+check("S011 监测对象用事项名称", objectTitle("PTY-M002").includes("被投企业A部分股权协议转让"), true);
+check("S032 法人名称优先于内部ID", objectTitle("LE-CTRL"), "海工控股装备公司");
+const holds = holdingRowsFor("JV001");
+check("产权持股仍为三条来源", holds.length, 3);
+check("产权持股60/60/55分列", holds.map((h) => h.pct).sort((a, b) => b - a).join("/"), "60/60/55");
+check("产权持股使用中文主体", holds.every((h) => h.investorName === "下属二级单位A" && h.investeeName === "被投企业A"), true);
+check("产权持股含来源与基准日", holds.every((h) => h.source && h.asOf === "2026-06-30"), true);
+check("产权持股差异待核实", Boolean(holdingDiffNote(holds)?.includes("待核实")), true);
+check("监测说明去掉首批路径评估", monitoringNoteLabel("首批路径评估", "evaluated_hit"), "发现关注事项");
+check("监测说明去掉R3.2覆盖文案", monitoringNoteLabel("R3.2 覆盖路径评估", "evaluated_clear"), "本次监测未发现异常");
+check("英文字段 actual 映射为实际支付金额", inputFieldLabel("actual"), "实际支付金额");
+const r011 = seed.risk_cases.find((r) => r.id === "R-FP-011");
+const r032 = seed.risk_cases.find((r) => r.id === "R-FP-032");
+check("S011 事项仍为待核查", r011?.status, "pending_review");
+check("S032 事项仍为待核查", r032?.status, "pending_review");
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

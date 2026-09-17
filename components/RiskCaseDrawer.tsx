@@ -28,11 +28,22 @@ import { DOMAIN_META, evidenceById, phaseName, scenarioName, seed, topicName } f
 import { orgPath } from "@/lib/org";
 import { daysBetween, fmtDate } from "@/lib/format";
 import { isIndependentReviewer, objectAllowed, riskVisible } from "@/lib/config";
-import { isScenarioMonitoringActive, liveRuleLabel } from "@/lib/live-config";
+import { isScenarioMonitoringActive, liveRule } from "@/lib/live-config";
 import { draftsForRisk } from "@/lib/materials";
 import { allRuleEvaluations } from "@/lib/evaluations";
 import { useDemoStore, type ActionKind } from "@/lib/store";
+import { trialRule } from "@/lib/fp-rules";
 import type { CaseAction, RiskCase } from "@/lib/types";
+import VerificationPanel from "@/components/fp/VerificationPanel";
+import ProfessionalReviewPanel from "@/components/fp/ProfessionalReviewPanel";
+import {
+  dataNatureLabel,
+  hitValidityLabel,
+  inputFieldLabel,
+  objectTitle,
+  ruleDisplayName,
+  verificationFromEval,
+} from "@/lib/fp-display";
 
 /**
  * 风险事项详情。所有领域、场景表、工作台共用本抽屉，
@@ -221,7 +232,13 @@ function RiskCaseDrawerBody({
 
   const links = seed.risk_context_links.filter((l) => l.risk_id === risk.id);
   const evidences = risk.evidence_ids.map((id) => evidenceById(id)).filter(Boolean);
-  const ruleEvals = allRuleEvaluations().filter((e) => e.risk_ids.includes(risk.id) || e.subject_object_id === risk.primary_object_id);
+  const ruleEvals = allRuleEvaluations().filter(
+    (e) => e.risk_ids.includes(risk.id) || (e.subject_object_id === risk.primary_object_id && e.rule_id === risk.rule_id),
+  );
+  const trialFallback =
+    ruleEvals.length === 0
+      ? trialRule(risk.scenario_ids[0] ?? risk.rule_id.replace("-R", "-S"), risk.primary_object_id)
+      : null;
   const traces = seed.data_traces.filter((t) => t.risk_id === risk.id);
   const myUrges = urges.filter((u) => u.riskId === risk.id);
   const dueDate = rectificationDueDate(risk);
@@ -286,8 +303,8 @@ function RiskCaseDrawerBody({
       width="72vw"
       title={
         <span className="flex items-center gap-2 flex-wrap">
-          <span className="num text-textsub text-[14px]">{risk.id}</span>
           {risk.title}
+          <span className="num text-textsub text-[13px]">事项编号 {risk.id}</span>
           <SeverityTag severity={risk.severity} />
           <Tag tone="neutral">{statusLabel[risk.status]}</Tag>
           {overdue && <Tag tone="red">整改逾期</Tag>}
@@ -301,7 +318,7 @@ function RiskCaseDrawerBody({
             {risk.domains.map((d) => DOMAIN_META[d].label).join("、")}
           </span>
           {sourceLabel && <span>来源：{sourceLabel}</span>}
-          <SimulatedBadge text={`数据性质：${risk.data_nature === "simulated" ? "合成样例" : risk.data_nature}`} />
+          <SimulatedBadge text={`数据性质：${dataNatureLabel(risk.data_nature)}`} />
         </span>
       }
       footer={
@@ -456,41 +473,57 @@ function RiskCaseDrawerBody({
                   { label: "承办人", value: risk.assignee_display_name ?? "未认领" },
                   { label: "首次发现", value: <span className="num">{fmtDate(risk.first_seen_at)}</span> },
                   { label: "最近命中", value: <span className="num">{fmtDate(risk.last_seen_at)}</span> },
-                  { label: "触发规则", value: liveRuleLabel(risk.rule_id) },
+                  { label: "触发规则", value: <>{ruleDisplayName(risk.rule_id)}<span className="num text-[12px] text-textsub ml-2">规则编号 {risk.rule_id}</span></> },
                   {
                     label: "关联监管场景",
                     value: (
                       <span className="flex flex-wrap gap-1">
                         {risk.scenario_ids.map((s) => (
                           <Tag key={s} tone={isScenarioMonitoringActive(s) ? "brand" : "neutral"}>
-                            {s} {scenarioName(s)}
+                            {scenarioName(s)}
+                            <span className="num text-[11px] ml-1">场景编号 {s}</span>
                             {!isScenarioMonitoringActive(s) ? " · 已停用" : ""}
                           </Tag>
                         ))}
                       </span>
                     ),
                   },
-                  {
-                    label: "历史评估版本",
-                    value:
-                      ruleEvals.length > 0 ? (
-                        <span>
-                          {ruleEvals
-                            .map(
-                              (e) =>
-                                `${e.rule_id} ${e.rule_version}｜${Object.entries(e.inputs)
-                                  .map(([k, v]) => `${k}=${String(v)}`)
-                                  .join("，")}`,
-                            )
-                            .join("；")}
-                        </span>
-                      ) : (
-                        "无自动评估记录"
-                      ),
-                  },
-                  { label: "主对象", value: <span className="num">{risk.primary_object_id}</span> },
+                  { label: "监测对象", value: <>{objectTitle(risk.primary_object_id)}<span className="num text-[12px] text-textsub ml-2">对象编号 {risk.primary_object_id}</span></> },
                 ]}
               />
+              {ruleEvals.length > 0 && (
+                <div className="space-y-3">
+                  {ruleEvals.map((e) => (
+                    <VerificationPanel
+                      key={e.id}
+                      view={verificationFromEval(e, { riskStatus: risk.status, scenarioIds: risk.scenario_ids })}
+                    />
+                  ))}
+                </div>
+              )}
+              {ruleEvals.length === 0 && trialFallback && trialFallback.result !== "not_applicable" && (
+                <VerificationPanel
+                  view={verificationFromEval(
+                    {
+                      rule_id: risk.rule_id,
+                      subject_object_id: risk.primary_object_id,
+                      inputs: trialFallback.inputs,
+                      formula: trialFallback.formula,
+                      effective_result:
+                        trialFallback.result === "hit" ? "hit" : trialFallback.result === "clear" ? "clear" : "data_insufficient",
+                      result: trialFallback.result === "hit" ? "hit" : "clear",
+                      rule_version: liveRule(risk.rule_id)?.published?.version ?? liveRule(risk.rule_id)?.version_id ?? "现行",
+                      window_start: risk.first_seen_at,
+                      window_end: risk.last_seen_at,
+                      evidence_ids: risk.evidence_ids,
+                      risk_ids: [risk.id],
+                      missing: trialFallback.missing,
+                    },
+                    { riskStatus: risk.status, scenarioIds: risk.scenario_ids },
+                  )}
+                />
+              )}
+              <ProfessionalReviewPanel risk={risk} />
               {risk.investigation_conclusion && (
                 <Notice tone="brand" title="核查结论">
                   {risk.investigation_conclusion}
@@ -541,49 +574,45 @@ function RiskCaseDrawerBody({
           {tab === "evidence" && (
             <>
               <h4 className="text-[15px] font-semibold text-textmain">规则评估记录</h4>
-              <DataTable
-                rows={ruleEvals}
-                rowKey={(r) => r.id}
-                empty="该事项没有对应的自动规则评估记录，属人工核查线索。"
-                columns={[
-                  { key: "id", title: "评估记录", width: "150px", render: (r) => <span className="num">{r.id}</span> },
-                  { key: "rule", title: "规则/版本", render: (r) => `${liveRuleLabel(r.rule_id)}（${r.rule_version}）` },
-                  {
-                    key: "window",
-                    title: "归属观察窗口",
-                    render: (r) => (
-                      <span className="num">
-                        {r.window_start} ~ {r.window_end}
-                      </span>
-                    ),
-                  },
-                  {
-                    key: "result",
-                    title: "结果",
-                    render: (r) => (
-                      <Tag tone={r.effective_result === "hit" ? "red" : r.effective_result === "excluded" ? "neutral" : "green"}>
-                        {r.effective_result === "hit" ? "有效命中" : r.effective_result === "excluded" ? "已排除" : "未命中"}
-                      </Tag>
-                    ),
-                  },
-                  { key: "formula", title: "计算式", render: (r) => <span className="text-[13px]">{r.formula}</span> },
-                  {
-                    key: "inputs",
-                    title: "当时参数",
-                    render: (r) => (
-                      <span className="num text-[12px]">
-                        {Object.entries(r.inputs)
-                          .map(([k, v]) => `${k}=${String(v)}`)
-                          .join("，") || "—"}
-                      </span>
-                    ),
-                  },
-                ]}
-              />
+              {ruleEvals.length === 0 ? (
+                trialFallback && trialFallback.result !== "not_applicable" ? (
+                  <VerificationPanel
+                    view={verificationFromEval(
+                      {
+                        rule_id: risk.rule_id,
+                        subject_object_id: risk.primary_object_id,
+                        inputs: trialFallback.inputs,
+                        formula: trialFallback.formula,
+                        effective_result:
+                          trialFallback.result === "hit" ? "hit" : trialFallback.result === "clear" ? "clear" : "data_insufficient",
+                        result: trialFallback.result === "hit" ? "hit" : "clear",
+                        rule_version: liveRule(risk.rule_id)?.published?.version ?? liveRule(risk.rule_id)?.version_id ?? "现行",
+                        window_start: risk.first_seen_at,
+                        window_end: risk.last_seen_at,
+                        evidence_ids: risk.evidence_ids,
+                        risk_ids: [risk.id],
+                        missing: trialFallback.missing,
+                      },
+                      { riskStatus: risk.status, scenarioIds: risk.scenario_ids },
+                    )}
+                  />
+                ) : (
+                  <p className="text-[13px] text-textsub">该事项没有对应的自动规则评估记录，属人工核查线索。</p>
+                )
+              ) : (
+                <div className="space-y-3">
+                  {ruleEvals.map((e) => (
+                    <VerificationPanel
+                      key={e.id}
+                      view={verificationFromEval(e, { riskStatus: risk.status, scenarioIds: risk.scenario_ids })}
+                    />
+                  ))}
+                </div>
+              )}
               {ruleEvals.length > 0 && (
-                <Notice tone="neutral" title="命中有效性">
-                  {ruleEvals.map((r) => r.hit_validity).join("；")}
-                </Notice>
+                <p className="text-[12px] text-textsub">
+                  命中有效性：{ruleEvals.map((r) => hitValidityLabel(r.hit_validity)).join("；")}
+                </p>
               )}
 
               <h4 className="text-[15px] font-semibold text-textmain">业务依据材料</h4>
@@ -594,13 +623,18 @@ function RiskCaseDrawerBody({
                 {evidences.map((e) => (
                   <div key={e!.id} className="rounded-[6px] border border-line p-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="num text-[12px] text-textsub">{e!.id}</span>
                       <span className="text-[14px] text-textmain">{e!.title}</span>
                       <Tag tone="neutral">{e!.source_type}</Tag>
-                      <SimulatedBadge />
+                      <SimulatedBadge text={dataNatureLabel(e!.data_nature)} />
                       <span className="num text-[12px] text-textsub ml-auto">记录时间 {e!.recorded_at}</span>
                     </div>
-                    <p className="text-[13px] text-textsub mt-1.5 leading-5">{e!.body}</p>
+                    <p className="text-[13px] text-textsub mt-1.5 leading-5">
+                      {String(e!.body ?? "")
+                        .split("FA-A-1101").join("账簿在册生产设备")
+                        .split("FA-A-1102").join("账簿在册配套设施")
+                        .split("FA-A-EXCL").join("已合法剥离资产")
+                        .split("DIR-A-03").join("已核实关联董事（受让方）")}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -621,7 +655,7 @@ function RiskCaseDrawerBody({
                         rows={t.calculation.inputs}
                         rowKey={(i) => i.field}
                         columns={[
-                          { key: "f", title: "构成项", render: (i) => i.field },
+                          { key: "f", title: "构成项", render: (i) => inputFieldLabel(i.field) },
                           { key: "v", title: "数值", align: "right", render: (i) => <span className="num">{i.value}</span> },
                           { key: "u", title: "单位", render: (i) => i.unit },
                         ]}
@@ -763,7 +797,7 @@ function RiskCaseDrawerBody({
                     render: (l) => l.phase_ids.map((p) => phaseName(p)).join("、") || "—",
                   },
                   { key: "topic", title: "专题", render: (l) => (l.topic_id ? topicName(l.topic_id) : "—") },
-                  { key: "sub", title: "子主题", render: (l) => l.subtopic_id ?? "—" },
+                  { key: "sub", title: "子主题", render: (l) => (l.subtopic_id ? topicName(l.subtopic_id) : "—") },
                 ]}
               />
               <div className="flex flex-wrap gap-2">
@@ -780,7 +814,7 @@ function RiskCaseDrawerBody({
                   href={`/object/${risk.primary_object_id}`}
                   className="h-8 px-3 inline-flex items-center rounded-[6px] border border-line text-[13px] text-brand hover:bg-tint transition-colors duration-150"
                 >
-                  打开主对象档案 {risk.primary_object_id} ›
+                  打开监测对象档案 {objectTitle(risk.primary_object_id)} ›
                 </Link>
               </div>
             </>

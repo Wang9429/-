@@ -112,7 +112,7 @@ export function draftsForRisk(riskId: string, kind?: DraftMaterial["kind"]): Dra
       pages: [
         {
           title: "范围材料",
-          body: "PTY-M002 账簿资产 FA-A-1101、FA-A-1102 均列入评估清单；FA-A-EXCL 有合法剥离依据〔2026〕2号。先排除时点、重复编号和合法剥离。",
+          body: "PTY-M002 对应事项「被投企业A部分股权协议转让」。账簿在册生产设备、配套设施均列入评估清单；已合法剥离资产有合法剥离依据〔2026〕2号。先排除时点、重复登记和合法剥离。",
         },
         {
           title: "结论栏",

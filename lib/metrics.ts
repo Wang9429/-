@@ -1490,10 +1490,10 @@ export const INDICATORS: IndicatorDef[] = [
           extras: [
             { label: "国家", value: le?.country ?? "—" },
             { label: "权益快照来源数", value: `${snaps.length}` },
-            {
-              label: "持股比例（各来源）",
-              value: snaps.map((s) => `${s.source_type} ${s.pct}%`).join("；") || "—",
-            },
+            ...snaps.map((s) => ({
+              label: `${s.source_type.includes("批准") ? "有效批准方案" : s.source_type.includes("工商") ? "工商登记" : s.source_type.includes("台账") ? "产权台账" : s.source_type}持股`,
+              value: `${s.pct}%（生效日 ${s.effective_date}，基准日 ${s.snapshot_date}）`,
+            })),
           ],
           riskIds: risksFor(id, ctx),
           dataComplete: true,
@@ -1537,7 +1537,10 @@ export const INDICATORS: IndicatorDef[] = [
           extras: [
             { label: "有效日期", value: snaps[0].effective_date },
             { label: "快照日期", value: snaps[0].snapshot_date },
-            ...snaps.map((s) => ({ label: s.source_type, value: `${s.pct}%` })),
+            ...snaps.map((s) => ({
+              label: `${s.source_type.includes("批准") ? "有效批准方案" : s.source_type.includes("工商") ? "工商登记" : s.source_type.includes("台账") ? "产权台账" : s.source_type}持股`,
+              value: `${s.pct}%（生效日 ${s.effective_date}，基准日 ${s.snapshot_date}）`,
+            })),
             { label: "差异", value: `${Math.max(...pcts) - Math.min(...pcts)} 个百分点（待核实）` },
           ],
           riskIds: risksFor(investee, ctx),

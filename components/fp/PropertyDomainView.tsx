@@ -18,6 +18,8 @@ import { censusCounts, openMatterCount, penetratePaths } from "@/lib/fp-census";
 import { ECONOMIC_BEHAVIORS, RIGHTS_TOPICS } from "@/lib/fp-topics";
 import { indicatorById, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
+import HoldingsTable from "@/components/fp/HoldingsTable";
+import { entityName, holdingRowsFor } from "@/lib/fp-display";
 
 export default function PropertyDomainView() {
   const { filters, user, catalog } = useDemoStore();
@@ -209,10 +211,20 @@ export default function PropertyDomainView() {
               {
                 key: "edge",
                 title: "直接持股",
-                render: (r) =>
-                  r.directEdges.length
-                    ? r.directEdges.map((e) => `${e.investorId} ${e.pct}%`).join("；")
-                    : "—",
+                render: (r) => {
+                  const rows = holdingRowsFor(r.entity.id);
+                  if (!rows.length) return "—";
+                  return (
+                    <ul className="space-y-1">
+                      {rows.map((e) => (
+                        <li key={e.id}>
+                          {e.investorName} {e.pct}%
+                          <span className="text-[12px] text-textsub"> ｜{e.source}｜基准日 {e.asOf}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                },
               },
             ]}
           />
@@ -220,11 +232,14 @@ export default function PropertyDomainView() {
           <EquityGraph orgIds={pageOrgIds} asOf={filters.asOf} focus={focusEntity} onFocus={(id) => { setFocusEntity(id); setObjectId(id); }} />
         )}
         {focusEntity && (
-          <div className="mt-3 text-[13px] text-textsub">
-            穿透权益（完整无环路径乘积）：{" "}
-            {penetratePaths(focusEntity)
-              .map((p) => `${p.path.join("→")} ${(p.product * 100).toFixed(2)}%`)
-              .join("；") || "链路不全，待核实"}
+          <div className="mt-4 space-y-3">
+            <HoldingsTable investeeId={focusEntity} title={`${entityName(focusEntity)}持股来源核对`} />
+            <div className="text-[13px] text-textsub">
+              穿透权益（完整无环路径乘积）：{" "}
+              {penetratePaths(focusEntity)
+                .map((p) => `${p.path.map((id) => entityName(id)).join("→")} ${(p.product * 100).toFixed(2)}%`)
+                .join("；") || "链路不全，待核实"}
+            </div>
           </div>
         )}
       </Card>
@@ -371,18 +386,26 @@ function EquityGraph({
           const fromName = seed.legal_entities.find((e) => e.id === from)?.name ?? from;
           const toName = seed.legal_entities.find((e) => e.id === to)?.name ?? to;
           const selected = focus === from || focus === to;
+          const pcts = snaps.map((s) => s.pct);
+          const diff = Math.max(...pcts) - Math.min(...pcts);
           return (
-            <div key={k} className={`flex flex-wrap items-center gap-2 text-[13px] ${selected ? "bg-tint rounded-[6px] px-2 py-1" : ""}`}>
-              <button type="button" className="text-brand hover:underline" onClick={() => onFocus(from)}>
-                {fromName}
-              </button>
-              <span className="text-textsub">→</span>
-              <button type="button" className="text-brand hover:underline" onClick={() => onFocus(to)}>
-                {toName}
-              </button>
-              <span className="num text-textsub">
-                {snaps.map((s) => `${s.pct}% · ${s.source_type} · ${s.effective_date}`).join(" ｜ ")}
-              </span>
+            <div key={k} className={`space-y-1 ${selected ? "bg-tint rounded-[6px] px-2 py-1" : ""}`}>
+              {snaps.map((s) => (
+                <div key={s.id} className="flex flex-wrap items-center gap-2 text-[13px]">
+                  <button type="button" className="text-brand hover:underline" onClick={() => onFocus(from)}>
+                    {fromName}
+                  </button>
+                  <span className="text-textsub">→</span>
+                  <button type="button" className="text-brand hover:underline" onClick={() => onFocus(to)}>
+                    {toName}
+                  </button>
+                  <span className="num">{s.pct}%</span>
+                  <span className="text-textsub">来源 {s.source_type.includes("批准") ? "有效批准方案" : s.source_type.includes("工商") ? "工商登记" : s.source_type.includes("台账") ? "产权台账" : s.source_type}</span>
+                  <span className="num text-textsub">生效日 {s.effective_date}</span>
+                  <span className="num text-textsub">基准日 {s.snapshot_date}</span>
+                </div>
+              ))}
+              {diff > 0 && <Tag tone="amber">差异待核实 {diff} 个百分点</Tag>}
             </div>
           );
         })}
