@@ -103,6 +103,23 @@ export function draftsForRisk(riskId: string, kind?: DraftMaterial["kind"]): Dra
         },
       ],
     },
+    {
+      id: "MAT-FP-011-SCOPE",
+      riskId: "R-FP-011",
+      title: "审计评估范围与账簿资产对照及专业核查结论稿",
+      kind: "rectification",
+      dataNature: "合成样例",
+      pages: [
+        {
+          title: "范围材料",
+          body: "PTY-M002 账簿资产 FA-A-1101、FA-A-1102 均列入评估清单；FA-A-EXCL 有合法剥离依据〔2026〕2号。先排除时点、重复编号和合法剥离。",
+        },
+        {
+          title: "结论栏",
+          body: "须由核查人逐项确认后记录「范围一致/未发现需整改问题」或转入整改。不得把资产数量差值包装成自动违法判断。",
+        },
+      ],
+    },
   ];
   return [...R07_MATERIALS, ...extra].filter((m) => m.riskId === riskId && (!kind || m.kind === kind));
 }

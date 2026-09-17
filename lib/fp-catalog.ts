@@ -184,6 +184,24 @@ function sampleParams(id: string): Record<string, string | number> {
       return { sample_note: "到期未收回按合同本金与有效回收计算，不引入无依据容差" };
     case "CASH2-S040":
       return { sample_note: "仅台账审批号为空不得判定未审批" };
+    case "CASH2-S006":
+      return { sample_note: "同主体同基准日比对银行确认清单与企业台账；缺独立银行清单不得称已筛查" };
+    case "CASH2-S017":
+      return { sample_note: "同一凭据有效累计报支，剔除合法分摊；关联同凭据不等于重复报销" };
+    case "CASH2-S020":
+      return { sample_note: "核验调整生效日前是否有覆盖主体与人员范围的有效批准；不以流水合计代替工资总额" };
+    case "PTY2-S003":
+      return { sample_note: "仅核验模板明确要求前置的决策审批，依法可先行的预披露不视为违规" };
+    case "PTY2-S011":
+      return { sample_note: "专业核查：人工确认应覆盖范围与资产差异，不把数量差自动认定为隐匿" };
+    case "PTY2-S014":
+      return { sample_note: "辅助匹配应回避人员与表决记录；同姓或关系未核实不得判违规" };
+    case "PTY2-S016":
+      return { sample_note: "按该类行为已确认定价约束核验；不把非上市模板套上市股份" };
+    case "PTY2-S037":
+      return { sample_note: "按同一分期义务计算应收未收；无偿划转不适用" };
+    case "PTY2-S038":
+      return { sample_note: "核验实际使用时点资质有效性；状态来源缺失为未评估" };
     default:
       return { sample_note: "样例参数，待业务确认" };
   }

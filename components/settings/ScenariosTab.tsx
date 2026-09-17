@@ -125,7 +125,7 @@ export default function ScenariosTab() {
   const toggleSub = (row: CatalogSubscenario) => {
     if (!canEdit) return;
     if (row.enabled) {
-      const impact = subDisableImpact(row, risks);
+      const impact = subDisableImpact(row, risks, catalog);
       if (!window.confirm(impact.detail)) return;
     }
     persist(

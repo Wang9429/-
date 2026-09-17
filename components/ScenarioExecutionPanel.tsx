@@ -21,7 +21,7 @@ import {
   type FiveCounts,
   type ScopeFilter,
 } from "@/lib/monitoring";
-import { isScenarioMonitoringActive, liveSub } from "@/lib/live-config";
+import { isScenarioMonitoringActive, liveSub, hasEffectiveExecutableRule } from "@/lib/live-config";
 import {
   objectTypeLabel,
   phaseName,
@@ -37,6 +37,7 @@ import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
 import type { DomainId, MonitoringRow, RiskCase } from "@/lib/types";
 import { officialDirectory, scopedDirectory } from "@/lib/fp-directory";
+import { scenarioFitsBehavior } from "@/lib/fp-topics";
 
 /**
  * 环节/专题选中后的执行情况（完整业需 5.3、5.4）。
@@ -103,7 +104,9 @@ export default function ScenarioExecutionPanel({
   onTopicChange,
   topicNavTestId,
   allTopicTestId,
+  allTopicLabel,
   toolbarExtra,
+  behaviorId,
 }: {
   domain: DomainId;
   phaseId?: string | null;
@@ -124,7 +127,9 @@ export default function ScenarioExecutionPanel({
   onTopicChange?: (id: string | null) => void;
   topicNavTestId?: string;
   allTopicTestId?: string;
+  allTopicLabel?: string;
   toolbarExtra?: React.ReactNode;
+  behaviorId?: string | null;
 }) {
   const { filters, risks, actions, canAct, catalog } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
@@ -145,9 +150,10 @@ export default function ScenarioExecutionPanel({
       phaseId: phaseId ?? null,
       topicId: topicId ?? null,
       subtopicId: subtopicId ?? null,
+      behaviorId: behaviorId ?? null,
       allowedObjectIds,
     }),
-    [domain, orgIds, filters.periodStart, filters.periodEnd, filters.asOf, phaseId, topicId, subtopicId, allowedObjectIds],
+    [domain, orgIds, filters.periodStart, filters.periodEnd, filters.asOf, phaseId, topicId, subtopicId, behaviorId, allowedObjectIds],
   );
 
   const asOfRisks = useMemo(
@@ -163,7 +169,7 @@ export default function ScenarioExecutionPanel({
       ? scopedDirectory(directoryDomain, topicId ?? null, phaseId ?? null, phaseId ? phaseName(phaseId) : null)
       : null;
     const ids = catalogMode
-      ? dir!.flatMap((g) => g.children.map((c) => c.id))
+      ? dir!.flatMap((g) => g.children.map((c) => c.id)).filter((id) => hasEffectiveExecutableRule(id, filters.asOf) && scenarioFitsBehavior(id, behaviorId))
       : configuredScenarios(domain, phaseId ?? null, topicId ?? null);
     const extra = new Set(ids);
     if (!catalogMode) {
@@ -217,7 +223,12 @@ export default function ScenarioExecutionPanel({
           hitRuleCount: new Set(rows.filter((x) => x.status === "evaluated_hit").flatMap((x) => x.rule_ids)).size,
         };
       })
-      .filter((r) => (catalogMode ? true : r.monitoringActive || r.counts.openRiskIds.length > 0))
+      .filter((r) => {
+        if (catalogMode) {
+          return hasEffectiveExecutableRule(r.id, filters.asOf) && scenarioFitsBehavior(r.id, behaviorId);
+        }
+        return r.monitoringActive || r.counts.openRiskIds.length > 0;
+      })
       .sort((a, b) => {
         if (dir) {
           const oa = groupMeta.get(a.id)?.order ?? 99;
@@ -240,7 +251,7 @@ export default function ScenarioExecutionPanel({
         const d = rank(a) - rank(b);
         return d !== 0 ? d : a.id.localeCompare(b.id);
       });
-  }, [domain, phaseId, topicId, baseScope, asOfRisks, summary.openRiskIds, orgIds, allowedObjectIds, catalog.groups, directoryDomain]);
+  }, [domain, phaseId, topicId, behaviorId, baseScope, asOfRisks, summary.openRiskIds, orgIds, allowedObjectIds, catalog.groups, directoryDomain, filters.asOf]);
 
   const visibleScenarioRows = useMemo(
     () =>
@@ -303,10 +314,11 @@ export default function ScenarioExecutionPanel({
               orgScope: orgIds,
               topicId: topicId ?? undefined,
               phaseId: phaseId ?? undefined,
-            }),
+            }) &&
+            r.scenario_ids.some((sid) => scenarioFitsBehavior(sid, behaviorId)),
         )
         .map((r) => r.id),
-    [asOfRisks, orgIds, domain, topicId, phaseId],
+    [asOfRisks, orgIds, domain, topicId, phaseId, behaviorId],
   );
 
   const compactStats: { kind: DetailKind; label: string; value: number; unit: string }[] = [
@@ -319,7 +331,8 @@ export default function ScenarioExecutionPanel({
   ];
 
   const catalogMode = directoryDomain === "CASH" || directoryDomain === "RIGHTS";
-  const activeScopeTitle = catalogMode && !topicId ? "全部专题" : scopeTitle;
+  const allLabel = allTopicLabel ?? (directoryDomain === "RIGHTS" ? "全部场景（10）" : "全部专题");
+  const activeScopeTitle = catalogMode && !topicId ? allLabel : scopeTitle;
 
   const groupedRows = useMemo(() => {
     if (catalogMode && directoryDomain) {
@@ -334,7 +347,9 @@ export default function ScenarioExecutionPanel({
           name: g.name,
           order: g.order,
           rows: visibleScenarioRows.filter((r) => r.groupId === g.id),
-          catalogChildren: g.children.length,
+          catalogChildren: g.children.filter(
+            (c) => hasEffectiveExecutableRule(c.id, filters.asOf) && scenarioFitsBehavior(c.id, behaviorId),
+          ).length,
         }))
         .filter((g) => (filtered || topicId || phaseId ? g.rows.length > 0 : true));
     }
@@ -362,11 +377,22 @@ export default function ScenarioExecutionPanel({
     onlyAbnormal,
     statusFilter,
     objectTypeFilter,
+    behaviorId,
+    filters.asOf,
   ]);
 
   React.useEffect(() => {
     setOpenGroups(new Set());
-  }, [topicId, phaseId, directoryDomain]);
+    setDetail(null);
+    setOpenRowId(null);
+  }, [topicId, phaseId, behaviorId, directoryDomain]);
+
+  React.useEffect(() => {
+    setSearch("");
+    setOnlyAbnormal(false);
+    setStatusFilter("all");
+    setObjectTypeFilter("all");
+  }, [topicId, phaseId, behaviorId]);
 
   React.useEffect(() => {
     const q = search.trim();
@@ -468,7 +494,7 @@ export default function ScenarioExecutionPanel({
                 !topicId ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
               }`}
             >
-              全部专题
+              {allLabel}
             </button>
             {topicOptions.map((t) => (
               <button
@@ -597,15 +623,13 @@ export default function ScenarioExecutionPanel({
               {visibleScenarioRows.length === 0 && groupedRows.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-3 py-4 text-center text-[13px] text-textsub border-b border-line">
-                    {scenarioRows.length === 0 ? "当前范围尚未配置监管场景。" : "当前筛选条件下没有匹配场景，请调整搜索或筛选。"}
+                    {scenarioRows.length === 0 ? "当前范围没有已启用且可实际执行的监管规则。" : "当前筛选条件下没有匹配场景，请调整搜索或筛选。"}
                   </td>
                 </tr>
               )}
               {groupedRows.map((group) => {
                 const opened = openGroups.has(group.id);
-                const subCount = catalogMode && !(search || onlyAbnormal || statusFilter !== "all" || objectTypeFilter !== "all")
-                  ? Math.max(group.rows.length, group.catalogChildren)
-                  : group.rows.length;
+                const subCount = group.rows.length;
                 return (
                   <React.Fragment key={group.id}>
                     <tr className="bg-[#f7f9fd]" data-testid={`scenario-group-${group.id}`}>
@@ -663,12 +687,6 @@ export default function ScenarioExecutionPanel({
                             <td className="px-3 py-2 align-top">
                               <span className="inline-flex flex-wrap items-center gap-1">
                                 <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>
-                                {!r.monitoringActive &&
-                                  r.statusLabelText !== "仅维护定义" &&
-                                  r.statusLabelText !== "暂未开展监测" &&
-                                  r.statusLabelText !== "未启用" &&
-                                  r.statusLabelText !== "未具备运行条件" &&
-                                  r.statusLabelText !== "未开展监测" && <Tag tone="neutral">已停用</Tag>}
                               </span>
                             </td>
                             <td className="px-3 py-2 align-top text-right num whitespace-nowrap">

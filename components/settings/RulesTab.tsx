@@ -181,7 +181,7 @@ export default function RulesTab() {
   const toggle = (row: CatalogRule) => {
     if (!canEdit && !canPublish) return;
     if (row.enabled) {
-      if (!window.confirm(ruleDisableImpact(row, risks).detail)) return;
+      if (!window.confirm(ruleDisableImpact(row, risks, catalog).detail)) return;
     }
     persist(
       catalog.rules.map((r) =>

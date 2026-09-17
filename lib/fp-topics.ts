@@ -55,11 +55,20 @@ export const FIRST_BATCH_SUBS = [
   "CASH2-S040",
   "CASH2-S012",
   "CASH2-S029",
+  "CASH2-S006",
+  "CASH2-S017",
+  "CASH2-S020",
   "PTY2-S006",
   "PTY2-S035",
   "PTY2-S028",
   "PTY2-S032",
   "PTY2-S025",
+  "PTY2-S003",
+  "PTY2-S011",
+  "PTY2-S014",
+  "PTY2-S016",
+  "PTY2-S037",
+  "PTY2-S038",
 ] as const;
 
 export type RuntimeCapability =
@@ -90,6 +99,62 @@ export const FIRST_BATCH_RUNTIME: Record<string, RuntimeCapability> = {
   "PTY2-S028": "structured_executable",
   "PTY2-S032": "professional_review",
   "PTY2-S025": "assisted_review",
+  "CASH2-S006": "assisted_review",
+  "CASH2-S017": "assisted_review",
+  "CASH2-S020": "assisted_review",
+  "PTY2-S003": "structured_executable",
+  "PTY2-S011": "professional_review",
+  "PTY2-S014": "assisted_review",
+  "PTY2-S016": "structured_executable",
+  "PTY2-S037": "structured_executable",
+  "PTY2-S038": "assisted_review",
+};
+
+export function isExecutableCapability(cap?: string | null): boolean {
+  return cap === "structured_executable" || cap === "assisted_review" || cap === "professional_review";
+}
+
+/** 仅在选定具体经济行为时收窄；全部行为仍展示交易专题下已启用规则。 */
+export const BEHAVIOR_CONSTRAINTS: Record<string, { priceRequired?: boolean; nonlistedOnly?: boolean; listedOnly?: boolean }> = {
+  "PTY2-S037": { priceRequired: true },
+  "PTY2-S016": { priceRequired: true, nonlistedOnly: true },
+};
+
+export function scenarioFitsBehavior(subId: string, behaviorId: string | null | undefined): boolean {
+  if (!behaviorId || behaviorId === "all") return true;
+  const b = ECONOMIC_BEHAVIORS.find((x) => x.id === behaviorId);
+  if (!b) return true;
+  const c = BEHAVIOR_CONSTRAINTS[subId];
+  if (!c) return true;
+  if (c.priceRequired && !b.priceApplicable) return false;
+  if (c.nonlistedOnly && b.listed) return false;
+  if (c.listedOnly && !b.listed) return false;
+  return true;
+}
+
+/** 默认交付 21 项一级场景的代表可执行子场景（实施对照，不覆盖配置种子）。 */
+export const COVERAGE_REPRESENTATIVE: Record<string, string> = {
+  "CASH2-P01": "CASH2-S040",
+  "CASH2-P02": "CASH2-S039",
+  "CASH2-P03": "CASH2-S006",
+  "CASH2-P04": "CASH2-S012",
+  "CASH2-P05": "CASH2-S017",
+  "CASH2-P06": "CASH2-S020",
+  "CASH2-P07": "CASH2-S024",
+  "CASH2-P08": "CASH2-S029",
+  "CASH2-P09": "CASH2-S031",
+  "CASH2-P10": "CASH2-S033",
+  "CASH2-P11": "CASH2-S035",
+  "PTY2-P01": "PTY2-S003",
+  "PTY2-P02": "PTY2-S006",
+  "PTY2-P03": "PTY2-S035",
+  "PTY2-P04": "PTY2-S011",
+  "PTY2-P05": "PTY2-S014",
+  "PTY2-P06": "PTY2-S016",
+  "PTY2-P07": "PTY2-S037",
+  "PTY2-P08": "PTY2-S038",
+  "PTY2-P09": "PTY2-S028",
+  "PTY2-P10": "PTY2-S032",
 };
 
 export const LEGACY_SCENARIO_MAP: Record<string, string> = {

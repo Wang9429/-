@@ -1,8 +1,51 @@
 import type { ConfigUser } from "./config";
 import type { CatalogGroup, CatalogIndicator, CatalogRule, CatalogSubscenario } from "./config-catalog";
+import { isExecutableCapability } from "./fp-topics";
 import { coverageRows, seed } from "./seed";
 import { isOpen } from "./risks";
 import type { RiskCase } from "./types";
+
+function ruleIsExecutableNow(rule: CatalogRule, sub?: CatalogSubscenario): boolean {
+  if (rule.enabled === false || rule.status === "disabled" || rule.status === "retired" || rule.status === "draft") return false;
+  if (!rule.published) return false;
+  const cap = rule.runtime_capability ?? sub?.runtime_capability;
+  return isExecutableCapability(cap);
+}
+
+function remainingExecutableAfterDisable(
+  catalog: { subscenarios: CatalogSubscenario[]; rules: CatalogRule[] },
+  primaryId: string,
+  disable: { kind: "rule" | "sub"; id: string },
+): number {
+  const children = catalog.subscenarios.filter((s) => s.parent_id === primaryId);
+  let n = 0;
+  for (const sub of children) {
+    if (disable.kind === "sub" && sub.id === disable.id) continue;
+    if (sub.enabled === false || sub.status === "disabled" || sub.status === "retired") continue;
+    const rules = catalog.rules.filter((r) => r.primary_subscenario_id === sub.id);
+    const keep = rules.filter((r) => {
+      if (disable.kind === "rule" && r.id === disable.id) return false;
+      return ruleIsExecutableNow(r, sub);
+    });
+    if (keep.length > 0 && isExecutableCapability(sub.runtime_capability)) n += 1;
+  }
+  return n;
+}
+
+export function lastExecutableCoverageNote(
+  catalog: { groups: CatalogGroup[]; subscenarios: CatalogSubscenario[]; rules: CatalogRule[] },
+  disable: { kind: "rule" | "sub"; id: string },
+): string | null {
+  const sub =
+    disable.kind === "sub"
+      ? catalog.subscenarios.find((s) => s.id === disable.id)
+      : catalog.subscenarios.find((s) => s.id === catalog.rules.find((r) => r.id === disable.id)?.primary_subscenario_id);
+  if (!sub) return null;
+  const group = catalog.groups.find((g) => g.id === sub.parent_id);
+  if (!group) return null;
+  if (remainingExecutableAfterDisable(catalog, group.id, disable) > 0) return null;
+  return `该一级场景「${group.name}」将不再开展后续监测。`;
+}
 
 export interface DisableImpact {
   title: string;
@@ -30,12 +73,17 @@ export function userDisableImpact(user: ConfigUser, all: ConfigUser[], actorId?:
   };
 }
 
-export function subDisableImpact(sub: CatalogSubscenario, risks: RiskCase[]): DisableImpact {
+export function subDisableImpact(
+  sub: CatalogSubscenario,
+  risks: RiskCase[],
+  catalog?: { groups: CatalogGroup[]; subscenarios: CatalogSubscenario[]; rules: CatalogRule[] },
+): DisableImpact {
   const rows = coverageRows.filter((r) => r.scenario_id === sub.id);
   const open = risks.filter((r) => r.scenario_ids.includes(sub.id) && isOpen(r));
+  const coverage = catalog ? lastExecutableCoverageNote(catalog, { kind: "sub", id: sub.id }) : null;
   return {
     title: "停用监管子场景",
-    detail: `停用「${sub.name}」后，后续监测停止（当前覆盖 ${rows.length} 条）。未关闭事项 ${open.length} 件仍出现在工作台、对象档案及总览，历史评估与来源版本可从事项查看。`,
+    detail: `停用「${sub.name}」后，后续监测停止（当前覆盖 ${rows.length} 条）。未关闭事项 ${open.length} 件仍出现在工作台、对象档案及总览，历史评估与来源版本可从事项查看。${coverage ? ` ${coverage}` : ""}`,
   };
 }
 
@@ -50,12 +98,17 @@ export function groupDisableImpact(group: CatalogGroup, subs: CatalogSubscenario
   };
 }
 
-export function ruleDisableImpact(rule: CatalogRule, risks: RiskCase[]): DisableImpact {
+export function ruleDisableImpact(
+  rule: CatalogRule,
+  risks: RiskCase[],
+  catalog?: { groups: CatalogGroup[]; subscenarios: CatalogSubscenario[]; rules: CatalogRule[] },
+): DisableImpact {
   const evals = seed.rule_evaluations.filter((e) => e.rule_id === rule.id);
   const open = risks.filter((r) => r.rule_id === rule.id && isOpen(r));
+  const coverage = catalog ? lastExecutableCoverageNote(catalog, { kind: "rule", id: rule.id }) : null;
   return {
     title: "停用监测规则",
-    detail: `停用「${rule.name}」后，后续监测停止。历史评估 ${evals.length} 条、未关闭事项 ${open.length} 件仍可查看并办理，原版本与参数可从事项依据中查看，不会被覆盖或关闭。`,
+    detail: `停用「${rule.name}」后，后续监测停止。历史评估 ${evals.length} 条、未关闭事项 ${open.length} 件仍可查看并办理，原版本与参数可从事项依据中查看，不会被覆盖或关闭。${coverage ? ` ${coverage}` : ""}`,
   };
 }
 

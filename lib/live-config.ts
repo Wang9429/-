@@ -1,6 +1,7 @@
 import type { CatalogPersist, CatalogSubscenario, CatalogRule } from "./config-catalog";
 import { extractCatalog, ruleRuntimeKind } from "./config-catalog";
 import { config } from "./config";
+import { isExecutableCapability } from "./fp-topics";
 import { setLiveScenarioNames } from "./scenario-names-live";
 import type { RuleEvaluation } from "./types";
 
@@ -171,6 +172,23 @@ export function getLiveConfig(): LiveState {
 
 export function isScenarioMonitoringActive(id: string): boolean {
   return !current.disabledScenarioIds.has(id);
+}
+
+/** 业务执行区：已启用、已发布、具备自动/辅助/专业核查路径，且当前时点有有效版本。 */
+export function hasEffectiveExecutableRule(subId: string, asOf = "2026-06-30"): boolean {
+  const sub = current.subs.get(subId);
+  if (!sub) return false;
+  if (current.disabledScenarioIds.has(subId)) return false;
+  if (sub.status === "draft" || sub.status === "disabled" || sub.status === "retired") return false;
+  if (!isExecutableCapability(sub.runtime_capability)) return false;
+  return current.rules.some(
+    (r) =>
+      r.primary_subscenario_id === subId &&
+      r.enabled !== false &&
+      r.status === "published" &&
+      Boolean(r.published) &&
+      (r.published?.effective_date ?? "9999-12-31") <= asOf,
+  );
 }
 
 export function liveSub(id: string): CatalogSubscenario | undefined {

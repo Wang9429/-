@@ -259,7 +259,11 @@ export default function FundsDomainView() {
         domain="CASH"
         directoryDomain="CASH"
         topicId={topicId}
-        onTopicChange={setTopicId}
+        onTopicChange={(id) => {
+          setTopicId(id);
+          setScenarioId(null);
+          setRiskId(null);
+        }}
         topicNavTestId="funds-topic-nav"
         allTopicTestId="funds-topic-all"
         topicOptions={CASH_TOPICS.map((t) => ({ id: t.id, label: t.short, testId: `funds-topic-${t.id}` }))}

@@ -419,12 +419,26 @@ export function hydrateCatalog(raw: unknown): CatalogPersist {
     schema: 1,
     groups: mergeById(base.groups, r.groups),
     subscenarios: stampLegacyTopics(
-      mergeById(base.subscenarios, r.subscenarios).map((s) => ({
-        ...s,
-        applicability: s.applicability === "pending" || s.applicability === "confirmed" ? s.applicability : "pending",
-        required_fields: Array.isArray(s.required_fields) ? s.required_fields : [],
-        object_types: Array.isArray(s.object_types) ? s.object_types : [],
-      })),
+      mergeById(base.subscenarios, r.subscenarios).map((s) => {
+        const seedSub = base.subscenarios.find((x) => x.id === s.id);
+        const upgraded =
+          seedSub && FIRST_BATCH_RUNTIME[s.id] && s.status === "draft" && seedSub.enabled
+            ? {
+                ...s,
+                ...seedSub,
+                enabled: true,
+                status: "published" as const,
+                applicability: "confirmed" as const,
+                runtime_capability: seedSub.runtime_capability,
+              }
+            : s;
+        return {
+          ...upgraded,
+          applicability: upgraded.applicability === "pending" || upgraded.applicability === "confirmed" ? upgraded.applicability : "pending",
+          required_fields: Array.isArray(upgraded.required_fields) ? upgraded.required_fields : [],
+          object_types: Array.isArray(upgraded.object_types) ? upgraded.object_types : [],
+        };
+      }),
     ),
     rules: mergeById(base.rules, r.rules).map((rule) => {
       const seedRule = base.rules.find((x) => x.id === rule.id);

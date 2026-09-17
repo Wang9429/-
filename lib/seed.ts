@@ -28,6 +28,16 @@ import {
   FP_TEMPLATES,
   FP_TX,
 } from "./fp-seed";
+import {
+  FP_R32_ACTIONS,
+  FP_R32_COVERAGE,
+  FP_R32_EVALS,
+  FP_R32_EVIDENCE,
+  FP_R32_LINKS,
+  FP_R32_MATTERS,
+  FP_R32_RISKS,
+  FP_R32_TX,
+} from "./fp-r32-seed";
 import { CASH_TOPICS, FIRST_BATCH_RUNTIME, RIGHTS_TOPICS, isOfficialFpSub } from "./fp-topics";
 import { liveSub } from "./live-config";
 
@@ -87,31 +97,52 @@ export const seed = {
   engineering_projects: concatUnique(base.engineering_projects, extra.engineering_projects, (x) => x.id),
   contracts: concatUnique(concatUnique(base.contracts, extra.contracts, (x) => x.id), FP_CONTRACTS, (x) => x.id),
   obligations: concatUnique(base.obligations ?? [], FP_OBLIGATIONS, (x) => x.id),
-  cash_transactions: concatUnique(base.cash_transactions, FP_TX, (x) => x.id),
+  cash_transactions: concatUnique(concatUnique(base.cash_transactions, FP_TX, (x) => x.id), FP_R32_TX, (x) => x.id),
   accounts: concatUnique(base.accounts, FP_ACCOUNTS, (x) => x.id),
   ownership_snapshots: concatUnique(base.ownership_snapshots, FP_SNAPSHOTS, (x) => x.id),
-  property_matters: concatUnique(base.property_matters, FP_MATTERS, (x) => x.id),
+  property_matters: concatUnique(concatUnique(base.property_matters, FP_MATTERS, (x) => x.id), FP_R32_MATTERS, (x) => x.id),
   lifecycle_templates: concatUnique(base.lifecycle_templates, FP_TEMPLATES, (x) => x.id),
   lifecycle_instances: concatUnique(base.lifecycle_instances, FP_STAGES, (x) => x.id),
-  rule_evaluations: concatUnique(concatUnique(base.rule_evaluations, extra.rule_evaluations, (x) => x.id), FP_EVALS, (x) => x.id),
-  scenario_monitoring_coverage: concatUnique(
-    concatUnique(base.scenario_monitoring_coverage, extra.scenario_monitoring_coverage, (x) => x.id),
-    FP_COVERAGE,
+  rule_evaluations: concatUnique(
+    concatUnique(concatUnique(base.rule_evaluations, extra.rule_evaluations, (x) => x.id), FP_EVALS, (x) => x.id),
+    FP_R32_EVALS,
     (x) => x.id,
   ),
-  risk_cases: concatUnique(concatUnique(base.risk_cases, extra.risk_cases, (x) => x.id), FP_RISKS, (x) => x.id).map((r) => {
+  scenario_monitoring_coverage: concatUnique(
+    concatUnique(
+      concatUnique(base.scenario_monitoring_coverage, extra.scenario_monitoring_coverage, (x) => x.id),
+      FP_COVERAGE,
+      (x) => x.id,
+    ),
+    FP_R32_COVERAGE,
+    (x) => x.id,
+  ),
+  risk_cases: concatUnique(
+    concatUnique(concatUnique(base.risk_cases, extra.risk_cases, (x) => x.id), FP_RISKS, (x) => x.id),
+    FP_R32_RISKS,
+    (x) => x.id,
+  ).map((r) => {
     if (r.id === "R07" && !r.scenario_ids.includes("CASH2-S039")) {
       return { ...r, scenario_ids: [...r.scenario_ids, "CASH2-S039"] };
     }
     return r;
   }),
-  evidence: concatUnique(concatUnique(base.evidence, extra.evidence, (x) => x.id), FP_EVIDENCE, (x) => x.id),
+  evidence: concatUnique(
+    concatUnique(concatUnique(base.evidence, extra.evidence, (x) => x.id), FP_EVIDENCE, (x) => x.id),
+    FP_R32_EVIDENCE,
+    (x) => x.id,
+  ),
   risk_context_links: [
     ...(base.risk_context_links ?? []),
     ...((extra.risk_context_links ?? []) as DemoSeed["risk_context_links"]),
     ...FP_LINKS,
+    ...FP_R32_LINKS,
   ],
-  case_actions: concatUnique(concatUnique(base.case_actions, extra.case_actions, (x) => x.id), FP_ACTIONS, (x) => x.id),
+  case_actions: concatUnique(
+    concatUnique(concatUnique(base.case_actions, extra.case_actions, (x) => x.id), FP_ACTIONS, (x) => x.id),
+    FP_R32_ACTIONS,
+    (x) => x.id,
+  ),
   business_links: concatUnique(concatUnique(base.business_links, extra.business_links, (x) => x.id), FP_BUSINESS_LINKS, (x) => x.id),
   domain_topics: [
     { domain: "CASH" as DomainId, topics: CASH_TOPICS.map((t) => ({ id: t.id, name: t.name })) },

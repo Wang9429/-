@@ -60,11 +60,20 @@ interface ActionOption {
 }
 
 function optionsFor(r: RiskCase): ActionOption[] {
-  const professional = r.scenario_ids.includes("PTY2-S032");
+  const professional = r.scenario_ids.includes("PTY2-S032") || r.scenario_ids.includes("PTY2-S011");
+  const professionalHint = r.scenario_ids.includes("PTY2-S011")
+    ? "打开资产账簿、权属及评估范围材料后认领。结论须人工记录，不能把数量差自动当成隐匿。"
+    : "打开章程、任免与到任材料后认领。结论须人工记录，不能只看专业核查标签。";
+  const professionalConfirm = r.scenario_ids.includes("PTY2-S011")
+    ? "结论写入事项。范围疑似漏列且需整改时转入整改，填写整改措施、责任人与期限。"
+    : "结论写入事项。权利行使受阻时转入整改，填写整改措施、责任人与期限。";
+  const professionalExclude = r.scenario_ids.includes("PTY2-S011")
+    ? "结论为范围一致、未见需整改问题，事项关闭为排除，不转入整改。"
+    : "结论为未见实质阻碍，事项关闭为排除，不转入整改。";
   switch (r.status) {
     case "pending_review":
       return [
-        { kind: "claim", label: professional ? "打开治理依据并认领专业核查" : "认领核查", primary: true, hint: professional ? "打开章程、任免与到任材料后认领。结论须人工记录，不能只看专业核查标签。" : "认领后事项进入核查中，责任人记为当前用户。" },
+        { kind: "claim", label: professional ? "打开材料并认领专业核查" : "认领核查", primary: true, hint: professional ? professionalHint : "认领后事项进入核查中，责任人记为当前用户。" },
       ];
     case "investigating":
       return professional
@@ -74,9 +83,9 @@ function optionsFor(r: RiskCase): ActionOption[] {
               label: "记录专业核查结论并关联整改",
               primary: true,
               needsMeasure: true,
-              hint: "结论写入事项。权利行使受阻时转入整改，填写整改措施、责任人与期限。",
+              hint: professionalConfirm,
             },
-            { kind: "exclude", label: "记录专业核查结论：未见权利受阻", hint: "结论为未见实质阻碍，事项关闭为排除，不转入整改。" },
+            { kind: "exclude", label: r.scenario_ids.includes("PTY2-S011") ? "记录专业核查结论：范围一致" : "记录专业核查结论：未见权利受阻", hint: professionalExclude },
           ]
         : [
             {

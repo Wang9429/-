@@ -26,8 +26,9 @@ export default function PropertyDomainView() {
   const [focusEntity, setFocusEntity] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "graph">("list");
   const [censusFilter, setCensusFilter] = useState<"N" | "C" | "P" | "T" | null>(null);
-  const [topicId, setTopicId] = useState<string | null>(null);
-  const [behavior, setBehavior] = useState<string>("all");
+  const [topicId, setTopicId] = useState<string | null>("PTY2-T-TRADE");
+  const [behavior, setBehavior] = useState<string>("nonlisted_transfer");
+  const [lastTradeBehavior, setLastTradeBehavior] = useState<string>("nonlisted_transfer");
   const [phaseId, setPhaseId] = useState<string | null>(null);
   const [riskId, setRiskId] = useState<string | null>(null);
   const [objectId, setObjectId] = useState<string | null>(null);
@@ -232,13 +233,24 @@ export default function PropertyDomainView() {
         domain="RIGHTS"
         directoryDomain="RIGHTS"
         topicId={topicId}
+        behaviorId={topicId === "PTY2-T-TRADE" ? behavior : null}
         onTopicChange={(id) => {
+          if (topicId === "PTY2-T-TRADE" && behavior && behavior !== "all") {
+            setLastTradeBehavior(behavior);
+          }
           setTopicId(id);
           setPhaseId(null);
-          setBehavior("all");
+          if (id === "PTY2-T-TRADE") {
+            setBehavior(lastTradeBehavior || "nonlisted_transfer");
+          }
+          setScenarioId(null);
+          setScenarioSourceOpen(false);
+          setRiskId(null);
+          if (objectId && objectId !== focusEntity) setObjectId(null);
         }}
         topicNavTestId="rights-topic-nav"
         allTopicTestId="rights-topic-all"
+        allTopicLabel="全部场景（10）"
         topicOptions={RIGHTS_TOPICS.map((t) => ({ id: t.id, label: t.short, testId: `rights-topic-${t.id}` }))}
         phaseId={topicId === "PTY2-T-TRADE" ? phaseId : null}
         orgIds={pageOrgIds}
@@ -246,7 +258,9 @@ export default function PropertyDomainView() {
         scopeTitle={
           topicId === "PTY2-T-TRADE" && phaseId
             ? (chevrons.find((c) => c.id === phaseId)?.name ?? "环节")
-            : (RIGHTS_TOPICS.find((t) => t.id === topicId)?.name ?? "全部专题")
+            : topicId
+              ? (RIGHTS_TOPICS.find((t) => t.id === topicId)?.name ?? "产权")
+              : "全部场景（10）"
         }
         toolbarExtra={
           topicId === "PTY2-T-TRADE" ? (
@@ -259,8 +273,12 @@ export default function PropertyDomainView() {
                   className="h-8 px-3 rounded-[6px] border border-line bg-surface text-[12px] min-w-[200px]"
                   value={behavior}
                   onChange={(e) => {
-                    setBehavior(e.target.value);
+                    const next = e.target.value;
+                    setBehavior(next);
                     setPhaseId(null);
+                    if (next !== "all") setLastTradeBehavior(next);
+                    setScenarioId(null);
+                    setRiskId(null);
                   }}
                 >
                   <option value="all">全部</option>

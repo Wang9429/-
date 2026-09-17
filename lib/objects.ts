@@ -1,6 +1,7 @@
 import { objectTypeLabel, seed } from "./seed";
 import type { ObjectType } from "./types";
 import { FP_GOVERNANCE, FP_GUARANTEES, FP_LENDS, FP_LOANS, FP_SEGMENTS, FP_SME, FP_SPECIALS } from "./fp-seed";
+import { FP_BANK_CONFIRMATIONS, FP_PERMITS, FP_SALARY_ADJS, FP_VOUCHERS } from "./fp-r32-seed";
 
 /**
  * 对象查找的唯一入口。同一对象在任何页面只有一个档案，
@@ -95,6 +96,10 @@ export function allObjectIds(): string[] {
   add(FP_SME);
   add(FP_SEGMENTS);
   add(FP_GOVERNANCE);
+  add(FP_BANK_CONFIRMATIONS);
+  add(FP_VOUCHERS);
+  add(FP_SALARY_ADJS);
+  add(FP_PERMITS);
   return [...ids];
 }
 
@@ -113,6 +118,14 @@ function lookupFpObject(id: string): ObjectRecord | undefined {
   if (seg) return { id, type: "legal_entity", name: `${seg.name}（${seg.period_start}～${seg.period_end}）`, orgId: seg.org_id, typeLabel: "核心业务" };
   const gov = FP_GOVERNANCE.find((x) => x.id === id);
   if (gov) return { id, type: "legal_entity", name: `治理权利 ${gov.legal_entity_id}`, orgId: gov.owner_org_id, typeLabel: objectTypeLabel.legal_entity };
+  const bank = FP_BANK_CONFIRMATIONS.find((x) => x.id === id);
+  if (bank) return { id, type: "account", name: `${bank.legal_entity_id} 银行确认清单`, orgId: bank.owner_org_id, typeLabel: "银行确认清单" };
+  const vch = FP_VOUCHERS.find((x) => x.id === id);
+  if (vch) return { id, type: "cash_transaction", name: `费用凭据 ${vch.voucher_no}`, orgId: vch.owner_org_id, typeLabel: "费用凭据" };
+  const sal = FP_SALARY_ADJS.find((x) => x.id === id);
+  if (sal) return { id, type: "cash_transaction", name: `薪酬标准调整 ${sal.scheme_id}`, orgId: sal.owner_org_id, typeLabel: "薪酬调整" };
+  const perm = FP_PERMITS.find((x) => x.id === id);
+  if (perm) return { id, type: "property_matter", name: `许可证件 ${perm.permit_no}`, orgId: perm.owner_org_id, typeLabel: "许可证件" };
   return undefined;
 }
 

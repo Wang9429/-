@@ -9,11 +9,12 @@ import { seed, AS_OF } from "../lib/seed";
 import { INDICATORS, computeIndicator, indicatorLeaves, type IndicatorDef, type NodeMetric } from "../lib/metrics";
 import { orgScope, ROOT_ORG_ID, isManagedUnit } from "../lib/org";
 import { computeFiveCounts, configuredScenarios, openCountForPhase } from "../lib/monitoring";
-import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule, trialCashS012, trialCashS029, trialCashS040, trialPtyS025 } from "../lib/fp-rules";
+import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule, trialCashS012, trialCashS029, trialCashS040, trialPtyS025, trialCashS006, trialCashS017, trialCashS020, trialPtyS003, trialPtyS011, trialPtyS014, trialPtyS016, trialPtyS037, trialPtyS038 } from "../lib/fp-rules";
 import { extractCatalog, validateSub } from "../lib/config-catalog";
+import { lastExecutableCoverageNote } from "../lib/config-impact";
 import { cashAccountStatementBridge, cashBridgeNote } from "../lib/finance";
 import { CASH_S039_TOLERANCE_MAX_WAN } from "../lib/fp-tolerance";
-import { syncLiveFromCatalog } from "../lib/live-config";
+import { hasEffectiveExecutableRule, syncLiveFromCatalog } from "../lib/live-config";
 import { FP_SME } from "../lib/fp-seed";
 import { isOpen, isOverdueRectification, rectificationStageCensus, snapshotRisksAtAsOf, statusAtAsOf } from "../lib/risks";
 import type { CaseAction, DomainId } from "../lib/types";
@@ -51,7 +52,7 @@ import {
   scopedIndicatorLeaves,
   switchableDrawerIndicators,
 } from "../lib/indicator-scope";
-import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, FIRST_BATCH_SUBS, MAIN_TOPIC_OVERRIDE } from "../lib/fp-topics";
+import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, COVERAGE_REPRESENTATIVE, FIRST_BATCH_SUBS, MAIN_TOPIC_OVERRIDE, scenarioFitsBehavior } from "../lib/fp-topics";
 import { CATEGORY_LABEL, computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "../lib/fp-trend";
 import { CASH_OFFICIAL_PRIMARY_IDS, RIGHTS_OFFICIAL_PRIMARY_IDS, coveragePrimaries, officialDirectory, officialSubIds, scopedDirectory } from "../lib/fp-directory";
 import { scenarioAdoption, scenarioSourceLabel, SUPPLEMENTAL_SCENARIO_LABEL } from "../lib/seed";
@@ -757,7 +758,7 @@ check("无启用子场景的P05仍在目录", cashDir.some((g) => g.id === "CASH
 check("无启用子场景的PTY2-P01仍在目录", rightsDir.some((g) => g.id === "PTY2-P01" && g.children.length === 4), true);
 const enabledOfficial = fpCat.subscenarios.filter((s) => officialSubIds("CASH").includes(s.id) || officialSubIds("RIGHTS").includes(s.id)).filter((s) => s.enabled);
 check("未批量启用80条", enabledOfficial.length, FIRST_BATCH_SUBS.length);
-check("已启用仍为首批14条", enabledOfficial.map((s) => s.id).sort(), [...FIRST_BATCH_SUBS].slice().sort());
+check("已启用为首批可执行覆盖条数", enabledOfficial.map((s) => s.id).sort(), [...FIRST_BATCH_SUBS].slice().sort());
 const allTopicsCash = scopedDirectory("CASH", null);
 check("全部专题仍为11项一级", allTopicsCash.length, 11);
 const payDir = scopedDirectory("CASH", "CASH2-T-PAYMENT");
@@ -789,6 +790,43 @@ check("S001 仍为草稿未启用", Boolean(s001 && !s001.enabled && s001.status
 check("历史评估版本仍为FP-R2-1", histEval?.rule_version, "FP-R2-1");
 check("R07 历史整改关联保留", r07?.scenario_ids.includes("CASH-S01") && r07?.scenario_ids.includes("CASH2-S039"), true);
 check("业务收付表仍不含仅定义CASH2-S001", payScenarios.includes("CASH2-S001"), false);
+
+console.log("\n[FP-20260917-R3.2 可执行覆盖]");
+syncLiveFromCatalog(fpCat);
+check("S006 银行确认清单一致未命中", trialCashS006("BANK-LE-A").result, "clear");
+check("S017 合法分摊未命中", trialCashS017("VCH-001").result, "clear");
+check("S020 批准早于生效未命中", trialCashS020("SAL-ADJ-OK").result, "clear");
+check("S003 决策早于实施节点", trialPtyS003("PTY-M002").result, "clear");
+check("S011 专业核查不自动认定隐匿", trialPtyS011("PTY-M002").result, "data_insufficient");
+check("S014 已回避未命中", trialPtyS014("PTY-M002").result, "clear");
+check("S016 成交等于评估基准", trialPtyS016("PTY-M002").result, "clear");
+check("S037 有偿转让价款未足额", trialPtyS037("PTY-M002").result, "hit");
+check("S037 无偿划转不适用", trialPtyS037("PTY-M003").result, "not_applicable");
+check("S038 许可在有效期", trialPtyS038("PTY-M012").result, "clear");
+check("无偿划转不套价款规则", scenarioFitsBehavior("PTY2-S037", "free_transfer"), false);
+check("非上市转让适用价款规则", scenarioFitsBehavior("PTY2-S037", "nonlisted_transfer"), true);
+for (const [primary, sub] of Object.entries(COVERAGE_REPRESENTATIVE)) {
+  check(`${primary} 代表规则当前可执行`, hasEffectiveExecutableRule(sub), true);
+}
+const lastNote = lastExecutableCoverageNote(fpCat, { kind: "sub", id: "CASH2-S039" });
+check("停用非最后一条不提示一级停监测", lastNote, null);
+const onlyS006 = {
+  ...fpCat,
+  subscenarios: fpCat.subscenarios.map((s) =>
+    s.parent_id === "CASH2-P03" && s.id !== "CASH2-S006" ? { ...s, enabled: false, status: "disabled" as const } : s,
+  ),
+  rules: fpCat.rules.map((r) =>
+    r.primary_subscenario_id !== "CASH2-S006" && fpCat.subscenarios.find((s) => s.id === r.primary_subscenario_id)?.parent_id === "CASH2-P03"
+      ? { ...r, enabled: false, status: "disabled" as const }
+      : r,
+  ),
+};
+check(
+  "停用P03最后一条提示不再监测",
+  Boolean(lastExecutableCoverageNote(onlyS006, { kind: "sub", id: "CASH2-S006" })?.includes("将不再开展后续监测")),
+  true,
+);
+check("R32 未批量启用全部80条", fpCat.subscenarios.filter((s) => s.enabled && /^CASH2-S\d{3}$|^PTY2-S\d{3}$/.test(s.id) && !s.id.startsWith("CASH2-S9")).length < 80, true);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

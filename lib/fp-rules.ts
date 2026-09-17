@@ -1,5 +1,16 @@
 import { FP_CONTROLS_PAY, FP_EVENTS, FP_GOVERNANCE, FP_REPORTS, FP_SEGMENTS, FP_SME, FP_SPECIALS, FP_GUARANTEES, FP_LENDS } from "./fp-seed";
 import { FP_ACCOUNT_OPENINGS, FP_NAME_LICENSES } from "./fp-history-seed";
+import {
+  FP_ASSET_SCOPE,
+  FP_BANK_CONFIRMATIONS,
+  FP_DECISION_TIMES,
+  FP_PERMITS,
+  FP_PRICING,
+  FP_RECUSALS,
+  FP_SALARY_ADJS,
+  FP_TRANSFER_PROCEEDS,
+  FP_VOUCHERS,
+} from "./fp-r32-seed";
 import { cashS039ParamsForPublish, resolveCashS039ToleranceWan } from "./fp-tolerance";
 import { liveRule } from "./live-config";
 import { seed } from "./seed";
@@ -64,6 +75,24 @@ export const FP_TRIAL_OBJECTS: Record<string, { id: string; name: string }[]> = 
     { id: "PTY-M011", name: "事项 PTY-M011" },
     { id: "PTY-M012", name: "事项 PTY-M012" },
   ],
+  "CASH2-S006": [
+    { id: "BANK-LE-A", name: "法人 LE-A 银行确认清单" },
+    { id: "BANK-LE-B", name: "法人 LE-B 银行确认清单" },
+  ],
+  "CASH2-S017": [{ id: "VCH-001", name: "费用凭据 VCH-001" }],
+  "CASH2-S020": [{ id: "SAL-ADJ-OK", name: "薪酬调整 SAL-ADJ-OK" }],
+  "PTY2-S003": [
+    { id: "PTY-M002", name: "事项 PTY-M002" },
+    { id: "PTY-M003", name: "事项 PTY-M003" },
+  ],
+  "PTY2-S011": [{ id: "PTY-M002", name: "事项 PTY-M002" }],
+  "PTY2-S014": [{ id: "PTY-M002", name: "事项 PTY-M002" }],
+  "PTY2-S016": [{ id: "PTY-M002", name: "事项 PTY-M002" }],
+  "PTY2-S037": [
+    { id: "PTY-M002", name: "事项 PTY-M002" },
+    { id: "PTY-M003", name: "事项 PTY-M003" },
+  ],
+  "PTY2-S038": [{ id: "PTY-M012", name: "事项 PTY-M012" }],
 };
 
 function ruleParams(
@@ -390,6 +419,228 @@ export function trialPtyS032(objectId: string): RuleTrialResult {
   };
 }
 
+export function trialCashS006(objectId: string): RuleTrialResult {
+  const rec = FP_BANK_CONFIRMATIONS.find((x) => x.id === objectId || x.legal_entity_id === objectId);
+  if (!rec) return { objectId, result: "not_applicable", formula: "无该主体银行确认清单", inputs: {} };
+  if (!rec.evidence_complete) {
+    return {
+      objectId,
+      result: "data_insufficient",
+      formula: "缺少独立银行确认清单，不能称已完成账外账户筛查",
+      inputs: { as_of: rec.as_of },
+      missing: ["银行确认完整账户清单"],
+    };
+  }
+  const extras = rec.bank_account_nos.filter(
+    (no) => !rec.ledger_account_nos.includes(no) && !rec.closed_or_out_of_scope.includes(no),
+  );
+  if (extras.length) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `银行确认存续未入台账：${extras.join("、")}（已排除销户及管理边界）`,
+      inputs: { extras, as_of: rec.as_of },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `同主体同基准日${rec.as_of}银行确认账户与企业台账一致`,
+    inputs: { bank: rec.bank_account_nos, ledger: rec.ledger_account_nos, as_of: rec.as_of },
+  };
+}
+
+export function trialCashS017(objectId: string): RuleTrialResult {
+  const v = FP_VOUCHERS.find((x) => x.id === objectId || x.voucher_no === objectId);
+  if (!v) return { objectId, result: "not_applicable", formula: "无该费用凭据", inputs: {} };
+  if (!v.evidence_complete) {
+    return {
+      objectId,
+      result: "data_insufficient",
+      formula: "缺凭据唯一标识或付款记录，不能核验费用真实性",
+      inputs: {},
+      missing: ["凭据唯一标识", "成功付款"],
+    };
+  }
+  const paid = v.allocations.filter((a) => a.kind !== "duplicate").reduce((s, a) => s + a.amount_wan, 0) - v.reversals_wan;
+  if (paid > v.claimable_wan) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `同一凭据有效累计报支${paid} > 可报${v.claimable_wan}，待核查，不认定支出虚假`,
+      inputs: { paid, claimable: v.claimable_wan, voucher: v.voucher_no },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `同一凭据有效累计报支${paid} ≤ 可报${v.claimable_wan}（合法分摊）`,
+    inputs: { paid, claimable: v.claimable_wan, voucher: v.voucher_no },
+  };
+}
+
+export function trialCashS020(objectId: string): RuleTrialResult {
+  const row = FP_SALARY_ADJS.find((x) => x.id === objectId || x.payroll_batch_id === objectId);
+  if (!row) return { objectId, result: "not_applicable", formula: "无该薪酬标准调整", inputs: {} };
+  if (!row.evidence_complete || !row.approval_on) {
+    return {
+      objectId,
+      result: "data_insufficient",
+      formula: "审批资料不齐，未评估；不据此判定超发滥发",
+      inputs: { effective_on: row.effective_on },
+      missing: ["覆盖该主体、人员范围和生效期的有效批准"],
+    };
+  }
+  if (row.approval_on > row.effective_on) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `批准${row.approval_on}晚于生效${row.effective_on}`,
+      inputs: { approval_on: row.approval_on, effective_on: row.effective_on },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `批准${row.approval_on}早于生效${row.effective_on}，范围${row.covered_scope}`,
+    inputs: { approval_on: row.approval_on, effective_on: row.effective_on, scope: row.covered_scope },
+  };
+}
+
+export function trialPtyS003(objectId: string): RuleTrialResult {
+  const row = FP_DECISION_TIMES.find((x) => x.matter_id === objectId);
+  if (!row) return { objectId, result: "not_applicable", formula: "无该交易决策时间线", inputs: {} };
+  if (row.approval_on > row.gate_on && !row.pre_disclosure_allowed) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `批准${row.approval_on}晚于前置节点「${row.gate_node}」${row.gate_on}`,
+      inputs: { approval_on: row.approval_on, gate_on: row.gate_on, gate: row.gate_node },
+    };
+  }
+  if (row.approval_on > row.gate_on && row.pre_disclosure_allowed) {
+    return {
+      objectId,
+      result: "clear",
+      formula: `晚于${row.gate_node}的活动属于依法可先行，不视为违规实施`,
+      inputs: { approval_on: row.approval_on, gate_on: row.gate_on },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `批准${row.approval_on}早于前置节点「${row.gate_node}」${row.gate_on}`,
+    inputs: { approval_on: row.approval_on, gate_on: row.gate_on, behavior: row.behavior_id },
+  };
+}
+
+export function trialPtyS011(objectId: string): RuleTrialResult {
+  const items = FP_ASSET_SCOPE.filter((x) => x.matter_id === objectId);
+  if (!items.length) return { objectId, result: "not_applicable", formula: "无该交易资产范围清单", inputs: {} };
+  const suspect = items.filter((x) => x.in_books && !x.in_valuation_list && !x.excluded_with_basis);
+  return {
+    objectId,
+    result: "data_insufficient",
+    formula: suspect.length
+      ? `专业核查：账簿有而评估清单未列且无排除依据 ${suspect.map((x) => x.asset_code).join("、")}；不自动认定隐匿`
+      : "专业核查：应覆盖范围与评估清单一致（含合法剥离），待人工确认结论",
+    inputs: { count: items.length, suspect: suspect.map((x) => x.asset_code) },
+    missing: ["专业核查结论"],
+  };
+}
+
+export function trialPtyS014(objectId: string): RuleTrialResult {
+  const row = FP_RECUSALS.find((x) => x.matter_id === objectId);
+  if (!row) return { objectId, result: "not_applicable", formula: "无已核实回避对象", inputs: {} };
+  if (row.voted || row.attended) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `应回避人员${row.related_person_code}实际${row.voted ? "参与表决" : "出席"}，待核查`,
+      inputs: { person: row.related_person_code, voted: row.voted, attended: row.attended },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `应回避人员${row.related_person_code}已申报且未参与表决`,
+    inputs: { person: row.related_person_code, declared: row.declared, voted: row.voted },
+  };
+}
+
+export function trialPtyS016(objectId: string): RuleTrialResult {
+  const row = FP_PRICING.find((x) => x.matter_id === objectId);
+  if (!row) return { objectId, result: "not_applicable", formula: "无该类行为定价记录", inputs: {} };
+  if (row.listed) {
+    return { objectId, result: "not_applicable", formula: "上市股份不适用非上市定价模板", inputs: { listed: true } };
+  }
+  if (row.deal_wan >= row.floor_wan || row.special_approval) {
+    return {
+      objectId,
+      result: "clear",
+      formula: `成交${row.deal_wan}对照${row.basis_kind}${row.basis_wan}／底价${row.floor_wan}`,
+      inputs: { deal: row.deal_wan, basis: row.basis_wan, floor: row.floor_wan },
+    };
+  }
+  return {
+    objectId,
+    result: "hit",
+    formula: `成交${row.deal_wan}低于已确认底价${row.floor_wan}且无特别批准，转人工核查`,
+    inputs: { deal: row.deal_wan, floor: row.floor_wan },
+  };
+}
+
+export function trialPtyS037(objectId: string): RuleTrialResult {
+  const row = FP_TRANSFER_PROCEEDS.find((x) => x.matter_id === objectId);
+  if (!row) return { objectId, result: "not_applicable", formula: "无该转让价款义务", inputs: {} };
+  if (!row.price_applicable) {
+    return { objectId, result: "not_applicable", formula: "无偿划转无价款，不适用到期价款核验", inputs: { behavior: row.behavior_id } };
+  }
+  const unpaid = Math.max(0, row.due_wan - row.received_wan);
+  if (row.due_date && row.due_date <= row.as_of && unpaid > 0) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `到期${row.due_date}应收${row.due_wan}−已核实到账${row.received_wan}=未收${unpaid}（义务${row.obligation_id}）`,
+      inputs: { due_wan: row.due_wan, received_wan: row.received_wan, unpaid, due_date: row.due_date, obligation_id: row.obligation_id },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `到期义务已足额到账或未到期`,
+    inputs: { due_wan: row.due_wan, received_wan: row.received_wan, due_date: row.due_date },
+  };
+}
+
+export function trialPtyS038(objectId: string): RuleTrialResult {
+  const rec = FP_PERMITS.find((x) => x.matter_id === objectId || x.id === objectId);
+  if (!rec) return { objectId, result: "not_applicable", formula: "无持续资质要求对象", inputs: {} };
+  if (rec.official_status === "unknown") {
+    return {
+      objectId,
+      result: "data_insufficient",
+      formula: "证件状态来源缺失，未评估",
+      inputs: { permit: rec.permit_no },
+      missing: ["官方/权威核验记录"],
+    };
+  }
+  if (rec.used_on > rec.valid_until && !rec.renewal_on) {
+    return {
+      objectId,
+      result: "hit",
+      formula: `使用${rec.used_on}晚于有效至${rec.valid_until}，无续期`,
+      inputs: { used_on: rec.used_on, valid_until: rec.valid_until, permit: rec.permit_no },
+    };
+  }
+  return {
+    objectId,
+    result: "clear",
+    formula: `证件${rec.permit_no}使用${rec.used_on}在有效期内（至${rec.valid_until}）`,
+    inputs: { used_on: rec.used_on, valid_until: rec.valid_until, permit: rec.permit_no },
+  };
+}
+
 export function trialRule(
   ruleOrSubId: string,
   objectId: string,
@@ -426,6 +677,24 @@ export function trialRule(
       return trialPtyS032(objectId);
     case "PTY2-S025":
       return trialPtyS025(objectId);
+    case "CASH2-S006":
+      return trialCashS006(objectId);
+    case "CASH2-S017":
+      return trialCashS017(objectId);
+    case "CASH2-S020":
+      return trialCashS020(objectId);
+    case "PTY2-S003":
+      return trialPtyS003(objectId);
+    case "PTY2-S011":
+      return trialPtyS011(objectId);
+    case "PTY2-S014":
+      return trialPtyS014(objectId);
+    case "PTY2-S016":
+      return trialPtyS016(objectId);
+    case "PTY2-S037":
+      return trialPtyS037(objectId);
+    case "PTY2-S038":
+      return trialPtyS038(objectId);
     default:
       return { objectId, result: "data_insufficient", formula: "仅维护定义，无执行器", inputs: {}, missing: ["执行器"] };
   }

@@ -8,7 +8,7 @@ import {
   riskMatches,
 } from "./risks";
 import type { DomainId, MonitoringRow, RiskCase } from "./types";
-import { canonicalRightsStage, isOfficialFpSub } from "./fp-topics";
+import { canonicalRightsStage, isOfficialFpSub, scenarioFitsBehavior } from "./fp-topics";
 
 export interface ScopeFilter {
   domain: DomainId;
@@ -20,6 +20,8 @@ export interface ScopeFilter {
   topicId?: string | null;
   subtopicId?: string | null;
   scenarioId?: string | null;
+  /** 产权交易选定的经济行为；全部或不适用时为空 */
+  behaviorId?: string | null;
   /** null/缺省=组织范围内全部对象；空数组=无对象权限 */
   allowedObjectIds?: string[] | null;
 }
@@ -52,6 +54,7 @@ export function rowInScope(row: MonitoringRow, f: ScopeFilter): boolean {
   if (f.subtopicId !== undefined && f.subtopicId !== null && row.subtopic_id !== f.subtopicId)
     return false;
   if (f.scenarioId && row.scenario_id !== f.scenarioId) return false;
+  if (!scenarioFitsBehavior(row.scenario_id, f.behaviorId)) return false;
   if (f.allowedObjectIds !== undefined && f.allowedObjectIds !== null) {
     if (!f.allowedObjectIds.includes(row.monitoring_object_id)) return false;
   }
@@ -139,6 +142,7 @@ export function computeFiveCounts(f: ScopeFilter, risks: RiskCase[]): FiveCounts
   const candidates = new Set<string>(riskIdsFromRows);
   for (const r of risks) {
     if (f.scenarioId && !r.scenario_ids.includes(f.scenarioId)) continue;
+    if (f.behaviorId && !r.scenario_ids.some((sid) => scenarioFitsBehavior(sid, f.behaviorId))) continue;
     if (riskMatches(r, linkFilter)) candidates.add(r.id);
   }
 
@@ -438,7 +442,7 @@ export function scenarioRuntimeStatus(
     return { code: "partial_hit", label: "部分完成·已有命中", tone: "red", missingFields: missing };
   }
   if (hit.length > 0) return { code: "hit", label: "已完成监测·有命中", tone: "red", missingFields: missing };
-  if (reference.length === applicable.length) return { code: "manual", label: "专业核查", tone: "neutral", missingFields: [] };
+  if (reference.length === applicable.length) return { code: "manual", label: "核查中", tone: "neutral", missingFields: [] };
   if (notDue.length === applicable.length) return { code: "not_due", label: "待评估", tone: "neutral", missingFields: [] };
   if (evaluated.length === 0) return { code: "pending_eval", label: "待评估", tone: "neutral", missingFields: missing };
   if (evaluated.length < applicable.length) return { code: "partial", label: "部分完成", tone: "amber", missingFields: missing };
