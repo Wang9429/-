@@ -10,7 +10,7 @@ import { INDICATORS, computeIndicator, indicatorLeaves, type IndicatorDef, type 
 import { orgScope, ROOT_ORG_ID, isManagedUnit } from "../lib/org";
 import { computeFiveCounts, configuredScenarios, openCountForPhase } from "../lib/monitoring";
 import { evaluationsForPublish, trialCashS039, trialPtyS028, trialRule, trialCashS012, trialCashS029, trialCashS040, trialPtyS025, trialCashS006, trialCashS017, trialCashS020, trialPtyS003, trialPtyS011, trialPtyS014, trialPtyS016, trialPtyS037, trialPtyS038 } from "../lib/fp-rules";
-import { verificationFromEval, holdingRowsFor, holdingDiffNote, objectTitle, monitoringNoteLabel, inputFieldLabel } from "../lib/fp-display";
+import { verificationFromEval, holdingRowsFor, holdingDiffNote, objectTitle, monitoringNoteLabel, inputFieldLabel, evidenceTitle } from "../lib/fp-display";
 import { extractCatalog, validateSub } from "../lib/config-catalog";
 import { lastExecutableCoverageNote } from "../lib/config-impact";
 import { cashAccountStatementBridge, cashBridgeNote } from "../lib/finance";
@@ -886,6 +886,8 @@ const r011 = seed.risk_cases.find((r) => r.id === "R-FP-011");
 const r032 = seed.risk_cases.find((r) => r.id === "R-FP-032");
 check("S011 事项仍为待核查", r011?.status, "pending_review");
 check("S032 事项仍为待核查", r032?.status, "pending_review");
+check("S011证据入口去掉对象代码", evidenceTitle("EVID-FP-011").includes("PTY-M002"), false);
+check("S011证据入口保留中文材料名", evidenceTitle("EVID-FP-011").includes("审计评估范围清单"), true);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

@@ -128,8 +128,18 @@ Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部�
 **实现提交**（功能、配置与 R3.2 覆盖）：以本仓库 `main` 最新提交为准，Pages 构建会写入 [`r32-build.json`](https://wang9429.github.io/-/deliverables/r32-build.json)。  
 **实际部署提交**：打开上述 JSON 的 `commit` 字段，应与本轮推送一致。工作流把静态导出写到 `gh-pages`；完成后刷新总览即可看到本轮页面。
 
-本轮资金/产权 R3.2 界面截图与 21 项覆盖（可下载；Pages 工作流完成后生效）：
+本轮资金/产权 R3.2 界面截图与 21 项覆盖（可下载；Pages 工作流完成后生效）。**详情业务化截图必须打开核验表/专业核查/持股来源，不能只看对象清单或首页：**
 
+- [S039 付款核验：批准 800 / 实付 1200 / 超出 400 / 上限 2000](https://wang9429.github.io/-/deliverables/r32_s039_payment_basis.png)
+- [S039 正常未命中：实付 4200 = 批准 4200](https://wang9429.github.io/-/deliverables/r32_s039_clear_basis.png)
+- [S039 关联事项办理入口（付款超批准）](https://wang9429.github.io/-/deliverables/r32_s039_hit_basis_entry.png)
+- [S037 到期转让价款：应收 800 / 到账 480 / 未收 320](https://wang9429.github.io/-/deliverables/r32_s037_proceeds_basis.png)
+- [S011 专业核查：材料、要点、责任人、结论（待核查≠已确认违规）](https://wang9429.github.io/-/deliverables/r32_s011_professional_review.png)
+- [S011 场景详情五段结构](https://wang9429.github.io/-/deliverables/r32_s011_scenario_detail.png)
+- [S032 治理核查：席位事实与专业核查结论栏](https://wang9429.github.io/-/deliverables/r32_s032_governance_review.png)
+- [S032 场景详情](https://wang9429.github.io/-/deliverables/r32_s032_scenario_detail.png)
+- [被投企业A 持股 60%／60%／55% 分行来源与基准日](https://wang9429.github.io/-/deliverables/r32_holdings_60_60_55.png)
+- [综合总览统一入口](https://wang9429.github.io/-/deliverables/r32_overview_entry.png)
 - [资金可执行 11 项一级（无未启用行）](https://wang9429.github.io/-/deliverables/r32_funds_executable_11.png)
 - [S039 监测对象清单（P-PAY001 1200 万元）](https://wang9429.github.io/-/deliverables/r32_funds_s039_objects.png)
 - [产权交易：经济行为、肩形流程与场景同框](https://wang9429.github.io/-/deliverables/r32_rights_trade_flow.png)
@@ -139,7 +149,6 @@ Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部�
 - [S037 命中对象 PTY-M002 未收 320 万元](https://wang9429.github.io/-/deliverables/r32_rights_s037_hit.png)
 - [S011 专业核查事项（不自动认定隐匿）](https://wang9429.github.io/-/deliverables/r32_rights_s011_review.png)
 - [系统配置仍保留完整目录](https://wang9429.github.io/-/deliverables/r32_settings_catalog.png)
-- [综合总览入口](https://wang9429.github.io/-/deliverables/r32_overview_entry.png)
 - [21 项实际覆盖明细 JSON](https://wang9429.github.io/-/deliverables/coverage-r32.json)
 - [21 项实际覆盖明细 Markdown](https://wang9429.github.io/-/deliverables/coverage-r32.md)
 - [R3.2 截图打包 zip](https://wang9429.github.io/-/deliverables/fp-r32-screenshots.zip)

@@ -38,6 +38,8 @@ import VerificationPanel from "@/components/fp/VerificationPanel";
 import ProfessionalReviewPanel from "@/components/fp/ProfessionalReviewPanel";
 import {
   dataNatureLabel,
+  displayBusinessTitle,
+  evidenceTitle,
   hitValidityLabel,
   inputFieldLabel,
   objectTitle,
@@ -303,7 +305,7 @@ function RiskCaseDrawerBody({
       width="72vw"
       title={
         <span className="flex items-center gap-2 flex-wrap">
-          {risk.title}
+          {displayBusinessTitle(risk.title)}
           <span className="num text-textsub text-[13px]">事项编号 {risk.id}</span>
           <SeverityTag severity={risk.severity} />
           <Tag tone="neutral">{statusLabel[risk.status]}</Tag>
@@ -623,7 +625,7 @@ function RiskCaseDrawerBody({
                 {evidences.map((e) => (
                   <div key={e!.id} className="rounded-[6px] border border-line p-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[14px] text-textmain">{e!.title}</span>
+                      <span className="text-[14px] text-textmain">{evidenceTitle(e!.id)}</span>
                       <Tag tone="neutral">{e!.source_type}</Tag>
                       <SimulatedBadge text={dataNatureLabel(e!.data_nature)} />
                       <span className="num text-[12px] text-textsub ml-auto">记录时间 {e!.recorded_at}</span>

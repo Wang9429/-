@@ -424,7 +424,7 @@ export function verificationFromEval(
     resultTone: res.tone,
     formula: e.formula,
     sourceSystem: evid?.source_type,
-    sourceDoc: evid?.title,
+    sourceDoc: evid ? displayBusinessTitle(evid.title) : undefined,
     sourceDate: evid?.recorded_at,
   };
 }
@@ -465,12 +465,21 @@ export function holdingDiffNote(rows: HoldingRow[]): string | null {
   return `各来源持股相差 ${diff} 个百分点，差异待核实，不直接计为登记违规或权益流失`;
 }
 
+/** 去掉标题前部的任务/对象代码，保留中文材料名或事项名。 */
+export function displayBusinessTitle(title: string): string {
+  return title
+    .replace(/[（(][A-Z][A-Z0-9-]*[）)]/g, "")
+    .replace(/^(?:PTY-M\d+|LE-[A-Z0-9]+|OWN-\d+[A-Z]?|JV\d+|ACC-[A-Z0-9]+|FA-A-[A-Z0-9]+|CASH2-[A-Z0-9-]+|PTY2-[A-Z0-9-]+)\s+/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function evidenceTitle(id: string): string {
-  return evidenceById(id)?.title ?? id;
+  return displayBusinessTitle(evidenceById(id)?.title ?? id);
 }
 
 export function riskTitleOf(id: string): string {
-  return seed.risk_cases.find((r) => r.id === id)?.title ?? id;
+  return displayBusinessTitle(seed.risk_cases.find((r) => r.id === id)?.title ?? id);
 }
 
 export function professionalReviewCopy(scenarioId: string): {

@@ -125,7 +125,7 @@ export default function ProfessionalReviewPanel({ risk }: { risk: RiskCase }) {
           <ul className="space-y-1">
             {evidences.map((e) => (
               <li key={e!.id} className="text-[14px] text-textmain">
-                {e!.title}
+                {evidenceTitle(e!.id)}
                 <span className="num text-[12px] text-textsub ml-2">{e!.source_type}｜{e!.recorded_at}</span>
               </li>
             ))}
