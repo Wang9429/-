@@ -28,7 +28,8 @@ import {
   FP_TEMPLATES,
   FP_TX,
 } from "./fp-seed";
-import { CASH_TOPICS, RIGHTS_TOPICS } from "./fp-topics";
+import { CASH_TOPICS, FIRST_BATCH_RUNTIME, RIGHTS_TOPICS, isOfficialFpSub } from "./fp-topics";
+import { liveSub } from "./live-config";
 
 /**
  * 全平台唯一的种子读取入口。页面与计算模块都从这里取数，
@@ -194,18 +195,29 @@ export const SCENARIO_NAMES: Record<string, string> = (() => {
 
 export const scenarioName = (id: string) => liveScenarioName(id) ?? SCENARIO_NAMES[id] ?? id;
 
-/** 场景的纳入方式标签：结构化监测 / 线索核查 / 核查依据 / 补充监管场景 */
+/** 投资底稿之外、且不属于官方 80 条的补充项标签。官方资金/产权目录不得套用此泛称。 */
 export const SUPPLEMENTAL_SCENARIO_LABEL = "补充监管场景";
+
+function officialAdoption(id: string): string {
+  const cap = liveSub(id)?.runtime_capability ?? FIRST_BATCH_RUNTIME[id] ?? "definition_only";
+  if (cap === "structured_executable") return "结构化监测";
+  if (cap === "assisted_review") return "线索核查";
+  if (cap === "professional_review") return "专业核查";
+  return "仅维护定义";
+}
 
 export const scenarioAdoption = (id: string): string => {
   const c = catalog.scenarios.find((s) => s.id === id);
   if (c) return c.adoption_mode;
+  if (isOfficialFpSub(id)) return officialAdoption(id);
   return SUPPLEMENTAL_SCENARIO_LABEL;
 };
 
 export const scenarioSourceLabel = (id: string): string => {
   const c = catalog.scenarios.find((s) => s.id === id);
   if (c) return "投资监管子场景目录";
+  if (isOfficialFpSub(id)) return id.startsWith("PTY2-") ? "产权监管场景目录" : "资金监管场景目录";
+  if (/^(CASH2|PTY2)-/.test(id)) return "资金产权补充草稿";
   return SUPPLEMENTAL_SCENARIO_LABEL;
 };
 

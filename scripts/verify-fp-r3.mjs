@@ -117,10 +117,15 @@ try {
 
   await goto(`${BASE}/property-rights${slash}`);
   const rightsText = await bodyText();
-  log("R3-22 四专题", ["产权交易", "产权登记", "标识名称", "股权控制"].every((t) => rightsText.includes(t)));
-  log("R3-22 交易有经济行为", rightsText.includes("经济行为") && rightsText.includes("非上市企业产权转让"));
+  log("R3-22 四专题", ["全部专题", "产权交易", "产权登记", "标识名称", "股权控制"].every((t) => rightsText.includes(t)));
+  log("R3-22 默认无经济行为", !rightsText.includes("非上市企业产权转让") || !(await page.$("[data-testid='rights-behavior-select']")));
   const censusSpark = await page.$$eval("[data-trend-chart='home']", (els) => els.length);
   log("R3-28 产权统计趋势", censusSpark >= 1, `快照小图 ${censusSpark}`);
+
+  await page.click("[data-testid='rights-topic-PTY2-T-TRADE']");
+  await new Promise((r) => setTimeout(r, 350));
+  const tradeOn = await bodyText();
+  log("R3-22 交易有经济行为", Boolean(await page.$("[data-testid='rights-behavior-select']")) && tradeOn.includes("经济行为"));
 
   await page.click("[data-testid='rights-topic-PTY2-T-REG']");
   await new Promise((r) => setTimeout(r, 350));

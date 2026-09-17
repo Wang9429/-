@@ -17,8 +17,6 @@ import { seed, templateById } from "@/lib/seed";
 import { censusCounts, openMatterCount, penetratePaths } from "@/lib/fp-census";
 import { ECONOMIC_BEHAVIORS, RIGHTS_TOPICS } from "@/lib/fp-topics";
 import { fmtPct } from "@/lib/format";
-import { openCountForPhase } from "@/lib/monitoring";
-import { riskMatches, snapshotRisksAtAsOf } from "@/lib/risks";
 import { indicatorById, computeIndicator, type IndicatorDef } from "@/lib/metrics";
 import { isRunnableDrawerIndicator } from "@/lib/indicator-scope";
 import { catalogIndicatorMeta } from "@/lib/live-config";
@@ -26,13 +24,13 @@ import { computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "@/lib/fp-t
 import { CompactSparkline } from "@/components/fp/MetricTrend";
 
 export default function PropertyDomainView() {
-  const { filters, risks, actions, user, catalog } = useDemoStore();
+  const { filters, risks, user, catalog } = useDemoStore();
   const [subjectId, setSubjectId] = useState(filters.orgId);
   const [subjectChildren, setSubjectChildren] = useState(filters.includeChildren);
   const [focusEntity, setFocusEntity] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "graph">("list");
   const [censusFilter, setCensusFilter] = useState<"N" | "C" | "P" | "T" | null>(null);
-  const [topicId, setTopicId] = useState("PTY2-T-TRADE");
+  const [topicId, setTopicId] = useState<string | null>(null);
   const [behavior, setBehavior] = useState<(typeof ECONOMIC_BEHAVIORS)[number]["id"]>("nonlisted_transfer");
   const [phaseId, setPhaseId] = useState<string | null>(null);
   const [riskId, setRiskId] = useState<string | null>(null);
@@ -77,33 +75,24 @@ export default function PropertyDomainView() {
   const eb = ECONOMIC_BEHAVIORS.find((x) => x.id === behavior)!;
   const template = templateById(eb.templateId);
 
-  const domainRisks = snapshotRisksAtAsOf(risks, filters.asOf, actions).filter((r) =>
-    riskMatches(r, { domain: "RIGHTS", orgScope: pageOrgIds }),
-  );
-
   const chevrons: ChevronItem[] = useMemo(() => {
     if (topicId !== "PTY2-T-TRADE" || !template) return [];
     return template.phase_nodes
       .slice()
       .sort((a, b) => a.display_order - b.display_order)
       .map((n) => {
-        const c = openCountForPhase("RIGHTS", n.id, pageOrgIds, domainRisks, filters.asOf);
-        const stay = seed.property_matters.filter(
-          (m) => pageOrgIds.has(m.owner_org_id) && m.template_id === template.id && m.current_phase_id === n.id,
-        ).length;
         const inst = seed.lifecycle_instances.find(
           (i) => i.template_id === template.id && i.phase_id === n.id && i.business_status === "not_applicable",
         );
         return {
           id: n.id,
           name: n.name,
-          openCount: c.open,
-          severity: c.maxSeverity,
-          stayCount: stay,
+          openCount: 0,
+          severity: null,
           businessNote: inst ? "不适用（有依据）" : undefined,
         };
       });
-  }, [topicId, template, pageOrgIds, domainRisks, filters.asOf]);
+  }, [topicId, template]);
 
   const path = orgPath(subjectId).filter((o) => globalOrgIds.has(o.id) || o.id === filters.orgId);
   const gate = path.findIndex((o) => o.id === filters.orgId);
@@ -264,67 +253,55 @@ export default function PropertyDomainView() {
         )}
       </Card>
 
-      <div className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-pagebg" id="rights-topic-nav" data-testid="rights-topic-nav" style={{ background: "var(--page-bg)" }}>
-      <Card title="产权事项监管">
-        <div className="flex flex-wrap gap-2 mb-4">
-          {RIGHTS_TOPICS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => {
-                setTopicId(t.id);
-                setPhaseId(null);
-              }}
-              data-testid={`rights-topic-${t.id}`}
-              className={`h-[48px] px-4 rounded-[6px] border text-[13px] ${
-                topicId === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
-              }`}
-            >
-              {t.short}
-            </button>
-          ))}
-        </div>
-
-        {topicId === "PTY2-T-TRADE" && (
-          <>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <span className="text-[12px] text-textsub">经济行为</span>
-              {ECONOMIC_BEHAVIORS.map((b) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  onClick={() => {
-                    setBehavior(b.id);
-                    setPhaseId(null);
-                  }}
-                  className={`h-8 px-3 rounded-[6px] border text-[12px] ${behavior === b.id ? "border-brand bg-tint text-brand" : "border-line"}`}
-                >
-                  {b.label}
-                </button>
-              ))}
-            </div>
-            {behavior === "free_transfer" && <Tag tone="neutral">无偿划转无价款，不生成价款逾期</Tag>}
-            {behavior === "listed_shares" && <Tag tone="neutral">上市股份模板，不套非上市挂牌</Tag>}
-            {template && (
-              <div className="mt-3">
-                <ChevronFlow items={chevrons} value={phaseId} onChange={setPhaseId} ariaLabel="产权交易监管节点" />
-              </div>
-            )}
-          </>
-        )}
-      </Card>
-      </div>
-
       <ScenarioExecutionPanel
         domain="RIGHTS"
+        directoryDomain="RIGHTS"
         topicId={topicId}
+        onTopicChange={(id) => {
+          setTopicId(id);
+          setPhaseId(null);
+        }}
+        topicNavTestId="rights-topic-nav"
+        allTopicTestId="rights-topic-all"
+        topicOptions={RIGHTS_TOPICS.map((t) => ({ id: t.id, label: t.short, testId: `rights-topic-${t.id}` }))}
         phaseId={topicId === "PTY2-T-TRADE" ? phaseId : null}
         orgIds={pageOrgIds}
         allowedObjectIds={allowedObjectIds}
         scopeTitle={
           topicId === "PTY2-T-TRADE" && phaseId
             ? (chevrons.find((c) => c.id === phaseId)?.name ?? "环节")
-            : (RIGHTS_TOPICS.find((t) => t.id === topicId)?.name ?? "专题")
+            : (RIGHTS_TOPICS.find((t) => t.id === topicId)?.name ?? "全部专题")
+        }
+        toolbarExtra={
+          topicId === "PTY2-T-TRADE" ? (
+            <div data-testid="rights-trade-flow">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <span className="text-[12px] text-textsub">经济行为</span>
+                <select
+                  data-testid="rights-behavior-select"
+                  className="h-8 px-3 rounded-[6px] border border-line bg-surface text-[12px] min-w-[200px]"
+                  value={behavior}
+                  onChange={(e) => {
+                    setBehavior(e.target.value as (typeof ECONOMIC_BEHAVIORS)[number]["id"]);
+                    setPhaseId(null);
+                  }}
+                >
+                  {ECONOMIC_BEHAVIORS.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {behavior === "free_transfer" && <Tag tone="neutral">无偿划转无价款，不生成价款逾期</Tag>}
+              {behavior === "listed_shares" && <Tag tone="neutral">上市股份模板，不套非上市挂牌</Tag>}
+              {template && (
+                <div className="mt-3">
+                  <ChevronFlow items={chevrons} value={phaseId} onChange={setPhaseId} ariaLabel="产权交易监管节点" showStats={false} />
+                </div>
+              )}
+            </div>
+          ) : null
         }
         onOpenRisk={setRiskId}
         onOpenObject={setObjectId}

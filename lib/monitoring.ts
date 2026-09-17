@@ -8,7 +8,7 @@ import {
   riskMatches,
 } from "./risks";
 import type { DomainId, MonitoringRow, RiskCase } from "./types";
-import { canonicalRightsStage } from "./fp-topics";
+import { canonicalRightsStage, isOfficialFpSub } from "./fp-topics";
 
 export interface ScopeFilter {
   domain: DomainId;
@@ -351,7 +351,8 @@ export interface ScenarioRuntimeStatus {
     | "manual"
     | "not_due"
     | "not_applicable"
-    | "definition_only";
+    | "definition_only"
+    | "not_yet_monitoring";
   label: string;
   tone: "red" | "amber" | "green" | "neutral";
   missingFields: string[];
@@ -373,9 +374,17 @@ export function scenarioRuntimeStatus(
   const sub = liveSub(scenarioId);
   const pendingByCatalog = sub?.applicability === "pending";
   const pendingByCoverage = scenarioHasPendingApplicability(scenarioId);
+  const inactive = !isScenarioMonitoringActive(scenarioId);
 
-  if (sub?.runtime_capability === "definition_only" && !isScenarioMonitoringActive(scenarioId) && rows.length === 0) {
-    return { code: "definition_only", label: "仅维护定义", tone: "neutral", missingFields: [] };
+  if (inactive && rows.length === 0) {
+    const cap = sub?.runtime_capability;
+    const executable = cap === "structured_executable" || cap === "assisted_review" || cap === "professional_review";
+    if (cap === "definition_only" || (isOfficialFpSub(scenarioId) && !executable)) {
+      return { code: "definition_only", label: "仅维护定义", tone: "neutral", missingFields: [] };
+    }
+    if (isOfficialFpSub(scenarioId)) {
+      return { code: "not_yet_monitoring", label: "暂未开展监测", tone: "neutral", missingFields: [] };
+    }
   }
 
   if (pendingByCatalog) {

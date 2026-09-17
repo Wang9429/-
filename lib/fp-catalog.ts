@@ -102,17 +102,23 @@ function subFromRow(row: FpScenarioRow, domain: DomainId): CatalogSubscenario {
   };
 }
 
+function isOfficialPrimaryId(id: string, domain: DomainId): boolean {
+  if (domain === "CASH") return /^CASH2-P(0[1-9]|1[01])$/.test(id);
+  if (domain === "RIGHTS") return /^PTY2-P(0[1-9]|10)$/.test(id);
+  return false;
+}
+
 function groupsFrom(rows: FpScenarioRow[], domain: DomainId): CatalogGroup[] {
   const seen = new Map<string, CatalogGroup>();
   for (const row of rows) {
     if (seen.has(row.primary_id)) continue;
-    const children = rows.filter((r) => r.primary_id === row.primary_id);
-    const published = children.some((c) => FIRST.has(c.id));
+    // 官方 11/10 一级项作为目录发布，不因没有已启用子场景而从配置中消失。
+    const official = isOfficialPrimaryId(row.primary_id, domain);
     seen.set(row.primary_id, {
       id: row.primary_id,
       name: row.primary_name,
       domain,
-      status: published ? "published" : "draft",
+      status: official ? "published" : "draft",
     });
   }
   return [...seen.values()];

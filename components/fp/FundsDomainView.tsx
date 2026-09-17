@@ -37,7 +37,7 @@ export default function FundsDomainView() {
   const [subjectId, setSubjectId] = useState(filters.orgId);
   const [subjectChildren, setSubjectChildren] = useState(filters.includeChildren);
   const [finTab, setFinTab] = useState<"profit" | "bs" | "liq">("profit");
-  const [topicId, setTopicId] = useState<string>("CASH2-T-ACCOUNT");
+  const [topicId, setTopicId] = useState<string | null>(null);
   const [indicatorId, setIndicatorId] = useState<string | null>(null);
   const [indicatorOrg, setIndicatorOrg] = useState<string | null>(null);
   const [riskId, setRiskId] = useState<string | null>(null);
@@ -139,8 +139,6 @@ export default function FundsDomainView() {
             : undefined;
     return { m, yoy, spec, points, stmtAux };
   };
-
-  const topicNavRef = React.useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="space-y-4">
@@ -257,32 +255,17 @@ export default function FundsDomainView() {
         </div>
       </Card>
 
-      <div ref={topicNavRef} className="sticky top-0 z-10 -mx-1 px-1 py-1 bg-pagebg" id="funds-topic-nav" style={{ background: "var(--page-bg)" }}>
-        <Card title="资金专题监管">
-          <div className="flex flex-wrap gap-2" data-testid="funds-topic-nav">
-            {CASH_TOPICS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTopicId(t.id)}
-                data-testid={`funds-topic-${t.id}`}
-                className={`h-[48px] px-4 rounded-[6px] border text-[13px] ${
-                  topicId === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
-                }`}
-              >
-                {t.short}
-              </button>
-            ))}
-          </div>
-        </Card>
-      </div>
-
       <ScenarioExecutionPanel
         domain="CASH"
+        directoryDomain="CASH"
         topicId={topicId}
+        onTopicChange={setTopicId}
+        topicNavTestId="funds-topic-nav"
+        allTopicTestId="funds-topic-all"
+        topicOptions={CASH_TOPICS.map((t) => ({ id: t.id, label: t.short, testId: `funds-topic-${t.id}` }))}
         orgIds={pageOrgIds}
         allowedObjectIds={allowedObjectIds}
-        scopeTitle={CASH_TOPICS.find((t) => t.id === topicId)?.name ?? "专题"}
+        scopeTitle={CASH_TOPICS.find((t) => t.id === topicId)?.name ?? "全部专题"}
         onOpenRisk={setRiskId}
         onOpenObject={setObjectId}
         onOpenScenario={(id, source) => {
@@ -335,7 +318,7 @@ export default function FundsDomainView() {
   );
 }
 
-function TopicScale({ topicId, orgIds }: { topicId: string; orgIds: Set<string> }) {
+function TopicScale({ topicId, orgIds }: { topicId: string | null; orgIds: Set<string> }) {
   const { filters } = useDemoStore();
   const accounts = seed.accounts.filter((a) => orgIds.has(a.owner_org_id));
   const bank = accounts.filter((a) => a.id !== "ACC-INT");
@@ -392,8 +375,19 @@ function TopicScale({ topicId, orgIds }: { topicId: string; orgIds: Set<string> 
       `期间支出 ${fmtAmountSmart(specs.reduce((s, x) => s + x.spent_wan, 0))} 万元`,
       `确认结余 ${fmtAmountSmart(specs.reduce((s, x) => s + x.confirmed_balance_wan, 0))} 万元`,
     );
-  } else {
+  } else if (topicId === "CASH2-T-OPERATING") {
     chips.push("已覆盖核心业务 2 项", "持续亏损业务 1 项");
+  } else {
+    const total = bank.reduce((s, a) => s + yuanToWan(a.closing_balance_native * a.fx_to_cny), 0);
+    chips.push(
+      `银行账户 ${bank.length} 户`,
+      `确认余额 ${fmtAmountSmart(total)} 万元`,
+      `收款 ${inflows.length} 笔`,
+      `付款 ${outflows.length} 笔`,
+      `专项项目 ${specs.length} 个`,
+    );
+    const bridge = cashAccountStatementBridge();
+    chips.push(`与总部合并报表差额 ${fmtAmountSmart(bridge.gapWan)} 万元（差异待核实）`);
   }
 
   return (
@@ -405,7 +399,7 @@ function TopicScale({ topicId, orgIds }: { topicId: string; orgIds: Set<string> 
           </Tag>
         ))}
       </div>
-      {topicId === "CASH2-T-ACCOUNT" && <CashBridgeTable />}
+      {(!topicId || topicId === "CASH2-T-ACCOUNT") && <CashBridgeTable />}
     </div>
   );
 }

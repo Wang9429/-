@@ -21,13 +21,13 @@ import {
   type FiveCounts,
   type ScopeFilter,
 } from "@/lib/monitoring";
-import { isScenarioMonitoringActive } from "@/lib/live-config";
+import { isScenarioMonitoringActive, liveSub } from "@/lib/live-config";
 import {
   objectTypeLabel,
+  phaseName,
   scenarioAdoption,
   scenarioName,
   scenarioSourceLabel,
-  seed,
 } from "@/lib/seed";
 import { orgName } from "@/lib/org";
 import { objectName } from "@/lib/objects";
@@ -35,8 +35,8 @@ import { isOverdueRectification, rectificationDueDate, riskMatches, snapshotRisk
 import { daysBetween, fmtDate } from "@/lib/format";
 import { downloadCsv } from "@/lib/export";
 import { useDemoStore } from "@/lib/store";
-import { liveSub } from "@/lib/live-config";
 import type { DomainId, MonitoringRow, RiskCase } from "@/lib/types";
+import { officialDirectory, scopedDirectory } from "@/lib/fp-directory";
 
 /**
  * 环节/专题选中后的执行情况（完整业需 5.3、5.4）。
@@ -65,6 +65,7 @@ const DETAIL_TITLE: Record<DetailKind, string> = {
 interface ScenarioRow {
   id: string;
   name: string;
+  groupId: string;
   groupName: string;
   adoption: string;
   rows: MonitoringRow[];
@@ -75,6 +76,12 @@ interface ScenarioRow {
   redOpen: number;
   objectTypes: string[];
   hitRuleCount: number;
+}
+
+export interface TopicChipOption {
+  id: string;
+  label: string;
+  testId?: string;
 }
 
 export default function ScenarioExecutionPanel({
@@ -91,6 +98,12 @@ export default function ScenarioExecutionPanel({
   onOpenObject,
   onOpenScenario,
   ledger,
+  directoryDomain,
+  topicOptions,
+  onTopicChange,
+  topicNavTestId,
+  allTopicTestId,
+  toolbarExtra,
 }: {
   domain: DomainId;
   phaseId?: string | null;
@@ -105,6 +118,13 @@ export default function ScenarioExecutionPanel({
   onOpenObject?: (id: string) => void;
   onOpenScenario?: (id: string, source?: boolean) => void;
   ledger?: React.ReactNode;
+  /** 资金/产权下半区按官方一级目录展示，不从命中或已启用项反向生成 */
+  directoryDomain?: "CASH" | "RIGHTS";
+  topicOptions?: TopicChipOption[];
+  onTopicChange?: (id: string | null) => void;
+  topicNavTestId?: string;
+  allTopicTestId?: string;
+  toolbarExtra?: React.ReactNode;
 }) {
   const { filters, risks, actions, canAct, catalog } = useDemoStore();
   const [detail, setDetail] = useState<{ kind: DetailKind; scenarioId: string | null } | null>(null);
@@ -138,18 +158,32 @@ export default function ScenarioExecutionPanel({
   const summary = useMemo(() => computeFiveCounts(baseScope, asOfRisks), [baseScope, asOfRisks]);
 
   const scenarioRows: ScenarioRow[] = useMemo(() => {
-    const ids = configuredScenarios(domain, phaseId ?? null, topicId ?? null);
+    const catalogMode = directoryDomain === "CASH" || directoryDomain === "RIGHTS";
+    const dir = catalogMode
+      ? scopedDirectory(directoryDomain, topicId ?? null, phaseId ?? null, phaseId ? phaseName(phaseId) : null)
+      : null;
+    const ids = catalogMode
+      ? dir!.flatMap((g) => g.children.map((c) => c.id))
+      : configuredScenarios(domain, phaseId ?? null, topicId ?? null);
     const extra = new Set(ids);
-    summary.openRiskIds.forEach((rid) => {
-      const r = asOfRisks.find((x) => x.id === rid);
-      r?.scenario_ids.forEach((s) => {
-        if (topicId) {
-          const mapped = liveSub(s)?.topic_id;
-          if (mapped !== topicId) return;
-        }
-        extra.add(s);
+    if (!catalogMode) {
+      summary.openRiskIds.forEach((rid) => {
+        const r = asOfRisks.find((x) => x.id === rid);
+        r?.scenario_ids.forEach((s) => {
+          if (topicId) {
+            const mapped = liveSub(s)?.topic_id;
+            if (mapped !== topicId) return;
+          }
+          extra.add(s);
+        });
       });
-    });
+    }
+    const groupMeta = new Map<string, { id: string; name: string; order: number }>();
+    if (dir) {
+      dir.forEach((g) => {
+        g.children.forEach((c) => groupMeta.set(c.id, { id: g.id, name: g.name, order: g.order }));
+      });
+    }
     return [...extra]
       .map((id) => {
         const scope = { ...baseScope, scenarioId: id };
@@ -164,10 +198,13 @@ export default function ScenarioExecutionPanel({
           (rid) => asOfRisks.find((r) => r.id === rid)?.severity === "red",
         ).length;
         const parentId = liveSub(id)?.parent_id;
-        const groupName = catalog.groups.find((g) => g.id === parentId)?.name ?? "";
+        const fromDir = groupMeta.get(id);
+        const groupName = fromDir?.name || catalog.groups.find((g) => g.id === parentId)?.name || "";
+        const groupId = fromDir?.id || parentId || "";
         return {
           id,
           name: scenarioName(id),
+          groupId,
           groupName,
           adoption: scenarioAdoption(id),
           rows,
@@ -180,8 +217,14 @@ export default function ScenarioExecutionPanel({
           hitRuleCount: new Set(rows.filter((x) => x.status === "evaluated_hit").flatMap((x) => x.rule_ids)).size,
         };
       })
-      .filter((r) => r.monitoringActive || r.counts.openRiskIds.length > 0)
+      .filter((r) => (catalogMode ? true : r.monitoringActive || r.counts.openRiskIds.length > 0))
       .sort((a, b) => {
+        if (dir) {
+          const oa = groupMeta.get(a.id)?.order ?? 99;
+          const ob = groupMeta.get(b.id)?.order ?? 99;
+          if (oa !== ob) return oa - ob;
+          return a.id.localeCompare(b.id);
+        }
         const g = a.groupName.localeCompare(b.groupName, "zh");
         if (g !== 0) return g;
         const rank = (r: ScenarioRow) =>
@@ -197,7 +240,7 @@ export default function ScenarioExecutionPanel({
         const d = rank(a) - rank(b);
         return d !== 0 ? d : a.id.localeCompare(b.id);
       });
-  }, [domain, phaseId, topicId, baseScope, asOfRisks, summary.openRiskIds, orgIds, allowedObjectIds, catalog.groups]);
+  }, [domain, phaseId, topicId, baseScope, asOfRisks, summary.openRiskIds, orgIds, allowedObjectIds, catalog.groups, directoryDomain]);
 
   const visibleScenarioRows = useMemo(
     () =>
@@ -275,20 +318,64 @@ export default function ScenarioExecutionPanel({
     { kind: "overdue", label: "逾期整改", value: summary.overdueRiskIds.length, unit: "件" },
   ];
 
+  const catalogMode = directoryDomain === "CASH" || directoryDomain === "RIGHTS";
+  const activeScopeTitle = catalogMode && !topicId ? "全部专题" : scopeTitle;
+
   const groupedRows = useMemo(() => {
+    if (catalogMode && directoryDomain) {
+      const source =
+        topicId || phaseId
+          ? scopedDirectory(directoryDomain, topicId ?? null, phaseId ?? null, phaseId ? phaseName(phaseId) : null)
+          : officialDirectory(directoryDomain);
+      const filtered = search || onlyAbnormal || statusFilter !== "all" || objectTypeFilter !== "all";
+      return source
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          order: g.order,
+          rows: visibleScenarioRows.filter((r) => r.groupId === g.id),
+          catalogChildren: g.children.length,
+        }))
+        .filter((g) => (filtered || topicId || phaseId ? g.rows.length > 0 : true));
+    }
     const map = new Map<string, ScenarioRow[]>();
     for (const r of visibleScenarioRows) {
-      const g = r.groupName || "未分组";
+      const g = r.groupName || r.groupId || "其他监管场景";
       const list = map.get(g) ?? [];
       list.push(r);
       map.set(g, list);
     }
-    return [...map.entries()];
-  }, [visibleScenarioRows]);
+    return [...map.entries()].map(([name, rows], order) => ({
+      id: rows[0]?.groupId || name,
+      name,
+      order,
+      rows,
+      catalogChildren: rows.length,
+    }));
+  }, [
+    catalogMode,
+    directoryDomain,
+    topicId,
+    phaseId,
+    visibleScenarioRows,
+    search,
+    onlyAbnormal,
+    statusFilter,
+    objectTypeFilter,
+  ]);
 
   React.useEffect(() => {
-    setOpenGroups(new Set(groupedRows.filter(([, rows]) => rows.some((r) => r.counts.openRiskIds.length > 0 || r.monitoringActive)).map(([g]) => g)));
+    setOpenGroups(
+      new Set(
+        groupedRows
+          .filter((g) => g.rows.some((r) => r.counts.openRiskIds.length > 0 || r.monitoringActive))
+          .map((g) => g.id),
+      ),
+    );
   }, [topicId, phaseId, groupedRows.length]);
+
+  const expandAll = () => setOpenGroups(new Set(groupedRows.map((g) => g.id)));
+  const collapseAll = () => setOpenGroups(new Set());
 
   return (
     <div className="space-y-4" id="scenario-execution">
@@ -296,7 +383,12 @@ export default function ScenarioExecutionPanel({
         title={
           <span className="inline-flex items-center gap-2 flex-wrap">
             场景执行情况
-            <Tag tone="brand">{scopeTitle}</Tag>
+            <Tag tone="brand">{activeScopeTitle}</Tag>
+            {catalogMode && (
+              <span className="text-[12px] text-textsub font-normal" data-testid="scenario-catalog-count">
+                {groupedRows.length} 项一级场景
+              </span>
+            )}
           </span>
         }
         right={
@@ -360,6 +452,36 @@ export default function ScenarioExecutionPanel({
           </div>
         }
       >
+        {topicOptions && topicOptions.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 mb-3" data-testid={topicNavTestId ?? "scenario-topic-nav"}>
+            <button
+              type="button"
+              data-testid={allTopicTestId ?? "scenario-topic-all"}
+              onClick={() => onTopicChange?.(null)}
+              className={`h-8 px-3 rounded-[6px] border text-[12px] ${
+                !topicId ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
+              }`}
+            >
+              全部专题
+            </button>
+            {topicOptions.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                data-testid={t.testId ?? `scenario-topic-${t.id}`}
+                onClick={() => onTopicChange?.(t.id)}
+                className={`h-8 px-3 rounded-[6px] border text-[12px] ${
+                  topicId === t.id ? "border-brand bg-tint text-brand font-medium" : "border-line text-textsub hover:bg-tint"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {toolbarExtra ? <div className="mb-3" data-testid="scenario-toolbar-extra">{toolbarExtra}</div> : null}
+
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-[13px]" data-testid="scenario-compact-stats">
           {compactStats.map((it) => (
             <button
@@ -423,6 +545,16 @@ export default function ScenarioExecutionPanel({
             <input type="checkbox" checked={onlyAbnormal} onChange={(e) => setOnlyAbnormal(e.target.checked)} />
             只看异常
           </label>
+          {catalogMode && (
+            <>
+              <Button data-testid="scenario-expand-all" onClick={expandAll}>
+                展开全部
+              </Button>
+              <Button data-testid="scenario-collapse-all" onClick={collapseAll}>
+                收起全部
+              </Button>
+            </>
+          )}
           {(search || onlyAbnormal || statusFilter !== "all" || objectTypeFilter !== "all") && (
             <>
               <Tag tone="brand">
@@ -456,41 +588,54 @@ export default function ScenarioExecutionPanel({
               </tr>
             </thead>
             <tbody>
-              {visibleScenarioRows.length === 0 && (
+              {visibleScenarioRows.length === 0 && groupedRows.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-3 py-4 text-center text-[13px] text-textsub border-b border-line">
                     {scenarioRows.length === 0 ? "当前范围尚未配置监管场景。" : "当前筛选条件下没有匹配场景，请调整搜索或筛选。"}
                   </td>
                 </tr>
               )}
-              {groupedRows.map(([group, rows]) => {
-                const opened = openGroups.has(group);
+              {groupedRows.map((group) => {
+                const opened = openGroups.has(group.id);
+                const subCount = catalogMode && !(search || onlyAbnormal || statusFilter !== "all" || objectTypeFilter !== "all")
+                  ? Math.max(group.rows.length, group.catalogChildren)
+                  : group.rows.length;
                 return (
-                  <React.Fragment key={group}>
-                    <tr className="bg-[#f7f9fd]">
+                  <React.Fragment key={group.id}>
+                    <tr className="bg-[#f7f9fd]" data-testid={`scenario-group-${group.id}`}>
                       <td colSpan={7} className="px-3 py-2 border-b border-line">
                         <button
                           type="button"
-                          className="inline-flex items-center gap-2 text-[13px] font-medium text-textmain"
+                          className="inline-flex items-center gap-2 text-[13px] font-medium text-textmain text-left"
                           onClick={() =>
                             setOpenGroups((prev) => {
                               const n = new Set(prev);
-                              if (n.has(group)) n.delete(group);
-                              else n.add(group);
+                              if (n.has(group.id)) n.delete(group.id);
+                              else n.add(group.id);
                               return n;
                             })
                           }
                         >
                           <span className="text-textsub w-3">{opened ? "▼" : "▶"}</span>
-                          {group}
-                          <span className="text-[12px] text-textsub font-normal">{rows.length} 个子场景</span>
+                          <span>
+                            {group.name}
+                            <span className="num text-[12px] text-textsub font-normal ml-2">{group.id}</span>
+                          </span>
+                          <span className="text-[12px] text-textsub font-normal">{subCount} 个子场景</span>
+                          {group.rows.length === 0 && (
+                            <span className="text-[12px] text-textsub font-normal">暂未开展监测</span>
+                          )}
                         </button>
                       </td>
                     </tr>
                     {opened &&
-                      rows.map((r) => (
+                      group.rows.map((r) => {
+                        const dormant =
+                          r.rows.length === 0 &&
+                          (r.statusLabelText === "仅维护定义" || r.statusLabelText === "暂未开展监测" || r.statusLabelText === "无业务");
+                        return (
                         <React.Fragment key={r.id}>
-                          <tr className="hover:bg-tint border-b border-line">
+                          <tr className="hover:bg-tint border-b border-line" data-testid={`scenario-sub-${r.id}`}>
                             <td className="px-3 py-2 align-top">
                               <button
                                 className="text-left hover:text-brand transition-colors duration-150"
@@ -505,7 +650,9 @@ export default function ScenarioExecutionPanel({
                             <td className="px-3 py-2 align-top">
                               <span className="inline-flex flex-wrap items-center gap-1">
                                 <Tag tone={r.statusTone}>{r.statusLabelText}</Tag>
-                                {!r.monitoringActive && r.statusLabelText !== "仅维护定义" && <Tag tone="neutral">已停用</Tag>}
+                                {!r.monitoringActive &&
+                                  r.statusLabelText !== "仅维护定义" &&
+                                  r.statusLabelText !== "暂未开展监测" && <Tag tone="neutral">已停用</Tag>}
                               </span>
                             </td>
                             <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
@@ -521,15 +668,21 @@ export default function ScenarioExecutionPanel({
                               )}
                             </td>
                             <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
-                              <button
-                                className="text-brand hover:underline"
-                                onClick={() => setDetail({ kind: "rules", scenarioId: r.id })}
-                              >
-                                {r.hitRuleCount}
-                              </button>
+                              {dormant ? (
+                                <span className="text-textsub">—</span>
+                              ) : (
+                                <button
+                                  className="text-brand hover:underline"
+                                  onClick={() => setDetail({ kind: "rules", scenarioId: r.id })}
+                                >
+                                  {r.hitRuleCount}
+                                </button>
+                              )}
                             </td>
                             <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
-                              {r.adoption === "核查依据" && r.counts.hitObjects.length === 0 ? (
+                              {dormant ? (
+                                <span className="text-textsub">—</span>
+                              ) : r.adoption === "核查依据" && r.counts.hitObjects.length === 0 ? (
                                 <span className="text-textsub" title="专业核查尚无结论">
                                   —（待人工核查）
                                 </span>
@@ -543,21 +696,25 @@ export default function ScenarioExecutionPanel({
                               )}
                             </td>
                             <td className="px-3 py-2 align-top text-right num whitespace-nowrap">
-                              <button
-                                className="hover:underline"
-                                style={{
-                                  color:
-                                    r.redOpen > 0
-                                      ? "var(--risk-red-fg)"
-                                      : r.counts.openRiskIds.length > 0
-                                        ? "var(--risk-amber-fg)"
-                                        : "var(--text-sub)",
-                                }}
-                                onClick={() => setDetail({ kind: "open", scenarioId: r.id })}
-                              >
-                                {r.counts.openRiskIds.length}
-                                {r.redOpen > 0 && <span className="ml-1">●</span>}
-                              </button>
+                              {dormant && r.counts.openRiskIds.length === 0 ? (
+                                <span className="text-textsub">—</span>
+                              ) : (
+                                <button
+                                  className="hover:underline"
+                                  style={{
+                                    color:
+                                      r.redOpen > 0
+                                        ? "var(--risk-red-fg)"
+                                        : r.counts.openRiskIds.length > 0
+                                          ? "var(--risk-amber-fg)"
+                                          : "var(--text-sub)",
+                                  }}
+                                  onClick={() => setDetail({ kind: "open", scenarioId: r.id })}
+                                >
+                                  {r.counts.openRiskIds.length}
+                                  {r.redOpen > 0 && <span className="ml-1">●</span>}
+                                </button>
+                              )}
                             </td>
                             <td className="px-3 py-2 align-top whitespace-nowrap">
                               <LinkButton
@@ -587,7 +744,8 @@ export default function ScenarioExecutionPanel({
                             </tr>
                           )}
                         </React.Fragment>
-                      ))}
+                        );
+                      })}
                   </React.Fragment>
                 );
               })}

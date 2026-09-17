@@ -231,16 +231,16 @@ try {
   await goto(`${BASE}/funds`);
   const fundsHome = await bodyText();
   const revenue = (fundsHome.match(/营业收入[\s\S]{0,40}?([0-9,]+)\s*万元/) || [])[1] || "";
-  log("收尾 资金首页上区", fundsHome.includes("主体经营与财务状况") && fundsHome.includes("资金专题监管"));
+  log("收尾 资金首页上区", fundsHome.includes("主体经营与财务状况") && fundsHome.includes("场景执行情况") && !fundsHome.includes("资金专题监管"));
   await shot("close_funds_home");
 
   const topicChecks = [
-    ["账户管理", ["CASH2-S001", "CASH2-S901", "仅维护定义"], ["账户"]],
-    ["资金收付", ["CASH2-S001", "CASH2-S901", "仅维护定义"], ["CASH2-S039", "CASH2-S033"]],
-    ["融资与担保", ["CASH2-S039", "仅维护定义"], []],
-    ["资金运作", ["CASH2-S039", "仅维护定义"], []],
-    ["专项资金", ["CASH2-S039", "仅维护定义"], ["CASH2-S031"]],
-    ["经营风险", ["CASH2-S039", "仅维护定义"], ["CASH2-S035"]],
+    ["账户管理", ["CASH2-S901"], ["账户"]],
+    ["资金收付", ["CASH2-S901"], ["CASH2-S039", "CASH2-S033"]],
+    ["融资与担保", ["CASH2-S901"], []],
+    ["资金运作", ["CASH2-S901"], []],
+    ["专项资金", ["CASH2-S901"], ["CASH2-S031"]],
+    ["经营风险", ["CASH2-S901"], ["CASH2-S035"]],
   ];
   let topicsOk = true;
   let topicsDetail = [];
@@ -260,7 +260,8 @@ try {
 
   await clickText("button", "资金收付");
   const payExec = await execText();
-  log("执行表不含仅维护定义", !payExec.includes("仅维护定义") && !payExec.includes("CASH2-S001"));
+  log("执行表含官方目录定义项", payExec.includes("仅维护定义") || payExec.includes("CASH2-S001"));
+  log("执行表不含补充草稿S901", !payExec.includes("CASH2-S901"));
   log("执行表含已启用收付场景", /CASH2-S039|CASH2-S033|CASH2-S037/.test(payExec) || /超该笔有效批准|中小企业/.test(payExec));
 
   await setInput("搜索场景名称或ID", "CASH2-S033");
@@ -369,7 +370,7 @@ try {
   await clickText("button", "标识名称");
   const ident = await bodyText();
   const identExec = await execText();
-  log("标识专题不混入仅定义", !identExec.includes("仅维护定义") || ident.includes("尚未配置"));
+  log("标识专题含官方目录", identExec.includes("PTY2-S025") || ident.includes("PTY2-P08"));
   await clickText("button", "股权控制");
   const ctrl = await bodyText();
   log("控制专题含PTY2-S032", /PTY2-S032|控股权利/.test(ctrl));

@@ -101,6 +101,13 @@ await page.click("[data-testid='funds-topic-CASH2-T-PAYMENT']");
 await page.waitForSelector("[data-testid='scenario-compact-stats']");
 await sleep(200);
 await shotEl("funds-scenario-execution", "#scenario-execution");
+await page.click("[data-testid='funds-topic-all']");
+await sleep(200);
+await page.click("[data-testid='scenario-expand-all']");
+await sleep(300);
+await page.evaluate(() => document.getElementById("scenario-execution")?.scrollIntoView({ block: "start" }));
+await sleep(200);
+await shot("r31-funds-full-catalog");
 await page.click("[data-testid='funds-topic-CASH2-T-ACCOUNT']");
 await sleep(250);
 await shot("r3-funds-topic-account");
@@ -114,13 +121,20 @@ await shot("r3-funds-topic-operation");
 await goto(`${BASE}/property-rights${slash}`);
 await page.waitForSelector("[data-testid='rights-topic-nav']");
 await shot("r3-rights-census-sparks");
-await clickText("button", "审计评估");
-await page.waitForSelector("#scenario-execution");
-await page.evaluate(() => document.getElementById("rights-topic-nav")?.scrollIntoView({ block: "start" }));
+await page.click("[data-testid='scenario-expand-all']");
+await sleep(300);
+await page.evaluate(() => document.getElementById("scenario-execution")?.scrollIntoView({ block: "start" }));
+await sleep(200);
+await shot("r31-rights-full-catalog");
+await page.click("[data-testid='rights-topic-PTY2-T-TRADE']");
+await page.waitForSelector("[data-testid='rights-behavior-select']");
+await page.evaluate(() => document.getElementById("scenario-execution")?.scrollIntoView({ block: "start" }));
 await sleep(250);
+await shot("r31-rights-trade");
 await shot("property-flow-and-execution");
 await page.click("[data-testid='rights-topic-PTY2-T-REG']");
 await sleep(300);
+await shot("r31-rights-nontrade");
 await shot("r3-rights-reg");
 await page.click("[data-testid='rights-topic-PTY2-T-IDENTITY']");
 await sleep(300);
@@ -134,16 +148,15 @@ fs.writeFileSync(
   note,
   `提交 ${COMMIT}
 来源 ${BASE}
-R3 截图：
+R3.1 截图：
+- r31-funds-full-catalog.png 资金全部专题 11 项一级目录
+- r31-rights-full-catalog.png 产权全部专题 10 项一级目录
+- r31-rights-trade.png 产权交易（经济行为下拉+肩形流程）
+- r31-rights-nontrade.png 非交易专题（无经济行为、无流程）
+R3 上半区仍有效：
 - funds-upper-kpis.png 资金盈利能力主卡与小趋势
 - r3-funds-revenue-detail-trend.png 营业收入详情趋势与同分类切换
-- funds-indicator-tree-leaf.png 指标树展开至实际末级
-- r3-funds-bs.png / r3-funds-liq.png 资产负债、流动性分类
-- funds-scenario-execution.png 资金收付场景执行
-- r3-funds-topic-account.png / finance / operation 账户、融资、运作专题
 - r3-rights-census-sparks.png 产权四卡与快照趋势
-- property-flow-and-execution.png 产权交易流程
-- r3-rights-reg.png / identity / control 登记、标识、控制专题
 `,
 );
 await browser.close();

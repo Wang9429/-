@@ -53,6 +53,8 @@ import {
 } from "../lib/indicator-scope";
 import { CASH2_BS_IDS, CASH2_LIQ_IDS, CASH2_PROFIT_IDS, FIRST_BATCH_SUBS, MAIN_TOPIC_OVERRIDE } from "../lib/fp-topics";
 import { CATEGORY_LABEL, computeTrendPoints, eligibleTrendPoints, trendSpecOf } from "../lib/fp-trend";
+import { CASH_OFFICIAL_PRIMARY_IDS, RIGHTS_OFFICIAL_PRIMARY_IDS, officialDirectory, officialSubIds, scopedDirectory } from "../lib/fp-directory";
+import { scenarioAdoption, scenarioSourceLabel, SUPPLEMENTAL_SCENARIO_LABEL } from "../lib/seed";
 
 const PERIOD_START = "2026-01-01";
 const PERIOD_END = AS_OF;
@@ -736,6 +738,48 @@ const pty1 = indicator("PTY2-I01");
 const specPty = trendSpecOf(pty1.id);
 const ptsPty = specPty ? computeTrendPoints(pty1, HQ, CTX, specPty, computeIndicator) : [];
 check("产权户数有历史快照趋势", Boolean(eligibleTrendPoints(ptsPty, specPty?.minPoints ?? 2)), true);
+
+console.log("\n[FP-20260916-R3.1 一级目录与下半区]");
+const cashDir = officialDirectory("CASH");
+const rightsDir = officialDirectory("RIGHTS");
+check("资金官方一级场景为11项", cashDir.length, 11);
+check("产权官方一级场景为10项", rightsDir.length, 10);
+check("资金一级ID按原始顺序", cashDir.map((g) => g.id), [...CASH_OFFICIAL_PRIMARY_IDS]);
+check("产权一级ID按原始顺序", rightsDir.map((g) => g.id), [...RIGHTS_OFFICIAL_PRIMARY_IDS]);
+check("资金目录不含P12", cashDir.some((g) => g.id === "CASH2-P12"), false);
+check("资金子场景为40条", officialSubIds("CASH").length, 40);
+check("产权子场景为40条", officialSubIds("RIGHTS").length, 40);
+check("目录不含S901", officialSubIds("CASH").includes("CASH2-S901"), false);
+check("无启用子场景的P03仍在目录", cashDir.some((g) => g.id === "CASH2-P03" && g.children.length === 2), true);
+check("无启用子场景的P05仍在目录", cashDir.some((g) => g.id === "CASH2-P05"), true);
+check("无启用子场景的PTY2-P01仍在目录", rightsDir.some((g) => g.id === "PTY2-P01" && g.children.length === 4), true);
+const enabledOfficial = fpCat.subscenarios.filter((s) => officialSubIds("CASH").includes(s.id) || officialSubIds("RIGHTS").includes(s.id)).filter((s) => s.enabled);
+check("未批量启用80条", enabledOfficial.length, FIRST_BATCH_SUBS.length);
+check("已启用仍为首批14条", enabledOfficial.map((s) => s.id).sort(), [...FIRST_BATCH_SUBS].slice().sort());
+const allTopicsCash = scopedDirectory("CASH", null);
+check("全部专题仍为11项一级", allTopicsCash.length, 11);
+const payDir = scopedDirectory("CASH", "CASH2-T-PAYMENT");
+check("收付专题一级不从命中反向生成", payDir.every((g) => (CASH_OFFICIAL_PRIMARY_IDS as readonly string[]).includes(g.id)), true);
+check("收付专题含P01原有子场景", payDir.find((g) => g.id === "CASH2-P01")?.children.some((c) => c.id === "CASH2-S001"), true);
+check("收付专题不含账户子场景S040", payDir.some((g) => g.children.some((c) => c.id === "CASH2-S040")), false);
+const identDir = scopedDirectory("RIGHTS", "PTY2-T-IDENTITY");
+check("标识专题不含交易一级P01", identDir.some((g) => g.id === "PTY2-P01"), false);
+check("标识专题含P08", identDir.some((g) => g.id === "PTY2-P08"), true);
+const tradeDir = scopedDirectory("RIGHTS", "PTY2-T-TRADE");
+check("交易专题不含登记P09", tradeDir.some((g) => g.id === "PTY2-P09"), false);
+check("S001 不标补充监管场景", scenarioAdoption("CASH2-S001") === SUPPLEMENTAL_SCENARIO_LABEL, false);
+check("S039 纳入方式为结构化监测", scenarioAdoption("CASH2-S039"), "结构化监测");
+check("S032 纳入方式为专业核查", scenarioAdoption("PTY2-S032"), "专业核查");
+check("S001 目录来源为资金监管场景目录", scenarioSourceLabel("CASH2-S001"), "资金监管场景目录");
+check("PTY2-S024 目录来源为产权监管场景目录", scenarioSourceLabel("PTY2-S024"), "产权监管场景目录");
+check("S901 不进入官方目录来源", scenarioSourceLabel("CASH2-S901"), "资金产权补充草稿");
+const p03group = fpCat.groups.find((g) => g.id === "CASH2-P03");
+check("无启用子场景的一级组仍发布为目录", p03group?.status, "published");
+const s001 = fpCat.subscenarios.find((s) => s.id === "CASH2-S001");
+check("S001 仍为草稿未启用", Boolean(s001 && !s001.enabled && s001.status === "draft"), true);
+check("历史评估版本仍为FP-R2-1", histEval?.rule_version, "FP-R2-1");
+check("R07 历史整改关联保留", r07?.scenario_ids.includes("CASH-S01") && r07?.scenario_ids.includes("CASH2-S039"), true);
+check("业务收付表仍不含仅定义CASH2-S001", payScenarios.includes("CASH2-S001"), false);
 
 console.log(`\n合计：${passed} 项通过，${failures.length} 项未通过。`);
 if (failures.length) {

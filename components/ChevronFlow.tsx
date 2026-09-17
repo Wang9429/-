@@ -30,11 +30,14 @@ export default function ChevronFlow({
   value,
   onChange,
   ariaLabel = "业务阶段",
+  showStats = true,
 }: {
   items: ChevronItem[];
   value: string | null;
   onChange: (id: string | null) => void;
   ariaLabel?: string;
+  /** 产权交易流程只保留环节名称，不在箭头上重复堆未关闭/停留统计 */
+  showStats?: boolean;
 }) {
   return (
     <div className="flex items-stretch gap-2">
@@ -66,7 +69,9 @@ export default function ChevronFlow({
                 : item.severity === "red"
                   ? "var(--risk-red-fg)"
                   : "var(--risk-amber-fg)";
-            const chevronWidth = Math.max(item.stayCount !== undefined ? 188 : 156, item.name.length * 14 + 64);
+            const chevronWidth = showStats
+              ? Math.max(item.stayCount !== undefined ? 188 : 156, item.name.length * 14 + 64)
+              : Math.max(128, item.name.length * 14 + 36);
             return (
               <button
                 key={item.id}
@@ -74,10 +79,14 @@ export default function ChevronFlow({
                 role="tab"
                 aria-selected={selected}
                 onClick={() => onChange(item.id)}
-                title={`${item.name}｜未关闭事项 ${item.openCount} 件${
-                  item.stayCount !== undefined ? `｜当前停留 ${item.stayCount}` : ""
-                }${item.businessNote ? `｜业务状态：${item.businessNote}` : ""}｜统计范围：当前组织及期间内与本环节实际关联的事项去重`}
-                className="relative h-[68px] shrink-0 transition-[filter] duration-150 hover:brightness-[0.99]"
+                title={
+                  showStats
+                    ? `${item.name}｜未关闭事项 ${item.openCount} 件${
+                        item.stayCount !== undefined ? `｜当前停留 ${item.stayCount}` : ""
+                      }${item.businessNote ? `｜业务状态：${item.businessNote}` : ""}｜统计范围：当前组织及期间内与本环节实际关联的事项去重`
+                    : `${item.name}${item.businessNote ? `｜业务状态：${item.businessNote}` : ""}`
+                }
+                className={`relative shrink-0 transition-[filter] duration-150 hover:brightness-[0.99] ${showStats ? "h-[68px]" : "h-[52px]"}`}
                 style={{
                   width: chevronWidth,
                   marginLeft: i === 0 ? 0 : -ARROW + 3,
@@ -104,25 +113,27 @@ export default function ChevronFlow({
                   >
                     {item.name}
                   </span>
-                  <span className="text-left text-[12px] leading-[18px] mt-0.5">
-                    <span className="text-textsub">未关闭 </span>
-                    <span className="num font-semibold" style={{ color: countTone }}>
-                      {item.openCount}
-                    </span>
-                    <span className="text-textsub"> 件</span>
-                    {item.stayCount !== undefined && (
-                      <>
-                        <span className="text-textsub">｜停留 </span>
-                        <span className="num">{item.stayCount}</span>
-                      </>
-                    )}
-                    {item.openCount > 0 && (
-                      <span style={{ color: countTone }} aria-hidden>
-                        {" "}
-                        {item.severity === "red" ? "●" : "▲"}
+                  {showStats && (
+                    <span className="text-left text-[12px] leading-[18px] mt-0.5">
+                      <span className="text-textsub">未关闭 </span>
+                      <span className="num font-semibold" style={{ color: countTone }}>
+                        {item.openCount}
                       </span>
-                    )}
-                  </span>
+                      <span className="text-textsub"> 件</span>
+                      {item.stayCount !== undefined && (
+                        <>
+                          <span className="text-textsub">｜停留 </span>
+                          <span className="num">{item.stayCount}</span>
+                        </>
+                      )}
+                      {item.openCount > 0 && (
+                        <span style={{ color: countTone }} aria-hidden>
+                          {" "}
+                          {item.severity === "red" ? "●" : "▲"}
+                        </span>
+                      )}
+                    </span>
+                  )}
                   {selected && (
                     <span className="absolute left-0 bottom-0 h-[3px] bg-brand" style={{ right: ARROW + 4, left: i === 0 ? 12 : ARROW + 8 }} />
                   )}
