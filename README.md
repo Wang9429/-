@@ -124,8 +124,8 @@ Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部�
 - 产权管理：<https://wang9429.github.io/-/property-rights/>
 - 系统配置：<https://wang9429.github.io/-/settings/>
 
-**实现提交**（功能与配置）：`5d4d8b8`（`03d65aa` 主体实现 + 断言收紧）。  
-**实际部署提交**：本仓库随后推送的截图/入口提交；GitHub Pages 工作流把它静态导出到 `gh-pages`。工作流完成后刷新上述路径即可看到本轮页面。
+**实现提交**（功能与配置）：`5d4d8b8`（主体 `03d65aa` + 断言收紧）。  
+**实际部署提交**（截图与本轮入口随 Pages 发布）：`0c6dda0`。GitHub Pages 工作流把它静态导出到 `gh-pages`；工作流完成后刷新上述路径即可看到本轮页面。
 
 本轮资金/产权 R3.1 界面截图（可下载；Pages 工作流完成后生效）：
 
