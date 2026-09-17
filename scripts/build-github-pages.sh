@@ -18,8 +18,16 @@ if [[ -d app/api ]]; then
   ASIDE="$ASIDE/api"
 fi
 
+COMMIT="$(git rev-parse HEAD)"
+SHORT="$(git rev-parse --short HEAD)"
+mkdir -p public/deliverables
+cat > public/deliverables/r32-build.json <<EOF
+{"version":"FP-20260917-R3.2","commit":"$SHORT","full":"$COMMIT","stamped_at":"github-pages-build"}
+EOF
+echo "[pages] 打入部署提交 $SHORT"
+
 export GITHUB_PAGES=1
 export NEXT_TELEMETRY_DISABLED=1
 npm run build
 touch out/.nojekyll
-echo "[pages] 静态导出完成：out/ （basePath=/-, trailingSlash）"
+echo "[pages] 静态导出完成：out/ （basePath=/-, trailingSlash） 提交 $SHORT"

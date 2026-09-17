@@ -125,20 +125,31 @@ Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS 4。无外部�
 - 产权管理：<https://wang9429.github.io/-/property-rights/>
 - 系统配置：<https://wang9429.github.io/-/settings/>
 
-**实现提交**（功能与配置）：`5d4d8b8`（主体 `03d65aa` + 断言收紧）。  
-**实际部署提交**（截图与本轮入口随 Pages 发布）：`0c6dda0`。GitHub Pages 工作流把它静态导出到 `gh-pages`；工作流完成后刷新上述路径即可看到本轮页面。
+**实现提交**（功能、配置与 R3.2 覆盖）：以本仓库 `main` 最新提交为准，Pages 构建会写入 [`r32-build.json`](https://wang9429.github.io/-/deliverables/r32-build.json)。  
+**实际部署提交**：打开上述 JSON 的 `commit` 字段，应与本轮推送一致。工作流把静态导出写到 `gh-pages`；完成后刷新总览即可看到本轮页面。
 
-本轮资金/产权 R3.1 界面截图（可下载；Pages 工作流完成后生效）：
+本轮资金/产权 R3.2 界面截图与 21 项覆盖（可下载；Pages 工作流完成后生效）：
+
+- [资金可执行 11 项一级（无未启用行）](https://wang9429.github.io/-/deliverables/r32_funds_executable_11.png)
+- [S039 监测对象清单（P-PAY001 1200 万元）](https://wang9429.github.io/-/deliverables/r32_funds_s039_objects.png)
+- [产权交易：经济行为、肩形流程与场景同框](https://wang9429.github.io/-/deliverables/r32_rights_trade_flow.png)
+- [产权登记：隐藏交易流程，仅登记场景](https://wang9429.github.io/-/deliverables/r32_rights_registration.png)
+- [标识与名称资质专题](https://wang9429.github.io/-/deliverables/r32_rights_identity.png)
+- [全部场景（10）](https://wang9429.github.io/-/deliverables/r32_rights_all_10.png)
+- [S037 命中对象 PTY-M002 未收 320 万元](https://wang9429.github.io/-/deliverables/r32_rights_s037_hit.png)
+- [S011 专业核查事项（不自动认定隐匿）](https://wang9429.github.io/-/deliverables/r32_rights_s011_review.png)
+- [系统配置仍保留完整目录](https://wang9429.github.io/-/deliverables/r32_settings_catalog.png)
+- [综合总览入口](https://wang9429.github.io/-/deliverables/r32_overview_entry.png)
+- [21 项实际覆盖明细 JSON](https://wang9429.github.io/-/deliverables/coverage-r32.json)
+- [21 项实际覆盖明细 Markdown](https://wang9429.github.io/-/deliverables/coverage-r32.md)
+- [R3.2 截图打包 zip](https://wang9429.github.io/-/deliverables/fp-r32-screenshots.zip)
+
+R3.1 对照截图仍保留：
 
 - [资金全部专题 11 项一级目录](https://wang9429.github.io/-/deliverables/r31-funds-full-catalog.png)
 - [产权全部专题 10 项一级目录](https://wang9429.github.io/-/deliverables/r31-rights-full-catalog.png)
-- [产权交易：选定经济行为后的下拉与肩形流程](https://wang9429.github.io/-/deliverables/r31-rights-trade.png)
-- [非交易专题：登记无流程](https://wang9429.github.io/-/deliverables/r31-rights-nontrade.png)
 - [产权四卡：无公式、无趋势](https://wang9429.github.io/-/deliverables/r31-rights-kpi-no-formula-trend.png)
-- [产权指标详情：无趋势](https://wang9429.github.io/-/deliverables/r31-rights-indicator-detail-no-trend.png)
 - [资金盈利能力小趋势仍在](https://wang9429.github.io/-/deliverables/r3-funds-profit-sparks.png)
-- [一级覆盖 11/11、10/10 JSON](https://wang9429.github.io/-/deliverables/coverage-11-10.json)
-- [R3.1 截图打包 zip](https://wang9429.github.io/-/deliverables/fp-r31-screenshots-5d4d8b8.zip)
 
 推送 `main` 会跑 `.github/workflows/github-pages.yml`：静态导出后写入 `gh-pages` 分支。仓库子路径为 `/-/`（仓库名为 `-`）。页面、样式与脚本均带此前缀；刷新上述路径应直接打开。
 

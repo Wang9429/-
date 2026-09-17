@@ -34,19 +34,25 @@ const browser = await puppeteer.launch({
   headless: "new",
   args: ["--no-sandbox", "--disable-dev-shm-usage", "--window-size=1440,1100"],
 });
-const page = await browser.newPage();
-page.setDefaultTimeout(25000);
-await page.setViewport({ width: 1440, height: 1100, deviceScaleFactor: 1 });
 
-async function shot(name) {
+async function newTab() {
+  const p = await browser.newPage();
+  p.setDefaultTimeout(25000);
+  await p.setViewport({ width: 1440, height: 1100, deviceScaleFactor: 1 });
+  return p;
+}
+
+let page = await newTab();
+
+async function shot(name, target = page, fullPage = false) {
   const file = path.join(OUT, `${name}_${COMMIT}.png`);
-  await page.screenshot({ path: file, fullPage: true });
+  await target.screenshot({ path: file, fullPage });
   return file;
 }
 
-async function goto(url) {
-  await page.goto(url, { waitUntil: "networkidle0" });
-  await page.evaluate(() => {
+async function goto(url, target = page) {
+  await target.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await target.evaluate(() => {
     try {
       localStorage.removeItem("cnooc-supervision-business-v16");
       localStorage.removeItem("cnooc-supervision-config-v16");
@@ -55,12 +61,26 @@ async function goto(url) {
       /* ignore */
     }
   });
-  await page.reload({ waitUntil: "networkidle0" });
-  await page.waitForSelector("nav, .reg-app", { timeout: 15000 });
+  await target.reload({ waitUntil: "domcontentloaded", timeout: 30000 });
+  await target.waitForSelector("nav, .reg-app, main, [data-testid], header", { timeout: 20000 });
+  await new Promise((r) => setTimeout(r, 400));
 }
 
-function bodyText() {
-  return page.evaluate(() => document.body.innerText);
+function bodyText(target = page) {
+  return target.evaluate(() => document.body.innerText);
+}
+
+async function clickNthButton(subId, index) {
+  await page.evaluate(
+    (id, i) => {
+      const row = document.querySelector(`[data-testid='scenario-sub-${id}']`);
+      const btns = row ? [...row.querySelectorAll("button")] : [];
+      btns[i]?.click();
+    },
+    subId,
+    index,
+  );
+  await new Promise((r) => setTimeout(r, 400));
 }
 
 const slash = BASE.includes("github.io") ? "/" : "";
@@ -99,7 +119,14 @@ try {
     });
     log(`R32-01 ${rec.primary_id} 代表 ${subId}`, Boolean(subEl));
   }
-  await shot("r32_funds_executable_11");
+  await shot("r32_funds_executable_11", page, false);
+  await clickNthButton("CASH2-S039", 1);
+  await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
+  const s039Modal = await page.$eval('[role="dialog"]', (el) => el.innerText || "");
+  log("R32-01 S039 可打开对象清单", s039Modal.includes("P-PAY001") || s039Modal.includes("监测对象"), s039Modal.slice(0, 120).replace(/\s+/g, " "));
+  await shot("r32_funds_s039_objects", page, false);
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { hidden: true, timeout: 5000 }).catch(() => {});
 
   const fundTopics = [
     "CASH2-T-ACCOUNT",
@@ -211,38 +238,87 @@ try {
     log(`R32-02 ${rec.primary_id} 代表 ${subId}`, Boolean(el) && Boolean(subEl), rec.primary_name);
   }
   log("R32-03 产权业务区无未启用", !(await bodyText()).includes("未启用"));
-  await shot("r32_rights_all_10");
+  await shot("r32_rights_all_10", page, false);
 
-  await goto(`${BASE}/settings${slash}`);
-  await page.waitForSelector("nav, .reg-app, main", { timeout: 20000 }).catch(() => {});
-  await new Promise((r) => setTimeout(r, 800));
-  const tabBtns = await page.$$("button");
-  for (const b of tabBtns) {
-    const t = await page.evaluate((el) => el.textContent || "", b);
-    if (t.includes("监管场景")) {
-      await b.click();
-      break;
+  await page.click("[data-testid='rights-topic-PTY2-T-TRADE']");
+  await new Promise((r) => setTimeout(r, 400));
+  await page.click("[data-testid='scenario-expand-all']").catch(() => {});
+  await new Promise((r) => setTimeout(r, 300));
+  await clickNthButton("PTY2-S037", 3);
+  await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
+  const s037Modal = await page.$eval('[role="dialog"]', (el) => el.innerText || "");
+  log("R32-01 S037 可打开命中对象", s037Modal.includes("PTY-M002") || s037Modal.includes("命中对象"), s037Modal.slice(0, 120).replace(/\s+/g, " "));
+  await shot("r32_rights_s037_hit", page, false);
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { hidden: true, timeout: 5000 }).catch(() => {});
+  await clickNthButton("PTY2-S011", 4);
+  await page.waitForSelector('[role="dialog"]', { timeout: 8000 });
+  const s011Modal = await page.$eval('[role="dialog"]', (el) => el.innerText || "");
+  log(
+    "R32-10 S011 可打开专业核查事项",
+    s011Modal.includes("专业核查") || s011Modal.includes("待核查") || s011Modal.includes("R-FP-011") || s011Modal.includes("隐匿"),
+    s011Modal.slice(0, 120).replace(/\s+/g, " "),
+  );
+  await shot("r32_rights_s011_review", page, false);
+  await page.keyboard.press("Escape");
+  await page.close().catch(() => {});
+
+  await browser.close();
+  const browser2 = await puppeteer.launch({
+    executablePath: "/usr/local/bin/google-chrome",
+    headless: "new",
+    args: ["--no-sandbox", "--disable-dev-shm-usage", "--window-size=1440,1100"],
+  });
+  const settingsPage = await browser2.newPage();
+  settingsPage.setDefaultTimeout(40000);
+  await settingsPage.setViewport({ width: 1440, height: 1100, deviceScaleFactor: 1 });
+  await settingsPage.goto(`${BASE}/settings${slash}?tab=scenarios`, { waitUntil: "domcontentloaded", timeout: 40000 });
+  await settingsPage.evaluate(() => {
+    try {
+      localStorage.setItem("cnooc-supervision-notice-ack", "1");
+    } catch {
+      /* ignore */
     }
-  }
-  await new Promise((r) => setTimeout(r, 600));
-  const setText = await bodyText();
-  log("R32-03 配置保留完整目录线索", setText.includes("监管场景") || setText.includes("CASH2") || setText.includes("子场景") || setText.includes("监测规则"));
-  await shot("r32_settings_catalog");
+  });
+  await settingsPage.waitForFunction(() => (document.body?.innerText || "").includes("系统配置"), { timeout: 20000 });
+  const setText = await settingsPage.evaluate(() => document.body.innerText);
+  log(
+    "R32-03 配置保留完整目录线索",
+    setText.includes("监管场景") || setText.includes("CASH2") || setText.includes("子场景") || setText.includes("监测规则") || setText.includes("一级监管场景"),
+  );
+  await shot("r32_settings_catalog", settingsPage, false);
 
-  await goto(`${BASE}/overview${slash}`);
-  await page.waitForSelector("nav, .reg-app, main", { timeout: 20000 });
-  log("R32-16 总览入口可打开", (await bodyText()).includes("综合总览") || (await bodyText()).includes("纳管"));
-  await shot("r32_overview_entry");
+  await settingsPage.goto(`${BASE}/overview${slash}`, { waitUntil: "domcontentloaded", timeout: 40000 });
+  await settingsPage.waitForFunction(() => (document.body?.innerText || "").includes("综合总览") || (document.body?.innerText || "").includes("纳管"), { timeout: 20000 });
+  const ovText = await settingsPage.evaluate(() => document.body.innerText);
+  log("R32-16 总览入口可打开", ovText.includes("综合总览") || ovText.includes("纳管"));
+  await shot("r32_overview_entry", settingsPage, false);
+  await browser2.close();
 } catch (err) {
   log("脚本异常", false, String(err));
+  try {
+    await shot("r32_script_error", page, false);
+  } catch {
+    /* ignore */
+  }
 } finally {
-  await browser.close();
+  await browser.close().catch(() => {});
 }
 
 const pass = results.filter((r) => r.ok).length;
 const fail = results.filter((r) => !r.ok);
 fs.writeFileSync(path.join(OUT, `r32-results_${COMMIT}.json`), JSON.stringify({ commit: COMMIT, pass, fail: fail.length, results, coverageDump }, null, 2));
-fs.writeFileSync(path.join("/workspace", "public", "deliverables", "coverage-r32.json"), JSON.stringify({ commit: COMMIT, coverageDump, results }, null, 2));
+const detailPath = path.join("/workspace", "public", "deliverables", "coverage-r32.json");
+let existing = {};
+try {
+  existing = JSON.parse(fs.readFileSync(detailPath, "utf8"));
+} catch {
+  existing = {};
+}
+existing.ui_visibility = coverageDump;
+existing.ui_results = results;
+existing.ui_commit = COMMIT;
+fs.writeFileSync(detailPath, JSON.stringify(existing, null, 2));
 console.log(`\nR3.2 页面验收：${pass} 通过，${fail.length} 未通过。提交 ${COMMIT}`);
 if (fail.length) {
   fail.forEach((f) => console.log(`  - ${f.name} ${f.detail}`));

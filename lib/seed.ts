@@ -39,7 +39,6 @@ import {
   FP_R32_TX,
 } from "./fp-r32-seed";
 import { CASH_TOPICS, FIRST_BATCH_RUNTIME, RIGHTS_TOPICS, isOfficialFpSub } from "./fp-topics";
-import { liveSub } from "./live-config";
 
 /**
  * 全平台唯一的种子读取入口。页面与计算模块都从这里取数，
@@ -230,7 +229,7 @@ export const scenarioName = (id: string) => liveScenarioName(id) ?? SCENARIO_NAM
 export const SUPPLEMENTAL_SCENARIO_LABEL = "补充监管场景";
 
 function officialAdoption(id: string): string {
-  const cap = liveSub(id)?.runtime_capability ?? FIRST_BATCH_RUNTIME[id] ?? "definition_only";
+  const cap = FIRST_BATCH_RUNTIME[id] ?? "definition_only";
   if (cap === "structured_executable") return "结构化监测";
   if (cap === "assisted_review") return "线索核查";
   if (cap === "professional_review") return "专业核查";

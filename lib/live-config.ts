@@ -1,6 +1,5 @@
 import type { CatalogPersist, CatalogSubscenario, CatalogRule } from "./config-catalog";
 import { extractCatalog, ruleRuntimeKind } from "./config-catalog";
-import { config } from "./config";
 import { isExecutableCapability } from "./fp-topics";
 import { setLiveScenarioNames } from "./scenario-names-live";
 import type { RuleEvaluation } from "./types";
@@ -55,7 +54,16 @@ interface LiveState {
   runtimeEvaluations: RuleEvaluation[];
 }
 
-const seedIds = new Set(extractCatalog().subscenarios.map((s) => s.id));
+let seedIds = new Set<string>();
+let booted = false;
+
+function bootFromCatalog(): void {
+  if (booted) return;
+  booted = true;
+  const catalog = extractCatalog();
+  seedIds = new Set(catalog.subscenarios.map((s) => s.id));
+  syncLiveFromCatalog(catalog);
+}
 
 function emptyLive(): LiveState {
   return {
@@ -67,10 +75,10 @@ function emptyLive(): LiveState {
     publishedWatch: null,
     rules: [],
     aiEnabled: true,
-    aiTasks: new Set(config.ai.tasks.map((t) => t.id)),
+    aiTasks: new Set(),
     aiDomains: new Set(["FA", "EQ", "INTL", "CASH", "RIGHTS", "ENG"]),
     aiExternalConnected: false,
-    aiModeDisplay: config.ai.mode_display,
+    aiModeDisplay: "",
     runtimeEvaluations: [],
   };
 }
@@ -84,6 +92,10 @@ function isSubActive(s: CatalogSubscenario, parentDisabled: boolean): boolean {
 }
 
 export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined): void {
+  booted = true;
+  if (seedIds.size === 0 && catalog) {
+    seedIds = new Set(catalog.subscenarios.map((s) => s.id));
+  }
   if (!catalog) {
     current = emptyLive();
     setLiveScenarioNames(current.scenarioNames);
@@ -167,15 +179,18 @@ export function syncLiveFromCatalog(catalog: CatalogPersist | null | undefined):
 }
 
 export function getLiveConfig(): LiveState {
+  bootFromCatalog();
   return current;
 }
 
 export function isScenarioMonitoringActive(id: string): boolean {
+  bootFromCatalog();
   return !current.disabledScenarioIds.has(id);
 }
 
 /** 业务执行区：已启用、已发布、具备自动/辅助/专业核查路径，且当前时点有有效版本。 */
 export function hasEffectiveExecutableRule(subId: string, asOf = "2026-06-30"): boolean {
+  bootFromCatalog();
   const sub = current.subs.get(subId);
   if (!sub) return false;
   if (current.disabledScenarioIds.has(subId)) return false;
@@ -192,18 +207,22 @@ export function hasEffectiveExecutableRule(subId: string, asOf = "2026-06-30"): 
 }
 
 export function liveSub(id: string): CatalogSubscenario | undefined {
+  bootFromCatalog();
   return current.subs.get(id);
 }
 
 export function publishedWatchRule(): LiveWatchRule | null {
+  bootFromCatalog();
   return current.publishedWatch;
 }
 
 export function liveRules(): CatalogRule[] {
+  bootFromCatalog();
   return current.rules;
 }
 
 export function liveRule(id: string): CatalogRule | undefined {
+  bootFromCatalog();
   return current.rules.find((r) => r.id === id);
 }
 
@@ -213,16 +232,19 @@ export function liveRuleLabel(id: string): string {
 }
 
 export function catalogIndicatorMeta(id: string): LiveIndicatorMeta | undefined {
+  bootFromCatalog();
   return current.indicators.get(id);
 }
 
 export function catalogIndicatorVisible(id: string): boolean {
+  bootFromCatalog();
   const meta = current.indicators.get(id);
   if (!meta) return true;
   return meta.enabled;
 }
 
 export function catalogIndicatorOnHomepage(id: string): boolean {
+  bootFromCatalog();
   const meta = current.indicators.get(id);
   if (!meta) return true;
   return meta.enabled && meta.display_position === "homepage";
@@ -230,6 +252,7 @@ export function catalogIndicatorOnHomepage(id: string): boolean {
 
 /** 领域页可展示的指标：首页或领域页位置，且已启用。停用不留空卡。 */
 export function catalogIndicatorOnDomainPage(id: string): boolean {
+  bootFromCatalog();
   const meta = current.indicators.get(id);
   if (!meta) return true;
   if (!meta.enabled || meta.status === "disabled" || meta.status === "retired") return false;
@@ -242,16 +265,19 @@ export function catalogIndicatorRunnableOnEntry(id: string): boolean {
 }
 
 export function homepageCatalogIndicatorIds(domain?: string): string[] {
+  bootFromCatalog();
   return [...current.indicators.values()]
     .filter((m) => m.enabled && m.display_position === "homepage" && (!domain || m.domain === domain))
     .map((m) => m.id);
 }
 
 export function publishedDeviationPct(): number | null {
+  bootFromCatalog();
   return current.publishedWatch?.pct ?? null;
 }
 
 export function liveAi() {
+  bootFromCatalog();
   return {
     enabled: current.aiEnabled,
     tasks: current.aiTasks,
@@ -260,5 +286,3 @@ export function liveAi() {
     modeDisplay: current.aiModeDisplay,
   };
 }
-
-syncLiveFromCatalog(extractCatalog());
