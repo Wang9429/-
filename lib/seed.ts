@@ -174,16 +174,26 @@ export const DOMAIN_META: Record<
   ENG: { id: "ENG", pageId: "P60", label: "工程项目管理", route: "/engineering-projects", short: "工程" },
 };
 
-/** 一级导航顺序固定：综合总览、固定资产、股权、国际化、资金、产权、工程 */
+/**
+ * 侧栏业务领域五项：投资管理、资金、产权、国际化、工程。
+ * 投资管理直接进入现有固定资产页，股权在页面内切换，不新建汇总页，不合并数据。
+ */
 export const NAV_ITEMS = [
   { id: "P00", label: "综合总览", route: "/overview", domain: null as DomainId | null },
-  { id: "P20", label: "固定资产投资管理", route: "/fixed-asset-investment", domain: "FA" as DomainId },
-  { id: "P10", label: "股权投资管理", route: "/equity-investment", domain: "EQ" as DomainId },
-  { id: "P30", label: "国际化业务", route: "/international-business", domain: "INTL" as DomainId },
+  { id: "INV", label: "投资管理", route: "/fixed-asset-investment", domain: null as DomainId | null },
   { id: "P40", label: "资金管理", route: "/funds", domain: "CASH" as DomainId },
   { id: "P50", label: "产权管理", route: "/property-rights", domain: "RIGHTS" as DomainId },
+  { id: "P30", label: "国际化业务", route: "/international-business", domain: "INTL" as DomainId },
   { id: "P60", label: "工程项目管理", route: "/engineering-projects", domain: "ENG" as DomainId },
 ];
+
+export const INVESTMENT_NAV_ID = "INV";
+
+const INVESTMENT_PATHS = [DOMAIN_META.FA.route, DOMAIN_META.EQ.route] as const;
+
+export function isInvestmentPath(pathname: string): boolean {
+  return INVESTMENT_PATHS.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
 
 export const templatesByDomain = (domain: DomainId): LifecycleTemplate[] =>
   seed.lifecycle_templates.filter((t) => t.domain === domain);

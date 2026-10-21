@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
-import { NAV_ITEMS } from "@/lib/seed";
+import { DOMAIN_META, INVESTMENT_NAV_ID, NAV_ITEMS, isInvestmentPath } from "@/lib/seed";
 import { can, canDomain, config, riskVisible } from "@/lib/config";
 import { useDemoStore } from "@/lib/store";
 import { Modal } from "@/components/ui";
@@ -31,13 +31,21 @@ const PAGE_OWNS_FILTER = [
   "/supervision-workbench",
 ];
 
+function routeActive(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
 function breadcrumb(pathname: string): { parent: string; current: string } {
   if (pathname.startsWith("/settings")) return { parent: "穿透式监管", current: "系统配置" };
   if (pathname.startsWith("/supervision-workbench")) return { parent: "穿透式监管", current: "监管工作台" };
   if (pathname.startsWith("/scenario-library")) return { parent: "系统配置", current: "场景规则库" };
   if (pathname.startsWith("/data-sources")) return { parent: "系统配置", current: "数据与运行" };
   if (pathname.startsWith("/object/")) return { parent: "穿透式监管", current: "对象档案" };
-  const nav = NAV_ITEMS.find((item) => pathname === item.route || pathname.startsWith(`${item.route}/`));
+  if (isInvestmentPath(pathname)) {
+    const current = routeActive(pathname, DOMAIN_META.EQ.route) ? DOMAIN_META.EQ.label : DOMAIN_META.FA.label;
+    return { parent: "投资管理", current };
+  }
+  const nav = NAV_ITEMS.find((item) => item.id !== INVESTMENT_NAV_ID && routeActive(pathname, item.route));
   return { parent: "穿透式监管", current: nav?.label ?? "综合总览" };
 }
 
@@ -51,9 +59,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     () => risks.filter((r) => isOpen(r) && riskVisible(user, r)).length,
     [risks, user],
   );
+  const canInvestment = canDomain(user, "FA") || canDomain(user, "EQ");
   const navItems = useMemo(
-    () => NAV_ITEMS.filter((item) => can(user, "business.read") && canDomain(user, item.domain)),
-    [user],
+    () =>
+      NAV_ITEMS.filter((item) => {
+        if (!can(user, "business.read")) return false;
+        if (item.id === INVESTMENT_NAV_ID) return canInvestment;
+        return canDomain(user, item.domain);
+      }),
+    [user, canInvestment],
   );
   const crumbs = breadcrumb(pathname);
   const ownsFilter = PAGE_OWNS_FILTER.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -73,17 +87,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <ul className="reg-nav">
           {navItems.map((item) => {
-            const active = pathname === item.route || pathname.startsWith(`${item.route}/`);
+            const active = item.id === INVESTMENT_NAV_ID ? isInvestmentPath(pathname) : routeActive(pathname, item.route);
+            const href =
+              item.id === INVESTMENT_NAV_ID
+                ? canDomain(user, "FA")
+                  ? DOMAIN_META.FA.route
+                  : DOMAIN_META.EQ.route
+                : item.route;
             const Icon = NAV_ICONS[item.id] ?? NAV_ICONS.P00;
             return (
               <li key={item.id}>
                 <Link
-                  href={item.route}
+                  href={href}
                   className="reg-nav-link"
                   aria-current={active ? "page" : undefined}
+                  data-testid={item.id === INVESTMENT_NAV_ID ? "nav-investment" : `nav-${item.id}`}
                 >
                   <Icon size={18} />
-          <span className="reg-nav-label" title={item.label}>{item.label}</span>
+                  <span className="reg-nav-label" title={item.label}>{item.label}</span>
                 </Link>
               </li>
             );
